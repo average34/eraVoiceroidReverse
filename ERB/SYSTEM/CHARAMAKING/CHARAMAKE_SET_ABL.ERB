@@ -1,0 +1,500 @@
+﻿;ABL生成
+
+;従順
+@CM_SET_ABL_0
+;基本判定値10
+LOCAL = 10
+;素質判定値を利用
+LOCAL += CM_TALENT_MAKE("プライド逆", "被虐", "素直さ", "素直さ", "モラル", "羞恥逆", "攻撃逆", "知性逆", "神経質逆")
+;素直だと判定値+50
+SIF TALENT:MASTER:素直
+	LOCAL += 50
+;反抗的だと判定値-50
+SIF TALENT:MASTER:反抗的
+	LOCAL -= 50
+;臆病だと判定値+30
+SIF TALENT:MASTER:臆病
+	LOCAL += 30
+;気丈だと判定値-30
+SIF TALENT:MASTER:気丈
+	LOCAL -= 30
+;小柄だと判定値+30
+SIF TALENT:MASTER:小柄
+	LOCAL += 30
+;大人しいと判定値+20
+SIF TALENT:MASTER:大人しい
+	LOCAL += 20
+;生意気だと判定値-40
+SIF TALENT:MASTER:生意気
+	LOCAL -= 40
+;プライド高いと判定値-50
+SIF TALENT:MASTER:プライド高い
+	LOCAL -= 50
+;プライド低いだと判定値+25
+SIF TALENT:MASTER:プライド低い
+	LOCAL += 25
+;幼稚だと判定値+25
+SIF TALENT:MASTER:幼稚
+	LOCAL += 25
+;３回回す
+FOR LOCAL:1, 0, 3
+	;加算失敗したら終了
+	SIF !PERCENT(LOCAL)
+		BREAK
+	ABL:MASTER:従順++
+	LOCAL /= 2
+NEXT
+
+;欲望
+@CM_SET_ABL_1
+;基本判定値10
+LOCAL = 10
+;素質判定値を利用
+LOCAL += CM_TALENT_MAKE("被虐", "衝動", "好奇心", "羞恥", "楽観", "倒錯", "同性愛", "モラル逆")
+;処女・童貞だと判定値+30
+SIF TALENT:MASTER:処女 || TALENT:MASTER:童貞
+	LOCAL += 30
+;臆病だと判定値-20
+SIF TALENT:MASTER:臆病
+	LOCAL -= 20
+;気丈だと判定値-20
+SIF TALENT:MASTER:気丈
+	LOCAL -= 20
+;小柄だと判定値-20
+SIF TALENT:MASTER:小柄
+	LOCAL -= 20
+;自制的だと判定値-50
+SIF TALENT:MASTER:自制的
+	LOCAL -= 50
+;衝動的だと判定値+30
+SIF TALENT:MASTER:衝動的
+	LOCAL += 30
+;好奇心だと判定値+50
+SIF TALENT:MASTER:好奇心
+	LOCAL += 50
+;感情乏しいだと判定値-50
+SIF TALENT:MASTER:感情乏しい
+	LOCAL -= 50
+;情緒豊かだと判定値+20
+SIF TALENT:MASTER:情緒豊か
+	LOCAL += 20
+;一線越えないだと判定値-40
+SIF TALENT:MASTER:一線越えない
+	LOCAL -= 40
+;貞操観念だと判定値-30
+SIF TALENT:MASTER:貞操観念
+	LOCAL -= 30
+;貞操無頓着だと判定値+30
+SIF TALENT:MASTER:貞操無頓着
+	LOCAL += 30
+;快感の否定だと判定値-50
+SIF TALENT:MASTER:快感の否定
+	LOCAL -= 50
+;快感に素直だと判定値+50
+SIF TALENT:MASTER:快感に素直
+	LOCAL += 50
+;倒錯的だと判定値+30
+SIF TALENT:MASTER:倒錯的
+	LOCAL += 30
+;自慰しやすいだと判定値+50
+SIF TALENT:MASTER:自慰しやすい
+	LOCAL += 50
+;３回回す
+FOR LOCAL:1, 0, 3
+	;加算失敗したら終了
+	SIF !PERCENT(LOCAL)
+		BREAK
+	ABL:MASTER:欲望++
+	LOCAL /= 2
+NEXT
+
+;技巧
+@CM_SET_ABL_2
+;基本判定値は性交経験*3+手淫経験*5+口淫経験*5+自慰経験*2/5
+LOCAL = ((EXP:MASTER:性交経験*3)+(EXP:MASTER:手淫経験*5)+(EXP:MASTER:口淫経験*5)+(EXP:MASTER:自慰経験*2))/5
+
+;処女・童貞だと判定値-30
+SIF TALENT:MASTER:処女 || TALENT:MASTER:童貞
+	LOCAL -= 30
+;習得早いだと判定値+30
+SIF TALENT:MASTER:習得早い
+	LOCAL += 30
+;習得遅いだと判定値-30
+SIF TALENT:MASTER:習得遅い
+	LOCAL -= 30
+;恥じらいだと判定値-20
+SIF TALENT:MASTER:恥じらい
+	LOCAL -= 20
+;舌使いだと判定値+30
+SIF TALENT:MASTER:舌使い
+	LOCAL += 30
+;器用な指先だと判定値+30
+SIF TALENT:MASTER:器用な指先
+	LOCAL += 30
+;献身的だと判定値+20
+SIF TALENT:MASTER:献身的
+	LOCAL += 20
+;受け身だと判定値-20
+SIF TALENT:MASTER:受け身
+	LOCAL -= 20
+;サドだと判定値+50
+SIF TALENT:MASTER:サド
+	LOCAL += 50
+;一線越えないだと判定値+20
+SIF TALENT:MASTER:一線越えない
+	LOCAL += 20
+;意地悪だと判定値+20
+SIF TALENT:MASTER:意地悪
+	LOCAL += 20
+;３回回す
+FOR LOCAL:1, 0, 3
+	;加算失敗したら終了
+	SIF !PERCENT(LOCAL)
+		BREAK
+	ABL:MASTER:技巧++
+	LOCAL /= 2
+NEXT
+
+;Ｃ感覚
+@CM_SET_ABL_3
+;基本判定値はＣ経験を3で割る
+LOCAL = EXP:MASTER:Ｃ経験/3
+;この時点で0だと終了
+SIF !LOCAL
+	RETURN 0
+
+;Ｃ敏感だと判定値+30
+SIF TALENT:MASTER:Ｃ敏感
+	LOCAL += 30
+;Ｃ鈍感だと判定値-30
+SIF TALENT:MASTER:Ｃ鈍感
+	LOCAL -= 30
+;ペニスがあると判定値-30
+SIF PENIS(MASTER)
+	LOCAL -= 30
+	
+;３回回す
+FOR LOCAL:1, 0, 3
+	;加算失敗したら終了
+	SIF !PERCENT(LOCAL)
+		BREAK
+	ABL:MASTER:Ｃ感覚++
+	LOCAL /= 2
+NEXT
+
+;Ｖ感覚
+@CM_SET_ABL_4
+;基本判定値はＶ経験
+LOCAL = EXP:MASTER:Ｖ経験
+;この時点で0だと終了
+SIF !LOCAL
+	RETURN 0
+
+;Ｖ敏感だと判定値+30
+SIF TALENT:MASTER:Ｖ敏感
+	LOCAL += 30
+;Ｖ鈍感だと判定値-30
+SIF TALENT:MASTER:Ｖ鈍感
+	LOCAL -= 30
+	
+;３回回す
+FOR LOCAL:1, 0, 3
+	;加算失敗したら終了
+	SIF !PERCENT(LOCAL)
+		BREAK
+	ABL:MASTER:Ｖ感覚++
+	LOCAL /= 2
+NEXT
+
+;Ａ感覚
+@CM_SET_ABL_5
+;基本判定値はＡ経験
+LOCAL = EXP:MASTER:Ａ経験
+;この時点で0だと終了
+SIF !LOCAL
+	RETURN 0
+
+;Ａ敏感だと判定値+30
+SIF TALENT:MASTER:Ａ敏感
+	LOCAL += 30
+;Ａ鈍感だと判定値-30
+SIF TALENT:MASTER:Ａ鈍感
+	LOCAL -= 30
+	
+;３回回す
+FOR LOCAL:1, 0, 3
+	;加算失敗したら終了
+	SIF !PERCENT(LOCAL)
+		BREAK
+	ABL:MASTER:Ａ感覚++
+	LOCAL /= 2
+NEXT
+
+;Ｂ感覚
+@CM_SET_ABL_6
+;基本判定値はＢ経験
+LOCAL = EXP:MASTER:Ｂ経験
+;この時点で0だと終了
+SIF !LOCAL
+	RETURN 0
+
+;Ｂ敏感だと判定値+30
+SIF TALENT:MASTER:Ｂ敏感
+	LOCAL += 30
+;Ｂ鈍感だと判定値-30
+SIF TALENT:MASTER:Ｂ鈍感
+	LOCAL -= 30
+	
+;３回回す
+FOR LOCAL:1, 0, 3
+	;加算失敗したら終了
+	SIF !PERCENT(LOCAL)
+		BREAK
+	ABL:MASTER:Ｂ感覚++
+	LOCAL /= 2
+NEXT
+
+;奉仕精神
+@CM_SET_ABL_7
+;基本判定値は手淫経験+口淫経験
+LOCAL = EXP:MASTER:手淫経験+EXP:MASTER:口淫経験
+
+;習得早いだと判定値+10
+SIF TALENT:MASTER:習得早い
+	LOCAL += 10
+;習得遅いだと判定値-10
+SIF TALENT:MASTER:習得遅い
+	LOCAL -= 10
+;恥じらいだと判定値-20
+SIF TALENT:MASTER:恥じらい
+	LOCAL -= 20
+;舌使いだと判定値+10
+SIF TALENT:MASTER:舌使い
+	LOCAL += 10
+;器用な指先だと判定値+10
+SIF TALENT:MASTER:器用な指先
+	LOCAL += 10
+;献身的だと判定値+50
+SIF TALENT:MASTER:献身的
+	LOCAL += 50
+;受け身だと判定値-20
+SIF TALENT:MASTER:受け身
+	LOCAL -= 20
+;サドだと判定値-50
+SIF TALENT:MASTER:サド
+	LOCAL -= 50
+;一線越えないだと判定値+20
+SIF TALENT:MASTER:一線越えない
+	LOCAL += 20
+;３回回す
+FOR LOCAL:1, 0, 3
+	;加算失敗したら終了
+	SIF !PERCENT(LOCAL)
+		BREAK
+	ABL:MASTER:奉仕精神++
+	LOCAL /= 2
+NEXT
+
+;露出癖
+@CM_SET_ABL_8
+;基本判定値は露出経験の３倍
+LOCAL = EXP:MASTER:露出経験*3
+;この時点で0だと終了
+SIF !LOCAL
+	RETURN 0
+
+;倒錯的だと判定値+30
+SIF TALENT:MASTER:倒錯的
+	LOCAL += 30
+;自制的だと判定値-30
+SIF TALENT:MASTER:自制的
+	LOCAL -= 30
+	
+;３回回す
+FOR LOCAL:1, 0, 3
+	;加算失敗したら終了
+	SIF !PERCENT(LOCAL)
+		BREAK
+	ABL:MASTER:露出癖++
+	LOCAL /= 2
+NEXT
+
+;レズっ気
+@CM_SET_ABL_9
+;基本判定値はレズ経験の２倍
+LOCAL = EXP:MASTER:レズ経験*2
+;この時点で0だと終了
+SIF !LOCAL
+	RETURN 0
+
+;両刀だと判定値+30
+SIF TALENT:MASTER:両刀
+	LOCAL += 30
+;男嫌いだと判定値+30
+SIF TALENT:MASTER:男嫌い
+	LOCAL += 30
+	
+;３回回す
+FOR LOCAL:1, 0, 3
+	;加算失敗したら終了
+	SIF !PERCENT(LOCAL)
+		BREAK
+	ABL:MASTER:レズっ気++
+	LOCAL /= 2
+NEXT
+
+;ＢＬっ気
+@CM_SET_ABL_10
+;とりあえず生成しない
+
+;マゾっ気
+@CM_SET_ABL_11
+;基本判定値は露出経験-50
+LOCAL = EXP:MASTER:露出経験-50
+;素質判定値を利用
+LOCAL += CM_TALENT_MAKE("被虐", "被虐", "攻撃逆", "倒錯", "楽観逆")
+;３回回す
+FOR LOCAL:1, 0, 3
+	;加算失敗したら終了
+	SIF !PERCENT(LOCAL)
+		BREAK
+	ABL:MASTER:マゾっ気++
+	LOCAL /= 2
+NEXT
+
+;中毒系はどれも調教要素として生成しない
+
+;会話のスキル
+@CM_SET_ABL_20
+;素質判定値を半分にして利用
+LOCAL = CM_TALENT_MAKE("攻撃逆", "プライド逆", "衝動逆", "羞恥逆", "知性", "知性", "潔癖", "モラル", "神経質", "神経質")/2
+;素直だと判定値+10
+SIF TALENT:MASTER:習得早い
+	LOCAL += 10
+;大人しいだと判定値+10
+SIF TALENT:MASTER:習得遅い
+	LOCAL += 10
+;自制的だと判定値+10
+SIF TALENT:MASTER:自制的
+	LOCAL += 10
+;受け身だと判定値-20
+SIF TALENT:MASTER:受け身
+	LOCAL -= 20
+;衝動的だと判定値-20
+SIF TALENT:MASTER:衝動的
+	LOCAL -= 20
+;感情乏しいだと判定値-50
+SIF TALENT:MASTER:感情乏しい
+	LOCAL -= 50
+;情緒豊かだと判定値+20
+SIF TALENT:MASTER:情緒豊か
+	LOCAL += 20
+;親しみやすいだと判定値+20
+SIF TALENT:MASTER:親しみやすい
+	LOCAL += 20
+;近寄り難いだと判定値-40
+SIF TALENT:MASTER:近寄り難い
+	LOCAL -= 40
+;一線越えないだと判定値+20
+SIF TALENT:MASTER:一線越えない
+	LOCAL += 20
+
+;３回回す
+FOR LOCAL:1, 0, 3
+	;加算失敗したら終了
+	SIF !PERCENT(LOCAL)
+		BREAK
+	ABL:MASTER:会話++
+	LOCAL /= 2
+NEXT
+
+;愛撫のスキル
+@CM_SET_ABL_21
+;基本判定値は性交経験*3+手淫経験*5+口淫経験*5+自慰経験*2/5
+LOCAL = ((EXP:MASTER:性交経験*3)+(EXP:MASTER:手淫経験*5)+(EXP:MASTER:口淫経験*5)+(EXP:MASTER:自慰経験*2))/5
+
+;処女・童貞だと判定値-30
+SIF TALENT:MASTER:処女 || TALENT:MASTER:童貞
+	LOCAL -= 30
+;習得早いだと判定値+30
+SIF TALENT:MASTER:習得早い
+	LOCAL += 30
+;習得遅いだと判定値-30
+SIF TALENT:MASTER:習得遅い
+	LOCAL -= 30
+;恥じらいだと判定値-20
+SIF TALENT:MASTER:恥じらい
+	LOCAL -= 20
+;舌使いだと判定値+30
+SIF TALENT:MASTER:舌使い
+	LOCAL += 30
+;器用な指先だと判定値+30
+SIF TALENT:MASTER:器用な指先
+	LOCAL += 30
+;献身的だと判定値+20
+SIF TALENT:MASTER:献身的
+	LOCAL += 20
+;受け身だと判定値-20
+SIF TALENT:MASTER:受け身
+	LOCAL -= 20
+;サドだと判定値+50
+SIF TALENT:MASTER:サド
+	LOCAL += 50
+;一線越えないだと判定値+20
+SIF TALENT:MASTER:一線越えない
+	LOCAL += 20
+;意地悪だと判定値+20
+SIF TALENT:MASTER:意地悪
+	LOCAL += 20
+;３回回す
+FOR LOCAL:1, 0, 3
+	;加算失敗したら終了
+	SIF !PERCENT(LOCAL)
+		BREAK
+	ABL:MASTER:愛撫++
+	LOCAL /= 2
+NEXT
+
+;道具のスキル
+@CM_SET_ABL_22
+;基本判定値は道具使用経験の５倍
+LOCAL = EXP:MASTER:道具使用経験*5
+;この時点で0だと終了
+SIF !LOCAL
+	RETURN 0
+
+;３回回す
+FOR LOCAL:1, 0, 3
+	;加算失敗したら終了
+	SIF !PERCENT(LOCAL)
+		BREAK
+	ABL:MASTER:道具++
+	LOCAL /= 2
+NEXT
+
+;性交のスキル
+@CM_SET_ABL_23
+;基本判定値は性交経験
+LOCAL = EXP:MASTER:性交経験
+;この時点で0だと終了
+SIF !LOCAL
+	RETURN 0
+
+;腰使いだと判定値+30
+SIF TALENT:MASTER:腰使い
+	LOCAL += 30
+;小柄だと判定値-30
+SIF TALENT:MASTER:小柄
+	LOCAL -= 30
+	
+;３回回す
+FOR LOCAL:1, 0, 3
+	;加算失敗したら終了
+	SIF !PERCENT(LOCAL)
+		BREAK
+	ABL:MASTER:性交++
+	LOCAL /= 2
+NEXT
+
+;羞恥・奉仕・加虐・異常・使役のスキルは調教要素として生成しない
+;一般のえっちで奉仕って言い方しないしね…

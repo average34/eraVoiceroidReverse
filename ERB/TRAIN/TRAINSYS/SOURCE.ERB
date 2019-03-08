@@ -1,0 +1,613 @@
+﻿@SOURCE_CHECK
+#LOCALSIZE 20
+;────────────────────────────────────
+;調教対象行動による精神的負荷を設定（地の文・口上で参照する）
+;────────────────────────────────────
+;選択されたREACTの負荷を保存
+;消費気力が最も低いCOMなら0、消費気力が100未満なら1、そうでなければ2
+TFLAG:REACT負荷 = GET_COMEFFORT(TRAINNAME:SELECTCOM)
+
+;────────────────────────────────────
+;REACT分類による快SOURCE等補正
+;────────────────────────────────────
+CALL REACT_TYPE_CHECK
+
+;────────────────────────────────────
+;変数整理
+;────────────────────────────────────
+CALL SOURCE_CHECK_DEBUG("SOURCE.ERB外", 1)
+
+;処女喪失・童貞喪失のリセット
+CVARSET TCVAR, 50, 0
+CVARSET TCVAR, 51, 0
+
+TFLAG:前回中出し = 0
+
+;────────────────────────────────────
+;調教対象行動による気力消費
+;────────────────────────────────────
+CALLF COMABLE_CONT(TRAINNAME:SELECTCOM, 1)
+DOWNBASE:MASTER:気力 += COM_VITALITY(, TRAINNAME:SELECTCOM)
+CALL SOURCE_CHECK_DEBUG("調教対象行動")
+
+;────────────────────────────────────
+;遅延された調教者行動の実行
+;────────────────────────────────────
+RESULT = 0
+;調教者行動が調教対象の行動によって左右される場合の処理
+CALL ACTION_APPLY2
+SIF RESULT
+	PRINTW
+
+;戻りが1でなければ呼ぶ
+IF RESULT != 1
+	;@ACTION_APPLY2対象外の一般処理
+	CALL REACTION_MESSAGE
+	PRINTW
+ENDIF
+CALL SOURCE_CHECK_DEBUG("調教者追加行動")
+
+;────────────────────────────────────
+;服薬などによる尿意ゲージ発生
+;────────────────────────────────────
+;尿意が発生して初めてMAXBASE:MASTER:尿意が用意される
+;早漏、遅漏に影響される
+SIF BASE:MASTER:尿意 > MAXBASE:MASTER:尿意
+	MAXBASE:MASTER:尿意 = 10000 - TALENT:MASTER:早漏 * 5000 + TALENT:MASTER:遅漏 * 5000
+
+;────────────────────────────────────
+;お仕置きモードの処理
+;────────────────────────────────────
+;お仕置きモード中は関連SOURCEにボーナスが入る
+IF TFLAG:お仕置きフラグ > 0
+	TIMES SOURCE:MASTER:痛み , 1.25
+	TIMES SOURCE:MASTER:拘束 , 1.25
+	TIMES SOURCE:MASTER:トラウマ , 1.15
+ENDIF
+
+;────────────────────────────────────
+;気力０による上下の処理（前半）
+;────────────────────────────────────
+;気力0で快感にボーナス
+IF BASE:MASTER:気力 <= 0
+	TIMES SOURCE:MASTER:快Ｃ, 1.25
+	TIMES SOURCE:MASTER:快Ｖ, 1.25
+	TIMES SOURCE:MASTER:快Ａ, 1.25
+	TIMES SOURCE:MASTER:快Ｂ, 1.25
+ENDIF
+
+IF BASE:気力 <= 0
+	TIMES SOURCE:快Ｃ, 1.25
+	TIMES SOURCE:快Ｖ, 1.25
+	TIMES SOURCE:快Ａ, 1.25
+	TIMES SOURCE:快Ｂ, 1.25
+ENDIF
+
+;────────────────────────────────────
+;快感のソース
+;────────────────────────────────────
+;連続ボーナス
+;連続数が1ずつ増えていく
+;元は倍々に増えてたけど、短期決戦に持ち込まれても面白くないと思ったので@これみ
+IF TFLAG:ACT == TFLAG:前ACT
+	TFLAG:同一行動ボーナス += 1
+ELSE
+	TFLAG:同一行動ボーナス = 1
+ENDIF
+;絶頂用文字列初期化
+VARSET STR, "", 1030, 1038
+
+;快感系ソースを乗算する装備アイテムを呼び出す
+CALL EQUIP_CHECK2
+
+;SOURCE計算
+SIF SOURCE:MASTER:快Ｃ + SOURCE:MASTER:快Ｖ + SOURCE:MASTER:快Ａ + SOURCE:MASTER:快Ｂ > 0
+	CALL CALC_SOURCE00
+CALL SOURCE_CHECK_DEBUG("SOURCE00")
+
+SIF SOURCE:快Ｃ + SOURCE:快Ｖ + SOURCE:快Ａ + SOURCE:快Ｂ > 0
+	CALL CALC_SOURCE40
+CALL SOURCE_CHECK_DEBUG("SOURCE40")
+
+;────────────────────────────────────
+;行為・精神・反応のソース
+;────────────────────────────────────
+FOR LOCAL, 10, 40
+	;SOURCE計算
+	IF SOURCE:MASTER:LOCAL > 0
+		CALLFORM CALC_SOURCE{LOCAL}
+		CALL SOURCE_CHECK_DEBUG(@"SOURCE{LOCAL}")
+	ENDIF
+NEXT
+
+;────────────────────────────────────
+;助手補正という名のサボり
+;────────────────────────────────────
+;助手が調教者に協力すると、調教対象の全UPが1.5倍になる
+IF TFLAG:助手の方針 == 1
+	FOR LOCAL, 0, 14
+		TIMES CUP:MASTER:LOCAL, 1.50
+	NEXT
+ENDIF
+
+;────────────────────────────────────
+;調教対象の反応による変動（最初はこれがなかったがより正しく調教対象の行為を反応するためやむ得なく追加しました）
+;────────────────────────────────────
+;快感を受け入れる/中に出して！
+IF IS_NOWCOMNAME("快感を受け入れる/中に出して！/イかせて！")
+	TIMES CUP:MASTER:恭順 , 1.10
+	TIMES CUP:MASTER:不快 , 0.50
+	TIMES CUP:MASTER:抑鬱 , 0.25
+;愛想よく応答する/積極的やる
+ELSEIF IS_NOWCOMNAME("愛想よく応答する/積極的やる")
+	TIMES CUP:MASTER:反抗 , 0.80
+	TIMES CUP:MASTER:不快 , 0.60
+	TIMES CUP:MASTER:抑鬱 , 0.20
+;愛情を込めてやる/もっとハードにして/気持ち良くして
+ELSEIF IS_NOWCOMNAME("愛情を込めてやる/もっとハードにして/気持ち良い！/気持ち良くして")
+	TIMES CUP:MASTER:恐怖 , 0.50
+	TIMES CUP:MASTER:恭順 , 1.25
+	TIMES CUP:MASTER:不快 , 0.20
+	TIMES CUP:MASTER:抑鬱 , 0.05
+	TFLAG:好感度アップ += 1
+ENDIF
+
+;────────────────────────────────────
+;相性による上下の処理(未実装)
+;────────────────────────────────────
+;R = NO:PLAYER
+;IF RELATION:R != 0
+;	PRINTFORML ＜相性{RELATION:R/100}.{RELATION:R%100}倍＞
+;ENDIF
+
+;────────────────────────────────────
+;調教者の体力/気力追加消費（最初はソースだけでこれを解決したかったがうまく表現できませんでした…）
+;────────────────────────────────────
+;ACT分類 または <ACT>
+
+;会話/<罵倒>
+IF TFLAG:ACT分類 == 0 || IS_NOWACTNAME("罵倒")
+	DOWNBASE:気力 += 25
+;愛撫
+ELSEIF TFLAG:ACT分類 == 1
+	DOWNBASE:体力 += 30
+	DOWNBASE:気力 += 50
+;道具
+ELSEIF TFLAG:ACT分類 == 2
+	DOWNBASE:体力 += 40
+	DOWNBASE:気力 += 35
+;性交
+ELSEIF TFLAG:ACT分類 == 3
+	DOWNBASE:体力 += 60
+	DOWNBASE:気力 += 50
+;羞恥
+ELSEIF TFLAG:ACT分類 == 4
+	;<自慰みせつけ>
+	SIF IS_NOWACTNAME("自慰みせつけ")
+		DOWNBASE:気力 += 40
+	;<羞恥プレイ>/<野外プレイ>
+	SIF IS_NOWACTNAME("羞恥プレイ/野外プレイ")
+		DOWNBASE:体力 += 40
+	DOWNBASE:体力 += 15
+	DOWNBASE:気力 += 40
+;奉仕
+ELSEIF TFLAG:ACT分類 == 5
+	;<イラマチオ>
+	SIF IS_NOWACTNAME("イラマチオ")
+		DOWNBASE:気力 += 40
+	DOWNBASE:体力 += 5
+	DOWNBASE:気力 += 30
+;加虐/<罵倒>
+ELSEIF TFLAG:ACT分類 == 6 && !IS_NOWACTNAME("罵倒")
+	DOWNBASE:体力 += 50
+	DOWNBASE:気力 += 15
+;異常/<放置プレイ>
+ELSEIF TFLAG:ACT分類 == 7 && !IS_NOWACTNAME("放置プレイ")
+	DOWNBASE:体力 += 35
+	DOWNBASE:気力 += 60
+ENDIF
+
+;────────────────────────────────────
+;気力０による上下の処理（後半）
+;────────────────────────────────────
+;調教対象気力0時、効果にボーナス
+IF BASE:MASTER:気力 <= 0
+	TIMES CUP:MASTER:欲情 , 1.40
+	TIMES CUP:MASTER:恐怖 , 1.20
+	TIMES CUP:MASTER:反抗 , 0.60
+	TIMES CUP:MASTER:不快 , 0.80
+ENDIF
+
+LOCAL = DOWNBASE:MASTER:気力 - BASE:MASTER:気力
+;抵抗不能なら
+IF TFLAG:抵抗不能
+	;気力は減らずに体力にまわされる
+	DOWNBASE:MASTER:体力 += DOWNBASE:MASTER:気力
+	DOWNBASE:MASTER:気力 = 0
+;気力が負になる減少量なら
+ELSEIF LOCAL > 0
+	;気力減少量の1/4が体力にまわされ、理性も減少する
+	DOWNBASE:MASTER:体力 += LOCAL
+	DOWNBASE:MASTER:理性 += LOCAL / 2
+ENDIF
+
+;────────────────────────────────────
+;調教対象のゲージの変動
+;────────────────────────────────────
+BASE:MASTER:体力 -= DOWNBASE:MASTER:体力
+BASE:MASTER:気力 -= DOWNBASE:MASTER:気力
+BASE:MASTER:射精 -= DOWNBASE:MASTER:射精
+BASE:MASTER:母乳 -= DOWNBASE:MASTER:母乳
+BASE:MASTER:尿意 -= DOWNBASE:MASTER:尿意
+;理性減少量補正
+SIF TALENT:MASTER:自制的
+	TIMES DOWNBASE:MASTER:理性 , 0.75
+SIF TALENT:MASTER:衝動的
+	TIMES DOWNBASE:MASTER:理性 , 1.25
+BASE:MASTER:理性 -= DOWNBASE:MASTER:理性
+
+;────────────────────────────────────
+;調教者のゲージの変動
+;────────────────────────────────────
+;興味の処理、調教対象の反応や変化を見せないとつまらない
+
+;LOCAL:1 = 肯定系計
+LOCAL:1 = SOURCE:MASTER:屈従 + SOURCE:MASTER:達成 + SOURCE:MASTER:悦楽
+;LOCAL:2 = 快楽系計
+LOCAL:2 = CUP:MASTER:快Ｃ + CUP:MASTER:快Ｖ + CUP:MASTER:快Ａ + CUP:MASTER:快Ｂ + CUP:MASTER:欲情
+;LOCAL:3 = 従順系計
+LOCAL:3 = CUP:MASTER:屈服 + CUP:MASTER:恐怖 + CUP:MASTER:恭順 + CUP:MASTER:苦痛 + CUP:MASTER:恥情
+;LOCAL:4 = 抵抗系計
+LOCAL:4 = CUP:MASTER:反抗 * 2 + CUP:MASTER:不快 + CUP:MASTER:抑鬱
+;LOCAL:5 = 調教者快楽系計		これがあっても良い気がしたので追加してみる@/L
+LOCAL:5 = CUP:快Ｃ + CUP:快Ｖ + CUP:快Ａ + CUP:快Ｂ
+;肯定/快楽/従順系計のいずれかが規定値に達していれば興味増加
+;(無関心にマイナス、好奇心にプラス補正)
+LOCAL = MAX(LOCAL:1, LOCAL:2, LOCAL:3, LOCAL:5)
+BASE:興味 += LINE_CALC(LOCAL, "300→10,1500→50,LIMIT/10～50") + (TALENT:好奇心 - TALENT:無関心) * LINE_CALC(LOCAL, "300→5,1500→20,LIMIT/5～20")
+
+;短気の調教者は負の反応にうんざり
+;短気時、抵抗系計が規定値に達していれば興味減少
+SIF TALENT:短気
+	BASE:興味 -= LINE_CALC(LOCAL:4, "0→0,1500→150,LIMIT/0～150")
+
+;自然消耗
+;(興味が1/3を切ると消耗速度が下がる)
+;調教レベルによる消耗加速をオミットした版
+;これ機械的すぎてひどいなｗ
+IF BASE:興味 > MAXBASE:興味 / 3
+	BASE:興味 -= MAXBASE:興味 * 20 / 200
+ELSE
+	BASE:興味 -= MAXBASE:興味 * 20 / 300
+ENDIF
+
+;興味を0-MAXBASEの範囲に収める
+BASE:興味 = LIMIT(BASE:興味, 0, MAXBASE:興味)
+
+;興味低下による気力消耗
+;(活発な性格であるほど気力消耗量は大きい)
+SIF BASE:興味 < 200
+	DOWNBASE:気力 += (300 - BASE:興味) / (10 + TALENT:無関心 * 3 - TALENT:好奇心 * 3 + TALENT:感情乏しい * 2 - TALENT:情緒豊か * 2)
+
+;苛立ちの処理
+;抵抗系計から補正して苛立ちを算出
+DOWNBASE:苛立ち -= LIMIT(LOCAL:4 / 15, 20, 100) + (TALENT:短気 - TALENT:慎重) * LIMIT(LOCAL:4 / 75 + 5, 10, 25) + (TALENT:生意気 - TALENT:大人しい) * LIMIT(LOCAL:4 / 150, 2, 10)
+
+;哀願/暴れる/要求を拒否
+;(REACT時素質によって追加補正)
+IF IS_COMGRONAME("許しを乞う")
+	DOWNBASE:苛立ち -= 25 - TALENT:心根優しい * 25 + TALENT:意地悪 * 10 + TALENT:サド * 25 - TALENT:MASTER:恋慕 * 5 - TALENT:MASTER:隷属 * 10 + PALAM:MASTER:反抗 / 250
+ELSEIF IS_COMGRONAME("暴れる")
+	DOWNBASE:苛立ち -= 50 + PALAM:MASTER:反抗 / 200 - TALENT:慎重 * 15 + TALENT:短気 * 20 + TALENT:プライド高い * 20 + MARK:反抗刻印 * 2
+ELSEIF IS_COMGRONAME("拒否")
+	DOWNBASE:苛立ち -= 25 + PALAM:MASTER:屈服 / 200 - TALENT:慎重 * 25 + TALENT:短気 * 15 + TALENT:心根優しい * 5 + TALENT:プライド高い * 10 + MARK:屈服刻印
+ENDIF
+
+;狂気でランダム変動、この設定に賛同できない人はかなりいるかもしれません…
+SIF TALENT:狂気
+	DOWNBASE:苛立ち -= (10 - RAND:20) * (1 + RAND:10)
+
+;苛立ち時、調教対象が従順であれば満足度に応じて苛立ち減衰
+SIF DOWNBASE:苛立ち > MAXBASE:苛立ち / 3 && CUP:MASTER:反抗 < 10
+	DOWNBASE:苛立ち += BASE:満足 / 20
+
+;怒り時、調教強度に応じて苛立ち減衰
+IF TCVAR:状態変化 == 6
+	;恭順補正
+	LOCAL = CUP:MASTER:恭順 * POWER(2, TALENT:心根優しい - TALENT:意地悪 + 10) / 1024
+	;屈服補正
+	LOCAL += (CUP:MASTER:屈服 + MARK:屈服刻印 * 50) * POWER(2, TALENT:素直 + 10) / 1024
+	DOWNBASE:苛立ち += LOCAL
+ENDIF
+
+;BASE値変動処理
+BASE:体力 -= DOWNBASE:体力
+BASE:気力 -= DOWNBASE:気力
+BASE:射精 -= DOWNBASE:射精
+BASE:母乳 -= DOWNBASE:母乳
+BASE:尿意 -= DOWNBASE:尿意
+
+;いらいらによる理性消耗
+;その分だけ苛立ち減衰
+;理性0時はその半分さらに苛立つ
+IF BASE:苛立ち > 700
+	LOCAL = (BASE:苛立ち - 500) / (5 + TALENT:狂気 * RAND:3)
+	IF BASE:理性 > 0
+		DOWNBASE:理性 += LOCAL
+		DOWNBASE:苛立ち += LOCAL
+	ELSE
+		DOWNBASE:苛立ち -= LOCAL / 2
+	ENDIF
+ENDIF
+;BASE値変動処理
+BASE:苛立ち -= DOWNBASE:苛立ち
+;苛立ちを0-MAXBASEの範囲に収める
+BASE:苛立ち = LIMIT(BASE:苛立ち, 0, MAXBASE:苛立ち)
+
+;理性減少量が素質によって補正される
+SIF TALENT:自制的
+	TIMES DOWNBASE:理性 , 0.75
+SIF TALENT:衝動的
+	TIMES DOWNBASE:理性 , 1.25
+;BASE値変動処理
+BASE:理性 -= DOWNBASE:理性
+
+;BASE値変動処理
+BASE:満足 -= DOWNBASE:満足
+
+;────────────────────────────────────
+;コマンド実行時の口上
+;────────────────────────────────────
+CALL KOJO_REACT
+
+IF TCVAR:MASTER:REACT姿勢変化
+	PRINTL 
+	CALL POSE_SHOW
+	TCVAR:MASTER:REACT姿勢変化 = 0
+ENDIF
+DRAWLINE
+
+;────────────────────────────────────
+;絶頂時の口上
+;────────────────────────────────────
+PRINTL 
+FLAG:地の文制御 = 0
+RESULT = 0
+;ビット和での指定が不具合の温床になってる気配があったので省略してみる@/L
+;公衆肉便器プレイ時の呼び出しは規制する //1.1seriesまでの暫定処置、ということで@/L
+SIF !IS_NOWACTNAME("公衆肉便器プレイ") && (MASTER_EX() || TARGET_EX())	;MASTER_EX(79) || TARGET_EX(15)
+	CALL KOJO_EVENT(20)
+IF RESULT
+	PRINTL 
+	DRAWLINE
+ENDIF
+
+RESULT = 0
+SIF MASTER_EX(4) || TARGET_EX(4)
+	CALL KOJO_EVENT_ASSI(20)
+
+RESULT = 0
+IF MASTER_EX(8) || TARGET_EX(8)
+	ASSI = ASSI:2
+	CALL KOJO_EVENT_ASSI(20)
+	ASSI = ASSI:1
+ENDIF
+
+;RESULT = 0
+;IF MASTER_EX(16) || TARGET_EX(16)
+;	ASSI = ASSI:3
+;	CALL KOJO_EVENT_ASSI(20)
+;	ASSI = ASSI:1 < 0 ? ASSI:3 # ASSI:1
+;ENDIF
+
+;────────────────────────────────────
+;絶頂関連の表示
+;────────────────────────────────────
+CALL PRINT_SOURCE00_40
+
+;依存度の計算
+VARSET LOCAL
+;射精orＣ絶頂と他３種絶頂の和で計算
+LOCAL = (MASTER_EX(, 1) || MASTER_EX(, 12)) + MASTER_EX(, 3) + MASTER_EX(, 3) + MASTER_EX(, 4)
+;２乗の１０倍を基礎値とする
+LOCAL = LOCAL*LOCAL*10
+;放尿・噴乳でも+10する
+LOCAL += (MASTER_EX(, 11) + MASTER_EX(, 13)) * 10
+;ご主人様に膣内射精されていれば20を加える
+LOCAL += TE_PLAYER(1) == 4 && TE_PLAYER(0) == 1 ? 20 # 0
+
+;射精orＣ絶頂と他３種絶頂の和で計算
+LOCAL:1 = (TARGET_EX(, 1) || TARGET_EX(, 12)) + TARGET_EX(, 3) + TARGET_EX(, 3) + TARGET_EX(, 4)
+;２乗の１０倍を基礎値とする
+LOCAL:1 = LOCAL:1*LOCAL:1*10
+;噴乳でも+10する
+LOCAL:1 += TARGET_EX(, 11) * 10
+;奴隷に膣内射精されていれば20を加える
+LOCAL:1 += ME_PLAYER(1) == 4 && ME_PLAYER(0) == 2 ? 20 # 0
+
+;依存度変化
+CALL ADD_DEPEND(LOCAL:1, LOCAL)
+
+
+;────────────────────────────────────
+;押し倒し終了
+;────────────────────────────────────
+;IF (SUMARRAY(NOWEX, 0, 4) || NOWEX:MASTER:射精) && TEQUIP:押し倒し中 == 1
+IF (NOWEX:MASTER:Ｃ絶頂 || NOWEX:MASTER:Ｖ絶頂 || NOWEX:MASTER:Ａ絶頂 || NOWEX:MASTER:Ｂ絶頂 || NOWEX:MASTER:射精) && TEQUIP:押し倒し中 == 1
+	TEQUIP:押し倒し中 = 0
+	TFLAG:押し倒し経過 = TFLAG:経過時間
+	PRINTFORMW %CALLNAME:TARGET%は%CALLNAME:MASTER%を絶頂させて満足したようだ…
+ENDIF
+IF TFLAG:押し倒し経過 && (TFLAG:経過時間 - TFLAG:押し倒し経過) > 15 && TEQUIP:押し倒し中
+	TEQUIP:押し倒し中 = 0
+	TFLAG:押し倒し経過 = TFLAG:経過時間
+	PRINTFORMW %CALLNAME:TARGET%は%CALLNAME:MASTER%を散々嬲って満足したようだ…
+ENDIF
+
+;────────────────────────────────────
+;刻印取得のチェック、そして刻印による素質変動
+;────────────────────────────────────
+CALL MARK_CHECK_SOURCE
+
+;────────────────────────────────────
+;経験のチェック、調教ソースの表示
+;────────────────────────────────────
+CALL EXP_CHECK
+FOR LOCAL, 0, 50
+	PRINTFORM \@ SOURCE:MASTER:LOCAL > 0 ? %SOURCENAME:LOCAL%({SOURCE:MASTER:LOCAL}) # \@
+NEXT
+FOR LOCAL, 0, 50
+	PRINTFORM \@ SOURCE:LOCAL > 0 ? 調教者%SOURCENAME:LOCAL%({SOURCE:LOCAL}) # \@
+NEXT
+PRINTL 
+
+;────────────────────────────────────
+;数値変動の表示
+;────────────────────────────────────
+;相性
+;SIF RELATION:(NO:PLAYER) && RELATION:(NO:PLAYER) != 100
+;	PRINTFORML ＜相性%TOSTR(RELATION:(NO:PLAYER), "0\\.00")%倍＞
+
+;体力・気力の減少
+PRINTFORML 体力-{DOWNBASE:MASTER:体力} 気力-{DOWNBASE:MASTER:気力} 理性-{DOWNBASE:MASTER:理性}
+PRINTFORML （%CALLNAME:TARGET%）体力-{DOWNBASE:体力} 気力-{DOWNBASE:気力}
+
+;CUP:MASTER:苦痛の1/30を魔力として取得
+TFLAG:取得魔力 += CUP:MASTER:苦痛 / 30
+
+;体力・気力０、疲弊のメッセージもあるのでこれは必要ないと思います
+;SIF BASE:MASTER:体力 <= 0
+;	PRINTL ★体力０★
+;SIF BASE:MASTER:気力 <= 0
+;	PRINTL ★気力０★
+;SIF BASE:体力 <= 0
+;	PRINTL ★体力０★（調教者）
+;SIF BASE:気力 <= 0
+;	PRINTL ★気力０★（調教者）
+
+;────────────────────────────────────
+;能力上昇の呼び出し
+;ここでは大まかな条件で絞り、詳細な判定はABLUP_**関数で行う
+;────────────────────────────────────
+
+;調教対象能力
+
+;従順
+;屈服 + 恭順、または恐怖が上昇している時
+;また、調教対象の反応が 暴れる/要求に応じない であれば判定しない
+SIF (CUP:MASTER:屈服 + CUP:MASTER:恭順 > 0 || CUP:MASTER:恐怖 > 0) && TFLAG:REACT分類 < 6
+	CALL ABLUP_0M
+;欲望
+;欲情上昇時
+SIF CUP:MASTER:欲情 > 0
+	CALL ABLUP_1M
+;技巧
+;調教内容が奉仕系であり、調教者が快感を得た時
+SIF TFLAG:ACT分類 == 5 && CUP:快Ｃ + CUP:快Ｖ + CUP:快Ａ + CUP:快Ｂ > 0
+	CALL ABLUP_2M
+;Ｘ感覚
+;調教対象が快感を得た時
+FOR LOCAL, 0, 4
+	SIF CUP:MASTER:LOCAL > 0
+		CALLFORM ABLUP_{3 + LOCAL}M
+NEXT
+;奉仕精神
+;調教内容が奉仕系/性交奉仕であるか、調教者挿入中体位が騎乗位である場合
+;なおかつ調教対象が積極的に従い、快感+欲情合計が1000突破
+SIF (TFLAG:ACT分類 == 5 || TFLAG:ACT分類 == 10  || TEQUIP:性交中 == 3 ) && IS_COMGRONAME("積極的従う") && CUP:MASTER:快Ｃ + CUP:MASTER:快Ｖ + CUP:MASTER:快Ａ + CUP:MASTER:快Ｂ + CUP:MASTER:欲情 > 1000
+	CALL ABLUP_7M
+;露出癖
+;痴情上昇時
+SIF CUP:MASTER:恥情 > 0
+	CALL ABLUP_8M
+;レズっ気
+;調教対象、調教者がともに男ではない
+SIF TALENT:MASTER:オトコ == 0 && TALENT:オトコ == 0
+	CALL ABLUP_9M
+;ＢＬっ気
+;調教対象、調教者がともに男
+SIF TALENT:MASTER:オトコ && TALENT:オトコ
+	CALL ABLUP_10M
+;マゾっ気
+;苦痛 + 不快上昇量が抑鬱上昇量を上回る
+SIF CUP:MASTER:苦痛 + CUP:MASTER:不快 > CUP:MASTER:抑鬱
+	CALL ABLUP_11M
+;自慰中毒
+;調教対象自慰中
+SIF GETBIT(TEQUIP:自慰中, 0)
+	CALL ABLUP_12M
+;精液中毒
+;調教者または調教対象が射精
+SIF NOWEX:射精 || NOWEX:MASTER:射精
+	CALL ABLUP_13M
+;レズ中毒
+;調教対象、調教者がともに男ではない
+SIF TALENT:MASTER:オトコ == 0 && TALENT:オトコ == 0
+	CALL ABLUP_14M
+;苦痛中毒
+;苦痛上昇量が抑鬱上昇量を上回る
+SIF CUP:MASTER:苦痛 > CUP:MASTER:抑鬱
+	CALL ABLUP_15M
+;拘束中毒
+;調教対象が何らかの拘束を受ける
+SIF TEQUIP:縄 || TEQUIP:アイマスク || TEQUIP:ボールギャグ || TEQUIP:三角木馬
+	CALL ABLUP_16M
+
+;調教者能力
+
+;欲望
+;調教者が快感を得た時
+SIF CUP:快Ｃ + CUP:快Ｖ + CUP:快Ａ + CUP:快Ｂ > 0
+	CALL ABLUP_1T
+;技巧
+;調教対象絶頂時
+SIF NOWEX:MASTER:Ｃ絶頂 + NOWEX:MASTER:Ｖ絶頂 + NOWEX:MASTER:Ａ絶頂 + NOWEX:MASTER:Ｂ絶頂 > 0
+	CALL ABLUP_2T
+;Ｘ感覚
+;調教者が快感を得た時
+FOR LOCAL, 0, 4
+	SIF CUP:LOCAL > 0
+		CALLFORM ABLUP_{3 + LOCAL}T
+NEXT
+;奉仕精神
+;調教内容が愛撫/道具系
+SIF TFLAG:ACT分類 == 1 || TFLAG:ACT分類 == 2
+	CALL ABLUP_7T
+;露出癖
+;現在条件なし
+;SIF ???
+	;CALL ABLUP_8T
+;レズっ気
+;調教対象、調教者がともに男ではない
+SIF TALENT:MASTER:オトコ == 0 && TALENT:オトコ == 0
+	CALL ABLUP_9T
+;ＢＬっ気
+;調教対象、調教者がともに男
+SIF TALENT:MASTER:オトコ && TALENT:オトコ
+	CALL ABLUP_10T
+;精液中毒
+;調教者または調教対象が射精
+SIF NOWEX:射精 || NOWEX:MASTER:射精
+	CALL ABLUP_13T
+;レズ中毒
+;調教対象、調教者がともに男ではない
+SIF TALENT:MASTER:オトコ == 0 && TALENT:オトコ == 0
+	CALL ABLUP_14T
+;調教系列技能
+;対応する調教系列について判定
+SIF 0 <= TFLAG:ACT分類 && TFLAG:ACT分類 <= 8
+	CALLFORM ABLUP_{20 + TFLAG:ACT分類}T
+;性交
+;調教内容が性交奉仕系
+SIF TFLAG:ACT分類 == 10
+	CALL ABLUP_23T
+
+@SOURCE_CHECK_DEBUG(ARGS, ARG)
+RETURN 0
+SIF ARG
+	VARSET LOCAL
+NOSKIP
+	PRINTFORML %ARGS% {DOWNBASE:MASTER:気力}(+{DOWNBASE:MASTER:気力 - LOCAL})
+ENDNOSKIP
+LOCAL = DOWNBASE:MASTER:気力
+RETURN 0

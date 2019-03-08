@@ -1,0 +1,239 @@
+﻿;────────────────────────────────────
+;新しい調教者の追加
+;────────────────────────────────────
+@NEW_TRAINER
+#DIM LCOUNT, 1
+#DIM PRINTCOUNT, 1
+
+;選択肢を呼び出す
+LOCALS = 
+LOCALS += "<識別>NEW_TRAINER"
+LOCALS += "<対象>登場可"
+LOCALS += "<上部>NEW_TRAINER_T"
+LOCALS += "<条件>NEW_TRAINER_R"
+LOCALS += "<口上>調教者"
+LOCALS += "<取消>やめる"
+LOCALS += "<項目>名前/二つ名"
+CALL SELECT_CHARA_LIST(LOCALS)
+IF RESULT != -1
+	;魔力消費
+	CFLAG:魔力 -= 1000
+	;召喚者記憶
+	LOCAL:1 = TARGET
+	;召喚処理
+	ADDCHARA RESULT
+	;調教者を今召喚したキャラに交代
+	TARGET = CHARANUM - 1
+	;登場フラグを折る
+	FLAG:(RESULT + 99) = 0
+	;追加調教者数を加算
+	FLAG:追加調教者数++
+	;処女・童貞喪失状況を記録
+	CFLAG:処女喪失済み = !TALENT:処女
+	CFLAG:童貞喪失済み = !TALENT:童貞
+	;RESULT初期化
+	RESULT = 0
+	;召喚キャラのカットイン
+	PRINTL
+	CALL CHARA_CUTIN(CSTR:二つ名, CSTR:登場名, CSTR:ローマ字)
+	PRINTL
+	;調教者を召喚した口上
+	CALL KOJO_EVENT(111, LOCAL:1, LOCAL:1)
+	SIF RESULT
+		PRINTL 
+	PRINTFORMW 調教者を「%NAME:TARGET%」に設定します
+	;ご主人様側で許可している場合、調教者として召喚された口上
+	SIF RESULT != 12
+		CALL KOJO_EVENT(112, 1)
+	;ゲージセットアップ
+	CALL BASE_TRAINER_SETUP
+	;すでに取得したボーナスを新しい調教者に適用
+	;CALL BONUS_APPLY
+	RETURN 1
+ENDIF
+RETURN 0
+
+@NEW_TRAINER_T
+DRAWLINE
+PRINTV DAY+1
+PRINT 日目
+IF TIME == 0
+	PRINTL  昼
+ELSE
+	PRINTL  夜
+ENDIF
+SIF TARGET >= 0
+	PRINTFORM %CALLNAME:TARGET%が調教中
+SIF ASSI >= 0
+	PRINTFORM （助手：%CALLNAME:ASSI%）
+PRINTFORML (残り魔力　{CFLAG:魔力})
+
+@NEW_TRAINER_R(ARG)
+;登場フラグが立っていれば表示
+IF FLAG:(ARG + 99) > 0
+	;召喚可能の判定
+	IF CSTR:召喚可能助手 == "" || STRFIND(CSTR:召喚可能助手, @"%CSVNAME(ARG)%/") >= 0
+		RETURN 1
+	ENDIF
+ENDIF
+RETURN 0
+
+;────────────────────────────────────
+;調教者のゲージセットアップ
+;────────────────────────────────────
+@BASE_TRAINER_SETUP
+;調教者の射精/母乳/尿意ゲージをセットアップ
+CALL BASE_SETUP_PENIS(TARGET)
+MAXBASE:母乳 = 0
+MAXBASE:尿意 = 0
+SIF TALENT:母乳体質
+	MAXBASE:母乳 = 10000
+SIF TALENT:おもらし癖
+	MAXBASE:尿意 = 10000
+
+;調教者の理性/興味/苛立ち/満足ゲージをセットアップ
+MAXBASE:理性 = 1000
+MAXBASE:興味 = 1000
+MAXBASE:苛立ち = 1000
+MAXBASE:満足 = 1000
+
+;臆病/気丈
+IF TALENT:臆病
+	MAXBASE:理性 -= 50
+ELSEIF TALENT:気丈
+	MAXBASE:理性 += 50
+ENDIF
+;反抗的/素直
+IF TALENT:反抗的
+	MAXBASE:苛立ち -= 50
+ELSEIF TALENT:素直
+	MAXBASE:苛立ち += 50
+ENDIF
+;大人しい/生意気
+IF TALENT:大人しい
+	MAXBASE:苛立ち -= 50
+ELSEIF TALENT:生意気
+	MAXBASE:苛立ち += 50
+ENDIF
+;プライド高い/プライド低い
+IF TALENT:プライド高い
+	MAXBASE:理性 += 50
+	MAXBASE:苛立ち -= 25
+	MAXBASE:満足 += 25
+ELSEIF TALENT:プライド低い
+	MAXBASE:理性 -= 50
+	MAXBASE:苛立ち += 25
+	MAXBASE:満足 -= 25
+ENDIF
+;感情乏しい/感情豊富な
+IF TALENT:感情乏しい
+	MAXBASE:理性 += 50
+ELSEIF TALENT:情緒豊か
+	MAXBASE:理性 -= 50
+ENDIF
+;自制的/衝動的
+IF TALENT:MASTER:自制的
+	MAXBASE:理性 += 50
+	MAXBASE:苛立ち += 50
+ELSEIF TALENT:衝動的
+	MAXBASE:理性 -= 50
+	MAXBASE:苛立ち -= 50
+ENDIF
+;無関心/好奇心
+IF TALENT:MASTER:無関心
+	MAXBASE:興味 -= 50
+	MAXBASE:満足 -= 50
+ELSEIF TALENT:好奇心
+	MAXBASE:興味 += 50
+	MAXBASE:満足 += 50
+ENDIF
+;目立ちたがり
+IF TALENT:目立ちたがり
+	MAXBASE:苛立ち -= 50
+	MAXBASE:満足 += 50
+ENDIF
+;抑圧/解放
+IF TALENT:MASTER:抑圧
+	MAXBASE:興味 -= 50
+	MAXBASE:満足 -= 50
+ELSEIF TALENT:解放
+	MAXBASE:興味 += 50
+	MAXBASE:満足 += 50
+ENDIF
+;自慰しやすい
+SIF TALENT:自慰しやすい
+	MAXBASE:理性 -= 50
+;倒錯的
+SIF TALENT:倒錯的
+	MAXBASE:理性 -= 50
+;男嫌い
+SIF TALENT:男嫌い && TALENT:MASTER:オトコ
+	MAXBASE:興味 -= 50
+;幼稚
+IF TALENT:幼稚
+	MAXBASE:理性 -= 50
+	MAXBASE:興味 += 25
+	MAXBASE:苛立ち -= 50
+ENDIF
+;狂気
+IF TALENT:狂気
+	MAXBASE:理性 -= 200
+	MAXBASE:苛立ち -= 100
+	MAXBASE:満足 += 200
+ENDIF
+;禁断の知識
+SIF TALENT:禁断の知識
+	MAXBASE:理性 += 100
+
+;極端な数値をギャップ
+SIF MAXBASE:理性 < 500
+	MAXBASE:理性 = 500
+SIF MAXBASE:理性 > 1500
+	MAXBASE:理性 = 1500
+SIF MAXBASE:興味 < 500
+	MAXBASE:興味 = 500
+SIF MAXBASE:興味 > 1500
+	MAXBASE:興味 = 1500
+SIF MAXBASE:苛立ち < 500
+	MAXBASE:苛立ち = 500
+SIF MAXBASE:苛立ち > 1500
+	MAXBASE:苛立ち = 1500
+SIF MAXBASE:満足 < 500
+	MAXBASE:苛立ち = 500
+SIF MAXBASE:満足 > 1500
+	MAXBASE:苛立ち = 1500
+B = 0
+REPEAT CFLAG:調教レベル + 1
+	B += 100 + COUNT * COUNT * 10
+REND
+
+CFLAG:必要経験値 = B
+
+;ゲージを初期化する
+BASE:体力 = MAXBASE:体力
+BASE:気力 = MAXBASE:気力
+BASE:射精 = MAXBASE:射精
+BASE:母乳 = MAXBASE:母乳
+BASE:尿意 = 0
+BASE:理性 = MAXBASE:理性
+BASE:興味 = MAXBASE:興味
+BASE:苛立ち = 0
+BASE:満足 = 0
+
+;ついでに衣装の初期化を呼び出します
+CALL CLOTHES_SETUP(TARGET)
+
+;精力設定関数
+;※現状ペニスを失う度に射精ゲージや精力限界を作りなおしているので、
+;　将来的にMASTERのペニス有無が変化する仕様やTARGETで精力限界を使う仕様にするなら
+;　ペニスがない状態でもこの2つをどこかに保存しておく必要があると思う@これみ
+@BASE_SETUP_PENIS(ARG)
+
+;射精ゲージを設定する
+IF PENIS(ARG)
+	MAXBASE:ARG:射精 = 15000 - 5000 * TALENT:ARG:精力薄弱 + 5000 * TALENT:ARG:精力絶倫
+ELSE
+	MAXBASE:ARG:射精 = 0
+ENDIF
+;精力限界を設定する
+CFLAG:ARG:精力限界 = MAXBASE:ARG:射精 / 500 + 5

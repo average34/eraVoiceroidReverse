@@ -1,0 +1,135 @@
+﻿;────────────────────────────────────
+;ゲージを表示
+;────────────────────────────────────
+;アライメントのバーの色が少しキツイ感がしたので微調整。無駄にボタン化するのを回避。他、微調整@revkoishi(14/05/26)
+@INFO_GAUGE_TRAINER
+#LOCALSSIZE 1
+PRINTFORM %CALLNAME:TARGET% [LV {CFLAG:TARGET:調教レベル}  EXP {CFLAG:TARGET:調教経験}/{CFLAG:TARGET:必要経験値}] が
+PRINTFORML %CALLNAME:MASTER% [LV {CFLAG:MASTER:調教レベル}  EXP {CFLAG:MASTER:調教経験}/{CFLAG:MASTER:必要経験値}] を調教中
+LOCALS = %CALLNAME:TARGET%の状態:[%CONDITION(TCVAR:状態変化)%]\@ FLAG:デバッグ ? %"　"%疲弊[{TFLAG:調教者消耗度}] # \@
+PRINTPLAINFORM %LOCALS,54,LEFT% %CALLNAME:MASTER%の状態:[%CONDITION(TCVAR:MASTER:状態変化)%]\@ FLAG:デバッグ ? %"　"%疲弊[{TFLAG:消耗度}] # \@
+PRINTL 
+
+;好感度表示         //このあたりはもう少しやりようがある感
+IF TALENT:MASTER:読心能力 == 1
+	SELECTCASE CFLAG:好意
+		CASE IS < -100
+			LOCALS = %CALLNAME:MASTER%への好感度：最悪
+		CASE IS < 0
+			LOCALS = %CALLNAME:MASTER%への好感度：とても悪い
+		CASE IS < 200
+			LOCALS = %CALLNAME:MASTER%への好感度：悪い
+		CASE IS < 500
+			LOCALS = %CALLNAME:MASTER%への好感度：普通
+		CASE IS < 1000
+			LOCALS = %CALLNAME:MASTER%への好感度：少し気になる
+		CASE IS < 1500
+			LOCALS = %CALLNAME:MASTER%への好感度：どきどき
+		CASE IS < 2000
+			LOCALS = %CALLNAME:MASTER%への好感度：好き
+		CASE IS < 3000
+			LOCALS = %CALLNAME:MASTER%への好感度：大好き
+		CASE IS < 5000
+			LOCALS = %CALLNAME:MASTER%への好感度：%CALLNAME:MASTER%なしではいられない
+		CASEELSE
+			LOCALS = %CALLNAME:MASTER%への好感度：CAUTION!!限界突破!!CAUTION
+	ENDSELECT
+ELSEIF TALENT:MASTER:読心能力 == 2
+	LOCALS = %CALLNAME:MASTER%への好感度[{CFLAG:TARGET:好意}] 
+ELSE
+	LOCALS =
+ENDIF
+PRINTPLAINFORM %LOCALS,54,LEFT% %CALLNAME:TARGET%への好感度[{CFLAG:TARGET:M好意}]
+PRINTL 
+
+HTML_PRINT HTML_BASE("体力", TARGET, 0) + "　　" + HTML_BASE("体力", MASTER, 0)
+HTML_PRINT HTML_BASE("気力", TARGET, 1) + "　　" + HTML_BASE("気力", MASTER, 1)
+
+LOCALS '= ""
+IF PENIS(TARGET) || PENIS(MASTER)
+	IF PENIS(TARGET)
+		LOCALS += HTML_BASE("射精", TARGET, 2)
+	ELSE
+		LOCALS += "　　　　　　　　　　　　　　　　　　　　　　　　　 "
+	ENDIF
+	LOCALS += "　　"
+	SIF PENIS(MASTER)
+		LOCALS += HTML_BASE("射精", MASTER, 2)
+	HTML_PRINT LOCALS
+ENDIF
+
+LOCALS '= ""
+IF TALENT:TARGET:母乳体質 || TALENT:MASTER:母乳体質
+	IF TALENT:TARGET:母乳体質
+		LOCALS += HTML_BASE("母乳", TARGET, 3)
+	ELSE
+		LOCALS += ""
+	ENDIF
+	LOCALS += "　　"
+	SIF TALENT:MASTER:母乳体質
+		LOCALS += HTML_BASE("母乳", MASTER, 3)
+	HTML_PRINT LOCALS
+ENDIF
+SIF TALENT:MASTER:おもらし癖
+	HTML_PRINT "　　　　　　　　　　　　　　　　　　　　　　　　　　　 " + HTML_BASE("尿意", MASTER, 4)
+
+IF PENIS(MASTER)
+	{
+	HTML_PRINT 
+	 "　　　　　　　　　　　　　　　　　　　　　　　　　　　 勃起"
+	+ LAYER_RECTBAR(TCVAR:MASTER:勃起度, MAX(TCVAR:MASTER:勃起度, 1000), 16, 0xC070C0, 0x502050, , , 30)
+	+ @"({TCVAR:MASTER:勃起度,5}/ 1000)　"
+	}
+ENDIF
+
+SELECTCASE TALENT:MASTER:読心能力
+	CASE 1
+		HTML_PRINT @"理性[%TENSION(TARGET, 5)%]" + "　　　　　　　　　　　　　　　　　　　　　　 " + HTML_BASE("理性", MASTER, 5)
+		LOCALS += @"興味[%TENSION(TARGET, 6)%]："
+		LOCALS += @"苛立[%TENSION(TARGET, 7)%]："
+		LOCALS += @"満足[%TENSION(TARGET, 8)%]"
+		HTML_PRINT LOCALS
+	CASE 2
+		HTML_PRINT HTML_BASE("理性", TARGET, 5, 32, 1) + "　　" + HTML_BASE("理性", MASTER, 5)
+		LOCALS '= ""
+		HTML_PRINT HTML_BASE("興味", TARGET, 6, 32, 1)
+		HTML_PRINT HTML_BASE("苛立", TARGET, 7, 32, 1)
+		HTML_PRINT HTML_BASE("満足", TARGET, 8, 32, 1)
+		PRINTFORM 罪悪感[{CFLAG:TARGET:罪悪感}]　アライメント
+		HTML_PRINT LOCALS
+		LOCAL = GETCOLOR()
+		SETCOLOR CFLAG:TARGET:アライメント >= 0 ? 0x0041FF # 0xFF2800
+		BAR CFLAG:TARGET:アライメント + 100, 199, 32
+		SETCOLOR LOCAL
+		PRINTPLAINFORM [{CFLAG:TARGET:アライメント}]
+		PRINTL 
+	CASEELSE
+		LOCALS += "　　　　　　　　　　　　　　　　　　　　　　　　　　　 " + HTML_BASE("理性", MASTER, 5)
+		HTML_PRINT LOCALS
+ENDSELECT
+;────────────────────────────────────
+;助手のゲージを表示
+;────────────────────────────────────
+;@INFO_GAUGE_ASSI
+;助手関連の処理は今回見送り
+;IF ASSIPLAY
+;	IF TALENT:ASSI:ふたなり || TALENT:ASSI:オトコ
+;		PRINT 射精（助手）
+;		BAR BASE:ASSI:2,MAXBASE:ASSI:2,32
+;		PRINTFORML ({BASE:ASSI:2}/{MAXBASE:ASSI:2})
+;	ENDIF
+;ENDIF
+
+
+;────────────────────────────────────
+;触手のゲージを表示
+;────────────────────────────────────
+;@INFO_GAUGE_TENTACLE
+;触手関連の処理も今回見送り
+;IF TEQUIP:触手調教中
+;	SIF MAXBASE:MASTER:尿意 == 0
+;		MAXBASE:MASTER:尿意 == 10000
+;	PRINT 射精（触手）
+;	BAR BASE:MASTER:4,MAXBASE:MASTER:4,32
+;	PRINTFORML ({BASE:MASTER:4}/{MAXBASE:MASTER:4})
+;ENDIF

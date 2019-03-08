@@ -1,0 +1,68 @@
+﻿;-------------------------------------------------
+;FPRINT系関数
+;-------------------------------------------------
+;・基本的なモノが無いと体系的にどうかと思ったので後付けで
+;・Fは関数(FUNCTION)のF。普通のFじゃないよ…たぶん
+;・SETFONT命令相当の引数を設ける気は無いらしい。私がまず使わないので
+;・慣れるとHTMLPRINTの方が便利。使い方は大体一緒。タグも使えるし
+;・とりあえずHTMLPRINTよりは処理が軽いと思われるので使い分けも可
+;-------------------------------------------------
+
+;-------------------------------------------------
+;関数名:FPRINT(|D)(|L|W)
+;概　要:普通のPRINT関数
+;引　数:ARGS:0…表示文字列。FORM文字列を渡す場合は""の前に@を付けてください
+;　　　 ARG:0 …[省略可]文字の表示色。省略した場合はSETCOLORの指定そのまま
+;　　　         ※キーワード"D"を使用した場合はARG:0を指定することは出来ません
+;　　　 ARGS:1…[省略可]文字列の表示位置。(LEFT/左/CENTER/中央/RIGHT/右)のいずれかを指定可
+;　　　         省略した場合は、ALIGNMENTの指定そのまま。大文字小文字の区別はしません
+;　　　         ※キーワード"L""W"を使用しない場合はARGS:1を指定することは出来ません
+;戻り値:なし(多分RESULT保護)
+;CALLで呼び出して使うPRINT命令のようなもの
+;その中でも基本的な部類。色指定機能と表示位置指定機能だけ存在する
+;ただし、キーワードにより一部機能が使えない関数もあるので注意
+;口上を書く際、基本は通常通りPRINTFORM(|D)(|L|W)を使って、
+;この関数は口上中に3人目のキャラ(助手等)を登場させる場合などに用いるとよい
+;(とりあえずは色を変えるのに使う。右寄せまでするかどうかは任意)
+;-------------------------------------------------
+;例1)次の2行の表示結果は等しい(但し、前者の方が処理は早い…といっても口上内で急ぐこともないけど)
+;PRINTFORMW 「おはようございます、%CALLNAME:MASTER%」
+;CALL FPRINTW(@"「おはようございます、%CALLNAME:MASTER%」")
+;-------------------------------------------------
+;例2)助手の台詞を捏造するケース
+;CALL FPRINTW("「おはようございま…せん」", 0xCCFFCC, "RIGHT")
+;-------------------------------------------------
+@FPRINT(ARGS:0, ARG:0 = -1)
+#LOCALSIZE 1
+LOCAL:0 = GETCOLOR()
+SETCOLOR ARG:0 < 0 ? LOCAL:0 # (ARG:0 & 0xFFFFFF)
+PRINTS ARGS:0
+SETCOLOR LOCAL:0
+RETURN RESULT
+
+@FPRINTL(ARGS:0, ARG:0 = -1, ARGS:1)
+#LOCALSSIZE 1
+LOCALS:0 = %CURRENTALIGN()%
+CALL ALIGNMENTS(ARGS:1)
+CALL FPRINT(ARGS:0, ARG:0)
+PRINTL 
+CALL ALIGNMENTS(LOCALS:0)
+RETURN RESULT
+
+@FPRINTW(ARGS:0, ARG:0 = -1, ARGS:1)
+CALL FPRINTL(ARGS:0, ARG:0, ARGS:1)
+WAIT
+RETURN RESULT
+
+@FPRINTD(ARGS:0)
+CALL FPRINT(ARGS:0, GETDEFCOLOR())
+RETURN RESULT
+
+@FPRINTDL(ARGS:0, ARGS:1)
+CALL FPRINTL(ARGS:0, GETDEFCOLOR(), ARGS:1)
+RETURN RESULT
+
+@FPRINTDW(ARGS:0, ARGS:1)
+CALL FPRINTL(ARGS:0, GETDEFCOLOR(), ARGS:1)
+WAIT
+RETURN RESULT

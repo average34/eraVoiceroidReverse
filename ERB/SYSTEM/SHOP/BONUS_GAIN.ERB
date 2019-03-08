@@ -1,0 +1,1013 @@
+﻿;────────────────────────────────────
+;ボーナス取得のメニュー。ボーナスの種類と必要ポイントは仮の設定です
+;────────────────────────────────────
+@BONUS_GAIN
+#DIM DAYONCE = -1
+
+#DIM LINE_WIDTH
+#DIM ITEM_LIST, 4, 10
+#DIM ITEM_SIZE, 4
+#DIM TALENT_LIST, 8, 15
+#DIM TALENT_SIZE, 8
+#DIM CONST TALENT_TBL = 52, 55, 57, 58, 59, 64, 66, 83, 91, 108, 109, 121, 130, 135, 140
+
+VARSET LOCAL
+VARSET ITEM_LIST
+VARSET ITEM_SIZE
+VARSET TALENT_LIST
+VARSET TALENT_SIZE
+
+DRAWLINE
+PRINTFORML %CALLNAME:MASTER%を%CALLNAME:TARGET%が調教中
+SIF ASSI:1 >= 0
+	PRINTFORML 　(助手１：%CALLNAME:(ASSI:1)%)　\@ ASSI:2 >= 0 ? (助手２：%CALLNAME:(ASSI:2)%) # \@
+PRINTFORML [LV {CFLAG:TARGET:0}　EXP {CFLAG:TARGET:1}/{CFLAG:TARGET:4}　NEXT {CFLAG:TARGET:4-CFLAG:TARGET:1}]
+PRINTFORML (残り魔力 {CFLAG:魔力})
+
+;────────────────────────────────────
+;これまで取得したボーナスの表示
+;処理がほぼSQRのままで、表示情報が不足していたので処理変更。微調整@revkoishi(14/05/26)
+LINE_WIDTH = WIDTH()
+
+;追加調教者
+PRINTFORM \@ FLAG:追加調教者数 ? 追加された調教者：{FLAG:11,2}人\n # \@
+
+;道具。基本的な処理はステータスの素質分類表示と同じです
+;似通った処理なのでもう少し頭使えば関数化できそうな気もするけど、今ならもっと賢いやり方があるかも
+FOR LOCAL:0, 0, 50	;分類ループ
+	SIF ITEM:(LOCAL:0)
+		ITEM_LIST:ITEM_TYPE(LOCAL:0):(ITEM_SIZE:ITEM_TYPE(LOCAL:0)++) = LOCAL:0
+NEXT
+IF VARSIZE("ITEM_SIZE") - MATCH(ITEM_SIZE, 0)
+	PRINTFORML -- □ 取得した道具 □ \@ ITEM:カスタム道具 ? (性具カスタマイズ済) %"-" * (LINE_WIDTH - 43)% # %"-" * (LINE_WIDTH - 22)% \@
+	FOR LOCAL:0, 1, 4
+		IF ITEM_SIZE:(LOCAL:0)	;その分類の道具が無ければ飛ばす
+			;道具分類名を表示
+			PRINTFORM %ITEM_TYPENAME(LOCAL:0), 8, RIGHT%：
+			LOCAL:2 = 10	;桁位置(↑表示後の位置)
+			FOR LOCAL:1, 0, ITEM_SIZE:(LOCAL:0)	;その分類の道具所持数分ループ
+				;道具名を取得([道具名] )
+				LOCALS:0 = [%GET_ITEMNAME(ITEM_LIST:(LOCAL:0):(LOCAL:1))%]%" "%
+				LOCAL:3 = STRLENS(LOCALS:0)	;↑の文字数(道具名+[]+スペース)
+				LOCAL:2 += LOCAL:3			;桁位置加算
+				IF LOCAL:2 > LINE_WIDTH		;このまま表示すると途中改行されそうな場合は改行処理を行う
+					;改行処理(折り返し、行頭インデント、桁位置再計算)
+					PRINTFORM \n          
+					LOCAL:2 = 10 + LOCAL:3
+				ENDIF
+				;道具名の表示
+				IF GROUPMATCH(ITEM_LIST:(LOCAL:0):(LOCAL:1), 1, 11, 12, 13, 14) && ITEM:カスタム道具
+					CALL PRINT_RAINBOW(LOCALS:0, , , RAND:12)
+				ELSE
+					PRINTS LOCALS:0
+				ENDIF
+			NEXT
+			PRINTL 
+		ENDIF
+	NEXT
+ENDIF
+
+;素質の表示。上と大体同じ…だったのだけれどちょっと魔が差した
+FOR LOCAL:0, 0, VARSIZE("TALENT_TBL")
+	SIF (TALENT:TARGET:(TALENT_TBL:(LOCAL:0)) ^^ CSVTALENT(NO:TARGET, TALENT_TBL:(LOCAL:0))) && TALENT_TYPE(TALENT_TBL:(LOCAL:0))
+		TALENT_LIST:TALENT_TYPE(TALENT_TBL:(LOCAL:0)):(TALENT_SIZE:TALENT_TYPE(TALENT_TBL:(LOCAL:0))++) = TALENT_TBL:(LOCAL:0)
+NEXT
+IF VARSIZE("TALENT_SIZE") - MATCH(TALENT_SIZE, 0)
+	LOCAL:4 = GETCOLOR()	;現在の表示色を保持
+{
+	CALL HTMLPRINTL("-- □ 変動した素質 □ (凡例：" + HTMLFONT("[<I> 取得素質 </I>] ", , 0x60FFFF) + 
+                    HTMLFONT("[<I> 消去素質 </I>]", , 0x606060) + @") %"-" * (LINE_WIDTH - 56)%")
+}
+	IF FLAG:素質表示方法	;素質分類表示。ここでやる意味があるのかどうか…とりあえずユーザフレンドリ重点(謎)
+		FOR LOCAL:0, 1, 8
+			IF TALENT_SIZE:(LOCAL:0)
+				PRINTFORM %TALENT_TYPENAME(LOCAL:0), 8, RIGHT%：
+				LOCAL:2 = 10
+				FOR LOCAL:1, 0, TALENT_SIZE:(LOCAL:0)
+					LOCALS:0 = [%GET_TALENTNAME(TARGET, TALENT_LIST:(LOCAL:0):(LOCAL:1))%]%" "%
+					LOCAL:3 = STRLENS(LOCALS:0)
+					LOCAL:2 += LOCAL:3
+					IF LOCAL:2 > LINE_WIDTH
+						PRINTFORM \n          
+						LOCAL:2 = 10 + LOCAL:3
+					ENDIF
+					SETCOLOR TALENT:TARGET:(TALENT_LIST:(LOCAL:0):(LOCAL:1)) ? 0x60FFFF # 0x606060
+					PRINTS LOCALS:0
+					SETCOLOR LOCAL:4
+				NEXT
+				PRINTL 
+			ENDIF
+		NEXT
+	ELSE					;素質番号順表示
+		LOCAL:2 = 0
+		FOR LOCAL:0, 0, VARSIZE("TALENT_TBL")
+			IF (TALENT:TARGET:(TALENT_TBL:(LOCAL:0)) ^^ CSVTALENT(NO:TARGET, TALENT_TBL:(LOCAL:0))) && TALENT_TYPE(TALENT_TBL:(LOCAL:0))
+				LOCALS:0 = [%GET_TALENTNAME(TARGET, TALENT_TBL:(LOCAL:0))%]%" "%
+				LOCAL:3 = STRLENS(LOCALS:0)
+				LOCAL:2 += LOCAL:3
+				IF LOCAL:2 > LINE_WIDTH
+					PRINTL 
+					LOCAL:2 = LOCAL:3
+				ENDIF
+				SETCOLOR TALENT:TARGET:(TALENT_TBL:(LOCAL:0)) ? 0x60FFFF # 0x606060
+				PRINTS LOCALS:0
+				SETCOLOR LOCAL:4
+			ENDIF
+		NEXT
+		PRINTL 
+	ENDIF
+ENDIF
+
+;────────────────────────────────────
+;ボーナスメニューの表示
+;名前の余白分
+LOCAL = MAX(8 - STRLENSU(CALLNAME:TARGET), 0)
+DRAWLINE
+
+;一日一回のみ表示
+IF DAYONCE != DAY
+	;イベント口上：魔力使用前
+	CALL KOJO_EVENT(110, 0)
+	CALL VOIDLINE_IF(RESULT)
+	DAYONCE = DAY
+ENDIF
+
+PRINTFORML %CALLNAME:TARGET%は、%CALLNAME:MASTER%から精製した魔力を使って…
+PRINTL [ 0] もういい
+;召喚はご主人様限定
+SIF TALENT:ご主人様
+	PRINTFORML [ 1] 新しい調教者を召喚する　　　　　　　　　　　　 魔力1000
+SELECTCASE ABL:技巧
+	CASE 0
+		PRINTFORML [ 2] 調教技巧の才能を開花させる　　　　　　　　　　 魔力{RIZE_ABL_V(0), 4}
+	CASE IS >= 99
+		PRINTFORML [--] 調教技巧はすでに最高だ
+	CASEELSE
+		PRINTFORML [ 2] 調教技巧を高める　　　　　　　　　　　　　　　 魔力{RIZE_ABL_V(0), 4} 要LV{RIZE_ABL_V(1)}
+	;試験的に魔力で買える技巧上限をなくしてみる
+	;世の中魔力だよ
+	;PRINTFORML [--] 調教技巧は実践で高めるしかないだろう
+ENDSELECT
+PRINTL [ 3] 知識を習得する
+PRINTL [ 4] 技能を取得する
+IF FLAG:モード != 1 || FLAG:デバッグ || !(FLAG:AI自由度&1)
+	PRINTL [ 5] 外界の性具を錬成する
+	PRINTL [ 6] 責め具を錬成する
+ENDIF
+PRINTFORML \@ ITEM:9 ? [--] 道具は既にカスタマイズされている # [10] 道具をカスタマイズする　　　　　　　　　　　　 魔力3000  要[%TALENTNAME:59%] \@
+SIF !TALENT:オトコ
+	PRINTFORML [11] \@ TALENT:ふたなり ? 両性化を元に戻す　 # 両性化の儀式をする \@　　　　　　　　　　　　　　 魔力7000
+SIF !TALENT:オトコ
+	PRINTFORML \@ TALENT:巨乳 ? [12] これ以上胸は大きくできない # [12] 豊胸の儀式をする　　　　　 \@　　　　　　　　　　 魔力5000
+SIF !TALENT:オトコ
+	PRINTFORML \@ TALENT:貧乳 ? [13] これ以上胸は小さくできない # [13] 縮胸の儀式をする　　　　　 \@　　　　　　　　　　 魔力1000
+SIF TALENT:MASTER:オトコ || TALENT:MASTER:ふたなり
+	PRINTFORML \@ MAXBASE:MASTER:射精 < 2500 + CFLAG:MASTER:精力限界 * 500 ? [--] 奴隷の精力は鍛えればまだ伸ばせそうだ # [16] 奴隷の精力の限界を上げる　　　　　　　　　　　 魔力{(MAXBASE:MASTER:射精 - 2500 - CFLAG:MASTER:精力限界 * 500) / 500 * 1000 + 1000} \@
+DRAWLINE
+
+;────────────────────────────────────
+;入力処理
+$INPUT_LOOP
+INPUT
+SELECTCASE RESULT
+	CASE 0
+		RETURN 0
+	CASE 1
+		SIF !TALENT:ご主人様
+			GOTO FAILED
+		IF CFLAG:魔力 < 1000
+			$FAILED_BY_MP
+			CLEARLINE 1
+			REUSELASTLINE 魔力が足りないようだ…
+			GOTO INPUT_LOOP
+		ENDIF
+		CALL NEW_TRAINER
+		SIF RESULT
+			RETURN 0
+	CASE 2
+		;技巧上昇に挑戦
+		CALL RIZE_ABL
+		LOCAL = RESULT:1
+		SELECTCASE RESULT
+			;成功時
+			CASE 0
+				CALL PRINT_DIALOG(@"%CALLNAME:TARGET%の調教技巧を<{ABL:技巧+1}>に上げてよろしいですか？",1,1,1)
+				CALL PRINT_CHOICE(,"はい",1,"いいえ",2,)
+				IF RESULT == 1
+					;魔力を消費
+					CFLAG:魔力 -= LOCAL
+					;技巧を上昇
+					ABL:技巧++
+					;イベント口上：調教技巧アップ
+					CALL KOJO_EVENT(110, 1)
+					CALL VOIDLINE_IF(RESULT)
+					;地の文表示
+					PRINTFORMW %CALLNAME:TARGET%の調教技巧は<{ABL:技巧}>になりました
+				ENDIF
+			;魔力不足時
+			CASE 1
+				REUSELASTLINE 魔力が足りないようだ…(魔力{LOCAL}が必要)
+				GOTO INPUT_LOOP
+			;調教レベル不足時
+			CASE 2
+				REUSELASTLINE 技巧を上げるには、もう少し経験を積む必要があるだろう…(調教LV{RIZE_ABL_V(1)}が必要)
+				GOTO INPUT_LOOP
+			;技巧上限時
+			CASE 3
+				REUSELASTLINE これ以上技巧は上げられない
+				GOTO INPUT_LOOP
+			;その他の問題
+			CASEELSE
+				$FAILED
+				CLEARLINE 1
+				GOTO INPUT_LOOP
+		ENDSELECT
+	CASE 3
+		;イベント口上：知識を得る前
+		CALL KOJO_EVENT(110, 2)
+		PRINTFORML %CALLNAME%は魔力を使って新たな知識を得ることにした…
+		PRINTL [ 0] - やめる
+		PRINTFORML \@ TALENT:調合知識   ? [--] [調合知識]を持っています           # [ 1] 薬品の[調合知識]を習得　　　　　　　　　　　　 魔力{GAIN_TALENT_V("調合知識"  , 0), 5} 要LV{GAIN_TALENT_V("調合知識"  , 1)} \@
+		PRINTFORML \@ TALENT:魅惑       ? [--] [魅惑]を持っています               # [ 2] [魅惑]能力の会得　　　　　　　　　　　　　　　 魔力{GAIN_TALENT_V("魅惑"      , 0), 5} 要LV{GAIN_TALENT_V("魅惑"      , 1)} \@
+		PRINTFORML \@ TALENT:禁断の知識 ? [--] [禁断の知識]を持っています         # [ 3] [禁断の知識]に手を染める　　　　　　　　　　　 魔力{GAIN_TALENT_V("禁断の知識", 0), 5} 要LV{GAIN_TALENT_V("禁断の知識", 1)} \@
+		PRINTFORML \@ TALENT:道具使い   ? [--] [道具使い]を持っています           # [ 4] [道具使い]の知識を習得　　　　　　　　　　　　 魔力{GAIN_TALENT_V("道具使い"  , 0), 5} 要LV{GAIN_TALENT_V("道具使い"  , 1)} \@
+		PRINTFORML \@ TALENT:撮影技能   ? [--] [撮影技能]を持っています           # [ 5] 写真の[撮影技能]を習得　　　　　　　　　　　　 魔力{GAIN_TALENT_V("撮影技能"  , 0), 5} 要LV{GAIN_TALENT_V("撮影技能"  , 1)} \@
+		$INPUT_LOOP_SKILL
+		INPUT
+		SELECTCASE RESULT
+			CASE 0
+				RESTART
+			CASE 1 TO 5
+				IF 0
+				ELSEIF RESULT == 1
+					LOCALS:0 = 調合知識
+					LOCALS:1 = 薬を正しく扱うには、もう少し経験を積む必要があるだろう…
+					LOCAL = 3
+				ELSEIF RESULT == 2
+					LOCALS:0 = 魅惑
+					LOCALS:1 = 魅惑の能力を得るには、もう少し経験を積む必要があるだろう…
+					LOCAL = 4
+				ELSEIF RESULT == 3
+					LOCALS:0 = 禁断の知識
+					LOCALS:1 = 禁断の知識を紐解くには、もう少し経験を積む必要があるだろう…
+					LOCAL = 5
+				ELSEIF RESULT == 4
+					LOCALS:0 = 道具使い
+					LOCALS:1 = 外界の性具を巧く使うには、まだ経験が足りないようだ…
+					LOCAL = 6
+				ELSEIF RESULT == 5
+					LOCALS:0 = 撮影技能
+					LOCALS:1 = カメラを巧く使うには、もう少し経験を積む必要があるだろう…
+					LOCAL = 37
+				ENDIF
+				IF TALENT:LOCALS
+					CLEARLINE 1
+					GOTO INPUT_LOOP_SKILL
+				ENDIF
+				;技能取得に挑戦
+				CALL GAIN_TALENT(LOCALS)
+				LOCAL:1 = RESULT:1
+				SELECTCASE RESULT
+					;成功時
+					CASE 0
+						CALL PRINT_DIALOG(@"%CALLNAME:TARGET%が素質[%LOCALS%]を取得します。よろしいですか？",1,1,1)
+						CALL PRINT_CHOICE(,"はい",1,"いいえ",2,)
+						IF RESULT == 1
+							;魔力を消費
+							CFLAG:魔力 -= LOCAL:1
+							;技能を取得
+							TALENT:LOCALS ^= 1
+							;イベント口上：知識取得
+							CALL KOJO_EVENT(110, LOCAL)
+							CALL VOIDLINE_IF(RESULT)
+							;地の文表示
+							PRINTFORMW %CALLNAME%は[%LOCALS%]を取得しました
+						ENDIF
+					;魔力不足時
+					CASE 1
+						CLEARLINE 1
+						REUSELASTLINE 魔力が足りないようだ…(魔力{LOCAL:1}が必要)
+						GOTO INPUT_LOOP_SKILL
+					;調教レベル不足時
+					CASE 2
+						CLEARLINE 1
+						REUSELASTLINE %LOCALS:1%(調教LV{GAIN_TALENT_V(LOCALS, 1)}が必要)
+						GOTO INPUT_LOOP_SKILL
+					;その他の問題
+					CASEELSE
+						CLEARLINE 1
+						GOTO INPUT_LOOP_SKILL
+				ENDSELECT
+			CASEELSE
+				CLEARLINE 1
+				GOTO INPUT_LOOP_SKILL
+		ENDSELECT
+	CASE 4
+		;イベント口上：技術を得る前
+		CALL KOJO_EVENT(110, 7)
+		PRINTFORML %CALLNAME%は魔力を使って新たな技術を得ることにした…
+		PRINTL [ 0] - やめる
+		PRINTFORML \@ TALENT:舌使い          ? %"[--] [舌使い]を持っています"    , 51, LEFT% # %"[ 1] [舌使い]を特に巧みに"      , 51, LEFT   % 魔力{GAIN_TALENT_V("舌使い"        , 0), 5} 要LV{GAIN_TALENT_V("舌使い"        , 1)} \@
+		PRINTFORML \@ TALENT:器用な指先      ? %"[--] [器用な指先]を持っています", 51, LEFT% # %"[ 2] [器用な指先]を会得"        , 51, LEFT   % 魔力{GAIN_TALENT_V("器用な指先"    , 0), 5} 要LV{GAIN_TALENT_V("器用な指先"    , 1)} \@
+		PRINTFORML \@ TALENT:腰使い          ? %"[--] [腰使い]を持っています    ", 51, LEFT% # %"[ 3] [腰使い]をより厭らしく"    , 51, LEFT   % 魔力{GAIN_TALENT_V("腰使い"        , 0), 5} 要LV{GAIN_TALENT_V("腰使い"        , 1)} \@
+		PRINTFORML \@ TALENT:縛り上手        ? %"[--] [縛り上手]を持っています"  , 51, LEFT% # %"[ 4] [縛り上手]に手を染める"    , 51, LEFT   % 魔力{GAIN_TALENT_V("縛り上手"      , 0), 5} 要LV{GAIN_TALENT_V("縛り上手"      , 1)} \@
+		PRINTFORML \@ TALENT:サド            ? %"[ 5] [サド]の道から足を洗う"    , 51, LEFT% # %"[ 5] [サド]の悦びを知る"        , 51, LEFT% \@ 魔力{GAIN_TALENT_V("サド"          , 0), 5} 要LV{GAIN_TALENT_V("サド"          , 1)}
+		PRINTFORML \@ TALENT:着衣プレイ好き  ? %"[ 6] [着衣プレイ好き]をやめる"  , 51, LEFT% # %"[ 6] [着衣プレイ好き]に目覚める", 51, LEFT% \@ 魔力{GAIN_TALENT_V("着衣プレイ好き", 0), 5} 要LV{GAIN_TALENT_V("着衣プレイ好き", 1)}
+		PRINTFORML \@ TALENT:汚れ無視        ? %"[--] [汚れ無視]を持っています"  , 51, LEFT% # %"[ 7] [汚れ無視]が出来るように"  , 51, LEFT   % 魔力{GAIN_TALENT_V("汚れ無視"      , 0), 5} 要LV{GAIN_TALENT_V("汚れ無視"      , 1)} \@
+		$INPUT_LOOP_SKILL2
+		INPUT
+		SELECTCASE RESULT
+			CASE 0
+				RESTART
+			CASE 1 TO 7
+				IF 0
+				ELSEIF RESULT == 1
+					LOCALS:0 = 舌使い
+					LOCALS:1 = 人外の舌使いに至るには、まだ経験が足りないようだ…
+					LOCAL = 8
+				ELSEIF RESULT == 2
+					LOCALS:0 = 器用な指先
+					LOCALS:1 = 指先を繊細に使うには、まだ経験が足りないようだ…
+					LOCAL = 9
+				ELSEIF RESULT == 3
+					LOCALS:0 = 腰使い
+					LOCALS:1 = 腰使いを極めるには、まだ経験が足りないようだ…
+					LOCAL = 39
+				ELSEIF RESULT == 4
+					LOCALS:0 = 縛り上手
+					LOCALS:1 = 拘束術の極意に至るには、まだ経験が足りないようだ…
+					LOCAL = 10
+				ELSEIF RESULT == 5
+					LOCALS:0 = サド
+					IF TALENT:サド
+						LOCALS:1 = 加虐趣味をやめるにしても、まだ少々遊び足りない…
+					ELSE
+						LOCALS:1 = サディストとなるには、もっと虐げる悦びを知る必要があるだろう…
+					ENDIF
+					LOCAL = 11
+				ELSEIF RESULT == 6
+					LOCALS:0 = 着衣プレイ好き
+					IF TALENT:着衣プレイ好き
+						LOCALS:1 = 着衣プレイをやめるにも、少し物足りない気がする…
+					ELSE
+						LOCALS:1 = 着衣プレイに走る前に、通常の行為をもっと重ねたほうが良いだろう…
+					ENDIF
+					LOCAL = 38
+				ELSEIF RESULT == 7
+					LOCALS:0 = 汚れ無視
+					LOCALS:1 = 汚れを無視できるようになるには、もっと行為に慣れなくてはいけないだろう…
+					LOCAL = 12
+				ENDIF
+				IF TALENT:LOCALS && LOCALS != "サド" && LOCALS != "着衣プレイ好き"
+					CLEARLINE 1
+					GOTO INPUT_LOOP_SKILL2
+				ENDIF
+				;技能取得に挑戦
+				CALL GAIN_TALENT(LOCALS)
+				LOCAL:1 = RESULT:1
+				SELECTCASE RESULT
+					;成功時
+					CASE 0
+						IF TALENT:LOCALS
+							CALL PRINT_DIALOG(@"%CALLNAME:TARGET%の素質[%LOCALS%]を消去します。よろしいですか？",1,1,1)
+						ELSE
+							CALL PRINT_DIALOG(@"%CALLNAME:TARGET%が素質[%LOCALS%]を取得します。よろしいですか？",1,1,1)
+						ENDIF
+						CALL PRINT_CHOICE(,"はい",1,"いいえ",2,)
+						IF RESULT == 1
+							;魔力を消費
+							CFLAG:魔力 -= LOCAL:1
+							;技能を取得
+							TALENT:LOCALS ^= 1
+							;イベント口上：技能取得
+							CALL KOJO_EVENT(110, LOCAL)
+							CALL VOIDLINE_IF(RESULT)
+							;地の文表示
+							IF !TALENT:LOCALS
+								PRINTFORMW %CALLNAME%は[%LOCALS%]ではなくなりました
+							ELSE
+								PRINTFORMW %CALLNAME%は[%LOCALS%]を取得しました
+							ENDIF
+						ENDIF
+					;魔力不足時
+					CASE 1
+						CLEARLINE 1
+						REUSELASTLINE 魔力が足りないようだ…(魔力{LOCAL:1}が必要)
+						GOTO INPUT_LOOP_SKILL2
+					;調教レベル不足時
+					CASE 2
+						CLEARLINE 1
+						REUSELASTLINE %LOCALS:1%(調教LV{GAIN_TALENT_V(LOCALS, 1)}が必要)
+						GOTO INPUT_LOOP_SKILL2
+					;その他の問題
+					CASEELSE
+						CLEARLINE 1
+						GOTO INPUT_LOOP_SKILL2
+				ENDSELECT
+			CASEELSE
+				CLEARLINE 1
+				GOTO INPUT_LOOP_SKILL2
+		ENDSELECT
+	CASE 5
+		;イベント口上：アイテム錬成前
+		CALL KOJO_EVENT(110, 13)
+		PRINTFORML %CALLNAME%は魔力を使って外界の性具を創ることにした…
+		PRINTL [ 0] - やめる
+		PRINTFORML \@ ITEM:0  ? [--] ローターを持っています             # [ 1] ローター　　　　　　　　　　　　　　　　　　　 魔力200 \@
+		PRINTFORML \@ ITEM:1  ? [--] バイブを持っています               # [ 2] バイブ　　　　　　　　　　　　　　　　　　　　 魔力500 \@
+		PRINTFORML \@ ITEM:2  ? [--] アナルビーズを持っています         # [ 3] アナルビーズ　　　　　　　　　　　　　　　　　 魔力300 \@
+		PRINTFORML \@ ITEM:3  ? [--] ペニスバンドを持っています         # [ 4] ペニスバンド　　　　　　　　　　　　　　　　　 魔力500 \@
+		PRINTFORML \@ ITEM:11 ? [--] アナルバイブを持っています         # [ 5] アナルバイブ　　　　　　　　　　　　　　　　　 魔力1000 \@
+		PRINTFORML \@ ITEM:12 ? [--] クリキャップを持っています         # [ 6] クリキャップ　　　　　　　　　　　　　　　　　 魔力600 \@
+		PRINTFORML \@ ITEM:13 ? [--] ニプルキャップを持っています       # [ 7] ニプルキャップ　　　　　　　　　　　　　　　　 魔力600 \@
+		PRINTFORML \@ ITEM:14 ? [--] オナホールを持っています           # [ 8] オナホール　　　　　　　　　　　　　　　　　　 魔力600 \@
+		$INPUT_LOOP_ITEM1
+		INPUT
+		SELECTCASE RESULT
+			CASE 0
+				RESTART
+			CASE 1
+				IF ITEM:0
+					CLEARLINE 1
+					GOTO INPUT_LOOP_ITEM1
+				ELSEIF CFLAG:魔力 < 200
+					CLEARLINE 1
+					REUSELASTLINE 魔力が足りないようだ…
+					GOTO INPUT_LOOP_ITEM1
+				ENDIF
+				CALL PRINT_DIALOG(@"「ローター」を錬成します。よろしいですか？",1,1,1)
+				CALL PRINT_CHOICE(,"はい",1,"いいえ",2,)
+				IF RESULT == 1
+					CFLAG:魔力 -= 200
+					ITEM:0 = 1
+					CALL KOJO_EVENT(110, 14)
+					CALL VOIDLINE_IF(RESULT)
+					PRINTFORMW %CALLNAME%はローターを錬成しました
+				ENDIF
+			CASE 2
+				IF ITEM:1
+					CLEARLINE 1
+					GOTO INPUT_LOOP_ITEM1
+				ELSEIF CFLAG:魔力 < 500
+					CLEARLINE 1
+					REUSELASTLINE 魔力が足りないようだ…
+					GOTO INPUT_LOOP_ITEM1
+				ENDIF
+				CALL PRINT_DIALOG(@"「バイブ」を錬成します。よろしいですか？",1,1,1)
+				CALL PRINT_CHOICE(,"はい",1,"いいえ",2,)
+				IF RESULT == 1
+					CFLAG:魔力 -= 500
+					ITEM:1 = 1
+					CALL KOJO_EVENT(110, 15)
+					CALL VOIDLINE_IF(RESULT)
+					PRINTFORMW %CALLNAME%はバイブを錬成しました
+				ENDIF
+			CASE 3
+				IF ITEM:2
+					CLEARLINE 1
+					GOTO INPUT_LOOP_ITEM1
+				ELSEIF CFLAG:魔力 < 300
+					CLEARLINE 1
+					REUSELASTLINE 魔力が足りないようだ…
+					GOTO INPUT_LOOP_ITEM1
+				ENDIF
+				CALL PRINT_DIALOG(@"「アナルビーズ」を錬成します。よろしいですか？",1,1,1)
+				CALL PRINT_CHOICE(,"はい",1,"いいえ",2,)
+				IF RESULT == 1
+					CFLAG:魔力 -= 300
+					ITEM:2 = 1
+					CALL KOJO_EVENT(110, 16)
+					CALL VOIDLINE_IF(RESULT)
+					PRINTFORMW %CALLNAME%はアナルビーズを錬成しました
+				ENDIF
+			CASE 4
+				IF ITEM:3
+					CLEARLINE 1
+					GOTO INPUT_LOOP_ITEM1
+				ELSEIF CFLAG:魔力 < 500
+					CLEARLINE 1
+					REUSELASTLINE 魔力が足りないようだ…
+					GOTO INPUT_LOOP_ITEM1
+				ENDIF
+				CALL PRINT_DIALOG(@"「ペニスバンド」を錬成します。よろしいですか？",1,1,1)
+				CALL PRINT_CHOICE(,"はい",1,"いいえ",2,)
+				IF RESULT == 1
+					CFLAG:魔力 -= 500
+					ITEM:3 = 1
+					CALL KOJO_EVENT(110, 17)
+					CALL VOIDLINE_IF(RESULT)
+					PRINTFORMW %CALLNAME%はペニスバンドを錬成しました
+				ENDIF
+			CASE 5
+				IF ITEM:11
+					CLEARLINE 1
+					GOTO INPUT_LOOP_ITEM1
+				ELSEIF CFLAG:魔力 < 1000
+					CLEARLINE 1
+					REUSELASTLINE 魔力が足りないようだ…
+					GOTO INPUT_LOOP_ITEM1
+				ENDIF
+				CALL PRINT_DIALOG(@"「アナルバイブ」を錬成します。よろしいですか？",1,1,1)
+				CALL PRINT_CHOICE(,"はい",1,"いいえ",2,)
+				IF RESULT == 1
+					CFLAG:魔力 -= 1000
+					ITEM:11 = 1
+					CALL KOJO_EVENT(110, 18)
+					CALL VOIDLINE_IF(RESULT)
+					PRINTFORMW %CALLNAME%はアナルバイブを錬成しました
+				ENDIF
+			CASE 6
+				IF ITEM:12
+					CLEARLINE 1
+					GOTO INPUT_LOOP_ITEM1
+				ELSEIF CFLAG:魔力 < 600
+					CLEARLINE 1
+					REUSELASTLINE 魔力が足りないようだ…
+					GOTO INPUT_LOOP_ITEM1
+				ENDIF
+				CALL PRINT_DIALOG(@"「クリキャップ」を錬成します。よろしいですか？",1,1,1)
+				CALL PRINT_CHOICE(,"はい",1,"いいえ",2,)
+				IF RESULT == 1
+					CFLAG:魔力 -= 600
+					ITEM:12 = 1
+					CALL KOJO_EVENT(110, 19)
+					CALL VOIDLINE_IF(RESULT)
+					PRINTFORMW %CALLNAME%はクリキャップを錬成しました
+				ENDIF
+			CASE 7
+				IF ITEM:13
+					CLEARLINE 1
+					GOTO INPUT_LOOP_ITEM1
+				ELSEIF CFLAG:魔力 < 600
+					CLEARLINE 1
+					REUSELASTLINE 魔力が足りないようだ…
+					GOTO INPUT_LOOP_ITEM1
+				ENDIF
+				CALL PRINT_DIALOG(@"「ニプルキャップ」を錬成します。よろしいですか？",1,1,1)
+				CALL PRINT_CHOICE(,"はい",1,"いいえ",2,)
+				IF RESULT == 1
+					CFLAG:魔力 -= 600
+					ITEM:13 = 1
+					CALL KOJO_EVENT(110, 20)
+					CALL VOIDLINE_IF(RESULT)
+					PRINTFORMW %CALLNAME%はニプルキャップを錬成しました
+				ENDIF
+			CASE 8
+				IF ITEM:14
+					CLEARLINE 1
+					GOTO INPUT_LOOP_ITEM1
+				ELSEIF CFLAG:魔力 < 600
+					CLEARLINE 1
+					REUSELASTLINE 魔力が足りないようだ…
+					GOTO INPUT_LOOP_ITEM1
+				ENDIF
+				CALL PRINT_DIALOG(@"「オナホール」を錬成します。よろしいですか？",1,1,1)
+				CALL PRINT_CHOICE(,"はい",1,"いいえ",2,)
+				IF RESULT == 1
+					CFLAG:魔力 -= 600
+					ITEM:14 = 1
+					CALL KOJO_EVENT(110, 21)
+					CALL VOIDLINE_IF(RESULT)
+					PRINTFORMW %CALLNAME%はオナホールを錬成しました
+				ENDIF
+			CASEELSE
+				CLEARLINE 1
+				GOTO INPUT_LOOP_ITEM1
+		ENDSELECT
+	CASE 6
+		;イベント口上：責め具錬成前
+		CALL KOJO_EVENT(110, 22)
+		PRINTFORML %CALLNAME%は魔力を使って責め具を創ることにした…
+		PRINTL [ 0] - やめる
+		PRINTFORML \@ ITEM:20 ? [--] アイマスクを持っています           # [ 1] アイマスク　　　　　　　　　　　　　　　　　　 魔力300 \@
+		PRINTFORML \@ ITEM:21 ? [--] 鞭を持っています                   # [ 2] 鞭　　　　　　　　　　　　　　　　　　　　　　 魔力500 \@
+		PRINTFORML \@ ITEM:22 ? [--] 縄を持っています                   # [ 3] 縄　　　　　　　　　　　　　　　　　　　　　　 魔力300 \@
+		PRINTFORML \@ ITEM:30 ? [--] ボールギャグを持っています         # [ 4] ボールギャグ　　　　　　　　　　　　　　　　　 魔力300 \@
+		PRINTFORML \@ ITEM:31 ? [--] 針を持っています                   # [ 5] 針　　　　　　　　　　　　　　　　　　　　　　 魔力500 \@
+		PRINTFORML \@ ITEM:32 ? [--] 浣腸セットを持っています           # [ 6] 浣腸セット　　　　　　　　　　　　　　　　　　 魔力1000 \@
+		PRINTFORML \@ ITEM:33 ? [--] 三角木馬を持っています             # [ 7] 三角木馬　　　　　　　　　　　　　　　　　　　 魔力2000 \@
+		PRINTFORML \@ ITEM:40 ? [--] 大鏡を持っています                 # [ 8] 大鏡　　　　　　　　　　　　　　　　　　　　　 魔力1000 \@
+		PRINTFORML \@ ITEM:42 ? [--] 首輪を持っています                 # [ 9] 首輪　　　　　　　　　　　　　　　　　　　　　 魔力1500 \@
+		$INPUT_LOOP_ITEM2
+		INPUT
+		SELECTCASE RESULT
+			CASE 0
+				RESTART
+			CASE 1
+				IF ITEM:20
+					CLEARLINE 1
+					GOTO INPUT_LOOP_ITEM2
+				ELSEIF CFLAG:魔力 < 300
+					CLEARLINE 1
+					REUSELASTLINE 魔力が足りないようだ…
+					GOTO INPUT_LOOP_ITEM2
+				ENDIF
+				CALL PRINT_DIALOG(@"「アイマスク」を錬成します。よろしいですか？",1,1,1)
+				CALL PRINT_CHOICE(,"はい",1,"いいえ",2,)
+				IF RESULT == 1
+					CFLAG:魔力 -= 300
+					ITEM:20 = 1
+					CALL KOJO_EVENT(110, 23)
+					CALL VOIDLINE_IF(RESULT)
+					PRINTFORMW %CALLNAME%はアイマスクを錬成しました
+				ENDIF
+			CASE 2
+				IF ITEM:21
+					CLEARLINE 1
+					GOTO INPUT_LOOP_ITEM2
+				ELSEIF CFLAG:魔力 < 500
+					CLEARLINE 1
+					REUSELASTLINE 魔力が足りないようだ…
+					GOTO INPUT_LOOP_ITEM2
+				ENDIF
+				CALL PRINT_DIALOG(@"「鞭」を錬成します。よろしいですか？",1,1,1)
+				CALL PRINT_CHOICE(,"はい",1,"いいえ",2,)
+				IF RESULT == 1
+					CFLAG:魔力 -= 500
+					ITEM:21 = 1
+					CALL KOJO_EVENT(110, 24)
+					CALL VOIDLINE_IF(RESULT)
+					PRINTFORMW %CALLNAME%は鞭を錬成しました
+				ENDIF
+			CASE 3
+				IF ITEM:22
+					CLEARLINE 1
+					GOTO INPUT_LOOP_ITEM2
+				ELSEIF CFLAG:魔力 < 300
+					CLEARLINE 1
+					REUSELASTLINE 魔力が足りないようだ…
+					GOTO INPUT_LOOP_ITEM2
+				ENDIF
+				CALL PRINT_DIALOG(@"「縄」を錬成します。よろしいですか？",1,1,1)
+				CALL PRINT_CHOICE(,"はい",1,"いいえ",2,)
+				IF RESULT == 1
+					CFLAG:魔力 -= 300
+					ITEM:22 = 1
+					CALL KOJO_EVENT(110, 25)
+					CALL VOIDLINE_IF(RESULT)
+					PRINTFORMW %CALLNAME%は縄を錬成しました
+				ENDIF
+			CASE 4
+				IF ITEM:30
+					CLEARLINE 1
+					GOTO INPUT_LOOP_ITEM2
+				ELSEIF CFLAG:魔力 < 300
+					CLEARLINE 1
+					REUSELASTLINE 魔力が足りないようだ…
+					GOTO INPUT_LOOP_ITEM2
+				ENDIF
+				CALL PRINT_DIALOG(@"「ボールギャグ」を錬成します。よろしいですか？",1,1,1)
+				CALL PRINT_CHOICE(,"はい",1,"いいえ",2,)
+				IF RESULT == 1
+					CFLAG:魔力 -= 300
+					ITEM:30 = 1
+					CALL KOJO_EVENT(110, 26)
+					CALL VOIDLINE_IF(RESULT)
+					PRINTFORMW %CALLNAME%はボールギャグを錬成しました
+				ENDIF
+			CASE 5
+				IF ITEM:31
+					CLEARLINE 1
+					GOTO INPUT_LOOP_ITEM2
+				ELSEIF CFLAG:魔力 < 500
+					CLEARLINE 1
+					REUSELASTLINE 魔力が足りないようだ…
+					GOTO INPUT_LOOP_ITEM2
+				ENDIF
+				CALL PRINT_DIALOG(@"「針」を錬成します。よろしいですか？",1,1,1)
+				CALL PRINT_CHOICE(,"はい",1,"いいえ",2,)
+				IF RESULT == 1
+					CFLAG:魔力 -= 500
+					ITEM:31 = 1
+					CALL KOJO_EVENT(110, 27)
+					CALL VOIDLINE_IF(RESULT)
+					PRINTFORMW %CALLNAME%は針を錬成しました
+				ENDIF
+			CASE 6
+				IF ITEM:32
+					CLEARLINE 1
+					GOTO INPUT_LOOP_ITEM2
+				ELSEIF CFLAG:魔力 < 100
+					CLEARLINE 1
+					REUSELASTLINE 魔力が足りないようだ…
+					GOTO INPUT_LOOP_ITEM2
+				ENDIF
+				CALL PRINT_DIALOG(@"「浣腸セット」を錬成します。よろしいですか？",1,1,1)
+				CALL PRINT_CHOICE(,"はい",1,"いいえ",2,)
+					IF RESULT == 1
+					CFLAG:魔力 -= 1000
+					ITEM:32 = 1
+					CALL KOJO_EVENT(110, 28)
+					CALL VOIDLINE_IF(RESULT)
+					PRINTFORMW %CALLNAME%は浣腸セットを錬成しました
+				ENDIF
+			CASE 7
+				IF ITEM:33
+					CLEARLINE 1
+					GOTO INPUT_LOOP_ITEM2
+				ELSEIF CFLAG:魔力 < 2000
+					CLEARLINE 1
+					REUSELASTLINE 魔力が足りないようだ…
+					GOTO INPUT_LOOP_ITEM2
+				ENDIF
+				CALL PRINT_DIALOG(@"「三角木馬」を錬成します。よろしいですか？",1,1,1)
+				CALL PRINT_CHOICE(,"はい",1,"いいえ",2,)
+				IF RESULT == 1
+					CFLAG:魔力 -= 2000
+					ITEM:33 = 1
+					CALL KOJO_EVENT(110, 29)
+					CALL VOIDLINE_IF(RESULT)
+					PRINTFORMW %CALLNAME%は三角木馬を錬成しました
+				ENDIF
+			CASE 8
+				IF ITEM:40
+					CLEARLINE 1
+					GOTO INPUT_LOOP_ITEM2
+				ELSEIF CFLAG:魔力 < 1000
+					CLEARLINE 1
+					REUSELASTLINE 魔力が足りないようだ…
+					GOTO INPUT_LOOP_ITEM2
+				ENDIF
+				CALL PRINT_DIALOG(@"「大鏡」を錬成します。よろしいですか？",1,1,1)
+				CALL PRINT_CHOICE(,"はい",1,"いいえ",2,)
+				IF RESULT == 1
+					CFLAG:魔力 -= 1000
+					ITEM:40 = 1
+					CALL KOJO_EVENT(110, 30)
+					CALL VOIDLINE_IF(RESULT)
+					PRINTFORMW %CALLNAME%は大鏡を錬成しました
+				ENDIF
+			CASE 9
+				IF ITEM:42
+					CLEARLINE 1
+					GOTO INPUT_LOOP_ITEM2
+				ELSEIF CFLAG:魔力 < 1500
+					CLEARLINE 1
+					REUSELASTLINE 魔力が足りないようだ…
+					GOTO INPUT_LOOP_ITEM2
+				ENDIF
+				CALL PRINT_DIALOG(@"「首輪」を錬成します。よろしいですか？",1,1,1)
+				CALL PRINT_CHOICE(,"はい",1,"いいえ",2,)
+				IF RESULT == 1
+					CFLAG:魔力 -= 1500
+					ITEM:42 = 1
+					CALL KOJO_EVENT(110, 31)
+					CALL VOIDLINE_IF(RESULT)
+					PRINTFORMW %CALLNAME%は首輪を錬成しました
+				ENDIF
+			CASEELSE
+				CLEARLINE 1
+				GOTO INPUT_LOOP_ITEM2
+		ENDSELECT
+	CASE 10
+		IF ITEM:9
+			GOTO FAILED
+		ELSEIF CFLAG:魔力 < 3000
+			GOTO FAILED_BY_MP
+		ELSEIF !TALENT:道具使い
+			CLEARLINE 1
+			REUSELASTLINE 外界の性具をカスタマイズできるだけの知識をまだ持っていない…
+			GOTO INPUT_LOOP
+		ENDIF
+		CALL PRINT_DIALOG(@"性具の性能を高めます。よろしいですか？",1,1,1)
+		CALL PRINT_CHOICE(,"はい",1,"いいえ",2,)
+		IF RESULT == 1
+			CFLAG:魔力 -= 2000
+			ITEM:9 = 1
+			CALL KOJO_EVENT(110, 32)
+			CALL VOIDLINE_IF(RESULT)
+			PRINTFORMW %CALLNAME%は性具をカスタマイズしました
+		ENDIF
+	CASE 11
+		SIF TALENT:オトコ
+			GOTO FAILED
+		SIF CFLAG:魔力 < 7000
+			GOTO FAILED_BY_MP
+		IF TALENT:ふたなり
+			CALL PRINT_DIALOG(@"%CALLNAME:TARGET%の[ふたなり]を消去します。よろしいですか？",1,1,1)
+		ELSE
+			CALL PRINT_DIALOG(@"%CALLNAME:TARGET%を[ふたなり]にします。よろしいですか？",1,1,1)
+		ENDIF
+		CALL PRINT_CHOICE(,"はい",1,"いいえ",2,)
+		IF RESULT == 1
+			CFLAG:魔力 -= 7000
+			TALENT:ふたなり = !TALENT:ふたなり
+			;童貞かどうか
+			TALENT:童貞 = !CFLAG:童貞喪失済み && TALENT:ふたなり
+			;射精ゲージの初期化
+			;初期化関数を統一@これみ
+			CALL BASE_SETUP_PENIS(TARGET)
+			CALL KOJO_EVENT(110, 33)
+			CALL VOIDLINE_IF(RESULT)
+			PRINTFORMW %CALLNAME:TARGET%は\@ TALENT:ふたなり ? ふたなり # 女の子 \@になりました
+		ENDIF
+	CASE 12
+		SIF TALENT:オトコ || TALENT:巨乳
+			GOTO FAILED
+		SIF CFLAG:魔力 < 5000
+			GOTO FAILED_BY_MP
+		IF TALENT:貧乳
+			CALL PRINT_DIALOG(@"%CALLNAME:TARGET%の胸を人並みのサイズにします。よろしいですか？",1,1,1)
+		ELSE
+			CALL PRINT_DIALOG(@"%CALLNAME:TARGET%を[巨乳]にします。よろしいですか？",1,1,1)
+		ENDIF
+		CALL PRINT_CHOICE(,"はい",1,"いいえ",2,)
+		IF RESULT == 1
+			CFLAG:魔力 -= 5000
+			TALENT:巨乳 = !TALENT:貧乳
+			TALENT:貧乳 = 0
+			CALL KOJO_EVENT(110, 34)
+			CALL VOIDLINE_IF(RESULT)
+			PRINTFORMW %CALLNAME:TARGET%は\@ TALENT:巨乳 ? 巨乳 # 普通のおっぱい \@になりました
+		ENDIF
+	CASE 13
+		SIF TALENT:オトコ || TALENT:貧乳
+			GOTO FAILED
+		SIF CFLAG:魔力 < 1000
+			GOTO FAILED_BY_MP
+		IF TALENT:巨乳
+			CALL PRINT_DIALOG(@"%CALLNAME:TARGET%の胸を人並みのサイズにします。よろしいですか？",1,1,1)
+		ELSE
+			CALL PRINT_DIALOG(@"%CALLNAME:TARGET%を[貧乳]にします。よろしいですか？",1,1,1)
+		ENDIF
+		CALL PRINT_CHOICE(,"はい",1,"いいえ",2,)
+		IF RESULT == 1
+			CFLAG:魔力 -= 1000
+			TALENT:貧乳 = !TALENT:巨乳
+			TALENT:巨乳 = 0
+			CALL KOJO_EVENT(110, 35)
+			CALL VOIDLINE_IF(RESULT)
+			PRINTFORMW %CALLNAME:TARGET%は\@ TALENT:貧乳 ? 貧乳 # 普通のおっぱい \@になりました
+		ENDIF
+	CASE 16
+		SIF MAXBASE:MASTER:射精 < 2500 + CFLAG:MASTER:精力限界 * 500
+			GOTO FAILED
+		SIF CFLAG:魔力 < (MAXBASE:MASTER:射精 - 2500 - CFLAG:MASTER:精力限界 * 500) / 500 * 1000 + 1000
+			GOTO FAILED_BY_MP
+		CALL PRINT_DIALOG(@"%CALLNAME:MASTER%の精力限界を少し強化します。よろしいですか？",1,1,0)
+		CALL PRINT_DIALOG(@"※精力最大値の伸びしろが増大します。",0,1,0)
+		CALL PRINT_DIALOG(@"  精力最大値自体は今後の調教で鍛えてください。",0,1,1)
+		CALL PRINT_CHOICE(,"はい",1,"いいえ",2,)
+		IF RESULT == 1
+			CFLAG:魔力 -= (MAXBASE:MASTER:射精 - 2500 - CFLAG:MASTER:精力限界 * 500) / 500 * 1000 + 1000
+			CFLAG:MASTER:精力限界 += (MAXBASE:MASTER:射精 - 2500 - CFLAG:MASTER:精力限界 * 500) / 500 + 1
+			CALL KOJO_EVENT(110, 36)
+			CALL VOIDLINE_IF(RESULT)
+			PRINTFORMW %CALLNAME:MASTER%の精力の限界値が上昇しました
+		ENDIF
+	CASEELSE
+		GOTO FAILED
+ENDSELECT
+RESTART
+
+
+;────────────────────────────────────
+;すでに取得したボーナスを新しい調教者に適用
+;────────────────────────────────────
+@BONUS_APPLY
+
+;────────────────────────────────────
+;技巧上昇処理
+;返り値 = 0:成功 1:魔力不足 2:調教レベル不足 3:技巧上限
+;────────────────────────────────────
+@RIZE_ABL
+
+;魔力消費量を返す
+RESULT:1 = RIZE_ABL_V(0)
+;技巧上限を判定
+SIF ABL:技巧 >= 99
+	RETURN 3
+;魔力不足を判定
+SIF CFLAG:魔力 < RIZE_ABL_V(0)
+	RETURN 1
+;調教レベルを判定
+SIF CFLAG:調教レベル < RIZE_ABL_V(1)
+	RETURN 2
+RETURN 0
+
+;-------------------------------------
+;技巧上昇所要魔力・調教レベル
+;どちらの条件も満たした場合のみ技巧上昇が可能
+;ARG = 0:魔力 1:調教レベル
+;-------------------------------------
+@RIZE_ABL_V(ARG)
+#FUNCTION
+IF ARG == 0
+	;所要魔力
+	;0→1:100 1→2:300 2→3:1000 3→4:3000 4→5:10000 ……
+	LOCAL = POWER(10, 2 + ABL:技巧 / 2)
+	SIF ABL:技巧 % 2
+		LOCAL *= 3
+	RETURNF LOCAL
+ELSE
+	;所要レベル
+	;0→1:0 1→2:1 2→3:4 3→4:9 4→5:16 ……
+	RETURNF ABL:技巧 * ABL:技巧
+ENDIF
+
+;────────────────────────────────────
+;技能取得・放棄処理
+;返り値 = 0:成功 1:魔力不足 2:調教レベル不足
+;────────────────────────────────────
+@GAIN_TALENT(ARGS)
+
+;魔力消費量を返す
+RESULT:1 = GAIN_TALENT_V(ARGS, 0)
+;魔力不足を判定
+SIF CFLAG:魔力 < GAIN_TALENT_V(ARGS, 0)
+	RETURN 1
+;調教レベルを判定
+SIF CFLAG:調教レベル < GAIN_TALENT_V(ARGS, 1)
+	RETURN 2
+RETURN 0
+
+;-------------------------------------
+;技能取得・放棄 所要魔力・調教レベル
+;どちらの条件も満たした場合のみ技能取得・放棄が可能
+;ARG = 0:魔力 1:調教レベル
+;-------------------------------------
+@GAIN_TALENT_V(ARGS, ARG)
+#FUNCTION
+
+;デバッグ用
+;魔力消費免除
+;SIF ARG == 0
+;	RETURNF 0
+;調教レベル無視
+;SIF ARG != 0
+;	RETURNF 0
+
+SELECTCASE ARGS
+	CASE "調合知識"
+		IF ARG == 0
+			RETURNF 1000
+		ELSE
+			RETURNF 5
+		ENDIF
+	CASE "魅惑"
+		IF ARG == 0
+			RETURNF 1000
+		ELSE
+			RETURNF 5
+		ENDIF
+	CASE "禁断の知識"
+		IF ARG == 0
+			RETURNF 10000
+		ELSE
+			RETURNF 8
+		ENDIF
+	CASE "道具使い"
+		IF ARG == 0
+			RETURNF 1000
+		ELSE
+			RETURNF 6
+		ENDIF
+	CASE "撮影技能"
+		IF ARG == 0
+			RETURNF 1000
+		ELSE
+			RETURNF 6
+		ENDIF
+	CASE "舌使い"
+		IF ARG == 0
+			RETURNF 10000
+		ELSE
+			RETURNF 10
+		ENDIF
+	CASE "器用な指先"
+		IF ARG == 0
+			RETURNF 10000
+		ELSE
+			RETURNF 10
+		ENDIF
+	CASE "腰使い"
+		IF ARG == 0
+			RETURNF 10000
+		ELSE
+			RETURNF 10
+		ENDIF
+	CASE "縛り上手"
+		IF ARG == 0
+			RETURNF 10000
+		ELSE
+			RETURNF 10
+		ENDIF
+	CASE "サド"
+		IF ARG == 0
+			RETURNF 10000
+		ELSE
+			RETURNF 10
+		ENDIF
+	CASE "着衣プレイ好き"
+		IF ARG == 0
+			RETURNF 10000
+		ELSE
+			RETURNF 10
+		ENDIF
+	CASE "汚れ無視"
+		IF ARG == 0
+			RETURNF 10000
+		ELSE
+			RETURNF 10
+		ENDIF
+ENDSELECT

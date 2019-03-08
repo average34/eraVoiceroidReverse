@@ -1,0 +1,276 @@
+﻿;────────────────────────────────────
+;ステータス表示
+;────────────────────────────────────
+;ちょっと整理@revkoishi(14/05/22)
+@PRINT_STATUS(ARG:0)
+LOCAL:1 = RESULT
+DO
+	DRAWLINE
+	PRINTFORML ■ %CALLNAME:(ARG:0)%のステータス ■ \@ ARG:0 != MASTER && TALENT:MASTER:読心能力 == 2 ? (好感度:{CFLAG:(ARG:0):9}) # \@
+	PRINTFORM [LV {CFLAG:(ARG:0):調教レベル, 2}  EXP {CFLAG:(ARG:0):調教経験, 6}/{CFLAG:(ARG:0):必要経験値, 6}  
+	PRINTFORML NEXT {CFLAG:(ARG:0):必要経験値 - CFLAG:(ARG:0):調教経験, 6}]
+	CALL PRINT_BASEL("体力", ARG:0, GETNUM(BASE, "体力"), 32, 1)
+	CALL PRINT_BASEL("気力", ARG:0, GETNUM(BASE, "気力"), 32, 1)
+	IF ARG:0 == MASTER
+		CALL PRINT_BASEL("理性", ARG:0, GETNUM(BASE, "理性"), 32, 1)
+		SIF PENIS(ARG:0)
+			CALL PRINT_BASEL("精力", ARG:0, GETNUM(BASE, "射精"), 32, 1)
+	ELSE
+		CALL PRINT_TENSION(ARG:0)
+	ENDIF
+	CALL NEW_PRINT_TALENT(ARG:0)
+	CALL NEW_PRINT_EXP(ARG:0)
+	CALL NEW_PRINT_ABL(ARG:0)
+	IF FLAG:調教UIパッド化 && FLAG:調教中
+		CALL HTMLPRINTL(HTMLBUTTON(@"[%KEYMARK_B%] - 戻る", KEY_B) + "　" +HTMLBUTTON(@"[%KEYMARK_X%] - 前のページ", KEY_X))
+		DO
+			ONEINPUTS
+			LOCAL:0 = (RESULTS != KEY_B && RESULTS != KEY_X)
+			IF LOCAL:0
+				CLEARLINE 1
+				REUSELASTLINE 入力値が範囲外です
+			ENDIF
+		LOOP LOCAL:0
+		RESULT = RESULTS == KEY_B ? 100 # 102
+	ELSE
+		PRINTL [100] - 戻る　[102] - 次のページ
+		DO
+			INPUT
+			LOCAL:0 = (RESULT != 100 && RESULT != 102)
+			IF LOCAL:0
+				CLEARLINE 1
+				REUSELASTLINE 入力値が範囲外です
+			ENDIF
+		LOOP LOCAL:0
+	ENDIF
+	SIF RESULT == 102
+		CALL PRINT_STATUS2(ARG:0)
+LOOP RESULT != 100
+RETURN LOCAL:1
+
+
+;未取得の刻印も含めカラー表示化。改行位置自動判定に変更。変更後ポイント計算が出来ていなかったのを修正。
+;決断的に新仕様へ大工事＋微調整@revkoishi(14/05/28)
+@PRINT_STATUS2(ARG:0)
+#DIM SURRENDER_LIST, 6, 30
+#DIM SURRENDER_SIZE, 6
+#DIM LINE_WIDTH
+LINE_WIDTH = WIDTH()
+
+IF ARG:0 == MASTER
+	PRINTFORML -- □ 刻印 □ %"-" * (LINE_WIDTH - 14)%
+	IF MARK:MASTER:苦痛刻印 || MARK:MASTER:快楽刻印 || MARK:MASTER:トラウマ
+		PRINTFORM \@ MARK:MASTER:苦痛刻印 ? %MARKNAME:0%Lv{MARK:MASTER:苦痛刻印, 2}%" "% # \@
+		PRINTFORM \@ MARK:MASTER:快楽刻印 ? %MARKNAME:1%Lv{MARK:MASTER:快楽刻印, 2}%" "% # \@
+		PRINTFORML \@ MARK:MASTER:トラウマ ? %MARKNAME:4%Lv{MARK:MASTER:トラウマ,2} # \@
+	ENDIF
+	SIF MARK:MASTER:トラウマ
+		PRINTFORML %CALLNAME:MASTER%のトラウマとなる原因は：[%GET_ACTNAME(CFLAG:MASTER:トラウマ)%]
+	PRINTFORML                      %MARKNAME:2%        %MARKNAME:3%
+	FOR LOCAL:0, 0, CHARANUM
+		IF LOCAL:0 == MASTER !| CFLAG:(LOCAL:0):一時退避	;一時退避中のキャラは表示しない
+			PRINTPLAINFORM [{LOCAL:0, 3}] - %CALLNAME:(LOCAL:0), 16, LEFT% 
+			PRINTFORML Lv{MARK:(LOCAL:0):屈服刻印, 2}            Lv{MARK:(LOCAL:0):反抗刻印, 2}
+		ENDIF
+	NEXT
+ELSE
+	VARSET LOCAL	;0.カウンタ/1.Lv/2.桁位置/3.文字列長/4.刻印数/5.処理中の実績番号/6.虹色
+	VARSET SURRENDER_LIST
+	VARSET SURRENDER_SIZE
+	PRINTFORML -- □ 調教履歴 □ %"-" * (LINE_WIDTH - 18)%
+	FOR LOCAL:0, 0, 128
+		SIF GET_SURRENDER_LV(LOCAL:0, ARG:0) && IS_SURRENDER_ENABLE(LOCAL:0, ARG:0)	;関数名変更@revkoishi(14/06/01)
+			SURRENDER_LIST:GET_SURRENDER_LV(LOCAL:0, ARG:0):(SURRENDER_SIZE:GET_SURRENDER_LV(LOCAL:0, ARG:0)++) = LOCAL:0
+	NEXT
+	FOR LOCAL:1, 1, 6
+		PRINTFORM Lv{LOCAL:1}
+		LOCAL:2 = 3	;桁位置リセット
+		LOCAL:4 = 0	;刻印数リセット
+		LOCAL:6 = GET_RAINBOW(6 + LOCAL:1)	;虹色
+		FOR LOCAL:0, 0, SURRENDER_SIZE:(LOCAL:1)
+			LOCAL:5 = SURRENDER_LIST:(LOCAL:1):(LOCAL:0)	;処理中の実績番号更新
+			LOCALS:0 = 【%GET_SURRENDER_STR_T(LOCAL:5, ARG:0)%】
+			LOCAL:3 = STRLENS(LOCALS:0)
+			LOCAL:2 += LOCAL:3
+			IF LOCAL:2 > LINE_WIDTH
+				PRINTFORM \n   
+				LOCAL:2 = 3 + LOCAL:3
+			ENDIF
+			;カテゴリ分け用色セット関数作ろうかと思ったけど、当面はこれで十分な予感…
+			IF LOCAL:5 > 63 ? GETBIT(CFLAG:(ARG:0):刻印2, LOCAL:5 - 64) # GETBIT(CFLAG:(ARG:0):刻印, LOCAL:5)	;所持刻印
+				++LOCAL:4							;刻印数加算
+				IF INRANGE(LOCAL:1, 1, 4)			;Lv4以下は単色
+					CALL FPRINT(LOCALS:0, LOCAL:6)
+				ELSE								;Lv5以上は虹色
+					CALL PRINT_RAINBOW(LOCALS:0, , , RAND:12)
+				ENDIF
+			ELSE									;未所持刻印
+				CALL FPRINT(LOCALS:0, 0x606060)		;灰色
+			ENDIF
+		NEXT
+		PRINTFORML \n    {SURRENDER_LV2POINT(LOCAL:1), 2}P×{LOCAL:4, 2}＝{LOCAL:4 * SURRENDER_LV2POINT(LOCAL:1), 2}P
+		PRINTSL "-" * LINE_WIDTH
+	NEXT
+	PRINTFORML 合計:{CFLAG:(ARG:0):屈服P1}P 屈服刻印:LV{MARK:(ARG:0):屈服刻印}
+ENDIF
+IF FLAG:調教UIパッド化 && FLAG:調教中
+	CALL HTMLPRINTL(HTMLBUTTON(@"[%KEYMARK_B%] - 戻る", KEY_B) + "　" +HTMLBUTTON(@"[%KEYMARK_X%] - 前のページ", KEY_X))
+	DO
+		ONEINPUTS
+		LOCAL:0 = (RESULTS != KEY_B && RESULTS != KEY_X)
+		IF LOCAL:0
+			CLEARLINE 1
+			REUSELASTLINE 不正な入力値です
+		ENDIF
+	LOOP LOCAL:0
+	RESULT = RESULTS == KEY_B ? 100 # 101
+ELSE
+	PRINTL [100] - 戻る　[101] - 前のページ
+	CALL INPUT_RANGE(100, 101)
+ENDIF
+RETURN RESULT
+
+
+;一部参照がずれていたので修正＆５列に変更＆表示の調整＆色設定@revkoishi(14/05/26)
+@NEW_PRINT_EXP(ARG:0)
+#DIM NODISP, 10
+#DIM LINE_WIDTH
+LINE_WIDTH = WIDTH()
+LOCAL:1 = 0				;表示カウンタ
+;表示順は性別によってありえないものを抜くだけにしました。以下抜かれるもの
+VARSET NODISP, -1
+IF TALENT:(ARG:0):ふたなり
+	NODISP = 14, 41				;ふたなり：14,潮吹き経験/41,ＢＬ経験
+ELSEIF TALENT:(ARG:0):オトコ
+	NODISP =  1,  6, 14, 40, 52	;　オトコ：1,Ｖ経験/6,噴乳経験/14,潮吹き経験/40,レズ経験/52,Ｖ拡張経験
+ELSE
+	NODISP =  5, 41				;　女の子：5,射精経験/41,ＢＬ経験
+ENDIF
+PRINTFORML -- □ 経験 □ %"-" * (LINE_WIDTH - 14)%
+FOR LOCAL:0, 0, 70
+	SIF STRLENSU(EXPNAME:(LOCAL:0)) && !MATCH(NODISP, LOCAL:0)
+{
+		CALL FPRINT(@"\@ EXP:(ARG:0):(LOCAL:0) ? %EXPNAME:(LOCAL:0), 12% # ？？？？？？ \@:{EXP:(ARG:0):(LOCAL:0), 5}" + 
+                    @"\@ ++LOCAL:1 % 5 ? 　 # \n \@", EXP:(ARG:0):(LOCAL:0) ? GET_RAINBOW(9 + EXP_TYPE(LOCAL:0)) # 0x606060)
+}
+NEXT
+PRINTFORM \@ LINEISEMPTY() ? # \n \@
+
+
+;８列に変更＆表示の調整＆色設定@revkoishi(14/05/26)
+@NEW_PRINT_ABL(ARG:0)
+#DIM NODISP, 10
+#DIM LINE_WIDTH
+LINE_WIDTH = WIDTH()
+LOCAL:1 = 0				;表示カウンタ
+;表示順は性別によってありえないものを抜くだけにしました。以下抜かれるもの
+VARSET NODISP, -1
+IF TALENT:(ARG:0):ふたなり
+	NODISP = 10			;ふたなり：10,ＢＬっ気
+ELSEIF TALENT:(ARG:0):オトコ
+	NODISP =  4,  9, 14	;　オトコ：4,Ｖ感覚/9,レズっ気/14,レズ中毒
+ELSE
+	NODISP = 10			;　女の子：10,ＢＬっ気/
+ENDIF
+PRINTFORML -- □ 能力 □ %"-" * (LINE_WIDTH - 14)%
+FOR LOCAL:0, 0, 30
+	SIF STRLENSU(ABLNAME:(LOCAL:0)) && !MATCH(NODISP, LOCAL:0)
+{
+		CALL FPRINT(@"%ABLNAME:(LOCAL:0), 8%:{ABL:(ARG:0):(LOCAL:0), 2}\@ ++LOCAL:1 % 8 ? 　 # \n \@", 
+                    ABL:(ARG:0):(LOCAL:0) ? GET_RAINBOW(3 + ABL_TYPE(LOCAL:0)) # 0x606060)
+}
+NEXT
+PRINTFORM \@ LINEISEMPTY() ? # \n \@
+
+
+;画面幅の有効活用＆LOCAL地獄でとても読みにくい処理だったので整理(したつもり)。微調整@revkoishi(14/05/26)
+@NEW_PRINT_TALENT(ARG:0)
+#DIM LINE_WIDTH
+#DIM TALENT_LIST, 8, 50
+#DIM TALENT_SIZE, 8
+
+;変数初期化
+VARSET LOCAL
+VARSET TALENT_LIST
+VARSET TALENT_SIZE
+LINE_WIDTH = WIDTH()	;とりあえず基準となる幅を他所から勝手に拝借。27*4+0=108桁
+
+PRINTFORML -- □ 素質 □ %"-" * (LINE_WIDTH - 14)%
+IF FLAG:素質表示方法	;素質分類表示
+	FOR LOCAL:0, 0, 150	;分類ループ
+		SIF TALENT:(ARG:0):(LOCAL:0)
+			TALENT_LIST:TALENT_TYPE(LOCAL:0):(TALENT_SIZE:TALENT_TYPE(LOCAL:0)++) = LOCAL:0
+	NEXT
+	;性別は特殊なので別処理とし、ここで表示する
+	PRINTFORM %TALENT_TYPENAME(1), 8, RIGHT%：
+{
+	CALL FPRINTL(@"[%GET_SEX(ARG:0)%] " + \@ TALENT:(ARG:0):処女 ? [%GET_TALENTNAME(ARG:0, GETNUM(TALENT, "処女"))%]%" "% # \@ + 
+                \@ TALENT:(ARG:0):童貞 ? [%GET_TALENTNAME(ARG:0, GETNUM(TALENT, "童貞"))%]%" "% # \@, GET_RAINBOW(1))
+}
+	FOR LOCAL:0, 2, 8	;表示ループ。非表示と、表示済みの性別は飛ばす
+		IF TALENT_SIZE:(LOCAL:0)	;その分類の素質が無ければ飛ばす
+			;素質分類名を表示
+			PRINTFORM %TALENT_TYPENAME(LOCAL:0), 8, RIGHT%：
+			LOCAL:2 = 10						;桁位置(↑表示後の位置)
+			LOCAL:4 = GET_RAINBOW(LOCAL:0)		;虹色
+			FOR LOCAL:1, 0, TALENT_SIZE:(LOCAL:0)	;その分類の所持素質数分ループ
+				;素質名を取得([素質名] )
+				LOCALS:0 = [%GET_TALENTNAME(ARG:0, TALENT_LIST:(LOCAL:0):(LOCAL:1))%]%" "%
+				LOCAL:3 = STRLENS(LOCALS:0)	;↑の文字数(素質名+[]+スペース)
+				LOCAL:2 += LOCAL:3			;桁位置加算
+				IF LOCAL:2 > LINE_WIDTH		;このまま表示すると途中改行されそうな場合は改行処理を行う
+					;改行処理(折り返し、行頭インデント、桁位置再計算)
+					PRINTFORM \n%"          "%
+					LOCAL:2 = 10 + LOCAL:3
+				ENDIF
+				;素質名を表示
+				CALL FPRINT(LOCALS:0, LOCAL:4)
+			NEXT
+			PRINTL 
+		ENDIF
+	NEXT
+ELSE					;素質番号順表示
+	LOCAL:2 = 0	;桁位置
+	FOR LOCAL:0, 0, 150	;表示ループ。非表示は飛ばす
+		IF TALENT:(ARG:0):(LOCAL:0) && TALENT_TYPE(LOCAL:0)
+			LOCALS:0 = [%GET_TALENTNAME(ARG:0, LOCAL:0)%]%" "%
+			LOCAL:3 = STRLENS(LOCALS:0)
+			LOCAL:2 += LOCAL:3
+			IF LOCAL:2 > LINE_WIDTH	;改行処理。行頭インデント無し
+				PRINTL 
+				LOCAL:2 = LOCAL:3
+			ENDIF
+			CALL FPRINT(LOCALS:0, GET_RAINBOW(TALENT_TYPE(LOCAL:0)))
+		ENDIF
+	NEXT
+	PRINTL 
+ENDIF
+RETURN RESULT
+
+
+;────────────────────────────────────
+;調教者のテンション表示
+;────────────────────────────────────
+;バーの色が少しキツイ感がしたので微調整。無駄にボタン化するのを回避@revkoishi(14/05/22)
+@PRINT_TENSION(ARG:0)
+LOCAL:1 = RESULT
+SELECTCASE TALENT:MASTER:読心能力
+	CASE 1
+		PRINTFORML 理性[%TENSION(ARG:0, GETNUM(BASE, "理性"))%]\n興味[%TENSION(ARG:0, GETNUM(BASE, "興味"))%]
+		PRINTFORML 苛立[%TENSION(ARG:0, GETNUM(BASE, "苛立ち"))%]\n満足[%TENSION(ARG:0, GETNUM(BASE, "満足"))%]
+	CASE 2
+		LOCAL:0 = GETCOLOR()
+		CALL PRINT_BASEL("理性", ARG:0, GETNUM(BASE, "理性"), 32, 1)
+		CALL PRINT_BASEL("興味", ARG:0, GETNUM(BASE, "興味"), 32, 1)
+		CALL PRINT_BASEL("苛立", ARG:0, GETNUM(BASE, "苛立ち"), 32, 1)
+		CALL PRINT_BASEL("満足", ARG:0, GETNUM(BASE, "満足"), 32, 1)
+		PRINTPLAINFORM 罪悪感[{CFLAG:ARG:5}]　アライメント
+		SETCOLOR CFLAG:(ARG:0):アライメント >= 0 ? 0x0041FF # 0xFF2800
+		BAR CFLAG:(ARG:0):アライメント + 100, 199, 32
+		SETCOLOR LOCAL:0
+		PRINTPLAINFORM [{CFLAG:(ARG:0):アライメント}]
+		PRINTL 
+	CASEELSE
+		PRINTFORML %CALLNAME:(ARG:0)%の気持ちについてまだよくわからない…
+ENDSELECT
+RETURN LOCAL:1

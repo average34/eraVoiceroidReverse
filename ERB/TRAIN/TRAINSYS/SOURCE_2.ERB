@@ -1,0 +1,193 @@
+﻿;────────────────────────────────────
+;接触のソース（恐怖ソース、欲情、恭順、恥情、不快、好感度）
+;────────────────────────────────────
+@CALC_SOURCE10
+#DIM 恥情増減
+#DIM 欲情増減
+#DIM 恭順増減
+#DIM 不快増減
+
+;変数初期化
+恥情増減 = SOURCE:MASTER:接触
+欲情増減 = SOURCE:MASTER:接触
+恭順増減 = SOURCE:MASTER:接触
+不快増減 = SOURCE:MASTER:接触
+
+;好感度基礎増減
+TFLAG:好感度アップ += MIN(SOURCE:MASTER:接触 / 100, 10)
+
+;従順と調教度合いをみる
+LOCAL = ABL:MASTER:欲望 * 2 + CFLAG:MASTER:調教レベル
+;恥情、恭順、好感度(M→T)増減
+恥情増減 = 恥情増減 * LINE_CALC(LOCAL, "0→150,18→0,LIMIT/1～150") / 100
+恭順増減 = 恭順増減 * LINE_CALC(LOCAL, "0→0,18→100,LIMIT/5～100") / 100
+TFLAG:好感度アップ += LINE_CALC(LOCAL, "0→-200,18→200,LIMIT/-200～200") / 100
+
+;欲望をみる
+LOCAL = 0
+SIF TEQUIP:媚薬
+	LOCAL += 1
+SIF TCVAR:MASTER:状態変化 == 5
+	LOCAL += 2
+LOCAL += ABL:MASTER:欲望 * 2 + CFLAG:M好意 / 500
+;欲情、不快、好感度(M→T)増減
+欲情増減 = 欲情増減 * LINE_CALC(LOCAL, "0→10,15→125,LIMIT/10～125") / 100
+不快増減 = 不快増減 * LINE_CALC(LOCAL, "0→120,15→0,LIMIT/1～120") / 100
+TFLAG:好感度アップ += LINE_CALC(LOCAL, "0→-2,15→2,LIMIT/-2～2")
+
+;同性の場合
+IF TALENT:MASTER:オトコ && TALENT:オトコ
+	;ＢＬっ気/レズっ気を取得
+	LOCAL = TALENT:オトコ ? ABL:MASTER:ＢＬっ気 # ABL:MASTER:レズっ気
+	;恥情、欲情、恭順、不快、好感度(M→T)増減
+	恥情増減 = 恥情増減 * LINE_CALC(LOCAL, "0→100,5→15,LIMIT/15～100")
+	欲情増減 = 欲情増減 * LINE_CALC(LOCAL, "0→0,5→120,LIMIT/0～120")
+	恭順増減 = 恭順増減 * LINE_CALC(LOCAL, "0→10,5→100,LIMIT/10～100")
+	不快増減 = 不快増減 * LINE_CALC(LOCAL, "0→200,5→0,LIMIT/1～200")
+	TFLAG:好感度アップ += LINE_CALC(LOCAL, "0→-3,5→5,LIMIT/-3～5")
+	;レズの場合
+	IF !TALENT:オトコ
+		欲情増減 = 欲情増減 * (5 + ABL:MASTER:レズ中毒) / 5
+		不快増減 = 不快増減 * (6 - ABL:MASTER:レズ中毒) / 6
+	ENDIF
+ENDIF
+
+;実際の増減処理
+CUP:MASTER:恥情 += 恥情増減
+CUP:MASTER:欲情 += 欲情増減
+CUP:MASTER:恭順 += 恭順増減
+CUP:MASTER:不快 += 不快増減
+
+;恥情増減量と同じだけ恐怖SOURCE増減
+SOURCE:MASTER:恐怖 += 恥情増減
+
+;────────────────────────────────────
+;情愛のソース（悦楽ソース、恭順、欲情、好感度）
+;────────────────────────────────────
+@CALC_SOURCE11
+
+;性別、同性などの処理
+;男嫌い時情愛SOURCE減衰
+SIF TALENT:MASTER:オトコ && TALENT:男嫌い && CFLAG:MASTER:調教レベル + CFLAG:調教レベル < 10
+	TIMES SOURCE:MASTER:情愛 , 0.60
+;同性時、ABLにより情愛SOURCE増減
+IF TALENT:MASTER:オトコ && TALENT:オトコ
+	SOURCE:MASTER:情愛 = SOURCE:MASTER:情愛 * (ABL:MASTER:ＢＬっ気 + 1) / 5
+ELSEIF !TALENT:MASTER:オトコ && !TALENT:オトコ
+	SOURCE:MASTER:情愛 = SOURCE:MASTER:情愛 * (ABL:MASTER:レズっ気 + 1) / 5
+	SOURCE:MASTER:情愛 = SOURCE:MASTER:情愛 * (ABL:MASTER:レズ中毒 + 5) / 5
+ENDIF
+
+;欲情、恭順、悦楽SOURCE増減
+CUP:MASTER:欲情 += SOURCE:MASTER:情愛 * (ABL:MASTER:欲望 + 5) / 10
+CUP:MASTER:恭順 += SOURCE:MASTER:情愛 * (ABL:MASTER:従順 + 5) / 5
+SOURCE:MASTER:悦楽 += SOURCE:MASTER:情愛 * (ABL:MASTER:欲望 + 5) / 10
+
+;好感度(M→T)増減
+TFLAG:好感度アップ += LINE_CALC(SOURCE:MASTER:情愛, "0→0,2500→10,LIMIT/0～10")
+
+;────────────────────────────────────
+;性行動のソース（不快、抑鬱、体力、気力、好感度、経験値追加）
+;────────────────────────────────────
+@CALC_SOURCE12
+
+;欲望が低い場合はPALAM:MASTER:不快があがる
+SIF PALAM:MASTER:欲情 < 5000
+	CUP:MASTER:不快 += SOURCE:MASTER:性行動 / LINE_CALC(PALAM:MASTER:欲情, "0→1,5000→6,LIMIT/1～6")
+
+;抑圧か抵抗がある場合はPALAM:MASTER:抑鬱が上がる
+;ABL:奉仕精神をみる
+SIF TALENT:MASTER:抑圧 || TALENT:MASTER:反抗的
+	CUP:MASTER:抑鬱 += SOURCE:MASTER:性行動 * LINE_CALC(ABL:MASTER:奉仕精神, "0→180,5→30,LIMIT/30～180") / 500
+
+;性行動SOURCEから補正値を作る
+LOCAL = SOURCE:MASTER:性行動 * (100 - CFLAG:MASTER:調教レベル) * (100 - CFLAG:調教レベル) / 20000
+LOCAL = LIMIT(LOCAL, 10, 500)
+
+;調教対象体力、気力を消費
+DOWNBASE:MASTER:体力 += 50 + LOCAL * 2 / 3
+DOWNBASE:MASTER:気力 += LOCAL / 2
+
+;性行動が激しく、十分な従順ABLがあるとき好感度(M→T)上昇
+LOCAL = MIN(SOURCE:MASTER:性行動, ABL:MASTER:従順 * 750)
+TFLAG:好感度アップ += LIMIT(LOCAL / 250, 0, 12)
+
+;経験値追加
+TFLAG:経験値アップ += SOURCE:MASTER:性行動 / 200
+
+;────────────────────────────────────
+;痛みのソース（達成ソース、恐怖ソース、欲情、苦痛、体力、気力、理性、出血）
+;────────────────────────────────────
+@CALC_SOURCE13
+
+;苦痛。小柄体型や巨躯時、縛られている時に補正
+CUP:MASTER:苦痛 += SOURCE:MASTER:痛み * (5 + TALENT:MASTER:小柄 - TALENT:MASTER:長身) * (SOURCE:MASTER:拘束 + 10000) / 50000
+
+;達成ソース、お仕置きモード中なら痛めつけることで満足		SOURCE:MASTER:反抗となっていたSQR由来の負の遺産をケジメ@/L
+SIF TFLAG:お仕置きフラグ > 0
+	SOURCE:MASTER:達成 += CUP:MASTER:苦痛 * (10 - ABL:MASTER:苦痛中毒) / 50
+
+;恐怖のソース、痛みに強い/弱いの影響を受け、マゾっ気と苦痛中毒が上がればほとんど消えます
+SOURCE:MASTER:恐怖 += SOURCE:MASTER:痛み * (20 - ABL:MASTER:マゾっ気 - ABL:MASTER:苦痛中毒 * 2 + TALENT:MASTER:痛みに弱い * 5 - TALENT:MASTER:痛みに強い * 3) / 20
+
+;欲情、マゾっ気と苦痛中毒、ドＭ、そして調教者のサドを見る
+CUP:MASTER:欲情 += SOURCE:MASTER:痛み * (ABL:MASTER:マゾっ気 + ABL:MASTER:苦痛中毒 * 2 + TALENT:MASTER:ドＭ * 5) * (3 + TALENT:サド) / 60
+
+;痛みSOURCEから補正値を作る
+LOCAL = 50 + (SOURCE:MASTER:痛み - 50) * (50 - CFLAG:MASTER:調教レベル - ABL:MASTER:従順 * 2) / 200
+;500を突破すると上昇しにくくなる処理
+;必要かどうかを見極めるため試験的にコメントアウト@これみ
+;B = (A - 500) / 3
+;SIF B > 0
+;	A = 500 + RAND:B
+LOCAL = MAX(LOCAL, 10)
+
+DOWNBASE:MASTER:体力 += LOCAL
+DOWNBASE:MASTER:気力 += LOCAL / 2
+DOWNBASE:MASTER:理性 += LOCAL * (5 + TALENT:MASTER:痛みに弱い - TALENT:MASTER:痛みに強い + TALENT:MASTER:情緒豊か - TALENT:MASTER:感情乏しい) * (900 + RAND:100 + 1) / 7000
+
+;苦痛による理性低下のフラグ
+TFLAG:苦痛による理性低下 = 1
+
+;出血
+;痛みが強いとどこかから出血する
+;適当すぎるのでとりあえず静かにしててもらう@これみ
+[SKIPSTART]
+SIF LOCAL > 500 && RAND:3 > 0
+	STAIN:MASTER:口 |= 32
+SIF LOCAL > 500 && RAND:4 > 0
+	STAIN:MASTER:足 |= 32
+SIF LOCAL > 750 && RAND:3 > 0
+	STAIN:MASTER:胸 |= 32
+SIF LOCAL > 750 && RAND:4 > 0
+	STAIN:MASTER:手 |= 32
+[SKIPEND]
+
+;────────────────────────────────────
+;拘束のソース（欲情、屈服、苦痛、不快、抑鬱、体力、気力）
+;────────────────────────────────────
+@CALC_SOURCE14
+
+;欲情、マゾっ気と拘束中毒、ドＭ、そして調教者のサドを見る
+CUP:MASTER:欲情 += SOURCE:MASTER:拘束 * (ABL:MASTER:マゾっ気 + ABL:MASTER:拘束中毒 * 2 + TALENT:MASTER:ドＭ * 5) * (3 + TALENT:サド) / 60
+
+;屈服、従順をみる
+CUP:MASTER:屈服 += SOURCE:MASTER:拘束 * (5 + ABL:MASTER:従順) / 25
+
+;苦痛、従順を見る
+CUP:MASTER:苦痛 += SOURCE:MASTER:拘束 * (11 - ABL:MASTER:従順 * 2) / 50
+
+;不快
+CUP:MASTER:不快 += SOURCE:MASTER:拘束 * (61 - ABL:MASTER:マゾっ気 - ABL:MASTER:拘束中毒 * 3 - CFLAG:MASTER:調教レベル - TALENT:MASTER:ドＭ * 5) / 50
+;;不快上昇がマイナスなら0に差し替える
+SIF CUP:MASTER:不快 < 0
+	CUP:MASTER:不快 = 0
+
+;抑鬱
+CUP:MASTER:抑鬱 += SOURCE:MASTER:拘束 * (2 + TALENT:MASTER:悲観的 - TALENT:MASTER:楽観的) / (3 + CFLAG:MASTER:調教レベル + ABL:MASTER:拘束中毒 * 3 + TALENT:MASTER:ドＭ * 10)
+
+;調教対象体力、気力
+LOCAL = SOURCE:MASTER:拘束 * (50 - CFLAG:MASTER:調教レベル - ABL:MASTER:従順 * 3) / 600
+DOWNBASE:MASTER:体力 += 30 + LOCAL * 2 / 3
+DOWNBASE:MASTER:気力 += LOCAL
+

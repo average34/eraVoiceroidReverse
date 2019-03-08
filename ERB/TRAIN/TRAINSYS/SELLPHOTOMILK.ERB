@@ -1,0 +1,117 @@
+﻿;────────────────────────────────────
+;写真の価値を計算
+;────────────────────────────────────
+@SELL_PHOTO
+
+;得点を以下の条件で加算していく
+VARSET LOCAL
+
+;快Ｘ * 5
+LOCAL += (CUP:MASTER:快Ｃ + CUP:MASTER:快Ｖ + CUP:MASTER:快Ａ + CUP:MASTER:快Ｂ) * 5
+;Ｘ絶頂 * 1500
+LOCAL += (NOWEX:MASTER:Ｃ絶頂 + NOWEX:MASTER:Ｖ絶頂 + NOWEX:MASTER:Ａ絶頂 + NOWEX:MASTER:Ｂ絶頂) * 1500
+;噴乳+射精 * 1000、放尿 * 450
+LOCAL += (NOWEX:MASTER:噴乳 + NOWEX:MASTER:射精) * 1000 + NOWEX:MASTER:放尿 * 450
+;潤滑 / 10
+LOCAL += CUP:MASTER:潤滑 / 10
+;欲情
+;自制心+4、衝動的-3、快感の否定+3、快感に素直-2
+;最大で-5されるので正に保つために+6
+LOCAL += CUP:MASTER:欲情 * (6 + TALENT:MASTER:自制的 * 4 - TALENT:MASTER:衝動的 * 3 + TALENT:MASTER:快感の否定 * 3 - TALENT:MASTER:快感に素直 * 2)
+;屈服
+;気丈+3、反抗的+2、臆病-2、素直-1、プライド高い+3、プライド低い-2
+;最大で-3されるので正に保つために+4
+LOCAL += CUP:MASTER:屈服 * (4 + TALENT:MASTER:気丈 * 3 + TALENT:MASTER:反抗的 * 2 - TALENT:MASTER:臆病 * 2 - TALENT:MASTER:素直 + TALENT:MASTER:プライド高い * 3 - TALENT:MASTER:プライド低い * 2)
+;恐怖
+;感情乏しい-1、情緒豊か+2
+;最大で-1だけど、全体補正は+5
+LOCAL += CUP:MASTER:恐怖 * (5 - TALENT:MASTER:感情乏しい + TALENT:MASTER:情緒豊か * 2)
+;恭順
+;反抗的+2、素直-1、生意気+3、大人しい-1
+;最大で-2だけど、全体補正は+5
+LOCAL += CUP:MASTER:恭順 * (5 + TALENT:MASTER:反抗的 * 2 - TALENT:MASTER:素直 + TALENT:MASTER:生意気 * 3 - TALENT:MASTER:大人しい)
+;反抗
+;3 + 反抗刻印 / 3
+LOCAL += CUP:MASTER:反抗 * (3 + MARK:反抗刻印 / 3)
+;苦痛
+;調教者がサドいと二倍
+LOCAL += CUP:MASTER:苦痛 * (1 + TALENT:サド)
+;恥情
+;恥じらい+5、恥薄い-5
+;最大で-5されるので正に保つために+6
+LOCAL += CUP:MASTER:恥情 * (6 + TALENT:MASTER:恥じらい * 5 - TALENT:MASTER:恥薄い * 5)
+;不快 * 3
+LOCAL += CUP:MASTER:不快 * 3
+;抑鬱 * 3
+LOCAL += CUP:MASTER:抑鬱 * 2
+
+;以後補正処理
+
+;(助手技巧+1) * (助手性交技能+調教レベル+1) * (100+調教対象被写経験) をかけて 10000 で割る
+LOCAL *= (ABL:ASSI:技巧 + 1) * (ABL:ASSI:性交 + CFLAG:ASSI:調教レベル + 1) * (100 + EXP:MASTER:被写経験) / 10000
+
+;助手が写真を新聞の記事にした場合
+;露出,逸脱SOURCEを足し、助手技巧+7をかけて6で割る
+SIF TFLAG:助手SPACT == 100
+	LOCAL = (LOCAL + SOURCE:MASTER:露出 + SOURCE:MASTER:逸脱) * (7 + ABL:ASSI:技巧) / 6
+
+PRINT 今回の撮影の得点：
+PRINTVL LOCAL
+;全く得点を獲得できなかった場合
+IF LOCAL == 0
+	PRINTL 今回の撮影は完全に失敗に終わった…
+	PRINTFORML %CALLNAME:ASSI%があまりに調教に不慣れだったかもしれない
+;CFLAG:MASTER:合意 = 撮影基準値
+;撮影基準値未満では魔力は得られない
+ELSEIF LOCAL < CFLAG:MASTER:合意
+	PRINTL 今回の撮影は前回ほどの出来とはいえないようだ
+;撮影基準値を満たすと
+ELSE
+	;400 + 基準値の1/5 + 調教レベルの二乗(+α)*20 を基準値に加算
+	CFLAG:MASTER:合意 += 400 + CFLAG:MASTER:合意 / 5 + (CFLAG:MASTER:調教レベル + 1) * (CFLAG:MASTER:調教レベル + 2) * 20
+	PRINTL 今回の撮影は上出来のようだ。魔力さえ滲んできている…
+	;今回得点の1/4の魔力を得る
+	PRINTFORMW %CALLNAME%は{LOCAL / 4}の魔力を得た
+	CFLAG:魔力 += LOCAL / 4
+	PRINTL 
+ENDIF
+
+;────────────────────────────────────
+;ミルクの価値を計算
+;────────────────────────────────────
+@SELL_MILK
+;調教時間、Ｂ絶頂、噴乳*3、献身的*2、魅惑*5、調教レベルの総計を魔力として得る
+LOCAL = TFLAG:調教時間 + EX:MASTER:Ｂ絶頂 + EX:MASTER:噴乳 * 3 + TALENT:MASTER:献身的 * 2 + TALENT:MASTER:魅惑 * 5 + CFLAG:MASTER:調教レベル
+CFLAG:魔力 += LOCAL
+PRINTFORML %CALLNAME:MASTER%から搾ったミルクは{LOCAL}の魔力として%CALLNAME%に吸収された
+
+;調教時間リセット
+TFLAG:調教時間 = 0
+
+;────────────────────────────────────
+;母乳体質取得のチェック
+;────────────────────────────────────
+@MILK_CHECK
+
+;基準値を生成
+VARSET LOCAL
+;快Ｂ/100の平方根を加算(0-5)
+LOCAL:1 = SQRT(CUP:MASTER:快Ｂ / 100)
+LOCAL += LIMIT(LOCAL:1, 0, 5)
+;調教対象Ｂ経験/4の平方根を加算(0-5)
+LOCAL:1 = SQRT(EXP:MASTER:Ｂ経験 / 4)
+LOCAL += LIMIT(LOCAL:1, 0, 5)
+
+;(基準値+調教時間)が(12+(0-4)-調教対象献身的-幼稚*2)を上回れば
+IF LOCAL + TFLAG:調教時間 > 12 + RAND:5 - TALENT:MASTER:献身的 - TALENT:幼稚 * 2
+	;母乳体質取得
+	TALENT:MASTER:母乳体質 = 1
+	PRINTFORMW %CALLNAME:MASTER%は母乳が出るようになった
+	;母乳ゲージを新設(MAX10000)
+	MAXBASE:MASTER:母乳 = 10000
+	;調教時間リセット
+	TFLAG:調教時間 = 0
+ELSE
+	;調教時間経過
+	TFLAG:調教時間 += 1
+ENDIF

@@ -1,0 +1,172 @@
+﻿
+;────────────────────────────────────
+;エキストラモードの主人公の選択
+;────────────────────────────────────
+@START_CHARA_SELECT
+
+;選択肢を呼び出す
+LOCALS = 
+LOCALS += "<識別>START_CHARA_SELECT_M"
+LOCALS += "<対象>登場可"
+LOCALS += "<上部>START_CHARA_SHOW_M"
+LOCALS += "<条件>START_CHARA_REQU_M"
+LOCALS += "<選択>START_CHARA_CHOI_M"
+LOCALS += "<取消>キャンセル不可"
+LOCALS += "<項目>名前/二つ名"
+CALL SELECT_CHARA_LIST(LOCALS)
+
+IF RESULT == 0
+	PRINTW 主人公を「あなた」に設定します
+	;「あなた」を追加
+	ADDCHARA 0
+	;主人公を設定
+	MASTER = CHARANUM - 1
+	;SANDBOXならゆかりんにお呼ばれ
+	IF FLAG:モード == 1
+		PRINTL 
+		CALL CHARA_MAKER
+	;そうでなければ主人公設定
+	ELSE
+		CALL MASTER_CUSTOM
+		;主人公のゲージをセットアップ、MASTERCUSTOM.ERBに格納
+		CALL BASE_MASTER_SETUP
+	ENDIF
+ELSE
+	;キャラクターを追加
+	ADDCHARA RESULT
+	;主人公を設定
+	MASTER = CHARANUM - 1
+	;登場フラグを0にしておく
+	FLAG:(RESULT + 99) = 0
+	PRINTFORMW 主人公を「%NAME:MASTER%」に設定します
+	;主人公のゲージをセットアップ、MASTERCUSTOM.ERBに格納
+	CALL BASE_MASTER_SETUP
+ENDIF
+;衣装設定がまだない場合、ここで設定する
+CALL CLOTHES_SETUP(MASTER)
+
+;────────────────────────────────────
+;最初の調教者の選択
+;────────────────────────────────────
+@START_CHARA_SELECT_T
+$TRAINER_REROLL
+;選択肢を呼び出す
+LOCALS = 
+LOCALS += "<識別>START_CHARA_SELECT_T"
+LOCALS += "<対象>登場可"
+LOCALS += "<上部>START_CHARA_SHOW_T"
+LOCALS += "<条件>START_CHARA_REQU_T"
+LOCALS += "<口上>調教者"
+LOCALS += "<選択>START_CHARA_CHOI_T"
+LOCALS += "<取消>キャンセル不可"
+LOCALS += "<項目>名前/二つ名"
+CALL SELECT_CHARA_LIST(LOCALS)
+LOCAL = RESULT
+CALL KOJO_PROFILE(RESULT)
+CALL PRINT_DIALOG(@"このキャラでよろしいですか？", 1, 1, 1)
+CALL PRINT_CHOICE(, "はい", 1, "いいえ", 2, )
+SIF RESULT == 2
+	GOTO TRAINER_REROLL
+
+IF LOCAL == 0
+	PRINTW 調教者を「あなた」に設定します
+	;「あなた」を追加
+	ADDCHARA 0
+	;調教者を設定
+	TARGET = CHARANUM - 1
+ELSE
+	;キャラクターを追加
+	ADDCHARA LOCAL
+	;調教者を設定
+	TARGET = CHARANUM - 1
+	;登場フラグを0にしておく
+	FLAG:(LOCAL + 99) = 0
+	PRINTFORMW 調教者を「%NAME:TARGET%」に設定します
+ENDIF
+;口上のコンフィグ設定	関数名変更@revkoishi(14/05/22)
+CALL KOJO_CONFIG_SET(TARGET)
+
+;────────────────────────────────────
+;エキストラモードのキャラクター選択(選択肢)
+;────────────────────────────────────
+@START_CHARA_SHOW_M
+CALL START_CHARA_SHOW(0)
+@START_CHARA_SHOW_T
+CALL START_CHARA_SHOW(1)
+@START_CHARA_SHOW(ARG)
+
+IF ARG == 0
+	PRINTL ★★調教されるキャラを選択してください★★
+ELSE
+	PRINTL ★★調教するキャラを選択してください★★
+ENDIF
+
+;「あなた」は特別扱い
+IF ARG == 0
+	PRINT 　[0]「あなた」
+	IF FLAG:モード == 1
+		PRINTL ※キャラメイキングに進みます
+	ELSE
+		PRINTL ※細かいパラメーターを設定できます
+	ENDIF
+ELSEIF NO:MASTER != 0
+	PRINTL 　[0]「あなた」にします
+ENDIF
+
+@START_CHARA_REQU_M(ARG)
+SIF FLAG:(ARG + 99) == 0
+	RETURN 0
+RETURN ARG == 0 ? 0 # 1
+
+@START_CHARA_REQU_T(ARG, ARGS)
+;ARGS = "口上ありのみ", "制限なし"
+IF ARGS != ""
+	LOCAL = ARGS == "口上ありのみ" ? 1 # 0
+	RETURN RESULT
+ENDIF
+;登場フラグが立っていれば表示
+IF FLAG:(ARG + 99) > 0
+	;口上があるかをチェック
+	CALL KOJO_CHECK(MASTER, ARG)
+	;口上があればいつでも表示
+	SIF RESULT
+		RETURN 1
+	;口上のないキャラを表示しない
+	RETURN KOJOOFF
+ENDIF
+RETURN 0
+
+@START_CHARA_CHOI_M(ARGS)
+CALL START_CHARA_CHOI(ARGS, 0)
+RETURN RESULT
+@START_CHARA_CHOI_T(ARGS)
+CALL START_CHARA_CHOI(ARGS, 1)
+RETURN RESULT
+@START_CHARA_CHOI(ARGS, ARG)
+;追加選択肢
+IF ARGS == "-1"
+	PRINTBUTTON @"%"　[R]ランダム", 25, LEFT%", "R"
+	SIF ARG
+		PRINTBUTTON @"%"　[S]口上" + \@ KOJOOFF ? ありのみ # 無し込み \@, 25, LEFT%", "S"
+	PRINTL 
+;主人公「あなた」
+ELSEIF ARGS == "0" && (ARG == 0 || NO:MASTER != 0)
+	RESULTS = 0
+	RETURN 0
+;ランダム選択時
+ELSEIF ARGS == "R"
+	;選択肢リストから一人選ぶ(あなた除く)
+	LOCAL = RAND:FINDELEMENT(CHARA_LIST, -1)
+	LOCAL = CHARA_LIST:LOCAL
+	PRINTFORML 「%CSVNAME(LOCAL)%」でよろしいですか？
+	CALL PRINT_CHOICE(, "はい", 1, "いいえ", 2, )
+	SIF RESULT == 2
+		RETURN -1
+	RESULTS = {LOCAL}
+	RETURN 0
+;口上チェック選択
+ELSEIF ARGS == "S" && ARG
+	KOJOOFF = !KOJOOFF
+	RETURN -1
+ENDIF
+RETURN 1

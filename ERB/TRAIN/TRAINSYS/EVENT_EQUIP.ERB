@@ -1,0 +1,6 @@
+﻿@EVENT_EQUIP
+;押し倒し解除
+IF TEQUIP:性交中 || TEQUIP:性交奉仕中 || TFLAG:お仕置きフラグ
+	TEQUIP:押し倒し中 = 0
+	TFLAG:押し倒し経過 = TFLAG:経過時間
+ENDIF

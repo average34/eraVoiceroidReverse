@@ -1,0 +1,384 @@
+﻿;────────────────────────────────────
+;調教開始の処理
+;────────────────────────────────────
+@EVENTTRAIN
+#DIM LCOUNT
+#DIM 可能満足ボー数
+
+;(調教者別)調教回数加算
+CFLAG:調教回数++
+
+;調教開始直前に魔力消費処理をはさむ(サンドボックスのみ、指定時)
+SIF FLAG:モード == 1 && FLAG:AI自由度
+	CALL MANAGE_MP
+
+FLAG:調教中 = 1
+;衣装をInitialize
+TEQUIP:MASTER:アクセサリ = CFLAG:MASTER:衣装 < 2 ? EQUIP:MASTER:アクセサリ # 0
+TEQUIP:MASTER:靴下       = CFLAG:MASTER:衣装 < 2 ? EQUIP:MASTER:靴下 # 0
+TEQUIP:MASTER:下半身下着 = CFLAG:MASTER:衣装 < 2 ? EQUIP:MASTER:下半身下着 # 0
+TEQUIP:MASTER:上半身下着 = CFLAG:MASTER:衣装 < 2 ? EQUIP:MASTER:上半身下着 # 0
+TEQUIP:MASTER:下半身上着 = CFLAG:MASTER:衣装 < 1 ? EQUIP:MASTER:下半身上着 # 0
+TEQUIP:MASTER:上半身上着 = CFLAG:MASTER:衣装 < 1 ? EQUIP:MASTER:上半身上着 # 0
+TEQUIP:MASTER:全身上着   = CFLAG:MASTER:衣装 < 1 ? EQUIP:MASTER:全身上着 # 0
+TEQUIP:MASTER:コスプレ   = CFLAG:MASTER:衣装 == 3 ? EQUIP:MASTER:コスプレ # 0
+
+TEQUIP:MASTER:奴隷の首輪 = EQUIP:MASTER:奴隷の首輪
+
+TEQUIP:アクセサリ = CFLAG:TARGET:衣装 < 2 ? EQUIP:TARGET:アクセサリ # 0
+TEQUIP:靴下       = CFLAG:TARGET:衣装 < 2 ? EQUIP:TARGET:靴下 # 0
+TEQUIP:下半身下着 = CFLAG:TARGET:衣装 < 2 ? EQUIP:TARGET:下半身下着 # 0
+TEQUIP:上半身下着 = CFLAG:TARGET:衣装 < 2 ? EQUIP:TARGET:上半身下着 # 0
+TEQUIP:下半身上着 = CFLAG:TARGET:衣装 < 1 ? EQUIP:TARGET:下半身上着 # 0
+TEQUIP:上半身上着 = CFLAG:TARGET:衣装 < 1 ? EQUIP:TARGET:上半身上着 # 0
+TEQUIP:全身上着   = CFLAG:TARGET:衣装 < 1 ? EQUIP:TARGET:全身上着 # 0
+TEQUIP:コスプレ   = CFLAG:TARGET:衣装 == 3 ? EQUIP:TARGET:コスプレ # 0
+
+;-1に初期化するTFLAGをリセット
+TFLAG:前ACT = -1
+TFLAG:前REACT分類 = -1
+TFLAG:ACT分類予約 = -1
+CVARSET TCVAR, GETNUM(TCVAR, "行動予約"), -1
+TCVAR:今日の満足ボーナス = -1
+
+;調教中に用いるCFLAGをリセット
+FOR LOCAL, 30, 34
+	CVARSET CFLAG, LOCAL, 50
+NEXT
+FOR LOCAL, 250, 260
+	CVARSET CFLAG, LOCAL
+NEXT
+TFLAG:可能なCOM数 = 0
+;絶頂関連
+FOR LCOUNT, 0, CHARANUM
+	VARSET EX:LCOUNT:0
+	VARSET NOWEX:LCOUNT:0
+	VARSET TCVAR:LCOUNT:0, 0, 70, 100
+NEXT
+
+;姿勢関連
+CVARSET TCVAR, GETNUM(TCVAR,           "姿勢")
+CVARSET TCVAR, GETNUM(TCVAR,     "前回の姿勢")
+CVARSET TCVAR, GETNUM(TCVAR,       "位置前後")
+CVARSET TCVAR, GETNUM(TCVAR, "前回の位置前後")
+CVARSET TCVAR, GETNUM(TCVAR,       "位置上下")
+CVARSET TCVAR, GETNUM(TCVAR, "前回の位置上下")
+
+;現在のアライメント=平時アライメント
+CFLAG:平時ア = LIMIT(CFLAG:平時ア, -999, 999)
+CFLAG:アライメント = CFLAG:平時ア / 10
+;奴隷の首輪装備中
+SIF TEQUIP:MASTER:奴隷の首輪 == 1
+	CFLAG:アライメント = -99
+
+;開始時の調教者の射精ゲージが0になっていたので、ここで修正
+BASE:射精 = MAXBASE:射精
+;尿意ゲージの設定
+BASE:MASTER:尿意 = 0
+MAXBASE:MASTER:尿意 = 10000 - TALENT:MASTER:早漏 * 5000 + TALENT:MASTER:遅漏 * 5000
+;まだ解消してない疲弊を調教フェースに反応
+TFLAG:調教者消耗度 = CFLAG:消耗
+TFLAG:消耗度 = CFLAG:MASTER:消耗
+
+TCVAR:MASTER:勃起度 = 1000 * (BASE:MASTER:射精 + 5000) * (MAXBASE:MASTER:理性 - BASE:MASTER:理性) / ((MAXBASE:MASTER:射精 + 5000) * MAXBASE:MASTER:理性)
+
+;長期補正値用初期化処理
+CALL ACT_M_RESEARCH_L(0)
+
+CALLF _UNEXTRACTION(MASTER, 1, 0)	;抜かず状態遅延判定フラグ初期化@revkoishi(14/07/15)
+
+;────────────────────────────────────
+;今回の方針
+;────────────────────────────────────
+;選択可能な大満足ボーナスがいくつあるか
+可能満足ボー数 = 0
+FOR LCOUNT, 0, 10
+	SIF SATISBONUS_ABLE(LCOUNT)
+		可能満足ボー数++
+NEXT
+
+
+;ご褒美があったときは方針変更を飛ばすように
+IF (!CFLAG:満足ボー && CFLAG:消耗 <= 5 && CFLAG:MASTER:消耗 <= 5 && CFLAG:調教レベル > 4) || !可能満足ボー数
+	;お尻をいじめてみようかな処理？
+	;なんだこれ意味わからん…Ａ感覚上がるほど出にくくなるの？
+	;暫定残し
+	SELECTCASE ABL:MASTER:Ａ感覚
+		CASE 0
+			TFLAG:今日の方針 = !RAND:3
+		CASE 1
+			TFLAG:今日の方針 = !RAND:4
+		CASE 2
+			TFLAG:今日の方針 = !RAND:6
+		CASE 3
+			TFLAG:今日の方針 = !RAND:8
+		CASE 4
+			TFLAG:今日の方針 = !RAND:12
+	ENDSELECT
+	;確率でいつもどおりでない方針をとるように
+	IF !RAND:5
+		LOCAL = RAND:4
+		IF BASE:MASTER:体力 < 2 * MAXBASE:MASTER:体力 / 3 && LOCAL == 0
+			TFLAG:今日の方針 = 4
+		ELSEIF	BASE:MASTER:射精 < 9 * MAXBASE:MASTER:体力 / 10 && LOCAL == 1
+			TFLAG:今日の方針 = 3
+		ELSEIF ITEM:首輪  && LOCAL == 2
+			TFLAG:今日の方針 = 6
+		;ELSEIF GETBIT(FLAG:60,0)  && LOCAL == 3
+		;	TFLAG:今日の方針 = 9
+		;お仕置きは反発依存にしたいが仕様がさだまっていないので後回し
+		;ELSEIF RAND:((2 + MARK:反抗刻印) * (TALENT:サド + 1)) > RAND:30
+		;	TFLAG:今日の方針 = 2
+		ENDIF
+	ENDIF
+ENDIF
+
+;調教開始口上
+DRAWLINE
+RESULT = 0
+IF CFLAG:消耗 > 5
+	CALL KOJO_EVENT(11, 1)
+ELSEIF CFLAG:MASTER:消耗 > 5
+	CALL KOJO_EVENT(11, 2)
+ELSE
+	CALL KOJO_EVENT(11)
+ENDIF
+
+LOCAL = 0
+IF 可能満足ボー数 && CFLAG:満足ボー && CFLAG:好意 > 1000 && !TFLAG:今日の方針 && CFLAG:消耗 <= 5 && CFLAG:MASTER:消耗 <= 5
+	SKIPDISP 0
+	PRINTL
+	CALL PRINT_RAINBOW2W(@"★★%CALLNAME:TARGET%さま大満足ボーナス★★", 30)
+	PRINTL
+	IF FLAG:オートモード > 0
+		LOCAL = FLAG:優先大満足ボーナス % 100
+		SIF LOCAL == 9
+			LOCAL = RAND:9
+		SIF !LOCAL:1 && LOCAL == 6
+			LOCAL = FLAG:優先大満足ボーナス / 100
+		SIF !LOCAL:2 && LOCAL == 7
+			LOCAL = FLAG:優先大満足ボーナス / 100
+		;選んだものが実行できない場合
+		IF !SATISBONUS_ABLE(LOCAL)
+			FOR LCOUNT, 0, 20
+				SIF SATISBONUS_ABLE(LCOUNT)
+					LOCAL = LCOUNT
+			NEXT
+		ENDIF
+		PRINTFORMW %AUTO_SPLIT("いつも通り/アナルをいじめて/お仕置きして/激しくして/甘えさせて/壊れるまでして/外に出たい/孕ませたい/休ませて/抱かれたい/ランダム", "/", LOCAL)%を選択しました
+		RESULT = LOCAL
+		LOCAL = 0
+	ELSE
+		CALL KOJO_EVENT(16)
+		PRINTFORMW %CALLNAME:TARGET%は上機嫌な様子で、今日は何をされたいかとたずねてきた
+		PRINTL
+		SIF SATISBONUS_ABLE(0)
+			CALL HTMLPRINTL(@"%HTMLBUTTON("[ 0] - いつも通り", "0", "通常")%")
+		SIF SATISBONUS_ABLE(1)
+			{
+			CALL HTMLPRINTL(@"%HTMLBUTTON("[ 1] - アナルをいじめて", "1", @"\@ 
+			CFLAG:M好意 + CFLAG:好意 >= 10000 && (TALENT:TARGET:ふたなり || ITEM:ペニスバンド) 
+			? 性交++ # 愛撫++ 道具++ 加虐+ \@")%")
+			}
+		SIF SATISBONUS_ABLE(2)
+			CALL HTMLPRINTL(@"%HTMLBUTTON("[ 2] - お仕置きして", "2", "お仕置きフラグが立つ")%")
+		SIF SATISBONUS_ABLE(3)
+			CALL HTMLPRINTL(@"%HTMLBUTTON("[ 3] - 激しくして", "3", "道具+ 奉仕+ 加虐++")%")
+		SIF SATISBONUS_ABLE(4)
+			{
+			CALL HTMLPRINTL(@"%HTMLBUTTON("[ 4] - 甘えさせて", "4", @"\@ 
+			CFLAG:M好意 + CFLAG:好意 >= 10000 && ITEM:ペニスバンド && !PENIS(MASTER) 
+			? 性奉++ # 愛撫+ 奉仕++ \@")%")
+			}
+		SIF SATISBONUS_ABLE(5)
+			CALL HTMLPRINTL(@"%HTMLBUTTON("[ 5] - 壊れるまでして", "5", "加虐++ 異常++")%")
+		SIF SATISBONUS_ABLE(6)
+			CALL HTMLPRINTL(@"%HTMLBUTTON("[ 6] - 外に出たい", "6", "野外プレイ")%")
+		;好意+好感度10000以上、調教者が妊娠できる
+		SIF SATISBONUS_ABLE(7)
+			CALL HTMLPRINTL(@"%HTMLBUTTON(@"[ 7] - %CALLNAME%さまを孕ませたい", "7", "性奉++")%")
+		SIF SATISBONUS_ABLE(8)
+			CALL HTMLPRINTL(@"%HTMLBUTTON("[ 8] - 休ませて", "8", "休憩による調教のスキップ")%")
+		;好意+好感度10000以上
+		SIF SATISBONUS_ABLE(9)
+			CALL HTMLPRINTL(@"%HTMLBUTTON(@"[ 9] - %CALLNAME%さまに抱かれたい", "9", "性交++")%")
+		;反抗刻印なしかつM好意1000以上
+		SIF SATISBONUS_ABLE(10)
+			CALL HTMLPRINTL(@"%HTMLBUTTON(@"[10] - %CALLNAME%さまにご奉仕したい", "10", "奉仕++")%")
+		REDRAW 0
+		$INPUT_LOOP
+		INPUT
+		IF !SATISBONUS_ABLE(RESULT)
+			CLEARLINE 1
+			GOTO INPUT_LOOP
+		ENDIF
+		REDRAW 1
+	ENDIF
+	;TCVAR:今日の満足ボーナスへの代入を追加@/L
+	SELECTCASE RESULT
+		;通常
+		CASE 0
+			TCVAR:今日の満足ボーナス = 0
+		;アナル
+		CASE 1
+			TCVAR:今日の満足ボーナス = 1
+		;お仕置き
+		CASE 2
+			TFLAG:お仕置きフラグ = 1
+			TCVAR:今日の満足ボーナス = 2
+		;ハード
+		CASE 3
+			TCVAR:今日の満足ボーナス = 3
+		;イチャイチャ
+		CASE 4
+			TCVAR:今日の満足ボーナス = 4
+		;異常
+		CASE 5
+			TCVAR:今日の満足ボーナス = 5
+		;野外
+		CASE 6
+			TEQUIP:野外プレイ = 1
+			TCVAR:今日の満足ボーナス = 6
+		;子作り
+		CASE 7
+			TCVAR:今日の満足ボーナス = 7
+		;休憩
+		CASE 8
+			TCVAR:今日の満足ボーナス = 8
+		;抱いて
+		CASE 9
+			TCVAR:今日の満足ボーナス = 9
+		;ご奉仕
+		CASE 10
+			TCVAR:今日の満足ボーナス = 10
+	ENDSELECT
+	TFLAG:今日の方針 = RESULT
+	;ここでリセットされると今日の方針箇所での参照に使えないのでコメントアウト
+	;CFLAG:満足ボー = 0
+	CALL KOJO_EVENT(16, 1)
+	SIF TFLAG:今日の方針 != 8
+		PRINTFORMW %CALLNAME:TARGET%は%CALLNAME:MASTER%の返事を聞くと調教の準備を始めた
+	LOCAL = 1
+	IF FLAG:オートモード > 0 && FLAG:オートモード表示設定 == 1
+		SKIPDISP 1
+	ENDIF
+ENDIF
+
+IF !LOCAL && TFLAG:今日の方針
+	CALL KOJO_EVENT(17)
+	CALL VOIDLINE_IF(RESULT)
+ENDIF
+
+SELECTCASE POLICY("今日")
+	CASE "通常"
+	CASE "アナル"
+		{
+		PRINTFORMW 今回%CALLNAME:TARGET%は%CALLNAME:MASTER%の\@ CFLAG:満足ボー 
+		? リクエストに応え、 # \@アナルを開発することに決めた…
+		}
+	CASE "お仕置き"
+		{
+		PRINTFORMW %CALLNAME:TARGET%は%CALLNAME:MASTER%\@ CFLAG:満足ボー 
+		? のリクエストに応え、 # に \@お仕置きをすることにした…
+		}
+	CASE "ハード"
+		{
+		PRINTFORMW %CALLNAME:TARGET%は\@ CFLAG:満足ボー 
+		? %CALLNAME:MASTER%のリクエストに応え、 # \@いつもより激しく調教することにした…
+		}
+	CASE "イチャイチャ"
+		PRINTFORMW %CALLNAME:TARGET%は%CALLNAME:MASTER%に手招きし、優しく抱き寄せた… 
+	CASE "異常"     ;嗜虐と情欲と言っても要するに異常系というだけなんで微妙な気はする
+		PRINTFORMW %CALLNAME:TARGET%は嗜虐と情欲に狂った目で%CALLNAME:MASTER%を見つめてきた…
+	CASE "野外"
+		PRINTFORMW %CALLNAME:TARGET%は%CALLNAME:MASTER%に首輪をつけさせると、外出の準備を始めた…
+	;以下、ご褒美でしか出ない
+	CASE "子作り"
+		PRINTFORMW %CALLNAME:TARGET%は子供を授かることの期待から%CALLNAME:MASTER%に擦り寄ってきた…
+	CASE "休憩"
+		;休憩。INFO.ERBに処理を移動
+	CASE "抱いて"
+		{
+		PRINTFORMW %CALLNAME:TARGET%はこれから抱かれることへの期待に身体を熱く火照らせる%CALLNAME:MASTER%を\@ 
+		!TALENT:サド ? 優しく # \@抱き寄せた…
+		}
+	CASE "ご奉仕"
+		PRINTFORMW %CALLNAME:TARGET%は殊勝な申し出に満足げな笑みを浮かべつつ、%CALLNAME:MASTER%を招き寄せその頭を優しく撫でた…
+ENDSELECT
+
+;今日の方針地の文を抜けてからリセット
+CFLAG:満足ボー = 0
+
+IF FLAG:オートモード > 0 && FLAG:オートモード表示設定 == 1
+	CALL SHOW_AUTOMODE_UPCHECK, 1
+	SKIPDISP 0
+	DRAWLINE
+	PRINTFORML {FLAG:年数+1}年{FLAG:日数+1}日目(%GET_TIME()%) %GET_SEASON()% %GET_DAY()%の行 　ご主人様：%CALLNAME:1%
+	DRAWLINE
+	SKIPDISP 1
+ENDIF
+
+;大満足ボーナスの可否
+@SATISBONUS_ABLE(ARG)
+#FUNCTION
+;大満足ボーナス自体が封印されていれば0を返す
+SIF CFLAG:大満足ボーナス封印
+	RETURNF 0
+SELECTCASE ARG
+	;いつも通り
+	CASE 0
+	;アナルをいじめて
+	CASE 1
+	;お仕置きして
+	CASE 2
+	;激しくして
+	CASE 3
+	;甘えさせて
+	CASE 4
+	;壊れるまでして
+	CASE 5
+	;外に出たい
+	CASE 6
+		SIF !ITEM:首輪
+			RETURNF 0
+	;孕ませたい
+	CASE 7
+		SIF !(CFLAG:M好意 + CFLAG:好意 >= 10000 && !TALENT:妊娠 && FLAG:妊娠 && !TALENT:オトコ && PENIS(MASTER))
+			RETURNF 0
+	;休ませて
+	CASE 8
+	;抱いてほしい
+	CASE 9
+		SIF !(CFLAG:M好意 + CFLAG:好意 >= 10000 && !TALENT:MASTER:オトコ && (TALENT:ふたなり || ITEM:ペニスバンド))
+			RETURNF 0
+	;ご奉仕したい
+	CASE 10
+		SIF !(!MARK:反抗刻印 && CFLAG:M好意 >= 1000)
+			RETURNF 0
+	[SKIPSTART]
+	実装する場合はペニバンと排他にすべきか？
+	;孕ませて
+	CASE 11
+		SIF !(CFLAG:M好意 + CFLAG:好意 >= 10000 && !TALENT:MASTER:妊娠 && FLAG:調教対象妊娠 && !TALENT:MASTER:オトコ && TALENT:ふたなり)
+			RETURN 0
+	[SKIPEND]
+	;未定義
+	CASEELSE
+		RETURNF 0
+ENDSELECT
+;個別に封印されていなければ
+RETURNF !CFLAG:(1200+ARG)
+
+
+;────────────────────────────────────
+;汚れのリセット
+;────────────────────────────────────
+@STAIN_RESET
+RESET_STAIN MASTER
+RESET_STAIN TARGET
+SIF ASSI:1 >= 0
+	RESET_STAIN ASSI:1
+SIF ASSI:2 >= 0
+	RESET_STAIN ASSI:2
+SIF ASSI:3 >= 0
+	RESET_STAIN ASSI:3

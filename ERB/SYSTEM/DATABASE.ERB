@@ -1,0 +1,177 @@
+﻿;────────────────────────────────────
+;データベース記録機能
+;────────────────────────────────────
+;記録初期化
+@DATABASE_INPUT_INIT
+;現在の魔力を記録
+CFLAG:6000 = CFLAG:魔力
+;現在の累積魔力を記録
+CFLAG:6100 = CFLAG:累積魔力
+
+;ターン毎記録
+@DATABASE_INPUT
+;今回の調教方針/メニュー/行動を記録
+FLAG:(1239 + TFLAG:ターン方針) += TFLAG:ターン方針 >= 0
+SIF TFLAG:ACT分類 >= 0
+	CALLF DATABASE_I_AM(MENU(TFLAG:ACT分類), 1)
+FLAG:(1000 + TFLAG:ACT) += TFLAG:ACT >= 0
+
+;同じ行動連続実行を記録
+SIF TFLAG:ACT == TFLAG:前ACT
+	FLAG:調教者連続実行回数++
+;射精量のレコード
+SIF FLAG:射精量レコード < DOWNBASE:MASTER:射精
+	FLAG:射精量レコード = DOWNBASE:MASTER:射精
+
+;今回の選択できる反応の数を記録
+FLAG:(1300 + TFLAG:可能なCOM数)++
+
+;今回の調教対象による影響を記録
+FLAG:(1200 + TFLAG:REACT分類)++
+
+;パラメーターの最大上昇値を記録
+;※現在手を抜いたため調教対象のみ
+FOR LOCAL, 0, 50
+	SIF CUP:MASTER:LOCAL - CDOWN:MASTER:LOCAL > FLAG:(1400 + LOCAL)
+		FLAG:(1400 + LOCAL) = CUP:MASTER:LOCAL - CDOWN:MASTER:LOCAL
+NEXT
+;絵本の執筆
+IF CFLAG:TARGET:(2000 + TFLAG:ACT) == 0
+	FLAG:(4000 + NO:TARGET) += CFLAG:MASTER:15 == 2 ? 25 # 20
+ELSE
+	FLAG:(4000 + NO:TARGET) += CFLAG:MASTER:15 == 2 ? 2 # 1
+ENDIF
+CFLAG:TARGET:(2000 + TFLAG:ACT) += TFLAG:ACT >= 0
+CFLAG:MASTER:(2000 + TFLAG:ACT) += TFLAG:ACT >= 0
+
+;興味補正パッチによる、興味の追加
+CALL KYOMI_ADD
+
+;調教毎記録
+@DATABASE_INPUT_T
+;現在の魔力を記録
+ARRAYSHIFT CFLAG, 1, 0, 6000, 100
+CFLAG:6000 = CFLAG:魔力
+;現在の累積魔力を記録
+ARRAYSHIFT CFLAG, 1, 0, 6100, 100
+CFLAG:6100 = CFLAG:累積魔力
+
+;ACT分類実行回数記録・読み出し関数
+;ARG = 0 読み出し, 1 加算
+@DATABASE_I_AM(ARGS, ARG)
+#FUNCTION
+LOCAL = MENUNUM(ARGS)
+SIF ARG
+	FLAG:(1250 + LOCAL)++
+RETURNF FLAG:(1250 + LOCAL)
+
+;────────────────────────────────────
+;データベース閲覧機能
+;────────────────────────────────────
+@DATABASE_OUTPUT
+#DIM LCOUNT
+WHILE 1
+	PRINTL 閲覧したい項目を選んでください
+	PRINTL 
+	PRINTL [0] ショップメニューに戻る
+	PRINTL [1] 各調教者行動の実行回数を見る
+	PRINTL [2] 各パラメーターの上昇量レコードを見る
+	PRINTL [3] 調教方針とメニューの記録を見る
+	PRINTL [4] その他の記録を見る
+	PRINTL [5] コマンドごとの興味を見る
+	$INPUT_LOOP
+	INPUT
+	SELECTCASE RESULT
+		CASE 0
+			BREAK
+		CASE 1
+			DRAWLINE
+			PRINTL 各調教者行動の実行回数：
+			FOR LOCAL, 0, 200
+				SIF FLAG:(1000 + LOCAL)
+					PRINTFORML 　%TOSTR(LOCAL,"000")%.%GET_ACTNAME(LOCAL),20,LEFT% [{FLAG:(1000 + LOCAL),4}]回
+			NEXT
+			PRINTL [0] - 戻る  [1] - 調教者別のデータを見る
+			INPUT
+			IF RESULT == 1
+				CALL DATABASE_TRAINER
+				RESTART
+			ELSE
+				RESTART
+			ENDIF
+		CASE 2
+			DRAWLINE
+			PRINTL 各パラメーターの上昇量レコード：
+			FOR LOCAL, 0, 50
+				SIF FLAG:(1400 + LOCAL)
+					PRINTFORML 　%TOSTR(LOCAL,"00")%.%PALAMNAME:LOCAL% [{FLAG:(1400 + LOCAL),5}]
+			NEXT
+		CASE 3
+			DRAWLINE
+			PRINTL 調教方針：
+			PRINTFORML 　01.休憩 [{FLAG:1240,4}]回
+			PRINTFORML 　02. ｿﾌﾄ [{FLAG:1241,4}]回
+			PRINTFORML 　03.ﾉｰﾏﾙ [{FLAG:1242,4}]回
+			PRINTFORML 　04.ﾊｰﾄﾞ [{FLAG:1243,4}]回
+			PRINTFORML 　05.異常 [{FLAG:1244,4}]回
+			PRINTFORML 　06.ＳＭ [{FLAG:1245,4}]回
+			DRAWLINE
+			PRINTL 調教メニュー：
+			FOR LCOUNT, 0, 11
+				PRINTFORML 　{LCOUNT, 2}.%MENU(LCOUNT)% [{DATABASE_I_AM(MENU(LCOUNT)), 4}]回
+			NEXT
+		CASE 4
+			DRAWLINE
+			PRINTL その他の記録：
+			PRINTFORML 　調教者が前回と同じ行動をした回数 [{FLAG:1210,4}]回
+			PRINTFORML 　最長調教時間レコード [{FLAG:最長調教時間記録,2}]
+			PRINTFORML 　最短調教時間レコード [{FLAG:最短調教時間記録,2}]
+			PRINTFORML 　射精量レコード [{FLAG:1213}]
+			DRAWLINE
+			PRINTL 調教対象の反応の記録：
+			PRINTFORML 　0.調教者行動に影響しなかった　 [{FLAG:1200,4}]回
+			PRINTFORML 　1.消極的従った　　　　　　　　 [{FLAG:1201,4}]回
+			PRINTFORML 　2.積極的従った　　　　　　　　 [{FLAG:1202,4}]回
+			PRINTFORML 　3.哀願した　　　　　　　　　　 [{FLAG:1203,4}]回
+			PRINTFORML 　4.暴れた(抑えられた回数を除く) [{FLAG:1204,4}]回
+			PRINTFORML 　5.拒否した　　　　　　　　　　 [{FLAG:1205,4}]回
+			PRINTFORML 　6.逃げる／もがく　　　　　　　 [{FLAG:1206,4}]回
+			DRAWLINE
+			PRINTL 調教対象が選択できる反応の数の記録：
+			FOR LOCAL, 0, 100
+				SIF FLAG:(1300 + LOCAL)
+					PRINTFORML 　{LOCAL,2}個 [{FLAG:(1300 + LOCAL),4}]回
+			NEXT
+		CASE 5
+			;興味補正のショップへ
+			CALL HOSEI_SHOP
+			
+		CASEELSE
+			CLEARLINE 1
+			GOTO INPUT_LOOP
+	ENDSELECT
+	DRAWLINE
+	WAIT
+WEND
+
+@DATABASE_TRAINER
+WHILE 1
+	PRINTL [0] 戻る
+	FOR LOCAL, 1, CHARANUM
+	PRINTFORML [{LOCAL}] - %CALLNAME:LOCAL%
+	NEXT
+	$INPUT_LOOP
+	INPUT
+	IF RESULT == 0
+		BREAK
+	ELSEIF RESULT < 0 || RESULT > CHARANUM - 1 || CFLAG:RESULT:一時退避
+		GOTO INPUT_LOOP
+	ELSE
+		DRAWLINE
+		PRINTFORML %CALLNAME:RESULT%の記録：
+		FOR LOCAL, 0, 100
+			SIF CFLAG:RESULT:(2000 + LOCAL)
+				PRINTFORML 　%TOSTR(LOCAL,"000")%.%GET_ACTNAME(LOCAL),20,LEFT% [{CFLAG:RESULT:(2000 + LOCAL),4}]回
+		NEXT
+	ENDIF
+WEND

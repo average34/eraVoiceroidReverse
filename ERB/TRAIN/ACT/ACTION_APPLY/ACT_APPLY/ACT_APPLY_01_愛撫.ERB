@@ -1,0 +1,778 @@
+﻿;────────────────────────────────────
+;010,愛撫/手淫する
+;────────────────────────────────────
+;リアクション前（Ｓ/Ｎ/Ｈ）（快Ｃ、快Ｂ、接触、情愛、性行動、不潔）
+@ACTION_APPLY_10
+;愛撫補正値、器用な指先素質に応じて、快ＣSOURCE増加
+SOURCE:MASTER:快Ｃ = 75 + ACT_FROM(TARGET, 1) * (2 + TALENT:器用な指先) / 2
+;脱衣の処理
+;壁抜けがあると3/4で無視する
+IF !TALENT:壁抜け || !RAND:4
+	;抑圧/恥じらい/着衣プレイ好き素質がない場合
+	IF !TALENT:抑圧 && !TALENT:恥じらい && !TALENT:着衣プレイ好き
+		;解放素質、調教者欲望、調教レベルに応じて成功率上昇
+		IF TALENT:解放 * 4 + GET_ABL(TARGET, "欲望") / 10 + GET_TRAINLV(TARGET) / 5 > 3 + RAND:3
+			;全裸まで強制脱衣
+			TFLAG:強制脱衣 = 8
+			;2/3の確率でアクセサリ－まで強制脱衣に軽減
+			SIF RAND:3
+				TFLAG:強制脱衣 = 7
+		;1/3の確率で上＋下上着強制脱衣
+		ELSEIF !RAND:3
+			TFLAG:強制脱衣 = 3
+		ENDIF
+	ENDIF
+ENDIF
+;調教者アクセサリ存在時、1/3の確率
+;または手淫時ペニスに何らかの汚れが付いている(2はペニス汚れなのでカウントしない)
+;または愛撫時ヴァギナに愛液、ペニス以外の汚れが付いている(濡れてたり挿入があったりはカウントしない)
+;場合、アクセサリー自主脱衣
+;※手袋などを脱いで素手で愛撫するためアクセサリー自主脱衣が発生
+SIF TEQUIP:アクセサリ && (!RAND:3 || (TFLAG:ACT派生 == 1 && STAIN:MASTER:ペニス > 2) || (TFLAG:ACT派生 == 0 && STAIN:MASTER:ヴァギナ > 3))
+	TFLAG:自主脱衣 = 6
+;必要ならば媚薬を使用
+CALL LOVEPOTION_USE
+;調教レベルに応じて接触SOURCE増加
+SOURCE:MASTER:接触 = 100 + GET_TRAINLV(TARGET) * 5
+;快ＣSOURCEに応じて性行動SOURCE増加
+SOURCE:MASTER:性行動 = 50 + SOURCE:MASTER:快Ｃ / 10
+;接触SOURCE、調教者奉仕精神に応じて情愛SOURCE増加
+SOURCE:MASTER:情愛 = SOURCE:MASTER:接触 / 2 + GET_ABL(TARGET, "奉仕精神") * 5
+;調教者の手に愛液/ペニス/母乳汚れが存在すると不潔SOURCE小増加
+SIF STAIN:手 & (1 + 2 + 16)
+	SOURCE:MASTER:不潔 += 50
+;調教者の手に精液/アナル汚れが存在すると不潔SOURCE中増加
+SIF STAIN:手 & (4 + 8)
+	SOURCE:MASTER:不潔 += 100
+;調教者の手に血/粘液汚れが存在すると不潔SOURCE大増加
+SIF STAIN:手 & (32 + 64)
+	SOURCE:MASTER:不潔 += 300
+;汚れが相互に移る
+IF TFLAG:ACT派生 >= 1
+	STAIN:MASTER:ペニス |= STAIN:手
+	STAIN:手 |= STAIN:MASTER:ペニス
+ELSE
+	STAIN:MASTER:ヴァギナ |= STAIN:手
+	STAIN:手 |= STAIN:MASTER:ヴァギナ
+ENDIF
+;調教対象自慰を中断
+TEQUIP:自慰中 &= ~1
+;調教者技巧、愛撫、器用な指先素質に応じて勃起度上昇
+TCVAR:MASTER:今回の勃起 += 100 + (GET_ABL(TARGET, "技巧") + GET_ABL(TARGET, "愛撫") + TALENT:器用な指先 * 50)
+TFLAG:経過時間 += 2
+
+;リアクション後（Ｓ/Ｎ/Ｈ）（快Ｃ、快Ｂ、接触、情愛、性行動、不潔）
+@ACTION_APPLY2_10
+
+;────────────────────────────────────
+;011,胸愛撫/乳首吸い/乳の揉み合い
+;────────────────────────────────────
+;リアクション前（Ｓ/Ｎ/Ｈ）（快Ｂ、接触、情愛、性行動、痛み、不潔）
+@ACTION_APPLY_11
+;脱衣の処理
+;壁抜けがあると3/4で無視する
+IF !TALENT:壁抜け || !RAND:4
+	;抑圧/恥じらい/着衣プレイ好き素質がない場合
+	IF !TALENT:抑圧 && !TALENT:恥じらい && !TALENT:着衣プレイ好き
+		;解放素質、調教者欲望、調教レベルに応じて成功率上昇
+		IF TALENT:解放 * 2 + GET_ABL(TARGET, "欲望") / 10 + GET_TRAINLV(TARGET) / 5 > 1 + RAND:3
+			;上＋下上着強制脱衣
+			TFLAG:強制脱衣 = 4
+		;1/3の確率で上半身上着強制脱衣
+		ELSEIF !RAND:3
+			TFLAG:強制脱衣 = 1
+		ENDIF
+	ENDIF
+ENDIF
+;調教者アクセサリ存在時、乳首吸い派生ではなく、
+;1/3の確率か調教対象の胸が愛液/ペニス汚れ以外の汚れを持つ
+;場合、アクセサリー自主脱衣
+;※手袋などを脱いで素手で愛撫するためアクセサリー自主脱衣が発生
+SIF TEQUIP:アクセサリ && TFLAG:ACT派生 != 1 && (!RAND:3 || STAIN:MASTER:胸 > 3)
+	TFLAG:自主脱衣 = 6
+;通常の胸愛撫時
+IF TFLAG:ACT派生 == 0
+	;愛撫補正値、器用な指先素質に応じて快ＢSOURCE上昇
+	SOURCE:MASTER:快Ｂ = 75 + ACT_FROM(TARGET, 4) * (2 + TALENT:器用な指先) / 3
+	;必要ならば媚薬を使用
+	CALL LOVEPOTION_USE
+	;調教レベルに応じて接触SOURCE増加
+	SOURCE:MASTER:接触 = 100 + GET_TRAINLV(TARGET) * 5
+	;接触SOURCE、調教者奉仕精神に応じて情愛SOURCE増加
+	SOURCE:MASTER:情愛 = SOURCE:MASTER:接触 / 2 + GET_ABL(TARGET, "奉仕精神") * 5
+	;快ＢSOURCEに応じて性行動SOURCE増加
+	SOURCE:MASTER:性行動 = 100 + SOURCE:MASTER:快Ｂ / 10
+	;調教者の手に愛液/ペニス/母乳汚れが存在すると不潔SOURCE小増加
+	SIF STAIN:手 & (1 + 2 + 16)
+		SOURCE:MASTER:不潔 += 80
+	;調教者の手に精液/アナル汚れが存在すると不潔SOURCE中増加
+	SIF STAIN:手 & (4 + 8)
+		SOURCE:MASTER:不潔 += 160
+	;調教者の手に血/粘液汚れが存在すると不潔SOURCE大増加
+	SIF STAIN:手 & (32 + 64)
+		SOURCE:MASTER:不潔 += 500
+	;汚れが相互に移る
+	STAIN:MASTER:胸 |= STAIN:手
+	STAIN:手 |= STAIN:MASTER:胸
+	;調教者技巧、愛撫、器用な指先素質に応じて勃起度上昇
+	TCVAR:MASTER:今回の勃起 += 80 + (GET_ABL(TARGET, "技巧") + GET_ABL(TARGET, "愛撫") + TALENT:器用な指先 * 50) / 3
+;乳首吸い時
+ELSEIF TFLAG:ACT派生 == 1
+	;愛撫補正値、舌使い素質に応じて快ＢSOURCE上昇
+	SOURCE:MASTER:快Ｂ = 150 + ACT_FROM(TARGET, 4) * (3 + TALENT:舌使い) / 3
+	;必要ならば媚薬を使用
+	CALL LOVEPOTION_USE
+	;猫舌素質時快ＢSOURCE上昇
+	SIF TALENT:猫舌
+		SOURCE:MASTER:快Ｂ *= 12 / 10
+	;調教レベルに応じて接触SOURCE増加
+	SOURCE:MASTER:接触 = 75 + GET_TRAINLV(TARGET) * 10
+	;接触SOURCE、調教者奉仕精神に応じて情愛SOURCE増加
+	SOURCE:MASTER:情愛 = SOURCE:MASTER:接触 / 2 + GET_ABL(TARGET, "奉仕精神") * 5
+	;快ＢSOURCEに応じて性行動SOURCE増加
+	SOURCE:MASTER:性行動 = 50 + SOURCE:MASTER:快Ｂ / 10
+	;調教者の口に愛液/ペニス/母乳汚れが存在すると不潔SOURCE小増加
+	SIF STAIN:口 & (1 + 2 + 16)
+		SOURCE:MASTER:不潔 += 100
+	;調教者の口に精液/アナル汚れが存在すると不潔SOURCE中増加
+	SIF STAIN:口 & (4 + 8)
+		SOURCE:MASTER:不潔 += 200
+	;調教者の口に血/粘液汚れが存在すると不潔SOURCE大増加
+	SIF STAIN:口 & (32 + 64)
+		SOURCE:MASTER:不潔 += 600
+	;汚れが相互に移る
+	STAIN:MASTER:胸 |= STAIN:口
+	STAIN:口 |= STAIN:MASTER:胸
+	;調教者技巧、愛撫、舌使い、猫舌素質に応じて勃起度上昇
+	TCVAR:MASTER:今回の勃起 += 80 + (GET_ABL(TARGET, "技巧") + GET_ABL(TARGET, "愛撫") + TALENT:舌使い * 50 + TALENT:猫舌 * 50) / 3
+;その他時
+ELSE
+	;調教対象の反応によって要求に応じない可能性がありますから
+	;ここは調教者が調教対象の胸を揉むまで処理し、調教対象の動きはCOMの方で処理します。
+	;この類の行動は全部このように処理します。
+	
+	;上半身全部自主脱衣
+	TFLAG:自主脱衣 = 4
+	;愛撫補正値、器用な指先素質に応じて快ＢSOURCE上昇
+	SOURCE:MASTER:快Ｂ = ACT_FROM(TARGET, 4) * (2 + TALENT:器用な指先) / 2
+	;調教者、調教対象調教レベルに応じて接触SOURCE増加
+	SOURCE:MASTER:接触 = 50 + GET_TRAINLV(TARGET) * 5 + CFLAG:MASTER:調教レベル * 5
+	;必要ならば媚薬を使用
+	CALL LOVEPOTION_USE
+	;調教対象好意、調教者奉仕精神に応じて情愛SOURCE増加
+	SOURCE:MASTER:情愛 = 50 + CFLAG:M好意 / 50 + GET_ABL(TARGET, "奉仕精神") * 5
+	;快ＢSOURCEに応じて性行動SOURCE増加
+	SOURCE:MASTER:性行動 = 50 + SOURCE:MASTER:快Ｂ / 8
+	;調教者の手に愛液/ペニス/母乳汚れが存在すると不潔SOURCE小増加
+	SIF STAIN:手 & (1 + 2 + 16)
+		SOURCE:MASTER:不潔 += 85
+	;調教者の手に精液/アナル汚れが存在すると不潔SOURCE中増加
+	SIF STAIN:手 & (4 + 8)
+		SOURCE:MASTER:不潔 += 180
+	;調教者の手に血/粘液汚れが存在すると不潔SOURCE大増加
+	SIF STAIN:手 & (32 + 64)
+		SOURCE:MASTER:不潔 += 550
+	;汚れが相互に移る
+	STAIN:MASTER:胸 |= STAIN:手
+	STAIN:手 |= STAIN:MASTER:胸
+	;調教者、調教対象自慰を中断
+	TEQUIP:自慰中 = 0
+	;調教者技巧、愛撫、器用な指先素質に応じて勃起度上昇
+	TCVAR:MASTER:今回の勃起 += 80 + (GET_ABL(TARGET, "技巧") + GET_ABL(TARGET, "愛撫") + TALENT:器用な指先 * 50) / 3
+ENDIF
+;顔面騎乗系解除
+CALL FACESITTING_SET(0)
+TFLAG:経過時間 += 2
+
+;リアクション後（接触、情愛、性行動、達成、快ｂ）
+@ACTION_APPLY2_11
+;乳の揉み合い派生時
+IF TFLAG:ACT派生 == 2
+	;実行した
+	IF IS_COMGRONAME("消極的従う/平然と従う/積極的従う/受け入れる")
+		;調教対象調教レベルに応じて接触SOURCE増加
+		SOURCE:MASTER:接触 += 70 + CFLAG:MASTER:調教レベル * 3
+		;調教対象好意、奉仕精神に応じて情愛SOURCE増加
+		SOURCE:MASTER:情愛 += 20 + CFLAG:M好意 / 40 + GET_ABL(MASTER, "奉仕精神") * 5
+		;愛撫補正、調教対象器用な指先素質に応じて補正値上昇
+		LOCAL = 35 + ACT_TO(TARGET, 4) * (3 + TALENT:MASTER:器用な指先) / 5
+		;補正値に応じて性行動、達成、快ｂSOURCE増加
+		SOURCE:MASTER:性行動 += 50 + LOCAL / 8
+		SOURCE:MASTER:達成 += LOCAL / 4
+		SOURCE:快Ｂ += LOCAL
+		;汚れが相互に移る
+		STAIN:MASTER:手 |= STAIN:胸
+		STAIN:胸 |= STAIN:MASTER:手
+	;その他の場合
+	ELSE
+		;反抗先行時、REACT分類に要求に応じないをセット
+		SIF PALAM:MASTER:恥情 <= PALAM:MASTER:反抗
+			CALL SET_COMGRO("拒否")
+	ENDIF
+ENDIF
+
+;────────────────────────────────────
+;012,クンニ/フェラする
+;────────────────────────────────────
+;リアクション前（Ｓ/Ｎ/Ｈ）（快Ｃ、接触、情愛、性行動、痛み、不潔）
+@ACTION_APPLY_12
+;愛撫補正値、舌使いに応じて快ＣSOURCE上昇
+SOURCE:MASTER:快Ｃ = 200 + ACT_FROM(TARGET, 1) * (3 + TALENT:舌使い) / 3
+;脱衣の処理
+;壁抜けがあると3/4で無視する
+IF !TALENT:壁抜け || !RAND:4
+	;抑圧/恥じらい/着衣プレイ好き素質がない場合
+	IF !TALENT:抑圧 && !TALENT:恥じらい && !TALENT:着衣プレイ好き
+		;解放素質、調教者欲望、調教レベルに応じて成功率上昇
+		IF TALENT:解放 * 2 + GET_ABL(TARGET, "欲望") / 10 + GET_TRAINLV(TARGET) / 5 > 1 + RAND:3
+			;下半身全部強制脱衣
+			TFLAG:強制脱衣 = 5
+		;1/3の確率で下半身上着強制脱衣
+		ELSEIF !RAND:3
+			TFLAG:強制脱衣 = 2
+		ENDIF
+	ENDIF
+ENDIF
+;必要ならば媚薬を使用
+CALL LOVEPOTION_USE
+;潤滑上昇(フェラで増加補正、Ｗフェラで補正倍増)
+PALAM:MASTER:潤滑 += 20 + TFLAG:ACT派生 * 20
+;猫舌素質時快ＣSOURCE上昇
+SIF TALENT:猫舌
+	SOURCE:MASTER:快Ｃ *= 12 / 10
+;調教レベルに応じて接触SOURCE増加
+SOURCE:MASTER:接触 = 150 + GET_TRAINLV(TARGET) * 5
+;接触SOURCE、調教者奉仕精神に応じて情愛SOURCE増加
+SOURCE:MASTER:情愛 = SOURCE:MASTER:接触 / 2 + GET_ABL(TARGET, "奉仕精神") * 5
+;快ＣSOURCEに応じて性行動SOURCE増加
+SOURCE:MASTER:性行動 = 80 + SOURCE:MASTER:快Ｃ / 10
+;調教者の口に愛液/ペニス/母乳汚れが存在すると不潔SOURCE小増加
+SIF STAIN:口 & (1 + 2 + 16)
+	SOURCE:MASTER:不潔 += 60
+;調教者の口に精液/アナル汚れが存在すると不潔SOURCE中増加
+SIF STAIN:口 & (4 + 8)
+	SOURCE:MASTER:不潔 += 120
+;調教者の口に血/粘液汚れが存在すると不潔SOURCE大増加
+SIF STAIN:口 & (32 + 64)
+	SOURCE:MASTER:不潔 += 360
+;汚れが相互に移る
+IF TFLAG:ACT派生 >= 1
+	STAIN:MASTER:ペニス |= STAIN:口
+	STAIN:口 |= STAIN:MASTER:ペニス
+ELSE
+	STAIN:MASTER:ヴァギナ |= STAIN:口
+	STAIN:口 |= STAIN:MASTER:ヴァギナ
+ENDIF
+;調教対象自慰を中断
+TEQUIP:自慰中 &= ~1
+;調教者技巧、愛撫、舌使い、猫舌素質に応じて勃起度上昇
+TCVAR:MASTER:今回の勃起 += 150 + (GET_ABL(TARGET, "技巧") + GET_ABL(TARGET, "愛撫") + TALENT:舌使い * 50 + TALENT:猫舌 * 50)
+TFLAG:経過時間 += 2
+
+;リアクション後（Ｓ/Ｎ/Ｈ）（快Ｃ、接触、情愛、性行動、痛み、不潔）
+@ACTION_APPLY2_12
+
+;────────────────────────────────────
+;013,アナル愛撫
+;────────────────────────────────────
+;リアクション前（Ｎ/Ｈ）[罰]（快Ａ、接触、性行動、痛み、不潔、逸脱）
+@ACTION_APPLY_13
+;愛撫補正値、器用な指先素質に応じて、快ＡSOURCE増加
+SOURCE:MASTER:快Ａ = 60 + ACT_FROM(TARGET, 3) * (2 + TALENT:器用な指先) / 2
+;前立腺責めに派生していれば快Ａ増加
+SIF TFLAG:ACT派生 == 1
+	TIMES SOURCE:MASTER:快Ａ, 2.50
+;アナルバイブ出し入れに派生していれば道具強化、愛撫補正値、道具使い素質に応じて快ＡSOURCE増加
+SIF TFLAG:ACT派生 == 2
+	SOURCE:MASTER:快Ａ += 40 + ITEM:9 * 100 + ACT_FROM(TARGET, 12) * (TALENT:道具使い + 3) / 3
+;脱衣の処理
+;壁抜けがあると3/4で無視する
+IF !TALENT:壁抜け || !RAND:4
+	;抑圧/恥じらい/着衣プレイ好き素質がない場合
+	IF !TALENT:抑圧 && !TALENT:恥じらい && !TALENT:着衣プレイ好き
+		;解放素質、調教者欲望、調教レベルに応じて成功率上昇
+		IF TALENT:解放 * 2 + GET_ABL(TARGET, "欲望") / 10 + GET_TRAINLV(TARGET) / 5 > 1 + RAND:3
+			;下半身全部強制脱衣
+			TFLAG:強制脱衣 = 5
+		ELSE
+			;最低でも下半身上着強制脱衣まで試行
+			TFLAG:強制脱衣 = 2
+		ENDIF
+	ENDIF
+ENDIF
+;調教者アクセサリ存在時、2/3の確率か調教対象の胸がアナル汚れ以外の汚れを持つ
+;場合、アクセサリー自主脱衣
+;※手袋などを脱いで素手で愛撫するためアクセサリー自主脱衣が発生
+SIF TEQUIP:アクセサリ && (RAND:3 || STAIN:MASTER:アナル > 8)
+	TFLAG:自主脱衣 = 6
+;必要ならばローション、媚薬を使用
+CALL LOTION_USE
+CALL LOVEPOTION_USE
+;潤滑不足時、快ＡSOURCEに減少補正、痛みSOURCE増加
+CALL SHORTAGE_LUBRICATION("500/M快Ａ,T,50/M痛み,A,500")
+;Ａ経験不足時、快ＡSOURCEに減少補正、痛み、逸脱SOURCE増加
+IF EXP:MASTER:Ａ経験 < 1
+	TIMES SOURCE:MASTER:快Ａ , 0.60
+	SOURCE:MASTER:痛み += 600
+	SOURCE:MASTER:逸脱 += 1200
+ELSEIF EXP:MASTER:Ａ経験 < 6
+	TIMES SOURCE:MASTER:快Ａ , 0.75
+	SOURCE:MASTER:痛み += 200
+	SOURCE:MASTER:逸脱 += 700 - EXP:MASTER:Ａ経験 * 100
+ELSEIF EXP:MASTER:Ａ経験 < 11
+	TIMES SOURCE:MASTER:快Ａ , 0.90
+	SOURCE:MASTER:痛み += 100
+	SOURCE:MASTER:逸脱 += 100 - EXP:MASTER:Ａ経験 * 10
+ELSEIF EXP:MASTER:Ａ経験 < 21
+	SOURCE:MASTER:逸脱 += 5
+ENDIF
+;調教レベルに応じて接触SOURCE増加
+SOURCE:MASTER:接触 = 80 + GET_TRAINLV(TARGET) * 5
+;快ＡSOURCEに応じて性行動SOURCE増加
+SOURCE:MASTER:性行動 = 80 + SOURCE:MASTER:快Ａ / 10
+;調教者の手に愛液/ペニス/母乳汚れが存在すると不潔SOURCE小増加
+SIF STAIN:手 & (1 + 2 + 16)
+	SOURCE:MASTER:不潔 += 10
+;調教者の手に精液/アナル汚れが存在すると不潔SOURCE中増加
+SIF STAIN:手 & (4 + 8)
+	SOURCE:MASTER:不潔 += 30
+;調教者の手に血/粘液汚れが存在すると不潔SOURCE大増加
+SIF STAIN:手 & (32 + 64)
+	SOURCE:MASTER:不潔 += 100
+;汚れが相互に移る
+STAIN:MASTER:アナル |= STAIN:手
+STAIN:手 |= STAIN:MASTER:アナル
+;オトコはＡで前立腺刺激
+SIF TALENT:MASTER:オトコ
+	TCVAR:MASTER:前立腺刺激 += 1
+;前立腺責めに派生していればさらに前立腺刺激がつく
+SIF TFLAG:ACT派生 == 1
+	TCVAR:MASTER:前立腺刺激 += 1
+;調教対象Ａ感覚、マゾっ気、調教者技巧に応じて勃起度上昇
+TCVAR:MASTER:今回の勃起 += 100 + (GET_ABL(MASTER, "Ａ感覚") + GET_ABL(MASTER, "マゾっ気") * GET_ABL(TARGET, "技巧") / 50)
+TFLAG:経過時間 += 2
+
+;リアクション後（Ｎ/Ｈ）[罰]（快Ａ、接触、性行動、痛み、不潔、逸脱）
+@ACTION_APPLY2_13
+
+;────────────────────────────────────
+;014,アナル舐め
+;────────────────────────────────────
+;リアクション前（Ｎ/Ｈ）[罰]（快Ａ、接触、性行動、痛み、不潔、逸脱）
+@ACTION_APPLY_14
+;愛撫補正値、舌使い素質に応じて、快ＡSOURCE増加
+SOURCE:MASTER:快Ａ = 60 + ACT_FROM(TARGET, 3) * (3 + TALENT:舌使い) / 3
+;脱衣の処理
+;壁抜けがあると3/4で無視する
+IF !TALENT:壁抜け || !RAND:4
+	;抑圧/恥じらい/着衣プレイ好き素質がない場合
+	IF !TALENT:抑圧 && !TALENT:恥じらい && !TALENT:着衣プレイ好き
+		;解放素質、調教者欲望、調教レベルに応じて成功率上昇
+		IF TALENT:解放 * 2 + GET_ABL(TARGET, "欲望") / 10 + GET_TRAINLV(TARGET) / 5 > 1 + RAND:3
+			;下半身全部強制脱衣
+			TFLAG:強制脱衣 = 5
+		ELSE
+			;最低でも下半身上着強制脱衣まで試行
+			TFLAG:強制脱衣 = 2
+		ENDIF
+	ENDIF
+ENDIF
+;必要ならば媚薬を使用
+CALL LOVEPOTION_USE
+;潤滑上昇
+PALAM:MASTER:潤滑 += 20
+;猫舌素質時快ＡSOURCE上昇
+SIF TALENT:猫舌
+	SOURCE:MASTER:快Ａ *= 12 / 10
+;Ａ経験不足時、快ＡSOURCEに減少補正、逸脱SOURCE増加
+IF EXP:MASTER:Ａ経験 < 1
+	TIMES SOURCE:MASTER:快Ａ , 0.80
+	SOURCE:MASTER:逸脱 += 1000
+ELSEIF EXP:MASTER:Ａ経験 < 6
+	TIMES SOURCE:MASTER:快Ａ , 0.85
+	SOURCE:MASTER:逸脱 += 500 - EXP:MASTER:Ａ経験 * 50
+ELSEIF EXP:MASTER:Ａ経験 < 11
+	TIMES SOURCE:MASTER:快Ａ , 0.95
+	SOURCE:MASTER:逸脱 += 150 - EXP:MASTER:Ａ経験 * 12
+ELSEIF EXP:MASTER:Ａ経験 < 21
+	SOURCE:MASTER:逸脱 += 10
+ENDIF
+;調教レベルに応じて接触SOURCE増加
+SOURCE:MASTER:接触 = 120 + GET_TRAINLV(TARGET) * 5
+;快ＡSOURCEに応じて性行動SOURCE増加
+SOURCE:MASTER:性行動 = 80 + SOURCE:MASTER:快Ａ / 10
+;調教者の口に愛液/ペニス/母乳汚れが存在すると不潔SOURCE小増加
+SIF STAIN:口 & (1 + 2 + 16)
+	SOURCE:MASTER:不潔 += 10
+;調教者の口に精液/アナル汚れが存在すると不潔SOURCE中増加
+SIF STAIN:口 & (4 + 8)
+	SOURCE:MASTER:不潔 += 30
+;調教者の口に血/粘液汚れが存在すると不潔SOURCE大増加
+SIF STAIN:口 & (32 + 64)
+	SOURCE:MASTER:不潔 += 100
+;汚れが相互に移る
+STAIN:MASTER:アナル |= STAIN:口
+STAIN:口 |= STAIN:MASTER:アナル
+;調教対象Ａ感覚に応じて勃起度上昇
+TCVAR:MASTER:今回の勃起 += 80 + GET_ABL(MASTER, "Ａ感覚")
+;顔面騎乗系解除
+CALL FACESITTING_SET(0)
+TFLAG:経過時間 += 2
+
+;リアクション後（Ｎ/Ｈ）[罰]（快Ａ、接触、性行動、痛み、不潔、逸脱）
+@ACTION_APPLY2_14
+;現在処理なし
+
+;────────────────────────────────────
+;015,キス
+;────────────────────────────────────
+;リアクション前（Ｓ/Ｎ）（接触、情愛、性行動、痛み、不潔）
+@ACTION_APPLY_15
+;調教レベルに応じて接触SOURCE増加
+SOURCE:MASTER:接触 = 150 + GET_TRAINLV(TARGET) * 5
+;調教対象好意、調教者愛撫、技巧、舌使い素質、奉仕精神に応じて情愛SOURCE増加
+SOURCE:MASTER:情愛 = 100 + CFLAG:M好意 / 50 + GET_ABL(TARGET, "愛撫") * (GET_ABL(TARGET, "技巧") / 10 + TALENT:舌使い * 2) + GET_ABL(TARGET, "奉仕精神") * 5
+;1/3の確率でアクセサリー強制脱衣
+SIF !RAND:3
+	TFLAG:強制脱衣 = 6
+;必要ならば媚薬を使用
+CALL LOVEPOTION_USE
+;情愛SOURCEに応じて性行動SOURCE増加
+SOURCE:MASTER:性行動 = 50 + SOURCE:MASTER:情愛 / 15
+;調教者の口に愛液/ペニス/母乳汚れが存在すると不潔SOURCE小増加
+SIF STAIN:口 & (1 + 2 + 16)
+	SOURCE:MASTER:不潔 += 180
+;調教者の口に精液/アナル汚れが存在すると不潔SOURCE中増加
+SIF STAIN:口 & (4 + 8)
+	SOURCE:MASTER:不潔 += 350
+;調教者の口に血/粘液汚れが存在すると不潔SOURCE大増加
+SIF STAIN:口 & (32 + 64)
+	SOURCE:MASTER:不潔 += 700
+;汚れが相互に移る
+STAIN:MASTER:口 |= STAIN:口
+STAIN:口 |= STAIN:MASTER:口
+;顔面騎乗系解除
+CALL FACESITTING_SET(0)
+;調教者技巧、愛撫、舌使い、猫舌素質に応じて勃起度上昇
+TCVAR:MASTER:今回の勃起 += 50 + (GET_ABL(TARGET, "技巧") + GET_ABL(TARGET, "愛撫") + TALENT:舌使い * 50 + TALENT:猫舌 * 50) / 2
+TFLAG:経過時間 += 1
+
+;リアクション後（Ｓ/Ｎ）（接触、情愛、性行動、痛み、不潔）
+@ACTION_APPLY2_15
+;現在処理なし
+
+;────────────────────────────────────
+;016,貝あわせ/素股する
+;────────────────────────────────────
+;リアクション前（Ｓ/Ｎ）（快Ｃ、接触、情愛、性行動、不潔、快ｃ）
+@ACTION_APPLY_16
+;愛撫補正値に応じて、快Ｃ/快ｃSOURCE増加、さらに濡れやすい、濡れにくい素質により増減
+SOURCE:MASTER:快Ｃ = 80 + ACT_FROM(TARGET, 1) * (3 + TALENT:濡れやすい - TALENT:濡れにくい) * (2*TALENT:腰使い + 1) / 3
+SOURCE:快Ｃ = 30 + ACT_TO(TARGET, 1) * (3 + TALENT:濡れやすい - TALENT:濡れにくい) * (2*TALENT:MASTER:腰使い + 1) / 3
+;脱衣の処理
+;壁抜けがあると3/4で無視する
+IF !TALENT:壁抜け || !RAND:4
+	;抑圧/恥じらい/着衣プレイ好き素質がない場合
+	IF !TALENT:抑圧 && !TALENT:恥じらい && !TALENT:着衣プレイ好き
+		;解放素質、調教者欲望、調教レベルに応じて成功率上昇
+		IF TALENT:解放 * 2 + GET_ABL(TARGET, "欲望") / 10 + GET_TRAINLV(TARGET) / 5 > 1 + RAND:3
+			;下半身全部強制脱衣
+			TFLAG:強制脱衣 = 5
+		ELSE
+			;最低でも下半身上着強制脱衣まで試行
+			TFLAG:強制脱衣 = 2
+		ENDIF
+	ENDIF
+ENDIF
+;下半身全部自主脱衣
+TFLAG:自主脱衣 = 5
+;必要ならばローション、媚薬を使用
+CALL LOTION_USE
+CALL LOVEPOTION_USE
+;潤滑不足時、快Ｃ/快ｃSOURCEに減少補正
+CALL SHORTAGE_LUBRICATION("500/M快Ｃ,T,75/T快Ｃ,T,75")
+;調教レベルに応じて接触SOURCE増加、素股派生時減少
+SOURCE:MASTER:接触 = 200 + GET_TRAINLV(TARGET) * 5 - TFLAG:ACT派生 * 50
+;接触SOURCE、調教対象奉仕精神に応じて情愛SOURCE増加
+SOURCE:MASTER:情愛 = SOURCE:MASTER:接触 / 2 + GET_ABL(TARGET, "奉仕精神") * 5
+;快ＣSOURCEに応じて性行動SOURCE増加
+SOURCE:MASTER:性行動 = 80 + SOURCE:MASTER:快Ｃ / 10
+;調教者のヴァギナに愛液/ペニス/母乳汚れが存在すると不潔SOURCE小増加
+SIF STAIN:ヴァギナ & (1 + 2 + 16)
+	SOURCE:MASTER:不潔 += 50
+;調教者のヴァギナに精液/アナル汚れが存在すると不潔SOURCE中増加
+SIF STAIN:ヴァギナ & (4 + 8)
+	SOURCE:MASTER:不潔 += 100
+;調教者のヴァギナに血/粘液汚れが存在すると不潔SOURCE大増加
+SIF STAIN:ヴァギナ & (32 + 64)
+	SOURCE:MASTER:不潔 += 300
+;汚れが相互に移る
+IF TFLAG:ACT派生 == 1
+	STAIN:MASTER:ペニス |= STAIN:ヴァギナ
+	STAIN:ヴァギナ |= STAIN:MASTER:ペニス
+ELSE
+	STAIN:MASTER:ヴァギナ |= STAIN:ヴァギナ
+	STAIN:ヴァギナ |= STAIN:MASTER:ヴァギナ
+ENDIF
+;調教者、調教対象自慰を中断
+TEQUIP:自慰中 = 0
+;顔面騎乗系解除
+CALL FACESITTING_SET(0)
+;調教者技巧、愛撫に応じて勃起度上昇
+TCVAR:MASTER:今回の勃起 += 150 + (GET_ABL(TARGET, "技巧") + GET_ABL(TARGET, "愛撫") )
+TFLAG:経過時間 += 3
+
+;リアクション後（Ｓ/Ｎ）（快Ｃ、接触、情愛、性行動、不潔、快ｃ）
+@ACTION_APPLY2_16
+;現在処理なし
+
+;────────────────────────────────────
+;017,パイズリする
+;────────────────────────────────────
+;リアクション前（Ｓ/Ｎ）（快Ｃ、接触、情愛、痛み、性行動、不潔、快ｂ）
+@ACTION_APPLY_17
+;愛撫補正値に応じて快ＣSOURCE増加、さらに巨乳、貧乳素質により増減
+SOURCE:MASTER:快Ｃ = 70 + ACT_FROM(TARGET, 1) * (4 + TALENT:巨乳 - TALENT:貧乳) / 4
+;愛撫補正値に応じて快ｂSOURCE増加
+SOURCE:快Ｂ = 20 + ACT_TO(TARGET, 4) * (TALENT:MASTER:腰使い + 1) / 2
+;脱衣の処理
+;壁抜けがあると3/4で無視する
+IF !TALENT:壁抜け || !RAND:4
+	;抑圧/恥じらい/着衣プレイ好き素質がない場合
+	IF !TALENT:抑圧 && !TALENT:恥じらい && !TALENT:着衣プレイ好き
+		;解放素質、調教者欲望、調教レベルに応じて成功率上昇
+		IF TALENT:解放 * 2 + GET_ABL(TARGET, "欲望") / 10 + GET_TRAINLV(TARGET) / 5 > 1 + RAND:3
+			;下半身全部強制脱衣
+			TFLAG:強制脱衣 = 5
+			;調教者欲望、調教レベルに応じて成功率上昇
+			;アクセサリ－まで強制脱衣に発展
+			SIF GET_ABL(TARGET, "欲望") / 10 + GET_TRAINLV(TARGET) > 4 + RAND:5
+				TFLAG:強制脱衣 = 7
+		ELSE
+			;最低でも下半身上着強制脱衣まで試行
+			TFLAG:強制脱衣 = 2
+		ENDIF
+	ENDIF
+ENDIF
+;上半身全部自主脱衣
+TFLAG:自主脱衣 = 4
+;必要ならばローション、媚薬を使用
+CALL LOVEPOTION_USE
+CALL LOTION_USE
+;潤滑不足時、快ＣSOURCEに減少補正
+CALL SHORTAGE_LUBRICATION("500/M快Ｃ,T,75")
+;貧乳素質時、快ＣSOURCEに減少補正
+SIF TALENT:貧乳
+	TIMES SOURCE:MASTER:快Ｃ , 0.80
+;猫舌素質時快ＣSOURCE上昇
+SIF TALENT:猫舌
+	SOURCE:MASTER:快Ｃ *= 11 / 10
+;調教レベルに応じて接触SOURCE増加
+SOURCE:MASTER:接触 = 250 + GET_TRAINLV(TARGET) * 5
+;接触SOURCE、調教対象奉仕精神に応じて情愛SOURCE増加
+SOURCE:MASTER:情愛 = SOURCE:MASTER:接触 / 2 + GET_ABL(TARGET, "奉仕精神") * 5
+;快ＣSOURCEに応じて性行動SOURCE増加
+SOURCE:MASTER:性行動 = 40 + SOURCE:MASTER:快Ｃ / 10
+;調教者の口に愛液/ペニス/母乳汚れが存在すると不潔SOURCE小増加
+SIF STAIN:口 & (1 + 2 + 16)
+	SOURCE:MASTER:不潔 += 20
+;調教者の口に精液/アナル汚れが存在すると不潔SOURCE中増加
+SIF STAIN:口 & (4 + 8)
+	SOURCE:MASTER:不潔 += 50
+;調教者の口に血/粘液汚れが存在すると不潔SOURCE大増加
+SIF STAIN:口 & (32 + 64)
+	SOURCE:MASTER:不潔 += 150
+;調教者の胸に愛液/ペニス/母乳汚れが存在すると不潔SOURCE小増加
+SIF STAIN:胸 & (1 + 2 + 16)
+	SOURCE:MASTER:不潔 += 50
+;調教者の胸に精液/アナル汚れが存在すると不潔SOURCE中増加
+SIF STAIN:胸 & (4 + 8)
+	SOURCE:MASTER:不潔 += 100
+;調教者の胸に血/粘液汚れが存在すると不潔SOURCE大増加
+SIF STAIN:胸 & (32 + 64)
+	SOURCE:MASTER:不潔 += 300
+;汚れが相互に移る
+STAIN:MASTER:ペニス |= STAIN:口
+STAIN:MASTER:ペニス |= STAIN:胸
+STAIN:口 |= STAIN:MASTER:ペニス
+STAIN:胸 |= STAIN:MASTER:ペニス
+;調教者、調教対象自慰を中断
+TEQUIP:自慰中 = 0
+;調教者技巧、愛撫に応じて勃起度上昇、巨乳、貧乳、淫乳素質によって増減
+TCVAR:MASTER:今回の勃起 += 150 + (GET_ABL(TARGET, "技巧") + GET_ABL(TARGET, "愛撫") + TALENT:巨乳 * 50 - TALENT:貧乳 * 50 + TALENT:淫乳 * 50)
+TFLAG:経過時間 += 3
+
+;リアクション後（Ｓ/Ｎ）（快Ｃ、接触、情愛、痛み、性行動、不潔、快ｂ）
+@ACTION_APPLY2_17
+
+;────────────────────────────────────
+;018,足コキする
+;────────────────────────────────────
+;リアクション前（Ｓ/Ｎ/Ｈ）[罰]（快Ｃ、接触、情愛、性行動、不潔、逸脱）
+@ACTION_APPLY_18
+;愛撫補正値、美脚素質に応じて快ＣSOURCE増加
+SOURCE:MASTER:快Ｃ = 40 + ACT_FROM(TARGET, 1) * (3 + TALENT:美脚) / 3
+;調教レベルに応じて接触SOURCE増加
+SOURCE:MASTER:接触 = 60 + GET_TRAINLV(TARGET) * 10
+;接触SOURCE、調教対象奉仕精神に応じて情愛SOURCE増加
+SOURCE:MASTER:情愛 = SOURCE:MASTER:接触 / 2 + GET_ABL(TARGET, "奉仕精神") * 5
+;快ＣSOURCEに応じて性行動SOURCE増加
+SOURCE:MASTER:性行動 = SOURCE:MASTER:快Ｃ / 10
+;サド素質が存在すると、快ＣSOURCEに応じて痛みSOURCE増加
+SIF TALENT:サド
+	SOURCE:MASTER:痛み = SOURCE:MASTER:快Ｃ / 4
+;逸脱SOURCE増加、調教レベルに応じて軽減
+SOURCE:MASTER:逸脱 = 200 - GET_TRAINLV(TARGET) * 10
+;逸脱SOURCEが負の値をとらないよう調整
+SOURCE:MASTER:逸脱 = SOURCE:MASTER:逸脱 < 0 ? 0 # SOURCE:MASTER:逸脱
+;脱衣の処理
+;壁抜けがあると3/4で無視する
+IF !TALENT:壁抜け || !RAND:4
+	;抑圧/恥じらい/着衣プレイ好き素質がない場合、下半身上着強制脱衣
+	SIF !TALENT:抑圧 && !TALENT:恥じらい && !TALENT:着衣プレイ好き
+		TFLAG:強制脱衣 = 2
+ENDIF
+;調教者靴下着用中、調教対象ペニスにペニス汚れ以外の汚れが存在すると、
+;アクセサリー自主脱衣
+SIF TEQUIP:靴下 && STAIN:MASTER:ペニス > 2
+	TFLAG:自主脱衣 = 6
+;調教者の足に愛液/ペニス/母乳汚れが存在すると不潔SOURCE小増加
+SIF STAIN:足 & (1 + 2 + 16)
+	SOURCE:MASTER:不潔 += 35
+;調教者の足に精液/アナル汚れが存在すると不潔SOURCE中増加
+SIF STAIN:足 & (4 + 8)
+	SOURCE:MASTER:不潔 += 80
+;調教者の足に血/粘液汚れが存在すると不潔SOURCE大増加
+SIF STAIN:足 & (32 + 64)
+	SOURCE:MASTER:不潔 += 200
+;潤滑不足時、快ＣSOURCEに減少補正
+CALL SHORTAGE_LUBRICATION("500/M快Ｃ,T,75")
+;汚れが相互に移る
+STAIN:MASTER:ペニス |= STAIN:足
+STAIN:足 |= STAIN:MASTER:ペニス
+;顔面騎乗は顔面騎乗アナルへ移行
+IF TEQUIP:顔面騎乗
+	CALL FACESITTING_SET(2)
+ENDIF
+;調教者、調教対象自慰を中断
+TEQUIP:自慰中 = 0
+;調教者技巧、愛撫に応じて勃起度上昇
+TCVAR:MASTER:今回の勃起 += 100 + (GET_ABL(TARGET, "技巧") + GET_ABL(TARGET, "愛撫"))
+TFLAG:経過時間 += 2
+
+;リアクション後（Ｓ/Ｎ/Ｈ）[罰]（快Ｃ、接触、情愛、性行動、不潔、逸脱）
+@ACTION_APPLY2_18
+;現在処理なし
+
+;────────────────────────────────────
+;019,指挿入れ
+;────────────────────────────────────
+;リアクション前（Ｎ/Ｈ）[罰]（快Ｖ、接触、性行動、痛み、情愛、不潔）
+@ACTION_APPLY_19
+;愛撫補正値、器用な指先素質に応じて、快ＶSOURCE増加
+SOURCE:MASTER:快Ｖ = 90 + ACT_FROM(TARGET, 3) * (2 + TALENT:器用な指先) / 2
+;Ｇスポット責めに派生していれば快Ｖ増加
+SIF TFLAG:ACT派生 == 1
+	TIMES SOURCE:MASTER:快Ｖ, 2.50
+;バイブ出し入れに派生していれば道具強化、愛撫補正値、道具使い素質に応じて快ＶSOURCE増加
+SIF TFLAG:ACT派生 == 2
+	SOURCE:MASTER:快Ｖ += 50 + ITEM:9 * 100 + ACT_FROM(TARGET, 12) * (TALENT:道具使い + 3) / 3
+;脱衣の処理
+;壁抜けがあると3/4で無視する
+IF !TALENT:壁抜け || !RAND:4
+	;着衣プレイ好き素質がある場合
+	IF TALENT:着衣プレイ好き
+		;調教レベル、解放素質に応じて成功率上昇し、下着だけ強制脱衣
+		SIF GET_TRAINLV(TARGET) + TALENT:解放 * 3 > 2 + RAND:3
+			TFLAG:強制脱衣 = 9
+	;抑圧/恥じらい素質がない場合
+	ELSEIF !TALENT:抑圧 && !TALENT:恥じらい
+		;下半身全部強制脱衣
+		TFLAG:強制脱衣 = 5
+	ENDIF
+	;調教対象下半身上着がスカートでなく、下半身全部強制脱衣でない場合、下半身上着強制脱衣
+	SIF TEQUIP:MASTER:下半身上着 > 1 && TFLAG:強制脱衣 != 5
+		TFLAG:強制脱衣 = 2
+ENDIF
+;調教者アクセサリ存在時、2/3の確率か調教対象のＶが愛液汚れ以外の汚れを持つ
+;場合、アクセサリー自主脱衣
+;※手袋などを脱いで素手で愛撫するためアクセサリー自主脱衣が発生
+SIF TEQUIP:アクセサリ && (RAND:3 || STAIN:MASTER:ヴァギナ-1)
+	TFLAG:自主脱衣 = 6
+;必要ならばローション、媚薬を使用
+CALL LOTION_USE
+CALL LOVEPOTION_USE
+;潤滑不足時、快ＶSOURCEに減少補正、痛みSOURCE増加
+CALL SHORTAGE_LUBRICATION("500/M快Ｖ,T,50/M痛み,A,500")
+;Ｖ経験不足時、快ＶSOURCEに減少補正、痛み、逸脱SOURCE増加
+IF EXP:MASTER:Ｖ経験 < 1
+	TIMES SOURCE:MASTER:快Ｖ , 0.60
+	SOURCE:MASTER:痛み += 600
+	SOURCE:MASTER:逸脱 += 1200
+ELSEIF EXP:MASTER:Ｖ経験 < 6
+	TIMES SOURCE:MASTER:快Ｖ , 0.75
+	SOURCE:MASTER:痛み += 200
+	SOURCE:MASTER:逸脱 += 700 - EXP:MASTER:Ａ経験 * 100
+ELSEIF EXP:MASTER:Ｖ経験 < 11
+	TIMES SOURCE:MASTER:快Ｖ , 0.90
+	SOURCE:MASTER:痛み += 100
+	SOURCE:MASTER:逸脱 += 100 - EXP:MASTER:Ａ経験 * 10
+ELSEIF EXP:MASTER:Ｖ経験 < 21
+	SOURCE:MASTER:逸脱 += 5
+ENDIF
+;処女時、さらに快Ｖに減少補正
+SIF TALENT:MASTER:処女
+	TIMES SOURCE:MASTER:快Ｖ , 0.80
+
+;調教レベルに応じて接触SOURCE増加
+SOURCE:MASTER:接触 = 80 + GET_TRAINLV(TARGET) * 5
+;快ＶSOURCEに応じて性行動SOURCE増加
+SOURCE:MASTER:性行動 = 80 + SOURCE:MASTER:快Ｖ / 10
+;調教者の手にペニス/母乳汚れが存在すると不潔SOURCE小増加
+SIF STAIN:手 & (2 + 16)
+	SOURCE:MASTER:不潔 += 10
+;調教者の手に精液/アナル汚れが存在すると不潔SOURCE中増加
+SIF STAIN:手 & (4 + 8)
+	SOURCE:MASTER:不潔 += 30
+;調教者の手に血/粘液汚れが存在すると不潔SOURCE大増加
+SIF STAIN:手 & (32 + 64)
+	SOURCE:MASTER:不潔 += 100
+;汚れが相互に移る
+STAIN:MASTER:ヴァギナ |= STAIN:手
+STAIN:手 |= STAIN:MASTER:ヴァギナ
+TCVAR:MASTER:前立腺刺激 += 1
+;Ｇスポット責めに派生していればさらに前立腺刺激がつく
+SIF TFLAG:ACT派生 == 1
+	TCVAR:MASTER:前立腺刺激 += 1
+;調教対象Ｖ感覚、調教者技巧に応じて勃起度上昇
+TCVAR:MASTER:今回の勃起 += 100 + (GET_ABL(MASTER, "Ｖ感覚") * GET_ABL(TARGET, "技巧") / 20)
+TFLAG:経過時間 += 2
+
+;リアクション後（Ｎ/Ｈ）[罰]（快Ａ、接触、性行動、痛み、不潔、逸脱）
+@ACTION_APPLY2_19
+
+;────────────────────────────────────
+;027,押し倒す
+;────────────────────────────────────
+;リアクション前（Ｓ/Ｎ）（快Ｂ、中毒充足）
+@ACTION_APPLY_27
+;押し倒す
+IF TEQUIP:押し倒し中 == 0
+	TFLAG:押し倒し経過 = TFLAG:経過時間
+	TEQUIP:押し倒し中 = 1
+;押し倒し終了
+ELSE
+	TFLAG:押し倒し経過 = TFLAG:経過時間
+	TEQUIP:押し倒し中 = 0
+ENDIF
+;調教者、調教対象自慰を中断
+TEQUIP:自慰中 = 0
+;調教対象欲望に応じて勃起度上昇
+TCVAR:MASTER:今回の勃起 += 100 + GET_ABL(MASTER, "欲望") * 3
+TFLAG:経過時間 += 1
+
+;リアクション後（Ｓ/Ｎ）（快Ｂ、中毒充足）
+@ACTION_APPLY2_27
+;現在処理なし
+
+

@@ -1,0 +1,53 @@
+﻿;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+;
+;	Module		:VAR.ERH
+;	Facility	:主に変数の追加を宣言するファイル。
+;
+;	Licence		:ライセンスフリー。
+;
+;	Modification Data:
+;
+;	Edit	Date			Author					Reason
+;	001		2012/12/19		Ｎ鳥					新規作成
+;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+
+;===========================================================
+;変数
+;===========================================================
+;@INPUT_CHARA_LISTにて使用する
+;キャラリスト保存用変数
+#DIM CHARA_LIST, 1000
+;オプション規定値記憶変数
+#DIMS CONST C_OPTION  = "行数", "列数", "項目"
+#DIMS CONST C_DEFAULT = "20"  , "1"   , "名前"
+;INPUT_CHARA_LIST指定オプション
+#DIMS C_ARGS
+;リスト表示の現在ページ
+#DIM C_PAGE
+;リスト表示のページ行数
+#DIM C_LINM
+;ページ行数記憶
+#DIMS GLOBAL SAVEDATA C_G_LINM
+;リスト表示のページ行数
+#DIM C_LINE
+;リスト表示の最大列数
+#DIM C_ROWM
+;最大列数記憶
+#DIMS GLOBAL SAVEDATA C_G_ROWM
+;リスト表示の実際列数
+#DIM C_ROW
+;表示文字数
+#DIM C_CHAR
+;識別文字列
+#DIMS C_IDES
+;対象とするキャラクタの分類(キャラ番号の処理方法)
+#DIMS C_TARS
+;口上色に文字色を合わせる
+#DIMS C_KOJS
+;表示項目
+#DIMS C_ITES
+;表示項目記憶
+#DIMS GLOBAL SAVEDATA C_G_ITES
+
+

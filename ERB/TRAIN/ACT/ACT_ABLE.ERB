@@ -1,0 +1,3223 @@
+﻿
+;-----------------------------------------------------------
+;ACTABLE一括管理
+;-----------------------------------------------------------
+@GLOBAL_ACTABLE(ARG)
+#FUNCTION
+#LOCALSIZE 200
+#DIM 参照ターン, 200
+#DIM DAYTIME管理, 2
+
+;日時更新
+IF DAYTIME管理 != TIME || DAYTIME管理:1 != DAY
+	VARSET 参照ターン, -1
+	DAYTIME管理 = TIME
+	DAYTIME管理:1 = DAY
+ENDIF
+
+;ターン内初回
+IF 参照ターン:ARG != TFLAG:調教時間
+	参照ターン:ARG = TFLAG:調教時間
+	IF PERCENT(CFLAG:(1000+ARG))
+		LOCAL:ARG = 1
+	ELSE
+		LOCAL:ARG = 0
+	ENDIF
+ENDIF
+
+;CFLAG:1000～1199によるACT封印判定
+ACTABLE_REASON:ARG = 封印_ACT封印
+IF LOCAL:ARG == 1
+	;採用不可
+	RESULT = 0
+	RETURNF 1
+ENDIF
+
+;休憩系ACT封印
+;SANDBOX限定処理
+ACTABLE_REASON:ARG = 封印_SANDBOX休憩封印
+IF FLAG:モード == 1 && GROUPMATCH(ARG, 90, 91, 92)
+	RESULT = 0
+	RETURNF 1
+ENDIF
+
+;-----------------------------------------------------------
+;今の気分を聞く の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE0
+;一括管理
+SIF GLOBAL_ACTABLE(0)
+	RETURN RESULT
+;方針が異常
+ACTABLE_REASON:0 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "異常")
+	RETURN 0
+;実行可能
+ACTABLE_REASON:0 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;自分への気持ちを聞く の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE1
+;一括管理
+SIF GLOBAL_ACTABLE(1)
+	RETURN RESULT
+;お仕置きモード
+ACTABLE_REASON:1 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ
+	RETURN 0
+;方針が異常
+ACTABLE_REASON:1 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "異常")
+	RETURN 0
+;実行可能
+ACTABLE_REASON:1 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;性についての話をする の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE2
+;一括管理
+SIF GLOBAL_ACTABLE(2)
+	RETURN RESULT
+;お仕置きモード
+ACTABLE_REASON:2 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ
+	RETURN 0
+;方針が異常
+ACTABLE_REASON:2 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "異常")
+	RETURN 0
+;調教者に性知識が無い
+SIF !EXP:性知識
+	RETURN 0
+;実行可能
+ACTABLE_REASON:2 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;優しく慰める の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE3
+;一括管理
+SIF GLOBAL_ACTABLE(3)
+	RETURN RESULT
+;お仕置きモード
+ACTABLE_REASON:3 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ
+	RETURN 0
+;方針がハード/異常
+ACTABLE_REASON:3 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "ハード/異常")
+	RETURN 0
+;実行可能
+ACTABLE_REASON:3 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;厳しく脅す の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE4
+;一括管理
+SIF GLOBAL_ACTABLE(4)
+	RETURN RESULT
+;お仕置きモード
+ACTABLE_REASON:4 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ
+	RETURN 0
+;方針がソフト/異常
+ACTABLE_REASON:4 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "ソフト/異常")
+	RETURN 0
+;実行可能
+ACTABLE_REASON:4 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;衣装の変更を要求する の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE5
+;一括管理
+SIF GLOBAL_ACTABLE(5)
+	RETURN RESULT
+;押し倒し
+ACTABLE_REASON:5 = 物理障害_押し倒し中
+SIF TEQUIP:押し倒し中
+	RETURN 0
+;性交中かつMASTERがコスプレ中
+ACTABLE_REASON:5 = 解除規制_コスプレSEX
+SIF GETINSERT() && TEQUIP:MASTER:コスプレ
+	RETURN 0
+;縄
+ACTABLE_REASON:5 = 物理障害_拘束(縄)
+SIF TEQUIP:縄
+	RETURN 0
+;実行可能
+ACTABLE_REASON:5 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;合意を求める の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE6
+;一括管理
+SIF GLOBAL_ACTABLE(6)
+	RETURN RESULT
+;お仕置きモード
+ACTABLE_REASON:6 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ
+	RETURN 0
+;方針が異常
+ACTABLE_REASON:6 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "異常")
+	RETURN 0
+;合意を既に得ている
+ACTABLE_REASON:6 = 無意味_合意済
+SIF CFLAG:合意
+	RETURN 0
+;処女でも童貞でもない
+ACTABLE_REASON:6 = 無意味_合意不要
+SIF TALENT:MASTER:処女 !| TALENT:MASTER:童貞
+	RETURN 0
+;実行可能
+ACTABLE_REASON:6 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;お仕置きと宣言する の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE7
+;一括管理
+SIF GLOBAL_ACTABLE(7)
+	RETURN RESULT
+;お仕置きモード
+ACTABLE_REASON:7 = 状況不適合_非お仕置き中
+SIF !TFLAG:お仕置きフラグ
+	RETURN 0
+;方針がソフト/異常
+ACTABLE_REASON:7 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "ソフト/異常")
+	RETURN 0
+;押し倒し
+ACTABLE_REASON:7 = 状況不適合_押し倒し中
+SIF TEQUIP:押し倒し中
+	RETURN 0
+;実行可能
+ACTABLE_REASON:7 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;怒鳴る の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE8
+;一括管理
+SIF GLOBAL_ACTABLE(8)
+	RETURN RESULT
+;お仕置きモード
+;制限解除@これみ
+;ACTABLE_REASON:8 = 状況不適合_お仕置き中
+;SIF TFLAG:お仕置きフラグ
+;	RETURN 0
+;方針がソフト/ノーマル
+ACTABLE_REASON:8 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "ソフト/ノーマル")
+	RETURN 0
+;実行可能
+ACTABLE_REASON:8 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;不気味に笑う の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE9
+;一括管理
+SIF GLOBAL_ACTABLE(9)
+	RETURN RESULT
+;方針がソフト/ノーマル/ハード
+ACTABLE_REASON:9 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF 2 <= TFLAG:ターン方針 && TFLAG:ターン方針 <= 4
+	RETURN 0
+;本日の方針がイチャイチャ
+ACTABLE_REASON:9 = 方針不適合_日毎方針(%POLICY("今日")%)
+SIF TFLAG:今日の方針 == 4
+	RETURN 0
+;実行可能
+ACTABLE_REASON:9 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;手で愛撫 の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE10
+;一括管理
+SIF GLOBAL_ACTABLE(10)
+	RETURN RESULT
+;お仕置きモード
+ACTABLE_REASON:10 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ
+	RETURN 0
+;方針が異常
+ACTABLE_REASON:10 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "異常")
+	RETURN 0
+;三角木馬
+ACTABLE_REASON:10 = 物理障害_拘束(三角木馬)
+SIF TEQUIP:三角木馬
+	RETURN 0
+;調教者に壁抜けがなく、調教対象にペニスがない
+IF !TALENT:壁抜け && !PENIS(MASTER)
+	;調教対象の下半身上着で妨害される
+	ACTABLE_REASON:10 = 物理障害_着衣(受)(下半身上着)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+ENDIF
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:10 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;実行可能
+ACTABLE_REASON:10 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;胸愛撫 の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE11
+;一括管理
+SIF GLOBAL_ACTABLE(11)
+	RETURN RESULT
+;お仕置きモード
+ACTABLE_REASON:11 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ
+	RETURN 0
+;方針が異常
+ACTABLE_REASON:11 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "異常")
+	RETURN 0
+;調教者に壁抜けがなく、調教対象がオトコ
+IF !TALENT:壁抜け && TALENT:MASTER:オトコ
+	;調教対象の上半身上着で妨害される
+	ACTABLE_REASON:11 = 物理障害_着衣(受)(上半身上着)
+	SIF CLOTHESTYPE(1, 3) == 2
+		RETURN 0
+	;調教対象の上半身下着で妨害される
+	ACTABLE_REASON:11 = 物理障害_着衣(受)(上半身下着)
+	SIF CLOTHESTYPE(1, 2) == 2
+		RETURN 0
+ENDIF
+;焦らし中(ペニス刺激を中断しないように)
+ACTABLE_REASON:11 = 状況不適合_焦らし中
+SIF TCVAR:MASTER:焦らし度
+	RETURN 0
+;性交中（後背位/背面座位/Ａセックス）
+ACTABLE_REASON:11 = 解除規制_性交(攻→受)(後背位/背面座位/Ａセックス)
+SIF GROUPMATCH(TEQUIP:性交中, 2, 5, 6) > 0
+	RETURN 0
+;性交奉仕中（正常位/後背位/背面座位/Ａセックス）
+ACTABLE_REASON:11 = 解除規制_性交(受→攻)(正常位/後背位/背面座位/Ａセックス)
+SIF GROUPMATCH(TEQUIP:性交奉仕中, 1, 2, 5, 6) > 0
+	RETURN 0
+;実行可能
+ACTABLE_REASON:11 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;口で愛撫 の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE12
+;一括管理
+SIF GLOBAL_ACTABLE(12)
+	RETURN RESULT
+;お仕置きモード
+ACTABLE_REASON:12 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ
+	RETURN 0
+;方針が異常
+ACTABLE_REASON:12 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "異常")
+	RETURN 0
+;調教対象が女の子でバイブ装着中
+ACTABLE_REASON:12 = 物理障害_装着(受)(バイブ)
+SIF TEQUIP:バイブ && !TALENT:MASTER:ふたなり
+	RETURN 0
+;オナホール
+ACTABLE_REASON:12 = 物理障害_装着(受)(オナホール)
+SIF TEQUIP:オナホール
+	RETURN 0
+;ペニスバンド
+ACTABLE_REASON:12 = 物理障害_装着(受)(ペニスバンド)
+SIF TEQUIP:ペニスバンド
+	RETURN 0
+;三角木馬
+ACTABLE_REASON:12 = 物理障害_拘束(三角木馬)
+SIF TEQUIP:三角木馬
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:12 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:12 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;調教者に壁抜けがない
+IF !TALENT:壁抜け
+	;調教対象の下半身上着で妨害される
+	ACTABLE_REASON:12 = 物理障害_着衣(受)(下半身上着)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+ENDIF
+;実行可能
+ACTABLE_REASON:12 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;アナル愛撫 の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE13
+;一括管理
+SIF GLOBAL_ACTABLE(13)
+	RETURN RESULT
+;お仕置きモード
+ACTABLE_REASON:13 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ
+	RETURN 0
+;方針がソフト/異常
+ACTABLE_REASON:13 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "ソフト/異常")
+	RETURN 0
+;三角木馬
+ACTABLE_REASON:13 = 物理障害_拘束(三角木馬)
+SIF TEQUIP:三角木馬
+	RETURN 0
+;ペニスバンド
+ACTABLE_REASON:13 = 物理障害_装着(受)(ペニスバンド)
+SIF TEQUIP:ペニスバンド
+	RETURN 0
+;アナルビーズ
+ACTABLE_REASON:13 = 物理障害_装着(受)(アナルビーズ)
+SIF TEQUIP:アナルビーズ
+	RETURN 0
+;アナルセックス中
+ACTABLE_REASON:13 = 物理障害_性交(攻→受)(全)
+SIF TEQUIP:性交中 == 6
+	RETURN 0
+;挿入中
+ACTABLE_REASON:13 = 物理障害_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;調教者に壁抜けがない
+IF !TALENT:壁抜け
+	;調教対象の下半身上着で妨害される
+	ACTABLE_REASON:13 = 物理障害_着衣(受)(下半身上着)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+ENDIF
+;焦らし中(ペニス刺激を中断しないように)
+ACTABLE_REASON:13 = 状況不適合_焦らし中
+SIF TCVAR:MASTER:焦らし度 && !TALENT:MASTER:オトコ
+	RETURN 0
+;実行可能
+ACTABLE_REASON:13 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;アナル舐め の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE14
+;一括管理
+SIF GLOBAL_ACTABLE(14)
+	RETURN RESULT
+;フェラ継続中
+ACTABLE_REASON:14 = 状況不適合_口淫中
+SIF TEQUIP:調教対象Ｃ使用 == 2
+	RETURN 0
+;お仕置きモード
+ACTABLE_REASON:14 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ
+	RETURN 0
+;方針がソフト/異常
+ACTABLE_REASON:14 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "ソフト/異常")
+	RETURN 0
+;アナル装備
+ACTABLE_REASON:14 = 物理障害_装着(受)(A装備)
+SIF TEQUIP:アナルバイブ || TEQUIP:アナルビーズ || TEQUIP:浣腸器＋プラグ
+	RETURN 0
+;ペニスバンド
+ACTABLE_REASON:14 = 物理障害_装着(受)(ペニスバンド)
+SIF TEQUIP:ペニスバンド
+	RETURN 0
+;三角木馬
+ACTABLE_REASON:14 = 物理障害_拘束(三角木馬)
+SIF TEQUIP:三角木馬
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:14 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:14 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;調教者に壁抜けがない
+IF !TALENT:壁抜け
+	;調教対象の下半身上着で妨害される
+	ACTABLE_REASON:14 = 物理障害_着衣(受)(下半身上着)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+	;調教対象の下半身下着で強く妨害される
+	ACTABLE_REASON:14 = 物理障害_着衣(受)(下半身下着)
+	SIF CLOTHESTYPE(1, 0)
+		RETURN 0
+ENDIF
+;焦らし中(ペニス刺激を中断しないように)
+ACTABLE_REASON:14 = 状況不適合_焦らし中
+SIF TCVAR:MASTER:焦らし度
+	RETURN 0
+;実行可能
+ACTABLE_REASON:14 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;キス の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE15
+;一括管理
+SIF GLOBAL_ACTABLE(15)
+	RETURN RESULT
+;お仕置きモード
+ACTABLE_REASON:15 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ
+	RETURN 0
+;方針がハード/異常
+ACTABLE_REASON:15 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "ハード/異常")
+	RETURN 0
+;玩具は基本的に透過しないけどボールギャグは壁抜け効いてもいいかも
+;調教者に壁抜けがない
+IF !TALENT:壁抜け
+	;ボールギャグ
+	ACTABLE_REASON:15 = 物理障害_拘束(ボールギャグ)
+	SIF TEQUIP:ボールギャグ
+		RETURN 0
+ENDIF
+;焦らし中(ペニス刺激を中断しないように)
+;トドメ時にはＣ刺激に集中する
+;トドメ時にキスしてもいいんじゃないかな@これみ
+;ACTABLE_REASON:15 = 状況不適合_焦らし中
+;SIF TCVAR:MASTER:焦らし度 == 1
+;	RETURN 0
+;実行可能
+ACTABLE_REASON:15 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;性器を擦り合う の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE16
+;一括管理
+SIF GLOBAL_ACTABLE(16)
+	RETURN RESULT
+;お仕置きモード
+ACTABLE_REASON:16 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ
+	RETURN 0
+;方針がハード/異常
+ACTABLE_REASON:16 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "ハード/異常")
+	RETURN 0
+;自分の服は壁抜けがあってもダメ
+;調教者の下半身下着に強く妨害される（パンティも不可）
+ACTABLE_REASON:16 = 物理障害_着衣(攻)(下半身下着)
+SIF CLOTHESTYPE(0, 0)
+	RETURN 0
+;調教者の下半身上着で妨害される
+ACTABLE_REASON:16 = 物理障害_着衣(攻)(下半身上着)
+SIF CLOTHESTYPE(0, 1) == 2
+	RETURN 0
+;調教対象が女の子でバイブ装着中
+ACTABLE_REASON:16 = 物理障害_装着(受)(バイブ)
+SIF TEQUIP:バイブ && !TALENT:MASTER:ふたなり
+	RETURN 0
+;オナホール
+ACTABLE_REASON:16 = 物理障害_装着(受)(オナホール)
+SIF TEQUIP:オナホール
+	RETURN 0
+;三角木馬
+ACTABLE_REASON:16 = 物理障害_拘束(三角木馬)
+SIF TEQUIP:三角木馬
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:16 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:16 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;調教者に壁抜けがない
+IF !TALENT:壁抜け
+	;調教対象の下半身上着で妨害される
+	ACTABLE_REASON:16 = 物理障害_着衣(受)(下半身上着)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+	;貝合わせの場合、調教対象の下半身下着に強く妨害される（パンティも不可）
+	ACTABLE_REASON:16 = 物理障害_着衣(受)(下半身下着)
+	SIF CLOTHESTYPE(1, 0) && !PENIS(MASTER)
+		RETURN 0
+ENDIF
+;素股するの場合、調教対象に足がないとダメ
+ACTABLE_REASON:16 = 物理障害_受足無し
+SIF (PENIS(MASTER) || TEQUIP:ペニスバンド) && TALENT:足無し
+	RETURN 0
+;調教者にペニスがあるとダメ
+ACTABLE_REASON:16 = 物理障害_攻ペニス
+SIF PENIS(TARGET)
+	RETURN 0
+;実行可能
+ACTABLE_REASON:16 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;パイズリする の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE17
+;一括管理
+SIF GLOBAL_ACTABLE(17)
+	RETURN RESULT
+;お仕置きモード
+ACTABLE_REASON:17 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ
+	RETURN 0
+;方針がハード/異常
+ACTABLE_REASON:17 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "ハード/異常")
+	RETURN 0
+;オナホール
+ACTABLE_REASON:17 = 物理障害_装着(受)(オナホール)
+SIF TEQUIP:オナホール
+	RETURN 0
+;三角木馬
+ACTABLE_REASON:17 = 物理障害_拘束(三角木馬)
+SIF TEQUIP:三角木馬
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:17 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:17 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;調教者に壁抜けがない
+IF !TALENT:壁抜け
+	;調教対象の下半身上着で妨害される
+	ACTABLE_REASON:17 = 物理障害_着衣(受)(下半身上着)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+ENDIF
+;調教者の上半身上着で妨害される
+ACTABLE_REASON:17 = 物理障害_着衣(攻)(上半身上着)
+SIF CLOTHESTYPE(0, 3) == 2
+	RETURN 0
+;調教者の上半身下着で妨害される
+ACTABLE_REASON:17 = 物理障害_着衣(攻)(上半身下着)
+SIF CLOTHESTYPE(0, 2) == 2
+	RETURN 0
+;調教者がオトコ
+ACTABLE_REASON:17 = 物理障害_攻男性
+SIF TALENT:オトコ
+	RETURN 0
+;調教対象が女の子
+ACTABLE_REASON:17 = 物理障害_受女性
+SIF TALENT:MASTER:ふたなり !| TALENT:MASTER:オトコ
+	RETURN 0
+;実行可能
+ACTABLE_REASON:17 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;足コキする の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE18
+;一括管理
+SIF GLOBAL_ACTABLE(18)
+	RETURN RESULT
+;お仕置きモード
+ACTABLE_REASON:18 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ
+	RETURN 0
+;本日の方針がイチャイチャ
+ACTABLE_REASON:18 = 方針不適合_日毎方針(%POLICY("今日")%)
+SIF TFLAG:今日の方針 == 4
+	RETURN 0
+;オナホール
+ACTABLE_REASON:18 = 物理障害_装着(受)(オナホール)
+SIF TEQUIP:オナホール
+	RETURN 0
+;三角木馬
+ACTABLE_REASON:18 = 物理障害_拘束(三角木馬)
+SIF TEQUIP:三角木馬
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:18 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:18 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;調教者に足がない
+ACTABLE_REASON:18 = 物理障害_攻足無し
+SIF TALENT:足無し
+	RETURN 0
+;調教対象が女の子
+ACTABLE_REASON:18 = 物理障害_受女性
+SIF TALENT:MASTER:ふたなり !| TALENT:MASTER:オトコ
+	RETURN 0
+;実行可能
+ACTABLE_REASON:18 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;指挿入れ の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE19
+;一括管理
+SIF GLOBAL_ACTABLE(19)
+	RETURN RESULT
+;お仕置きモード
+ACTABLE_REASON:19 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ
+	RETURN 0
+;方針が異常
+ACTABLE_REASON:19 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "異常")
+	RETURN 0
+;三角木馬
+ACTABLE_REASON:19 = 物理障害_拘束(三角木馬)
+SIF TEQUIP:三角木馬
+	RETURN 0
+;ペニスバンド
+ACTABLE_REASON:19 = 物理障害_装着(受)(ペニスバンド)
+SIF TEQUIP:ペニスバンド
+	RETURN 0
+;挿入中
+ACTABLE_REASON:19 = 物理障害_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:19 = 物理障害_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;触手
+ACTABLE_REASON:19 = 物理障害_触手
+SIF TEQUIP:触手調教中
+	RETURN 0
+;オトコ
+ACTABLE_REASON:19 = 物理障害_受男性
+SIF TALENT:MASTER:オトコ
+	RETURN 0
+;調教者に壁抜けがない
+IF !TALENT:壁抜け
+	;調教対象の下半身上着で妨害される
+	ACTABLE_REASON:19 = 物理障害_着衣(受)(下半身上着)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+ENDIF
+;焦らし中(ペニス刺激を中断しないように)
+ACTABLE_REASON:19 = 状況不適合_焦らし中
+SIF TCVAR:MASTER:焦らし度 && !TALENT:MASTER:ふたなり
+	RETURN 0
+;実行可能
+ACTABLE_REASON:19 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;ローター の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE20
+;一括管理
+SIF GLOBAL_ACTABLE(20)
+	RETURN RESULT
+;ローターが無い
+ACTABLE_REASON:20 = 未所持_ローター
+SIF !ITEM:ローター
+	RETURN 0
+;お仕置きモード
+ACTABLE_REASON:20 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ
+	RETURN 0
+;方針がハード/異常
+ACTABLE_REASON:20 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "ハード/異常")
+	RETURN 0
+;Ｃに他の道具装着中
+ACTABLE_REASON:20 = 物理障害_装着(受)(Ｃキャップ)
+SIF TEQUIP:クリキャップ
+	RETURN 0
+ACTABLE_REASON:20 = 物理障害_装着(受)(Ｐホール)
+SIF TEQUIP:オナホール
+	RETURN 0
+;ペニスバンド
+ACTABLE_REASON:20 = 物理障害_装着(受)(ペニスバンド)
+SIF TEQUIP:ペニスバンド
+	RETURN 0
+;三角木馬
+ACTABLE_REASON:20 = 物理障害_拘束(三角木馬)
+SIF TEQUIP:三角木馬
+	RETURN 0
+;挿入中
+ACTABLE_REASON:20 = 物理障害_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:20 = 物理障害_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;触手
+ACTABLE_REASON:20 = 物理障害_触手
+SIF TEQUIP:触手調教中
+	RETURN 0
+;調教対象がペニス有り
+ACTABLE_REASON:20 = 物理障害_受ペニス
+SIF PENIS(MASTER)
+	RETURN 0
+;実行可能
+ACTABLE_REASON:20 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;バイブ の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE21
+;一括管理
+SIF GLOBAL_ACTABLE(21)
+	RETURN RESULT
+;バイブが無い
+ACTABLE_REASON:21 = 未所持_バイブ
+SIF !ITEM:バイブ
+	RETURN 0
+;お仕置きモード
+ACTABLE_REASON:21 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ && TEQUIP:バイブ
+	RETURN 0
+;方針が異常
+ACTABLE_REASON:21 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "異常")
+	RETURN 0
+;三角木馬
+ACTABLE_REASON:21 = 物理障害_拘束(三角木馬)
+SIF TEQUIP:三角木馬
+	RETURN 0
+;ペニスバンド
+ACTABLE_REASON:21 = 物理障害_装着(受)(ペニスバンド)
+SIF TEQUIP:ペニスバンド
+	RETURN 0
+;Ｖ挿入中
+ACTABLE_REASON:21 = 物理障害_性交(攻→受)(Ｖ)
+SIF V_SEX()
+	RETURN 0
+;さすがにバイブは壁抜けしない
+;調教対象の下半身上着で妨害される
+	ACTABLE_REASON:21 = 物理障害_着衣(受)(下半身上着)
+SIF CLOTHESTYPE(1, 1) == 2
+	RETURN 0
+;調教対象の下半身下着で妨害される
+	ACTABLE_REASON:21 = 物理障害_着衣(受)(下半身下着)
+SIF CLOTHESTYPE(1, 0) == 2
+	RETURN 0
+;触手
+ACTABLE_REASON:21 = 物理障害_触手
+SIF TEQUIP:触手調教中
+	RETURN 0
+;オトコ
+ACTABLE_REASON:21 = 物理障害_受男性
+SIF TALENT:MASTER:オトコ
+	RETURN 0
+;調教対象が処女で調教者がご主人様でない@ぽ0422test+勝手に調整3
+;今後の条件考慮のためこういう案もあるということを記録@これみ
+;SIF TALENT:MASTER:処女 && !TALENT:TARGET:ご主人様
+;	RETURN 0
+;実行可能
+ACTABLE_REASON:21 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;アナルバイブ の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE22
+;一括管理
+SIF GLOBAL_ACTABLE(22)
+	RETURN RESULT
+;アナルバイブが無い
+ACTABLE_REASON:22 = 未所持_Ａバイブ
+SIF !ITEM:アナルバイブ
+	RETURN 0
+;方針がソフト/異常
+ACTABLE_REASON:22 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "ソフト/異常")
+	RETURN 0
+;Ａに他の道具装着中
+ACTABLE_REASON:22 = 物理障害_装着(受)(Ａ)
+SIF TEQUIP:アナルビーズ || TEQUIP:浣腸器＋プラグ
+	RETURN 0
+;三角木馬
+ACTABLE_REASON:22 = 物理障害_拘束(三角木馬)
+SIF TEQUIP:三角木馬
+	RETURN 0
+;ペニスバンド
+ACTABLE_REASON:22 = 物理障害_装着(受)(ペニスバンド)
+SIF TEQUIP:ペニスバンド
+	RETURN 0
+;Ａ挿入中
+ACTABLE_REASON:22 = 物理障害_性交(攻→受)(Ａ)
+SIF TEQUIP:性交中 == 6
+	RETURN 0
+;調教対象の下半身上着で妨害される
+	ACTABLE_REASON:22 = 物理障害_着衣(受)(下半身上着)
+SIF CLOTHESTYPE(1, 1) == 2
+	RETURN 0
+;調教対象の下半身下着で妨害される
+	ACTABLE_REASON:22 = 物理障害_着衣(受)(下半身下着)
+SIF CLOTHESTYPE(1, 0) == 2
+	RETURN 0
+;触手
+ACTABLE_REASON:22 = 物理障害_触手
+SIF TEQUIP:触手調教中
+	RETURN 0
+;実行可能
+ACTABLE_REASON:22 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;アナルビーズ の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE23
+;一括管理
+SIF GLOBAL_ACTABLE(23)
+	RETURN RESULT
+;アナルビーズが無い
+ACTABLE_REASON:23 = 未所持_Ａビーズ
+SIF !ITEM:アナルビーズ
+	RETURN 0
+;お仕置きモード
+ACTABLE_REASON:23 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ && TEQUIP:アナルビーズ == 0
+	RETURN 0
+;方針が異常
+ACTABLE_REASON:23 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "異常")
+	RETURN 0
+;Ａに他の道具装着中
+ACTABLE_REASON:23 = 物理障害_装着(受)(Ａ)
+SIF TEQUIP:アナルバイブ || TEQUIP:浣腸器＋プラグ
+	RETURN 0
+;三角木馬
+ACTABLE_REASON:23 = 物理障害_拘束(三角木馬)
+SIF TEQUIP:三角木馬
+	RETURN 0
+;ペニスバンド
+ACTABLE_REASON:23 = 物理障害_装着(受)(ペニスバンド)
+SIF TEQUIP:ペニスバンド
+	RETURN 0
+;Ａ挿入中
+ACTABLE_REASON:23 = 物理障害_性交(攻→受)(Ａ)
+SIF TEQUIP:性交中 == 6
+	RETURN 0
+;調教対象の下半身上着で妨害される
+ACTABLE_REASON:23 = 物理障害_着衣(受)(下半身上着)
+SIF CLOTHESTYPE(1, 1) == 2
+	RETURN 0
+;調教対象の下半身下着で妨害される
+ACTABLE_REASON:23 = 物理障害_着衣(受)(下半身下着)
+SIF CLOTHESTYPE(1, 0) == 2
+	RETURN 0
+;触手
+ACTABLE_REASON:23 = 物理障害_触手
+SIF TEQUIP:触手調教中
+	RETURN 0
+;実行可能
+ACTABLE_REASON:23 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;Ｃ愛撫道具 の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE24
+;一括管理
+SIF GLOBAL_ACTABLE(24)
+	RETURN RESULT
+;クリキャップが無い
+ACTABLE_REASON:24 = 未所持_Ｃキャップ
+SIF (TALENT:MASTER:ふたなり !| TALENT:MASTER:オトコ) && !ITEM:クリキャップ
+	RETURN 0
+;オナホールが無い
+ACTABLE_REASON:24 = 未所持_Ｐホール
+SIF (TALENT:MASTER:ふたなり || TALENT:MASTER:オトコ) && !ITEM:オナホール
+	RETURN 0
+;お仕置きモード
+ACTABLE_REASON:24 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ
+	RETURN 0
+;方針がハード/異常
+ACTABLE_REASON:24 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "ハード/異常")
+	RETURN 0
+;勃起判定
+ACTABLE_REASON:24 = 物理障害_勃起(受)(不足)
+SIF TCVAR:MASTER:勃起度 < 1000 & (TALENT:MASTER:ふたなり || TALENT:MASTER:オトコ) && !TEQUIP:オナホール
+	RETURN 0
+;三角木馬
+ACTABLE_REASON:24 = 物理障害_拘束(三角木馬)
+SIF TEQUIP:三角木馬
+	RETURN 0
+;ペニスバンド
+ACTABLE_REASON:24 = 物理障害_装着(受)(ペニスバンド)
+SIF TEQUIP:ペニスバンド
+	RETURN 0
+;オナホールの場合、調教対象の下半身上着で妨害される
+ACTABLE_REASON:24 = 物理障害_着衣(受)(下半身上着)
+SIF CLOTHESTYPE(1, 1) == 2 && PENIS(MASTER)
+	RETURN 0
+;挿入中
+ACTABLE_REASON:24 = 物理障害_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;触手
+ACTABLE_REASON:24 = 物理障害_触手
+SIF TEQUIP:触手調教中
+	RETURN 0
+;実行可能
+ACTABLE_REASON:24 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;ニプルキャップ の実行判定
+;-----------------------------------------------------------
+;Revの場合はクリップローターという扱い
+;男性用の代物も確認できるので、まぁオトコでも通して良いと考えることに@/L
+@ACT_ABLE25
+;一括管理
+SIF GLOBAL_ACTABLE(25)
+	RETURN RESULT
+;ニプルキャップが無い
+ACTABLE_REASON:25 = 未所持_Ｂキャップ
+SIF !ITEM:ニプルキャップ
+	RETURN 0
+;お仕置きモード
+ACTABLE_REASON:25 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ
+	RETURN 0
+;方針がハード/異常
+ACTABLE_REASON:25 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "ハード/異常")
+	RETURN 0
+;調教対象の上半身上着で妨害される
+ACTABLE_REASON:25 = 物理障害_着衣(受)(上半身上着)
+SIF CLOTHESTYPE(1, 3) == 2
+	RETURN 0
+;調教対象の上半身下着で強く妨害される
+ACTABLE_REASON:25 = 物理障害_着衣(受)(上半身下着)
+SIF CLOTHESTYPE(1, 2)
+	RETURN 0
+;触手
+ACTABLE_REASON:25 = 物理障害_触手
+SIF TEQUIP:触手調教中
+	RETURN 0
+;実行可能
+ACTABLE_REASON:25 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;ペニスバンド の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE26
+;一括管理
+SIF GLOBAL_ACTABLE(26)
+	RETURN RESULT
+;ペニスバンドが無い
+ACTABLE_REASON:26 = 未所持_Ｐバンド
+SIF !ITEM:ペニスバンド || TEQUIP:調教者ペニスバンド
+	RETURN 0
+;お仕置きモード
+ACTABLE_REASON:26 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ && TEQUIP:ペニスバンド
+	RETURN 0
+;Ａに他の道具装着中
+ACTABLE_REASON:26 = 物理障害_装着(受)(Ａ)
+SIF TEQUIP:アナルビーズ || TEQUIP:アナルバイブ || TEQUIP:浣腸器＋プラグ
+	RETURN 0
+;三角木馬
+ACTABLE_REASON:26 = 物理障害_拘束(三角木馬)
+SIF TEQUIP:三角木馬
+	RETURN 0
+;Ｖ挿入中
+ACTABLE_REASON:26 = 物理障害_性交(攻→受)(Ｖ)
+SIF TEQUIP:性交中
+	RETURN 0
+;性交奉仕中
+ACTABLE_REASON:26 = 物理障害_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;調教対象の下半身上着で妨害される
+ACTABLE_REASON:26 = 物理障害_着衣(受)(下半身上着)
+SIF CLOTHESTYPE(1, 1) == 2
+	RETURN 0
+;調教対象の下半身下着で妨害される
+ACTABLE_REASON:26 = 物理障害_着衣(受)(下半身下着)
+SIF CLOTHESTYPE(1, 0) == 2
+	RETURN 0
+;触手
+ACTABLE_REASON:26 = 物理障害_触手
+SIF TEQUIP:触手調教中
+	RETURN 0
+;ペニスがある
+ACTABLE_REASON:26 = 物理障害_受ペニス
+SIF PENIS(MASTER)
+	RETURN 0
+;実行可能
+ACTABLE_REASON:26 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;押し倒す の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE27
+;一括管理
+SIF GLOBAL_ACTABLE(27)
+	RETURN RESULT
+;お仕置きモード
+ACTABLE_REASON:27 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ
+	RETURN 0
+;本日の方針がイチャイチャ // 調教者が情欲なら通す
+ACTABLE_REASON:27 = 方針不適合_日毎方針(%POLICY("今日")%)
+SIF IS_POLICY("今日", "イチャイチャ") && !IS_CONDITION(TARGET, "情欲")
+	RETURN 0
+;ペニスバンド
+ACTABLE_REASON:27 = 物理障害_装着(受)(ペニスバンド)
+SIF TEQUIP:ペニスバンド
+	RETURN 0
+;押し倒し中
+[SKIPSTART]
+ACTABLE_REASON:27 = 無意味_押し倒し中
+SIF TEQUIP:押し倒し中
+	RETURN 0
+[SKIPEND]
+;焦らし中(ペニス刺激を中断しないように)
+ACTABLE_REASON:27 = 状況不適合_焦らし中
+SIF TCVAR:MASTER:焦らし度
+	RETURN 0
+;挿入中は押し倒しがキャンセルされる
+;@EVENT_EQUIP関係で必要です@これみ
+ACTABLE_REASON:27 = 状況不適合_挿入中
+SIF TEQUIP:性交中 || TEQUIP:性交奉仕中
+	RETURN 0
+;満足度が50%以下 // 押し倒しが頻発するので条件を絞って様子を見ます@/L
+ACTABLE_REASON:27 = 状況不適合_満足度
+SIF TENSION(TARGET, 8) != "高い" && !TEQUIP:押し倒し中
+	RETURN 0
+;実行可能
+ACTABLE_REASON:27 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;正常位 の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE30
+;一括管理
+SIF GLOBAL_ACTABLE(30)
+	RETURN RESULT
+;調教者勃起所要判定
+;調教者ペニスが存在し、かつ勃起不足であれば
+ACTABLE_REASON:30 = 物理障害_勃起不足(攻)
+SIF PENIS(TARGET) && TCVAR:勃起 < 2
+	RETURN 0
+;調教者にペニスがなく、ペニスバンドがない
+ACTABLE_REASON:30 = 未所持_Ｐバンド
+SIF !PENIS(TARGET) && (TEQUIP:ペニスバンド || !ITEM:ペニスバンド)
+	RETURN 0
+;Ｖ使用中
+ACTABLE_REASON:30 = 物理障害_装着(受)(Ｖ)
+SIF TEQUIP:三角木馬 || TEQUIP:ペニスバンド || TEQUIP:バイブ
+	RETURN 0
+;お仕置きモード
+ACTABLE_REASON:30 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ
+	RETURN 0
+;方針がハード/異常
+ACTABLE_REASON:30 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "ハード/異常")
+	RETURN 0
+;オトコ
+ACTABLE_REASON:30 = 物理障害_受男性
+SIF TALENT:MASTER:オトコ
+	RETURN 0
+;体位変更不可
+ACTABLE_REASON:30 = 物理障害_性交(攻→受)(体位)
+SIF TEQUIP:性交中 == 5
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:30 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+ACTABLE_REASON:30 = 解除規制_性交(攻→受)(Ａ)
+SIF TEQUIP:性交中 == 6 && !TEQUIP:調教者ペニスバンド
+	RETURN 0
+;調教者に壁抜けがない（ペニバンも不可）
+IF !TALENT:壁抜け || !PENIS(TARGET)
+	;調教対象の下半身上着で妨害される
+	ACTABLE_REASON:30 = 物理障害_着衣(受)(下半身上着)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+	;調教対象の下半身下着で妨害される
+	ACTABLE_REASON:30 = 物理障害_着衣(受)(下半身下着)
+	SIF CLOTHESTYPE(1, 0) == 2
+		RETURN 0
+ENDIF
+;調教者の下半身上着で妨害される
+ACTABLE_REASON:30 = 物理障害_着衣(攻)(下半身上着)
+SIF CLOTHESTYPE(0, 1) == 2
+	RETURN 0
+;触手
+ACTABLE_REASON:30 = 物理障害_触手
+SIF TEQUIP:触手調教中
+	RETURN 0
+;調教対象が処女で調教者がご主人様でない@ぽ0422test+勝手に調整3
+;今後の条件考慮のためこういう案もあるということを記録@これみ
+;SIF TALENT:MASTER:処女 && !TALENT:TARGET:ご主人様
+;	RETURN 0
+;実行可能
+ACTABLE_REASON:30 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;後背位 の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE31
+;一括管理
+SIF GLOBAL_ACTABLE(31)
+	RETURN RESULT
+;調教者勃起所要判定
+;調教者ペニスが存在し、かつ勃起不足であれば
+ACTABLE_REASON:31 = 物理障害_勃起不足(攻)
+SIF PENIS(TARGET) && TCVAR:勃起 < 2
+	RETURN 0
+;調教者にペニスがなく、ペニスバンドがない
+ACTABLE_REASON:31 = 未所持_Ｐバンド
+SIF !PENIS(TARGET) && (TEQUIP:ペニスバンド || !ITEM:ペニスバンド)
+	RETURN 0
+;Ｖ使用中
+ACTABLE_REASON:31 = 物理障害_装着(受)(Ｖ)
+SIF TEQUIP:三角木馬 || TEQUIP:ペニスバンド || TEQUIP:バイブ
+	RETURN 0
+;方針がソフト/異常
+ACTABLE_REASON:31 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "ソフト/異常")
+	RETURN 0
+;オトコ
+ACTABLE_REASON:31 = 物理障害_受男性
+SIF TALENT:MASTER:オトコ
+	RETURN 0
+;体位変更不可
+ACTABLE_REASON:31 = 物理障害_性交(攻→受)(体位)
+SIF TEQUIP:性交中 == 4
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:31 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+ACTABLE_REASON:31 = 解除規制_性交(攻→受)(Ａ)
+SIF TEQUIP:性交中 == 6 && !TEQUIP:調教者ペニスバンド
+	RETURN 0
+;調教者に壁抜けがない（ペニバンも不可）
+IF !TALENT:壁抜け || !PENIS(TARGET)
+	;調教対象の下半身上着で妨害される
+	ACTABLE_REASON:31 = 物理障害_着衣(受)(下半身上着)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+	;調教対象の下半身下着で妨害される
+	ACTABLE_REASON:31 = 物理障害_着衣(受)(下半身下着)
+	SIF CLOTHESTYPE(1, 0) == 2
+		RETURN 0
+ENDIF
+;調教者の下半身上着で妨害される
+ACTABLE_REASON:31 = 物理障害_着衣(攻)(下半身上着)
+SIF CLOTHESTYPE(0, 1) == 2
+	RETURN 0
+;触手
+ACTABLE_REASON:31 = 物理障害_触手
+SIF TEQUIP:触手調教中
+	RETURN 0
+;調教対象が処女で調教者がご主人様でない@ぽ0422test+勝手に調整3
+;今後の条件考慮のためこういう案もあるということを記録@これみ
+;SIF TALENT:MASTER:処女 && !TALENT:TARGET:ご主人様
+;	RETURN 0
+;実行可能
+ACTABLE_REASON:31 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;騎乗位 の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE32
+;一括管理
+SIF GLOBAL_ACTABLE(32)
+	RETURN RESULT
+;調教者勃起所要判定
+;調教者ペニスが存在し、かつ勃起不足であれば
+ACTABLE_REASON:32 = 物理障害_勃起不足(攻)
+SIF PENIS(TARGET) && TCVAR:勃起 < 2
+	RETURN 0
+;調教者にペニスがなく、ペニスバンドがない
+ACTABLE_REASON:32 = 未所持_Ｐバンド
+SIF !PENIS(TARGET) && (TEQUIP:ペニスバンド || !ITEM:ペニスバンド)
+	RETURN 0
+;Ｖ使用中
+ACTABLE_REASON:32 = 物理障害_装着(受)(Ｖ)
+SIF TEQUIP:三角木馬 || TEQUIP:ペニスバンド || TEQUIP:バイブ
+	RETURN 0
+;お仕置きモード
+ACTABLE_REASON:32 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ
+	RETURN 0
+;方針がハード/異常
+ACTABLE_REASON:32 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "ハード/異常")
+	RETURN 0
+;オトコ
+ACTABLE_REASON:32 = 物理障害_受男性
+SIF TALENT:MASTER:オトコ
+	RETURN 0
+;押し倒し中(いくまで解放しないように)
+ACTABLE_REASON:32 = 解除規制_押し倒し中
+SIF TEQUIP:押し倒し中
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:32 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+ACTABLE_REASON:32 = 解除規制_性交(攻→受)(Ａ)
+SIF TEQUIP:性交中 == 6 && !TEQUIP:調教者ペニスバンド
+	RETURN 0
+;調教者に壁抜けがない（ペニバンも不可）
+IF !TALENT:壁抜け || !PENIS(TARGET)
+	;調教対象の下半身上着で妨害される
+	ACTABLE_REASON:32 = 物理障害_着衣(受)(下半身上着)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+	;調教対象の下半身下着で妨害される
+	ACTABLE_REASON:32 = 物理障害_着衣(受)(下半身下着)
+	SIF CLOTHESTYPE(1, 0) == 2
+		RETURN 0
+ENDIF
+;調教者の下半身上着で妨害される
+ACTABLE_REASON:32 = 物理障害_着衣(攻)(下半身上着)
+SIF CLOTHESTYPE(0, 1) == 2
+	RETURN 0
+;触手
+ACTABLE_REASON:32 = 物理障害_触手
+SIF TEQUIP:触手調教中
+	RETURN 0
+;調教対象が処女で調教者がご主人様でない@ぽ0422test+勝手に調整3
+;今後の条件考慮のためこういう案もあるということを記録@これみ
+;SIF TALENT:MASTER:処女 && !TALENT:TARGET:ご主人様
+;	RETURN 0
+;実行可能
+ACTABLE_REASON:32 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;対面座位 の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE33
+;一括管理
+SIF GLOBAL_ACTABLE(33)
+	RETURN RESULT
+;調教者勃起所要判定
+;調教者ペニスが存在し、かつ勃起不足であれば
+ACTABLE_REASON:33 = 物理障害_勃起不足(攻)
+SIF PENIS(TARGET) && TCVAR:勃起 < 2
+	RETURN 0
+;調教者にペニスがなく、ペニスバンドがない
+ACTABLE_REASON:33 = 未所持_Ｐバンド
+SIF !PENIS(TARGET) && (TEQUIP:ペニスバンド || !ITEM:ペニスバンド)
+	RETURN 0
+;Ｖ使用中
+ACTABLE_REASON:33 = 物理障害_装着(受)(Ｖ)
+SIF TEQUIP:三角木馬 || TEQUIP:ペニスバンド || TEQUIP:バイブ
+	RETURN 0
+;お仕置きモード
+ACTABLE_REASON:33 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ
+	RETURN 0
+;方針が異常
+ACTABLE_REASON:33 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "異常")
+	RETURN 0
+;オトコ
+ACTABLE_REASON:33 = 物理障害_受男性
+SIF TALENT:MASTER:オトコ
+	RETURN 0
+;体位変更不可
+ACTABLE_REASON:33 = 物理障害_性交(攻→受)(体位)
+SIF TEQUIP:性交中 == 2 || TEQUIP:性交中 == 5
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:33 = 解除規制_性交(受→攻)(全)
+SIF (TEQUIP:性交奉仕中)
+	RETURN 0
+ACTABLE_REASON:33 = 解除規制_性交(攻→受)(Ａ)
+SIF TEQUIP:性交中 == 6 && !TEQUIP:調教者ペニスバンド
+	RETURN 0
+;調教者に壁抜けがない（ペニバンも不可）
+IF !TALENT:壁抜け || !PENIS(TARGET)
+	;調教対象の下半身上着で妨害される
+	ACTABLE_REASON:33 = 物理障害_着衣(受)(下半身上着)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+	;調教対象の下半身下着で妨害される
+	ACTABLE_REASON:33 = 物理障害_着衣(受)(下半身下着)
+	SIF CLOTHESTYPE(1, 0) == 2
+		RETURN 0
+ENDIF
+;調教者の下半身上着で妨害される
+ACTABLE_REASON:33 = 物理障害_着衣(攻)(下半身上着)
+SIF CLOTHESTYPE(0, 1) == 2
+	RETURN 0
+;触手
+ACTABLE_REASON:33 = 物理障害_触手
+SIF TEQUIP:触手調教中
+	RETURN 0
+;調教対象が処女で調教者がご主人様でない@ぽ0422test+勝手に調整3
+;今後の条件考慮のためこういう案もあるということを記録@これみ
+;SIF TALENT:MASTER:処女 && !TALENT:TARGET:ご主人様
+;	RETURN 0
+;実行可能
+ACTABLE_REASON:33 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;背面座位 の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE34
+;一括管理
+SIF GLOBAL_ACTABLE(34)
+	RETURN RESULT
+;調教者勃起所要判定
+;調教者ペニスが存在し、かつ勃起不足であれば
+ACTABLE_REASON:34 = 物理障害_勃起不足(攻)
+SIF PENIS(TARGET) && TCVAR:勃起 < 2
+	RETURN 0
+;調教者にペニスがなく、ペニスバンドがない
+ACTABLE_REASON:34 = 未所持_Ｐバンド
+SIF !PENIS(TARGET) && (TEQUIP:ペニスバンド || !ITEM:ペニスバンド)
+	RETURN 0
+;Ｖ使用中
+ACTABLE_REASON:34 = 物理障害_装着(受)(Ｖ)
+SIF TEQUIP:三角木馬 || TEQUIP:ペニスバンド || TEQUIP:バイブ
+	RETURN 0
+;お仕置きモード
+ACTABLE_REASON:34 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ
+	RETURN 0
+;方針がソフト/異常
+ACTABLE_REASON:34 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "ソフト/異常")
+	RETURN 0
+;オトコ
+ACTABLE_REASON:34 = 物理障害_受男性
+SIF TALENT:MASTER:オトコ
+	RETURN 0
+;体位変更不可
+ACTABLE_REASON:34 = 物理障害_性交(攻→受)(体位)
+SIF TEQUIP:性交中 == 1 || TEQUIP:性交中 == 4
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:34 = 解除規制_性交(受→攻)(全)
+SIF (TEQUIP:性交奉仕中)
+	RETURN 0
+ACTABLE_REASON:34 = 解除規制_性交(攻→受)(Ａ)
+SIF TEQUIP:性交中 == 6 && !TEQUIP:調教者ペニスバンド
+	RETURN 0
+;調教者に壁抜けがない（ペニバンも不可）
+IF !TALENT:壁抜け || !PENIS(TARGET)
+	;調教対象の下半身上着で妨害される
+	ACTABLE_REASON:34 = 物理障害_着衣(受)(下半身上着)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+	;調教対象の下半身下着で妨害される
+	ACTABLE_REASON:34 = 物理障害_着衣(受)(下半身下着)
+	SIF CLOTHESTYPE(1, 0) == 2
+		RETURN 0
+ENDIF
+;調教者の下半身上着で妨害される
+ACTABLE_REASON:34 = 物理障害_着衣(攻)(下半身上着)
+SIF CLOTHESTYPE(0, 1) == 2
+	RETURN 0
+;触手
+ACTABLE_REASON:34 = 物理障害_触手
+SIF TEQUIP:触手調教中
+	RETURN 0
+;調教対象が処女で調教者がご主人様でない@ぽ0422test+勝手に調整3
+;今後の条件考慮のためこういう案もあるということを記録@これみ
+;SIF TALENT:MASTER:処女 && !TALENT:TARGET:ご主人様
+;	RETURN 0
+;実行可能
+ACTABLE_REASON:34 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;アナルセックス の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE35
+;一括管理
+SIF GLOBAL_ACTABLE(35)
+	RETURN RESULT
+;調教者勃起所要判定
+;調教者ペニスが存在し、かつ勃起不足であれば
+ACTABLE_REASON:35 = 物理障害_勃起不足(攻)
+SIF PENIS(TARGET) && TCVAR:勃起 < 2
+	RETURN 0
+;調教者にペニスがなく、ペニスバンドがない
+ACTABLE_REASON:35 = 未所持_Ｐバンド
+SIF !PENIS(TARGET) && (TEQUIP:ペニスバンド || !ITEM:ペニスバンド)
+	RETURN 0
+;Ｖ使用中
+ACTABLE_REASON:35 = 物理障害_装着(受)(Ｖ)
+SIF TEQUIP:三角木馬 ; || TEQUIP:ペニスバンド || TEQUIP:バイブ
+	RETURN 0
+;Ａ使用中
+ACTABLE_REASON:35 = 物理障害_装着(受)(Ａ)
+SIF TEQUIP:アナルバイブ || TEQUIP:アナルビーズ || TEQUIP:浣腸器＋プラグ
+	RETURN 0
+;方針がソフト
+ACTABLE_REASON:35 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "ソフト") && TEQUIP:性交中 < 6
+	RETURN 0
+;浣腸中
+ACTABLE_REASON:35 = 物理障害_浣腸
+SIF TEQUIP:浣腸器＋プラグ
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:35 = 解除規制_性交(受→攻)(全)
+SIF (TEQUIP:性交奉仕中)
+	RETURN 0
+ACTABLE_REASON:35 = 解除規制_性交(攻→受)(Ｖ)
+SIF V_SEX() && !TEQUIP:調教者ペニスバンド
+	RETURN 0
+;調教者に壁抜けがない（ペニバンも不可）
+IF !TALENT:壁抜け || !PENIS(TARGET)
+	;調教対象の下半身上着で妨害される
+	ACTABLE_REASON:35 = 物理障害_着衣(受)(下半身上着)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+	;調教対象の下半身下着で強く妨害される（アナルセックスはパンティも不可）
+	ACTABLE_REASON:35 = 物理障害_着衣(受)(下半身下着)
+	SIF CLOTHESTYPE(1, 0)
+		RETURN 0
+ENDIF
+;調教者の下半身上着で妨害される
+ACTABLE_REASON:35 = 物理障害_着衣(攻)(下半身上着)
+SIF CLOTHESTYPE(0, 1) == 2
+	RETURN 0
+;触手
+ACTABLE_REASON:35 = 物理障害_触手
+SIF TEQUIP:触手調教中
+	RETURN 0
+;調教対象のＡ経験が2未満かつ、技巧2未満
+ACTABLE_REASON:35 = 物理障害_Ａ経験不足
+SIF EXP:MASTER:Ａ経験 < 2 && ABL:MASTER:技巧 < 2
+	RETURN 0
+;いきなりアナルに突っ込まれないように
+;調教対象のＡ感覚が0、または調教対象のＡ感覚が1かつ方針がノーマル
+ACTABLE_REASON:35 = 条件未達_Ａ感覚不足
+SIF !ABL:MASTER:Ａ感覚 || (ABL:MASTER:Ａ感覚 == 1 && IS_POLICY("今", "ノーマル"))
+	RETURN 0
+;実行可能
+ACTABLE_REASON:35 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;自慰 の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE40
+;一括管理
+SIF GLOBAL_ACTABLE(40)
+	RETURN RESULT
+;方針が異常
+ACTABLE_REASON:40 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "異常")
+	RETURN 0
+;押し倒し中(いくまで解放しないように)
+ACTABLE_REASON:40 = 解除規制_押し倒し中
+SIF TEQUIP:押し倒し中
+	RETURN 0
+;すでに自慰中
+ACTABLE_REASON:40 = 無意味_自慰中
+SIF GETBIT(TEQUIP:自慰中, 0)
+	RETURN 0
+;縄
+ACTABLE_REASON:40 = 物理障害_拘束(縄)
+SIF TEQUIP:縄
+	RETURN 0
+;三角木馬
+ACTABLE_REASON:40 = 物理障害_拘束(三角木馬)
+SIF TEQUIP:三角木馬
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:40 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:40 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;実行可能
+ACTABLE_REASON:40 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;秘貝開帳 の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE41
+;一括管理
+SIF GLOBAL_ACTABLE(41)
+	RETURN RESULT
+;お仕置きモード
+ACTABLE_REASON:41 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ
+	RETURN 0
+;方針が異常
+ACTABLE_REASON:41 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "異常")
+	RETURN 0
+;押し倒し中(いくまで解放しないように)
+ACTABLE_REASON:41 = 解除規制_押し倒し中
+SIF TEQUIP:押し倒し中
+	RETURN 0
+;三角木馬
+ACTABLE_REASON:41 = 物理障害_拘束(三角木馬)
+SIF TEQUIP:三角木馬
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:41 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:41 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;調教対象の下半身上着で妨害される
+ACTABLE_REASON:41 = 物理障害_着衣(受)(下半身上着)
+SIF CLOTHESTYPE(1, 1) == 2
+	RETURN 0
+;調教対象の下半身下着で妨害される
+ACTABLE_REASON:41 = 物理障害_着衣(受)(下半身下着)
+SIF CLOTHESTYPE(1, 0) == 2
+	RETURN 0
+;調教対象がオトコ
+ACTABLE_REASON:41 = 物理障害_受男性
+SIF TALENT:MASTER:オトコ
+	RETURN 0
+;実行可能
+ACTABLE_REASON:41 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;自慰みせつけ の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE42
+;一括管理
+SIF GLOBAL_ACTABLE(42)
+	RETURN RESULT
+;お仕置きモード
+ACTABLE_REASON:42 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ
+	RETURN 0
+;押し倒し中(いくまで解放しないように)
+ACTABLE_REASON:42 = 解除規制_押し倒し中
+SIF TEQUIP:押し倒し中
+	RETURN 0
+;すでに自慰中
+ACTABLE_REASON:42 = 無意味_調教者自慰中
+SIF GETBIT(TEQUIP:自慰中, 1)
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:42 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:42 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;実行可能
+ACTABLE_REASON:42 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;羞恥プレイ の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE43
+;一括管理
+SIF GLOBAL_ACTABLE(43)
+	RETURN RESULT
+;大鏡が無い
+ACTABLE_REASON:43 = 未所持_大鏡
+SIF !ITEM:大鏡
+	RETURN 0
+;野外プレイ中
+ACTABLE_REASON:43 = 物理障害_野外プレイ中
+SIF TEQUIP:野外プレイ
+	RETURN 0
+[SKIPSTART]
+;アイマスク装着中		弾こうと思ったが保留@/L
+ACTABLE_REASON:43 = 状況不適合_目隠し中
+SIF TEQUIP:アイマスク
+	RETURN 0
+[SKIPEND]
+;お仕置きモード
+ACTABLE_REASON:43 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ
+	RETURN 0
+;方針が異常
+ACTABLE_REASON:43 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "異常")
+	RETURN 0
+;押し倒し中(いくまで解放しないように)
+ACTABLE_REASON:43 = 解除規制_押し倒し中
+SIF TEQUIP:押し倒し中
+	RETURN 0
+;三角木馬
+ACTABLE_REASON:43 = 物理障害_拘束(三角木馬)
+SIF TEQUIP:三角木馬
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:43 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:43 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;実行可能
+ACTABLE_REASON:43 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;野外プレイ の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE44
+;一括管理
+SIF GLOBAL_ACTABLE(44)
+	RETURN RESULT
+;首輪が無い
+ACTABLE_REASON:44 = 未所持_首輪
+SIF !ITEM:首輪
+	RETURN 0
+;方針がソフト/ノーマル
+ACTABLE_REASON:44 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "ソフト/ノーマル")
+	RETURN 0
+;押し倒し中(いくまで解放しないように)
+ACTABLE_REASON:44 = 解除規制_押し倒し中
+SIF TEQUIP:押し倒し中
+	RETURN 0
+;縄
+ACTABLE_REASON:44 = 物理障害_拘束(縄)
+SIF TEQUIP:縄
+	RETURN 0
+;三角木馬
+ACTABLE_REASON:44 = 物理障害_拘束(三角木馬)
+SIF TEQUIP:三角木馬
+	RETURN 0
+;羞恥プレイ中
+ACTABLE_REASON:44 = 状況不適合_羞恥プレイ中
+SIF TEQUIP:大鏡
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:44 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:44 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;実行可能
+ACTABLE_REASON:44 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;放尿 の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE45
+;一括管理
+SIF GLOBAL_ACTABLE(45)
+	RETURN RESULT
+;方針がソフト
+ACTABLE_REASON:45 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "ソフト")
+	RETURN 0
+;押し倒し中(いくまで解放しないように)
+ACTABLE_REASON:45 = 解除規制_押し倒し中
+SIF TEQUIP:押し倒し中
+	RETURN 0
+;三角木馬・ペニスバンド
+ACTABLE_REASON:45 = 物理障害_拘束(三角木馬)
+SIF TEQUIP:三角木馬
+	RETURN 0
+ACTABLE_REASON:45 = 物理障害_装着(受)(Ｐバンド)
+SIF TEQUIP:ペニスバンド
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:45 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:45 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;調教対象の尿意が5000未満
+ACTABLE_REASON:45 = 物理障害_尿意不足
+SIF BASE:MASTER:尿意 < 5000
+	RETURN 0
+;実行可能
+ACTABLE_REASON:45 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;コスプレ の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE46
+;一括管理
+SIF GLOBAL_ACTABLE(46)
+	RETURN RESULT
+;お仕置きモード
+ACTABLE_REASON:46 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ
+	RETURN 0
+;押し倒し中(いくまで解放しないように)
+ACTABLE_REASON:46 = 解除規制_押し倒し中
+SIF TEQUIP:押し倒し中
+	RETURN 0
+;縄
+ACTABLE_REASON:46 = 物理障害_拘束(縄)
+SIF TEQUIP:縄
+	RETURN 0
+;三角木馬
+ACTABLE_REASON:46 = 物理障害_拘束(三角木馬)
+SIF TEQUIP:三角木馬
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:46 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:46 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;コスプレは未実装
+ACTABLE_REASON:46 = 未実装
+RETURN 0
+
+;-----------------------------------------------------------
+;手で愛撫を強制 の実行判定
+;調教対象の壁抜けは考慮しないことにします
+;-----------------------------------------------------------
+@ACT_ABLE50
+;一括管理
+SIF GLOBAL_ACTABLE(50)
+	RETURN RESULT
+;お仕置きモード
+ACTABLE_REASON:50 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ
+	RETURN 0
+;方針がハード/異常
+ACTABLE_REASON:50 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "ハード/異常")
+	RETURN 0
+;押し倒し中(いくまで解放しないように)
+ACTABLE_REASON:50 = 解除規制_押し倒し中
+SIF TEQUIP:押し倒し中
+	RETURN 0
+;縄
+ACTABLE_REASON:50 = 物理障害_拘束(縄)
+SIF TEQUIP:縄
+	RETURN 0
+;三角木馬
+ACTABLE_REASON:50 = 物理障害_拘束(三角木馬)
+SIF TEQUIP:三角木馬
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:50 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+;後背位/逆レイプ/アナルセックスさせるなら問答無用でアウト
+ACTABLE_REASON:50 = 解除規制_性交(受→攻)(後背位/逆レ/Ａセックス)
+SIF GROUPMATCH(TEQUIP:性交奉仕中, 2, 3, 6)
+	RETURN 0
+;正常位/対面座位/背面座位中かつ調教者が"情欲"かつTCVAR:イきそうが立っていれば通す
+ACTABLE_REASON:50 = 解除規制_性交(受→攻)(条件不適合)
+SIF TEQUIP:性交奉仕中 && !IS_CONDITION(TARGET, "情欲") && !TCVAR:イきそう
+	RETURN 0
+;触手
+ACTABLE_REASON:50 = 物理障害_触手
+SIF TEQUIP:触手調教中
+	RETURN 0
+;実行可能
+ACTABLE_REASON:50 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;口で愛撫を強制 の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE51
+;一括管理
+SIF GLOBAL_ACTABLE(51)
+	RETURN RESULT
+;お仕置きモード
+ACTABLE_REASON:51 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ
+	RETURN 0
+;方針が異常
+ACTABLE_REASON:51 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "異常")
+	RETURN 0
+;押し倒し中(いくまで解放しないように)
+ACTABLE_REASON:51 = 解除規制_押し倒し中
+SIF TEQUIP:押し倒し中
+	RETURN 0
+;ボールギャグ
+ACTABLE_REASON:51 = 物理障害_拘束(ボールギャグ)
+SIF TEQUIP:ボールギャグ
+	RETURN 0
+;三角木馬
+ACTABLE_REASON:51 = 物理障害_拘束(三角木馬)
+SIF TEQUIP:三角木馬
+	RETURN 0
+;調教者ペニスバンド
+ACTABLE_REASON:51 = 物理障害_装着(攻)(Ｐバンド)
+SIF TEQUIP:調教者ペニスバンド
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:51 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:51 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;調教者の下半身上着で妨害される
+ACTABLE_REASON:51 = 物理障害_着衣(攻)(下半身上着)
+SIF CLOTHESTYPE(0, 1) == 2
+	RETURN 0
+;調教者の下半身下着で妨害される
+ACTABLE_REASON:51 = 物理障害_着衣(攻)(下半身下着)
+SIF CLOTHESTYPE(0, 0) == 2
+	RETURN 0
+;触手
+ACTABLE_REASON:51 = 物理障害_触手
+SIF TEQUIP:触手調教中
+	RETURN 0
+;実行可能
+ACTABLE_REASON:51 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;パイズリ の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE52
+;一括管理
+SIF GLOBAL_ACTABLE(52)
+	RETURN RESULT
+;お仕置きモード
+ACTABLE_REASON:52 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ
+	RETURN 0
+;方針が異常
+ACTABLE_REASON:52 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "異常")
+	RETURN 0
+;押し倒し中(いくまで解放しないように)
+ACTABLE_REASON:52 = 解除規制_押し倒し中
+SIF TEQUIP:押し倒し中
+	RETURN 0
+;縄
+ACTABLE_REASON:52 = 物理障害_拘束(縄)
+SIF TEQUIP:縄
+	RETURN 0
+;三角木馬
+ACTABLE_REASON:52 = 物理障害_拘束(三角木馬)
+SIF TEQUIP:三角木馬
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:52 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:52 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;調教者の下半身上着で妨害される
+ACTABLE_REASON:52 = 物理障害_着衣(攻)(下半身上着)
+SIF CLOTHESTYPE(0, 1) == 2
+	RETURN 0
+;調教対象の上半身上着で妨害される
+ACTABLE_REASON:52 = 物理障害_着衣(受)(上半身上着)
+SIF CLOTHESTYPE(1, 3) == 2
+	RETURN 0
+;調教対象の上半身下着で強く妨害される
+ACTABLE_REASON:52 = 物理障害_着衣(受)(上半身下着)
+SIF CLOTHESTYPE(1, 2)
+	RETURN 0
+;触手
+ACTABLE_REASON:52 = 物理障害_触手
+SIF TEQUIP:触手調教中
+	RETURN 0
+;調教者が女の子
+ACTABLE_REASON:52 = 物理障害_攻女性
+SIF TALENT:ふたなり !| TALENT:オトコ
+	RETURN 0
+;調教対象がオトコ
+ACTABLE_REASON:52 = 物理障害_受男性
+SIF TALENT:MASTER:オトコ
+	RETURN 0
+;実行可能
+ACTABLE_REASON:52 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;素股 の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE53
+;一括管理
+SIF GLOBAL_ACTABLE(53)
+	RETURN RESULT
+;調教者に棒がついてない
+ACTABLE_REASON:53 = 物理障害_攻ペニス無し
+SIF !PENIS(TARGET) && !TEQUIP:調教者ペニスバンド
+	RETURN 0
+;お仕置きモード
+ACTABLE_REASON:53 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ
+	RETURN 0
+;方針が異常
+ACTABLE_REASON:53 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "異常")
+	RETURN 0
+;押し倒し中(いくまで解放しないように)
+ACTABLE_REASON:53 = 解除規制_押し倒し中
+SIF TEQUIP:押し倒し中
+	RETURN 0
+;三角木馬
+ACTABLE_REASON:53 = 物理障害_拘束(三角木馬)
+SIF TEQUIP:三角木馬
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:53 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:53 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;調教者の下半身上着で妨害される
+ACTABLE_REASON:53 = 物理障害_着衣(攻)(下半身上着)
+SIF CLOTHESTYPE(0, 1) == 2
+	RETURN 0
+;調教者に壁抜けがない
+IF !TALENT:壁抜け
+	;調教対象の下半身上着で妨害される
+	ACTABLE_REASON:53 = 物理障害_着衣(受)(下半身上着)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+	;調教対象の下半身下着で強く妨害される
+	ACTABLE_REASON:53 = 物理障害_着衣(受)(下半身下着)
+	SIF CLOTHESTYPE(1, 0)
+		RETURN 0
+ENDIF
+;触手
+ACTABLE_REASON:53 = 物理障害_触手
+SIF TEQUIP:触手調教中
+	RETURN 0
+;調教対象に足がないとダメ
+ACTABLE_REASON:53 = 物理障害_受足無し
+SIF TALENT:MASTER:足無し
+	RETURN 0
+;調教対象がペニス有り
+ACTABLE_REASON:53 = 物理障害_受ペニス
+SIF PENIS(MASTER)
+	RETURN 0
+;実行可能
+ACTABLE_REASON:53 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;足舐め強制 の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE55
+;一括管理
+SIF GLOBAL_ACTABLE(55)
+	RETURN RESULT
+;方針がソフト
+ACTABLE_REASON:55 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "ソフト")
+	RETURN 0
+;本日の方針がイチャイチャ
+ACTABLE_REASON:55 = 方針不適合_日毎方針(%POLICY("今日")%)
+SIF TFLAG:今日の方針 == 4
+	RETURN 0
+;押し倒し中(いくまで解放しないように)
+ACTABLE_REASON:55 = 解除規制_押し倒し中
+SIF TEQUIP:押し倒し中
+	RETURN 0
+;ボールギャグ
+ACTABLE_REASON:55 = 物理障害_拘束(ボールギャグ)
+SIF TEQUIP:ボールギャグ
+	RETURN 0
+;三角木馬
+ACTABLE_REASON:55 = 物理障害_拘束(三角木馬)
+SIF TEQUIP:三角木馬
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:55 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:55 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;調教者に足がない
+ACTABLE_REASON:55 = 物理障害_攻足無し
+SIF TALENT:足無し
+	RETURN 0
+;触手
+ACTABLE_REASON:55 = 物理障害_触手
+SIF TEQUIP:触手調教中
+	RETURN 0
+;実行可能
+ACTABLE_REASON:55 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;イラマチオ の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE56
+;一括管理
+SIF GLOBAL_ACTABLE(56)
+	RETURN RESULT
+;調教者勃起所要判定
+;調教者ペニスが存在し、かつ勃起不足であれば
+ACTABLE_REASON:56 = 物理障害_勃起不足(攻)
+SIF PENIS(TARGET) && TCVAR:勃起 < 2
+	RETURN 0
+;方針がソフト/ノーマル
+ACTABLE_REASON:56 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "ソフト/ノーマル")
+	RETURN 0
+;押し倒し中(いくまで解放しないように)
+ACTABLE_REASON:56 = 解除規制_押し倒し中
+SIF TEQUIP:押し倒し中
+	RETURN 0
+;ボールギャグ
+ACTABLE_REASON:56 = 物理障害_拘束(ボールギャグ)
+SIF TEQUIP:ボールギャグ
+	RETURN 0
+;三角木馬
+ACTABLE_REASON:56 = 物理障害_拘束(三角木馬)
+SIF TEQUIP:三角木馬
+	RETURN 0
+;性交中はいくまで抜かないように
+ACTABLE_REASON:56 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:56 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;触手
+ACTABLE_REASON:56 = 物理障害_触手
+SIF TEQUIP:触手調教中
+	RETURN 0
+;調教者の下半身上着で妨害される
+ACTABLE_REASON:56 = 物理障害_着衣(攻)(下半身上着)
+SIF CLOTHESTYPE(0, 1) == 2
+	RETURN 0
+;調教者が女の子
+ACTABLE_REASON:56 = 物理障害_攻女性
+SIF TALENT:ふたなり !| TALENT:オトコ
+	RETURN 0
+;実行可能
+ACTABLE_REASON:56 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;胸に奉仕の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE57
+;一括管理
+SIF GLOBAL_ACTABLE(57)
+	RETURN RESULT
+;オトコは不可
+ACTABLE_REASON:57 = 物理障害_攻男性
+SIF TALENT:オトコ
+	RETURN 0
+;お仕置きモード
+ACTABLE_REASON:57 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ
+	RETURN 0
+;方針が異常
+ACTABLE_REASON:57 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "異常")
+	RETURN 0
+;押し倒し中(いくまで解放しないように)
+ACTABLE_REASON:57 = 解除規制_押し倒し中
+SIF TEQUIP:押し倒し中
+	RETURN 0
+;縄装備中は口限定になり制限を受ける
+IF TEQUIP:縄
+	;調教者の上半身上着で妨害される
+	ACTABLE_REASON:57 = 物理障害_着衣(攻)(上半身上着)
+	SIF CLOTHESTYPE(0, 3) == 2
+		RETURN 0
+	;調教者の上半身下着で妨害される
+	ACTABLE_REASON:57 = 物理障害_着衣(攻)(上半身下着)
+	SIF CLOTHESTYPE(0, 2) == 2
+		RETURN 0
+	;ボールギャグもあるとアウト
+	ACTABLE_REASON:57 = 物理障害_拘束(ボールギャグ)
+	SIF TEQUIP:ボールギャグ
+		RETURN 0
+ENDIF
+;性交中（正常位/後背位/背面座位/Ａセックス）
+ACTABLE_REASON:11 = 解除規制_性交(攻→受)(正常位/後背位/背面座位/Ａセックス)
+SIF GROUPMATCH(TEQUIP:性交中, 1, 2, 5, 6) > 0
+	RETURN 0
+;性交奉仕中（後背位/背面座位/Ａセックス）
+ACTABLE_REASON:11 = 解除規制_性交(受→攻)(後背位/背面座位/Ａセックス)
+SIF GROUPMATCH(TEQUIP:性交奉仕中, 2, 5, 6) > 0
+	RETURN 0
+;触手
+ACTABLE_REASON:57 = 物理障害_触手
+SIF TEQUIP:触手調教中
+	RETURN 0
+;実行可能
+ACTABLE_REASON:57 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;スパンキング の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE60
+;一括管理
+SIF GLOBAL_ACTABLE(60)
+	RETURN RESULT
+;性交中はいくまで抜かないように
+ACTABLE_REASON:60 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;調教対象の上半身上着で妨害される
+ACTABLE_REASON:60 = 物理障害_着衣(受)(上半身上着)
+SIF CLOTHESTYPE(1, 3) == 2
+	RETURN 0
+;実行可能
+ACTABLE_REASON:60 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;鞭 の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE61
+;一括管理
+SIF GLOBAL_ACTABLE(61)
+	RETURN RESULT
+;鞭が無い
+ACTABLE_REASON:61 = 未所持_鞭
+SIF !ITEM:鞭
+	RETURN 0
+;方針がソフト
+ACTABLE_REASON:61 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "ソフト")
+	RETURN 0
+;性交中はいくまで抜かないように
+ACTABLE_REASON:61 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:61 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;実行可能
+ACTABLE_REASON:61 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;針 の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE62
+;一括管理
+SIF GLOBAL_ACTABLE(62)
+	RETURN RESULT
+;針が無い
+ACTABLE_REASON:62 = 未所持_針
+SIF !ITEM:針
+	RETURN 0
+;方針がソフト/ノーマル
+ACTABLE_REASON:62 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "ソフト/ノーマル")
+	RETURN 0
+;性交中はいくまで抜かないように
+ACTABLE_REASON:62 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:62 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;実行可能
+ACTABLE_REASON:62 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;縄 の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE63
+;一括管理
+SIF GLOBAL_ACTABLE(63)
+	RETURN RESULT
+;縄が無い
+ACTABLE_REASON:63 = 未所持_縄
+SIF !ITEM:縄
+	RETURN 0
+;お仕置きモード
+ACTABLE_REASON:63 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ && TEQUIP:縄
+	RETURN 0
+;性交中はいくまで抜かないように
+ACTABLE_REASON:63 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:63 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;実行可能
+ACTABLE_REASON:63 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;アイマスク の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE64
+;一括管理
+SIF GLOBAL_ACTABLE(64)
+	RETURN RESULT
+;アイマスクが無い
+ACTABLE_REASON:64 = 未所持_アイマスク
+SIF !ITEM:アイマスク
+	RETURN 0
+;お仕置きモード
+ACTABLE_REASON:64 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ && TEQUIP:アイマスク
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:64 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:64 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;実行可能
+ACTABLE_REASON:64 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;ボールギャグ の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE65
+;一括管理
+SIF GLOBAL_ACTABLE(65)
+	RETURN RESULT
+;ボールギャグが無い
+ACTABLE_REASON:65 = 未所持_ボールギャグ
+SIF !ITEM:ボールギャグ
+	RETURN 0
+;お仕置きモード
+ACTABLE_REASON:65 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ && TEQUIP:ボールギャグ
+	RETURN 0
+;方針がソフト/ノーマル
+ACTABLE_REASON:65 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "ソフト/ノーマル")
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:65 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:65 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;実行可能
+ACTABLE_REASON:65 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;罵倒 の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE66
+;一括管理
+SIF GLOBAL_ACTABLE(66)
+	RETURN RESULT
+;方針がソフト
+ACTABLE_REASON:66 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "ソフト")
+	RETURN 0
+;実行可能
+ACTABLE_REASON:66 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;三角木馬 の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE67
+;一括管理
+SIF GLOBAL_ACTABLE(67)
+	RETURN RESULT
+;三角木馬が無い
+ACTABLE_REASON:67 = 未所持_三角木馬
+SIF !ITEM:三角木馬
+	RETURN 0
+;お仕置きモード
+ACTABLE_REASON:67 = 状況不適合_お仕置き中
+SIF TFLAG:お仕置きフラグ && TEQUIP:三角木馬
+	RETURN 0
+;方針がソフト/ノーマル
+ACTABLE_REASON:67 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "ソフト/ノーマル")
+	RETURN 0
+;本日の方針がイチャイチャ
+ACTABLE_REASON:67 = 方針不適合_日毎方針(%POLICY("今日")%)
+SIF TFLAG:今日の方針 == 4
+	RETURN 0
+;道具挿入中
+ACTABLE_REASON:67 = 物理障害_装着(受)(ＶＡ)
+SIF TEQUIP:バイブ || TEQUIP:アナルバイブ || TEQUIP:アナルビーズ || TEQUIP:浣腸器＋プラグ || TEQUIP:ペニスバンド
+	RETURN 0
+;押し倒し中(いくまで解放しないように)
+ACTABLE_REASON:67 = 解除規制_押し倒し中
+SIF TEQUIP:押し倒し中
+	RETURN 0
+;野外プレイ
+ACTABLE_REASON:67 = 物理障害_野外プレイ中
+SIF TEQUIP:野外プレイ
+	RETURN 0
+;性交中はいくまで抜かないように
+ACTABLE_REASON:67 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:67 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;調教対象の上半身上着で妨害される
+ACTABLE_REASON:67 = 物理障害_着衣(受)(上半身上着)
+SIF CLOTHESTYPE(1, 3) == 2
+	RETURN 0
+;触手
+ACTABLE_REASON:67 = 物理障害_触手
+SIF TEQUIP:触手調教中
+	RETURN 0
+;オトコ
+ACTABLE_REASON:67 = 物理障害_受男性
+SIF TALENT:MASTER:オトコ
+	RETURN 0
+;実行可能
+ACTABLE_REASON:67 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;浣腸器＋プラグ の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE68
+;一括管理
+SIF GLOBAL_ACTABLE(68)
+	RETURN RESULT
+;浣腸器＋プラグが無い
+ACTABLE_REASON:68 = 未所持_浣腸セット
+SIF !ITEM:浣腸セット
+	RETURN 0
+;方針がソフト
+ACTABLE_REASON:68 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "ソフト")
+	RETURN 0
+;Ａに他の道具装着中
+ACTABLE_REASON:68 = 物理障害_装着(受)(Ａ)
+SIF TEQUIP:アナルバイブ || TEQUIP:アナルビーズ || TEQUIP:ペニスバンド
+	RETURN 0
+;三角木馬
+ACTABLE_REASON:68 = 物理障害_拘束(三角木馬)
+SIF TEQUIP:三角木馬
+	RETURN 0
+;挿入中
+ACTABLE_REASON:68 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:68 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;下半身下着
+ACTABLE_REASON:68 = 物理障害_着衣(受)(下半身下着)
+SIF TEQUIP:MASTER:下半身下着
+	RETURN 0
+;調教対象の上半身上着で妨害される
+ACTABLE_REASON:68 = 物理障害_着衣(受)(上半身上着)
+SIF CLOTHESTYPE(1, 3) == 2
+	RETURN 0
+;触手
+ACTABLE_REASON:68 = 物理障害_触手
+SIF TEQUIP:触手調教中
+	RETURN 0
+;実行可能
+ACTABLE_REASON:68 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;フィストファック の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE70
+;一括管理
+SIF GLOBAL_ACTABLE(70)
+	RETURN RESULT
+;方針がソフト/ノーマル
+ACTABLE_REASON:70 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "ソフト/ノーマル")
+	RETURN 0
+;本日の方針がイチャイチャ
+ACTABLE_REASON:70 = 方針不適合_日毎方針(%POLICY("今日")%)
+SIF TFLAG:今日の方針 == 4
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:70 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:70 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;調教者に壁抜けがない
+IF !TALENT:壁抜け
+	;調教対象の下半身上着で妨害される
+	ACTABLE_REASON:70 = 物理障害_着衣(受)(下半身上着)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+	;調教対象の下半身下着で妨害される
+	ACTABLE_REASON:70 = 物理障害_着衣(受)(下半身下着)
+	SIF CLOTHESTYPE(1, 0) == 2
+		RETURN 0
+ENDIF
+;触手
+ACTABLE_REASON:70 = 物理障害_触手
+SIF TEQUIP:触手調教中
+	RETURN 0
+;調教対象がオトコ
+ACTABLE_REASON:70 = 物理障害_受男性
+SIF TALENT:MASTER:オトコ
+	RETURN 0
+;調教対象が処女で調教者がご主人様でない@ぽ0422test+勝手に調整3
+;今後の条件考慮のためこういう案もあるということを記録@これみ
+;SIF TALENT:MASTER:処女 && !TALENT:TARGET:ご主人様
+;	RETURN 0
+;実行可能
+ACTABLE_REASON:70 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;アナルフィスト の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE71
+;一括管理
+SIF GLOBAL_ACTABLE(71)
+	RETURN RESULT
+;方針がソフト/ノーマル
+ACTABLE_REASON:71 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "ソフト/ノーマル")
+	RETURN 0
+;本日の方針がイチャイチャ
+ACTABLE_REASON:71 = 方針不適合_日毎方針(%POLICY("今日")%)
+SIF TFLAG:今日の方針 == 4
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:71 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:71 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;調教者に壁抜けがない
+IF !TALENT:壁抜け
+	;調教対象の下半身上着で妨害される
+	ACTABLE_REASON:71 = 物理障害_着衣(受)(下半身上着)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+	;調教対象の下半身下着で強く妨害される
+	ACTABLE_REASON:71 = 物理障害_着衣(受)(下半身下着)
+	SIF CLOTHESTYPE(1, 0)
+		RETURN 0
+ENDIF
+;触手
+ACTABLE_REASON:71 = 物理障害_触手
+SIF TEQUIP:触手調教中
+	RETURN 0
+;実行可能
+ACTABLE_REASON:71 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;両穴フィスト の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE72
+;一括管理
+SIF GLOBAL_ACTABLE(72)
+	RETURN RESULT
+;方針がソフト/ノーマル/ハード
+ACTABLE_REASON:72 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF 2 <= TFLAG:ターン方針 && TFLAG:ターン方針 <= 4
+	RETURN 0
+;本日の方針がイチャイチャ
+ACTABLE_REASON:72 = 方針不適合_日毎方針(%POLICY("今日")%)
+SIF TFLAG:今日の方針 == 4
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:72 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:72 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;調教者に壁抜けがない
+IF !TALENT:壁抜け
+	;調教対象の下半身上着で妨害される
+	ACTABLE_REASON:72 = 物理障害_着衣(受)(下半身上着)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+	;調教対象の下半身下着で強く妨害される
+	ACTABLE_REASON:72 = 物理障害_着衣(受)(下半身下着)
+	SIF CLOTHESTYPE(1, 0)
+		RETURN 0
+ENDIF
+;触手
+ACTABLE_REASON:72 = 物理障害_触手
+SIF TEQUIP:触手調教中
+	RETURN 0
+;調教対象がオトコ
+ACTABLE_REASON:72 = 物理障害_受男性
+SIF TALENT:MASTER:オトコ
+	RETURN 0
+;調教対象が処女で調教者がご主人様でない@ぽ0422test+勝手に調整3
+;今後の条件考慮のためこういう案もあるということを記録@これみ
+;SIF TALENT:MASTER:処女 && !TALENT:TARGET:ご主人様
+;	RETURN 0
+;実行可能
+ACTABLE_REASON:72 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;放置プレイ の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE73
+;一括管理
+SIF GLOBAL_ACTABLE(73)
+	RETURN RESULT
+;方針がソフト/ノーマル
+ACTABLE_REASON:73 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "ソフト/ノーマル")
+	RETURN 0
+;本日の方針がイチャイチャ
+ACTABLE_REASON:73 = 方針不適合_日毎方針(%POLICY("今日")%)
+SIF TFLAG:今日の方針 == 4
+	RETURN 0
+;押し倒し中(いくまで解放しないように)
+ACTABLE_REASON:73 = 解除規制_押し倒し中
+SIF TEQUIP:押し倒し中
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:73 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:73 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;実行可能
+ACTABLE_REASON:73 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;公衆肉便器プレイ の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE74
+;一括管理
+SIF GLOBAL_ACTABLE(74)
+	RETURN RESULT
+;縄と首輪のどちらかが無い
+ACTABLE_REASON:74 = 未所持_縄
+SIF !ITEM:縄
+	RETURN 0
+ACTABLE_REASON:74 = 未所持_首輪
+SIF !ITEM:首輪
+	RETURN 0
+;方針がソフト/ノーマル/ハード
+ACTABLE_REASON:74 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF 2 <= TFLAG:ターン方針 && TFLAG:ターン方針 <= 4
+	RETURN 0
+;本日の方針がイチャイチャ
+ACTABLE_REASON:74 = 方針不適合_日毎方針(%POLICY("今日")%)
+SIF TFLAG:今日の方針 == 4
+	RETURN 0
+;押し倒し中(いくまで解放しないように)
+ACTABLE_REASON:74 = 解除規制_押し倒し中
+SIF TEQUIP:押し倒し中
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:74 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:74 = 解除規制_性交(受→攻)(全)
+SIF TEQUIP:性交奉仕中
+	RETURN 0
+;触手
+ACTABLE_REASON:74 = 物理障害_触手
+SIF TEQUIP:触手調教中
+	RETURN 0
+;調教対象が処女で調教者がご主人様でない@ぽ0422test+勝手に調整3
+;今後の条件考慮のためこういう案もあるということを記録@これみ
+;SIF TALENT:MASTER:処女 && !TALENT:TARGET:ご主人様
+;	RETURN 0
+;実行可能
+ACTABLE_REASON:74 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;ペニスバンド装着 の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE75
+;一括管理
+SIF GLOBAL_ACTABLE(75)
+	RETURN RESULT
+;ペニスバンドが無い
+ACTABLE_REASON:75 = 未所持_Ｐバンド
+SIF !ITEM:ペニスバンド || TEQUIP:ペニスバンド
+	RETURN 0
+;挿入中
+ACTABLE_REASON:75 = 物理障害_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+;性交奉仕中
+ACTABLE_REASON:75 = 物理障害_性交(受→攻)(全)
+SIF (TEQUIP:性交奉仕中)
+	RETURN 0
+;触手
+ACTABLE_REASON:75 = 物理障害_触手
+SIF TEQUIP:触手調教中
+	RETURN 0
+;ペニスがある
+ACTABLE_REASON:75 = 物理障害_攻ペニス
+SIF PENIS(TARGET)
+	RETURN 0
+;実行可能
+ACTABLE_REASON:75 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;触手召喚 の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE80
+;一括管理
+SIF GLOBAL_ACTABLE(80)
+	RETURN RESULT
+;召喚できるクリーチャーがいない
+ACTABLE_REASON:80 = 未所持_触手
+SIF !ITEM:90
+	RETURN 0
+;本日の方針がイチャイチャ
+ACTABLE_REASON:80 = 方針不適合_日毎方針(%POLICY("今日")%)
+SIF TFLAG:今日の方針 == 4
+	RETURN 0
+;押し倒し中(いくまで解放しないように)
+ACTABLE_REASON:80 = 解除規制_押し倒し中
+SIF TEQUIP:押し倒し中
+	RETURN 0
+;触手召喚は未実装
+ACTABLE_REASON:80 = 未実装
+RETURN 0
+
+;-----------------------------------------------------------
+;休ませる の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE90
+;一括管理
+SIF GLOBAL_ACTABLE(90)
+	RETURN RESULT
+;実行可能
+ACTABLE_REASON:90 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;栄養剤を飲ませる の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE91
+;一括管理
+SIF GLOBAL_ACTABLE(91)
+	RETURN RESULT
+;調教者に調合知識が無い
+ACTABLE_REASON:91 = 条件未達_調合知識無し
+SIF !TALENT:調合知識
+	RETURN 0
+;実行可能
+ACTABLE_REASON:91 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;治療する の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE92
+;一括管理
+SIF GLOBAL_ACTABLE(92)
+	RETURN RESULT
+;調教者が治療できない
+ACTABLE_REASON:92 = 条件未達_治療無し
+SIF !TALENT:治療
+	RETURN 0
+;実行可能
+ACTABLE_REASON:92 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;正常位させる の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE95
+;一括管理
+SIF GLOBAL_ACTABLE(95)
+	RETURN RESULT
+;調教対象にペニスがなく、ペニスバンドがない
+ACTABLE_REASON:95 = 未所持_Ｐバンド
+SIF !PENIS(MASTER) && (TEQUIP:調教者ペニスバンド || !ITEM:ペニスバンド)
+	RETURN 0
+;調教対象が仰向
+ACTABLE_REASON:95 = 物理障害_姿勢(受)(仰向け)
+SIF TFLAG:仰向け && !TEQUIP:性交奉仕中
+	RETURN 0
+;Ｖ使用中
+ACTABLE_REASON:95 = 物理障害_装着(攻)(Ｐバンド)
+SIF TEQUIP:調教者ペニスバンド
+	RETURN 0
+;勃起1000未満
+ACTABLE_REASON:95 = 物理障害_勃起不足(受)
+SIF TCVAR:MASTER:勃起度 < 1000 && PENIS(MASTER)
+	RETURN 0
+;押し倒し中(いくまで解放しないように)
+ACTABLE_REASON:95 = 解除規制_押し倒し中
+SIF TEQUIP:押し倒し中
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:95 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:95 = 解除規制_性交(受→攻)(Ａ)
+SIF A_SEX(MASTER)
+	RETURN 0
+;体位変更不可
+ACTABLE_REASON:95 = 物理障害_性交(受→攻)(体位)
+SIF TEQUIP:性交奉仕中 == 5
+	RETURN 0
+;抜かずなら挿し替え不可
+ACTABLE_REASON:95 = 解除規制_抜かず
+SIF TFLAG:抜かず && PREV_A_SEX(MASTER)
+	RETURN 0
+;三角木馬
+ACTABLE_REASON:95 = 物理障害_拘束(三角木馬)
+SIF TEQUIP:三角木馬
+	RETURN 0
+;調教者の下半身上着で妨害される
+ACTABLE_REASON:95 = 物理障害_着衣(攻)(下半身上着)
+SIF CLOTHESTYPE(0, 1) == 2
+	RETURN 0
+;調教者の下半身下着で妨害される
+ACTABLE_REASON:95 = 物理障害_着衣(攻)(下半身下着)
+SIF CLOTHESTYPE(0, 0) == 2
+	RETURN 0
+;調教対象の下半身上着で妨害される
+ACTABLE_REASON:95 = 物理障害_着衣(受)(下半身上着)
+SIF CLOTHESTYPE(1, 1) == 2
+	RETURN 0
+;調教者がオトコ
+ACTABLE_REASON:95 = 物理障害_攻男性
+SIF TALENT:オトコ
+	RETURN 0
+;調教対象がオナホール使用中
+ACTABLE_REASON:95 = 物理障害_装着(受)(Ｐホール)
+SIF TEQUIP:オナホール
+	RETURN 0
+;調教対象の体力が0以下
+ACTABLE_REASON:95 = 物理障害_体力不足(受)
+SIF BASE:MASTER:体力 <= 0
+	RETURN 0
+;調教対象が童貞で調教者がご主人様でない@ぽ0422test+勝手に調整3
+;今後の条件考慮のためこういう案もあるということを記録@これみ
+;SIF TALENT:MASTER:童貞 && !TALENT:TARGET:ご主人様
+;	RETURN 0
+;実行可能
+ACTABLE_REASON:95 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;後背位させる の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE96
+;一括管理
+SIF GLOBAL_ACTABLE(96)
+	RETURN RESULT
+;調教対象にペニスがなく、ペニスバンドがない
+ACTABLE_REASON:96 = 未所持_Ｐバンド
+SIF !PENIS(MASTER) && (TEQUIP:調教者ペニスバンド || !ITEM:ペニスバンド)
+	RETURN 0
+;調教対象が仰向
+ACTABLE_REASON:96 = 物理障害_姿勢(受)(仰向け)
+SIF TFLAG:仰向け && !TEQUIP:性交奉仕中
+	RETURN 0
+;Ｖ使用中
+ACTABLE_REASON:96 = 物理障害_装着(攻)(Ｐバンド)
+SIF TEQUIP:調教者ペニスバンド
+	RETURN 0
+;勃起1000未満
+ACTABLE_REASON:96 = 物理障害_勃起不足(受)
+SIF TCVAR:MASTER:勃起度 < 1000 && PENIS(MASTER)
+	RETURN 0
+;押し倒し中(いくまで解放しないように)
+ACTABLE_REASON:96 = 解除規制_押し倒し中
+SIF TEQUIP:押し倒し中
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:96 = 解除規制_性交(攻→受)(全)
+SIF (TEQUIP:性交中)
+	RETURN 0
+ACTABLE_REASON:96 = 解除規制_性交(受→攻)(Ａ)
+SIF A_SEX(MASTER)
+	RETURN 0
+;体位変更不可
+ACTABLE_REASON:96 = 物理障害_性交(受→攻)(体位)
+SIF TEQUIP:性交奉仕中 == 4
+	RETURN 0
+;抜かずなら挿し替え不可
+ACTABLE_REASON:96 = 解除規制_抜かず
+SIF TFLAG:抜かず && PREV_A_SEX(MASTER)
+	RETURN 0
+;三角木馬
+ACTABLE_REASON:96 = 物理障害_拘束(三角木馬)
+SIF TEQUIP:三角木馬
+	RETURN 0
+;調教者の下半身上着で妨害される
+ACTABLE_REASON:96 = 物理障害_着衣(攻)(下半身上着)
+SIF CLOTHESTYPE(0, 1) == 2
+	RETURN 0
+;調教者の下半身下着で妨害される
+ACTABLE_REASON:96 = 物理障害_着衣(攻)(下半身下着)
+SIF CLOTHESTYPE(0, 0) == 2
+	RETURN 0
+;調教対象の下半身上着で妨害される
+ACTABLE_REASON:96 = 物理障害_着衣(受)(下半身上着)
+SIF CLOTHESTYPE(1, 1) == 2
+	RETURN 0
+;調教者がオトコ
+ACTABLE_REASON:96 = 物理障害_攻男性
+SIF TALENT:オトコ
+	RETURN 0
+;調教対象オナホール使用中
+ACTABLE_REASON:96 = 物理障害_装着(受)(Ｐホール)
+SIF TEQUIP:オナホール
+	RETURN 0
+;調教対象の体力が0以下
+ACTABLE_REASON:96 = 物理障害_体力不足(受)
+SIF BASE:MASTER:体力 <= 0
+	RETURN 0
+;調教対象が童貞で調教者がご主人様でない@ぽ0422test+勝手に調整3
+;今後の条件考慮のためこういう案もあるということを記録@これみ
+;SIF TALENT:MASTER:童貞 && !TALENT:TARGET:ご主人様
+;	RETURN 0
+;実行可能
+ACTABLE_REASON:96 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;対面座位させる の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE97
+;一括管理
+SIF GLOBAL_ACTABLE(97)
+	RETURN RESULT
+;調教対象にペニスがなく、ペニスバンドがない
+ACTABLE_REASON:97 = 未所持_Ｐバンド
+SIF !PENIS(MASTER) && (TEQUIP:調教者ペニスバンド || !ITEM:ペニスバンド)
+	RETURN 0
+;調教対象が仰向
+ACTABLE_REASON:97 = 物理障害_姿勢(受)(仰向け)
+SIF TFLAG:仰向け && !TEQUIP:性交奉仕中
+	RETURN 0
+;Ｖ使用中
+ACTABLE_REASON:97 = 物理障害_装着(攻)(Ｐバンド)
+SIF TEQUIP:調教者ペニスバンド
+	RETURN 0
+;勃起1000未満
+ACTABLE_REASON:97 = 物理障害_勃起不足(受)
+SIF TCVAR:MASTER:勃起度 < 1000 && PENIS(MASTER)
+	RETURN 0
+;押し倒し中(いくまで解放しないように)
+ACTABLE_REASON:97 = 解除規制_押し倒し中
+SIF TEQUIP:押し倒し中
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:97 = 解除規制_性交(攻→受)(全)
+SIF (TEQUIP:性交中)
+	RETURN 0
+ACTABLE_REASON:97 = 解除規制_性交(受→攻)(Ａ)
+SIF A_SEX(MASTER)
+	RETURN 0
+;体位変更不可
+ACTABLE_REASON:97 = 物理障害_性交(受→攻)(体位)
+SIF TEQUIP:性交奉仕中 == 2 || TEQUIP:性交奉仕中 == 5
+	RETURN 0
+;抜かずなら挿し替え不可
+ACTABLE_REASON:97 = 解除規制_抜かず
+SIF TFLAG:抜かず && PREV_A_SEX(MASTER)
+	RETURN 0
+;三角木馬
+ACTABLE_REASON:97 = 物理障害_拘束(三角木馬)
+SIF TEQUIP:三角木馬
+	RETURN 0
+;調教者の下半身上着で妨害される
+ACTABLE_REASON:97 = 物理障害_着衣(攻)(下半身上着)
+SIF CLOTHESTYPE(0, 1) == 2
+	RETURN 0
+;調教者の下半身下着で妨害される
+ACTABLE_REASON:97 = 物理障害_着衣(攻)(下半身下着)
+SIF CLOTHESTYPE(0, 0) == 2
+	RETURN 0
+;調教対象の下半身上着で妨害される
+ACTABLE_REASON:97 = 物理障害_着衣(受)(下半身上着)
+SIF CLOTHESTYPE(1, 1) == 2
+	RETURN 0
+;調教者がオトコ
+ACTABLE_REASON:97 = 物理障害_攻男性
+SIF TALENT:オトコ
+	RETURN 0
+;調教対象オナホール使用中
+ACTABLE_REASON:97 = 物理障害_装着(受)(Ｐホール)
+SIF TEQUIP:オナホール
+	RETURN 0
+;調教対象の体力が0以下
+ACTABLE_REASON:97 = 物理障害_体力不足(受)
+SIF BASE:MASTER:体力 <= 0
+	RETURN 0
+;調教対象が童貞で調教者がご主人様でない@ぽ0422test+勝手に調整3
+;今後の条件考慮のためこういう案もあるということを記録@これみ
+;SIF TALENT:MASTER:童貞 && !TALENT:TARGET:ご主人様
+;	RETURN 0
+;実行可能
+ACTABLE_REASON:97 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;背面座位させる の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE98
+;一括管理
+SIF GLOBAL_ACTABLE(98)
+	RETURN RESULT
+;調教対象にペニスがなく、ペニスバンドがない
+ACTABLE_REASON:98 = 未所持_Ｐバンド
+SIF !PENIS(MASTER) && (TEQUIP:調教者ペニスバンド || !ITEM:ペニスバンド)
+	RETURN 0
+;調教対象が仰向
+ACTABLE_REASON:98 = 物理障害_姿勢(受)(仰向け)
+SIF TFLAG:仰向け && !TEQUIP:性交奉仕中
+	RETURN 0
+;Ｖ使用中
+ACTABLE_REASON:98 = 物理障害_装着(攻)(Ｐバンド)
+SIF TEQUIP:調教者ペニスバンド
+	RETURN 0
+;勃起1000未満
+ACTABLE_REASON:98 = 物理障害_勃起不足(受)
+SIF TCVAR:MASTER:勃起度 < 1000 && PENIS(MASTER)
+	RETURN 0
+;押し倒し中(いくまで解放しないように)
+ACTABLE_REASON:98 = 解除規制_押し倒し中
+SIF TEQUIP:押し倒し中
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:98 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:98 = 解除規制_性交(受→攻)(Ａ)
+SIF A_SEX(MASTER)
+	RETURN 0
+;体位変更不可
+ACTABLE_REASON:98 = 物理障害_性交(受→攻)(体位)
+SIF TEQUIP:性交奉仕中 == 1 || TEQUIP:性交奉仕中 == 4
+	RETURN 0
+;抜かずなら挿し替え不可
+ACTABLE_REASON:98 = 解除規制_抜かず
+SIF TFLAG:抜かず && PREV_A_SEX(MASTER)
+	RETURN 0
+;三角木馬
+ACTABLE_REASON:98 = 物理障害_拘束(三角木馬)
+SIF TEQUIP:三角木馬
+	RETURN 0
+;調教者の下半身上着で妨害される
+ACTABLE_REASON:98 = 物理障害_着衣(攻)(下半身上着)
+SIF CLOTHESTYPE(0, 1) == 2
+	RETURN 0
+;調教者の下半身下着で妨害される
+ACTABLE_REASON:98 = 物理障害_着衣(攻)(下半身下着)
+SIF CLOTHESTYPE(0, 0) == 2
+	RETURN 0
+;調教対象の下半身上着で妨害される
+ACTABLE_REASON:98 = 物理障害_着衣(受)(下半身上着)
+SIF CLOTHESTYPE(1, 1) == 2
+	RETURN 0
+;調教者がオトコ
+ACTABLE_REASON:98 = 物理障害_攻男性
+SIF TALENT:オトコ
+	RETURN 0
+;調教対象がオナホール使用中
+ACTABLE_REASON:98 = 物理障害_装着(受)(Ｐホール)
+SIF TEQUIP:オナホール
+	RETURN 0
+;調教対象の体力が0以下
+ACTABLE_REASON:98 = 物理障害_体力不足(受)
+SIF BASE:MASTER:体力 <= 0
+	RETURN 0
+;調教対象が童貞で調教者がご主人様でない@ぽ0422test+勝手に調整3
+;今後の条件考慮のためこういう案もあるということを記録@これみ
+;SIF TALENT:MASTER:童貞 && !TALENT:TARGET:ご主人様
+;	RETURN 0
+;実行可能
+ACTABLE_REASON:98 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;アナルセックスさせる の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE99
+;一括管理
+SIF GLOBAL_ACTABLE(99)
+	RETURN RESULT
+;調教対象にペニスがなく、ペニスバンドがない
+ACTABLE_REASON:99 = 未所持_Ｐバンド
+SIF !PENIS(MASTER) && (TEQUIP:調教者ペニスバンド || !ITEM:ペニスバンド)
+	RETURN 0
+;方針がソフトでアナル性交奉仕中でない
+ACTABLE_REASON:99 = 方針不適合_ターン方針(%POLICY("今")%)
+SIF IS_POLICY("今", "ソフト") && TEQUIP:性交奉仕中 < 6
+	RETURN 0
+;Ａ使用中
+ACTABLE_REASON:99 = 物理障害_装着(攻)(Ｐバンド)
+SIF TEQUIP:調教者ペニスバンド
+	RETURN 0
+;勃起1000未満
+ACTABLE_REASON:99 = 物理障害_勃起不足(受)
+SIF TCVAR:MASTER:勃起度 < 1000 && PENIS(MASTER)
+	RETURN 0
+;押し倒し中(いくまで解放しないように)
+ACTABLE_REASON:99 = 解除規制_押し倒し中
+SIF TEQUIP:押し倒し中
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:99 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:99 = 解除規制_性交(受→攻)(Ｖ)
+SIF V_SEX(MASTER)
+	RETURN 0
+;抜かずなら挿し替え不可
+ACTABLE_REASON:99 = 解除規制_抜かず
+SIF TFLAG:抜かず && PREV_V_SEX(MASTER)
+	RETURN 0
+;三角木馬
+ACTABLE_REASON:99 = 物理障害_拘束(三角木馬)
+SIF TEQUIP:三角木馬
+	RETURN 0
+;調教者の下半身上着で妨害される
+ACTABLE_REASON:99 = 物理障害_着衣(攻)(下半身上着)
+SIF CLOTHESTYPE(0, 1) == 2
+	RETURN 0
+;調教者の下半身下着で強く妨害される
+ACTABLE_REASON:99 = 物理障害_着衣(攻)(下半身下着)
+SIF CLOTHESTYPE(0, 0)
+	RETURN 0
+;調教対象の下半身上着で妨害される
+ACTABLE_REASON:99 = 物理障害_着衣(受)(下半身上着)
+SIF CLOTHESTYPE(1, 1) == 2
+	RETURN 0
+;調教対象オナホール使用中
+ACTABLE_REASON:99 = 物理障害_装着(受)(Ｐホール)
+SIF TEQUIP:オナホール
+	RETURN 0
+;調教対象の体力が0以下
+ACTABLE_REASON:99 = 物理障害_体力不足(受)
+SIF BASE:MASTER:体力 <= 0
+	RETURN 0
+;調教者のＡ感覚が2未満
+ACTABLE_REASON:99 = 条件未達_Ａ感覚不足
+SIF ABL:Ａ感覚 < 2
+	RETURN 0
+;調教対象が童貞で調教者がご主人様でない@ぽ0422test+勝手に調整3
+;今後の条件考慮のためこういう案もあるということを記録@これみ
+;SIF TALENT:MASTER:童貞 && !TALENT:TARGET:ご主人様
+;	RETURN 0
+;実行可能
+ACTABLE_REASON:99 = 
+RETURN 1
+
+;-----------------------------------------------------------
+;逆レイプ の実行判定
+;-----------------------------------------------------------
+@ACT_ABLE103
+;一括管理
+SIF GLOBAL_ACTABLE(103)
+	RETURN RESULT
+;調教対象にペニスがなく、ペニスバンドがない
+ACTABLE_REASON:103 = 未所持_Ｐバンド
+SIF !PENIS(MASTER) && (TEQUIP:調教者ペニスバンド || !ITEM:ペニスバンド)
+	RETURN 0
+;勃起1000未満
+ACTABLE_REASON:103 = 物理障害_勃起不足(受)
+SIF TCVAR:MASTER:勃起度 < 1000 && PENIS(MASTER)
+	RETURN 0
+;Ｖ使用中
+ACTABLE_REASON:103 = 物理障害_装着(攻)(Ｐバンド)
+SIF TEQUIP:調教者ペニスバンド
+	RETURN 0
+;挿入中(射精するまで抜かないように)
+ACTABLE_REASON:103 = 解除規制_性交(攻→受)(全)
+SIF TEQUIP:性交中
+	RETURN 0
+ACTABLE_REASON:103 = 解除規制_性交(受→攻)(Ａ)
+SIF A_SEX(MASTER)
+	RETURN 0
+;抜かずなら挿し替え不可
+ACTABLE_REASON:103 = 解除規制_抜かず
+SIF TFLAG:抜かず && PREV_A_SEX(MASTER)
+	RETURN 0
+;三角木馬
+ACTABLE_REASON:103 = 物理障害_拘束(三角木馬)
+SIF TEQUIP:三角木馬
+	RETURN 0
+;調教者の下半身上着で妨害される
+ACTABLE_REASON:103 = 物理障害_着衣(攻)(下半身上着)
+SIF CLOTHESTYPE(0, 1) == 2
+	RETURN 0
+;調教者の下半身下着で妨害される
+ACTABLE_REASON:103 = 物理障害_着衣(攻)(下半身下着)
+SIF CLOTHESTYPE(0, 0) == 2
+	RETURN 0
+;調教者に壁抜けがない（ペニバンも不可）
+IF !TALENT:壁抜け || !PENIS(TARGET)
+	;調教対象の下半身上着で妨害される
+	ACTABLE_REASON:103 = 物理障害_着衣(受)(下半身上着)
+	SIF CLOTHESTYPE(1, 1) == 2
+		RETURN 0
+ENDIF
+;調教者がオトコ
+ACTABLE_REASON:103 = 物理障害_攻男性
+SIF TALENT:オトコ
+	RETURN 0
+;調教対象がオナホール使用中
+ACTABLE_REASON:103 = 物理障害_装着(受)(Ｐホール)
+SIF TEQUIP:オナホール
+	RETURN 0
+;調教対象が童貞で調教者がご主人様でない@ぽ0422test+勝手に調整3
+;今後の条件考慮のためこういう案もあるということを記録@これみ
+;SIF TALENT:MASTER:童貞 && !TALENT:TARGET:ご主人様
+;	RETURN 0
+;実行可能
+ACTABLE_REASON:103 = 
+RETURN 1

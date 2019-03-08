@@ -1,0 +1,157 @@
+﻿;==================================================
+;
+;	汎用関数置き場＠参照編
+;		参照に用い、特定の数値や名称などを返すもの
+;		あるいは、状況に応じた接頭語などを返すもの
+;
+;		口上向けのものもあったりなかったり。
+;
+;==================================================
+
+;==================================================
+;
+;	屈服実績の参照
+;	(ピンポイント過ぎるのでそのうちStr.csvなどの文字列処理系があつまるかも)
+;
+;==================================================
+;屈服実績関連関数の基本方針は割とノーガード
+;繰り返し呼ばれるので処理速度優先(謎
+;新規作成@revkoishi(14/05/28)
+;-------------------------------------------------
+;関数の概要
+;・GET_SURRENDER_LV   …屈服実績Lv取得関数
+;・GET_SURRENDER_NUM  …屈服実績番号取得関数
+;・GET_SURRENDER_POINT…屈服実績ポイント取得関数
+;・GET_SURRENDER_STR_M…屈服実績文言取得関数(調教対象視点)
+;・GET_SURRENDER_STR_T…屈服実績文言取得関数(調教者視点)
+;・IS_SURRENDER_ENABLE…屈服実績表示可否判定関数
+;・SURRENDER_LV2POINT …屈服実績Lv→ポイント変換関数
+;-------------------------------------------------
+
+;-------------------------------------------------
+;関数名:GET_SURRENDER_LV
+;概　要:屈服実績Lv取得関数
+;引　数:ARG:0…屈服実績番号(0～127)
+;　　　 ARG:1…[省略可]登録番号。省略した場合はTARGET
+;戻り値:屈服実績Lv(1～5)。未定義や不正な場合は0が返る
+;備　考:式中関数
+;-------------------------------------------------
+@GET_SURRENDER_LV(ARG:0, ARG:1 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+SWAP TARGET, ARG:1
+LOCAL:0 = TOINT(CHARATU(STRFORM(STR:(1300 + ARG:0)), 0))
+SWAP TARGET, ARG:1
+RETURNF LOCAL:0
+
+
+;-------------------------------------------------
+;関数名:GET_SURRENDER_NUM
+;概　要:屈服実績番号取得関数
+;引　数:ARGS:0…屈服実績の略称文字列(Strname.csvで定義)
+;戻り値:屈服実績番号(0～127)。未定義や不正な場合は-1301が返る
+;備　考:式中関数
+;-------------------------------------------------
+@GET_SURRENDER_NUM(ARGS:0)
+#FUNCTION
+RETURNF GETNUM(STR, ARGS:0) - 1300
+
+
+;-------------------------------------------------
+;関数名:GET_SURRENDER_POINT
+;概　要:屈服実績ポイント取得関数
+;引　数:ARG:0…屈服実績番号(0～127)
+;　　　 ARG:1…[省略可]登録番号。省略した場合はTARGET
+;戻り値:屈服実績Lvに応じたポイント(1～10)。未定義や不正な場合は0が返る
+;備　考:式中関数
+;-------------------------------------------------
+@GET_SURRENDER_POINT(ARG:0, ARG:1 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+SWAP TARGET, ARG:1
+LOCAL:0 = SURRENDER_LV2POINT(TOINT(CHARATU(STRFORM(STR:(1300 + ARG:0)), 0)))
+SWAP TARGET, ARG:1
+RETURNF LOCAL:0
+
+
+;-------------------------------------------------
+;関数名:GET_SURRENDER_STR_M
+;概　要:屈服実績文言取得関数(調教対象視点)
+;引　数:ARG:0…屈服実績番号(0～127)
+;　　　 ARG:1…[省略可]登録番号。省略した場合はTARGET
+;戻り値:屈服実績文言(調教対象視点)
+;備　考:式中関数
+;-------------------------------------------------
+@GET_SURRENDER_STR_M(ARG:0, ARG:1 = -2)
+#FUNCTIONS
+#LOCALSSIZE 3
+VARSET LOCALS
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+SWAP TARGET, ARG:1
+SPLIT STRFORM(STR:(1300 + ARG:0)), "___", LOCALS, LOCAL:0
+SWAP TARGET, ARG:1
+RETURNF LOCALS:2
+
+
+;-------------------------------------------------
+;関数名:GET_SURRENDER_STR_T
+;概　要:屈服実績文言取得関数(調教者視点)
+;引　数:ARG:0…屈服実績番号(0～127)
+;　　　 ARG:1…[省略可]登録番号。省略した場合はTARGET
+;戻り値:屈服実績文言
+;備　考:式中関数
+;-------------------------------------------------
+@GET_SURRENDER_STR_T(ARG:0, ARG:1 = -2)
+#FUNCTIONS
+#LOCALSSIZE 3
+VARSET LOCALS
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+SWAP TARGET, ARG:1
+SPLIT STRFORM(STR:(1300 + ARG:0)), "___", LOCALS, LOCAL:0
+SWAP TARGET, ARG:1
+RETURNF LOCALS:1
+
+
+;-------------------------------------------------
+;関数名:IS_SURRENDER_ENABLE
+;概　要:屈服実績有効判定関数
+;引　数:ARG:0…屈服実績番号(0～127)
+;　　　 ARG:1…[省略可]登録番号。省略した場合はTARGET
+;戻り値:有効/無効を表す真偽値(0か1)。有効の場合は1(真)、無効の場合は0(偽)が返る
+;備　考:式中関数
+;関数名変更。他所でも使えるように@revkoishi(14/06/01)
+;-------------------------------------------------
+@IS_SURRENDER_ENABLE(ARG:0, ARG:1 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+LOCAL:0 = 0
+SELECTCASE CHARATU(STRFORM(STR:(1300 + ARG:0)), 1)
+	CASE "A"	;ALL(♂♀双)
+		LOCAL:0 = 1
+	CASE "F"	;FEMALE(♀)
+		LOCAL:0 = TALENT:MASTER:ふたなり !| TALENT:MASTER:オトコ
+	CASE "M"	;MALE(♂)
+		LOCAL:0 = TALENT:MASTER:オトコ
+	CASE "P"	;PENIS(♂双)
+		LOCAL:0 = TALENT:MASTER:ふたなり || TALENT:MASTER:オトコ
+	CASE "S"	;SINGLE(♂♀)
+		LOCAL:0 = !TALENT:MASTER:ふたなり
+	CASE "T"	;TWIN(双)
+		LOCAL:0 = TALENT:MASTER:ふたなり
+	CASE "V"	;VAGINA(♀双)
+		LOCAL:0 = !TALENT:MASTER:オトコ
+ENDSELECT
+RETURNF LOCAL:0
+
+
+;-------------------------------------------------
+;関数名:SURRENDER_LV2POINT
+;概　要:屈服実績Lv→ポイント変換関数
+;引　数:ARG:0…屈服実績Lv(1～5)
+;戻り値:屈服実績ポイント(1～10)。Lv0の場合は0が返る
+;備　考:式中関数
+;-------------------------------------------------
+@SURRENDER_LV2POINT(ARG:0)
+#DIM CONST POINT = 0, 1, 2, 3, 5, 10
+#FUNCTION
+RETURNF POINT:(ARG:0)

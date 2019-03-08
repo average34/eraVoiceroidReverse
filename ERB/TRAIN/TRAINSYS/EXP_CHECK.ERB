@@ -1,0 +1,534 @@
+﻿;────────────────────────────────────
+;経験を行動やコマンドから分離してここでまとめて処理するの実験です
+;────────────────────────────────────
+@EXP_CHECK
+#DIM LCOUNT
+;────────────────────────────────────
+;快ＣＶＡＢ経験
+;────────────────────────────────────
+;1(最低保証) + UP補正(MASTER:1000UPで+1,10000UPで+4、TARGET:500UPで+1,その後1000UPごとに+1) * レベル補正（対手とのレベル差が大きいほど補正）
+
+;調教対象PALAM
+FOR LCOUNT, 0, 4
+	;PALAM変化時
+	IF CUP:MASTER:LCOUNT
+		;変化値の平方根を初期値に利用
+		LOCAL = (SQRT(CUP:MASTER:LCOUNT) + 10) / 30
+		;調教者調教レベルが優位であれば増大
+		LOCAL = LOCAL * MAX(100 * (CFLAG:調教レベル + 10) / (CFLAG:MASTER:調教レベル + 10) , 10) / 100
+		;絶頂時1.5倍+α
+		SIF NOWEX:MASTER:LCOUNT
+			LOCAL = (LOCAL + 1) * 3 / 2
+		;最低限1を確保
+		LOCAL = LOCAL < 1 ? 1 # LOCAL
+		;経験上昇
+		EXP:MASTER:LCOUNT += LOCAL
+		;地の文表示
+		PRINTFORML %EXPNAME:LCOUNT%+{LOCAL}
+	ENDIF
+NEXT
+
+;調教者PALAM
+FOR LCOUNT, 0, 4
+	;PALAM変化時
+	IF CUP:LCOUNT
+		;変化値の1/1000を初期値に利用
+		LOCAL = 1 + (CUP:LCOUNT + 500) / 1000
+		;調教対象調教レベルが優位であれば増大
+		LOCAL = LOCAL * MAX(100 * (CFLAG:MASTER:調教レベル + 10) / (CFLAG:調教レベル + 10) , 100) / 100
+		;絶頂時1.5倍+α
+		SIF NOWEX:LCOUNT
+			LOCAL = (LOCAL + 1) * 3 / 2
+		;最低限1を確保
+		;調教対象に合わせて試しに追加してみた@これみ
+		LOCAL = LOCAL < 1 ? 1 # LOCAL
+		;経験上昇
+		EXP:LCOUNT += LOCAL
+		;地の文表示
+		PRINTFORML （%CALLNAME:TARGET%）%EXPNAME:LCOUNT%+{LOCAL}
+	ENDIF
+NEXT
+
+;────────────────────────────────────
+;処女喪失のチェック
+;────────────────────────────────────
+IF TCVAR:MASTER:処女喪失 && TALENT:MASTER:処女
+	;地の文表示
+	PRINTW 処女喪失
+	CALL MARK_CHECK_GET("処女喪失")	;【屈服:57】処女喪失	新仕様に変更@revkoishi(14/05/26)
+	;処女喪失
+	TALENT:MASTER:処女 = 0
+	TCVAR:MASTER:調教内処女喪失 = 1
+	CFLAG:MASTER:処女喪失済み = 1
+	;最低限1のＶ経験を確保
+	IF EXP:MASTER:Ｖ経験 == 0
+		EXP:MASTER:Ｖ経験 += 1
+		PRINTL Ｖ経験+1
+	ENDIF
+	;依存度変化
+	CALL ADD_DEPEND(20, 50)
+ENDIF
+
+;処女時
+IF TCVAR:処女喪失 && TALENT:処女
+	;地の文表示
+	PRINTFORMW 処女喪失（%CALLNAME:TARGET%）
+	;処女喪失
+	TALENT:処女 = 0
+	TCVAR:調教内処女喪失 = 1
+	CFLAG:処女喪失済み = 1
+	;最低限1のＶ経験を確保
+	IF EXP:Ｖ経験 == 0
+		EXP:Ｖ経験 += 1
+		;ｖを大文字に修正@revkoishi(14/05/26)
+		PRINTFORML （%CALLNAME:TARGET%）Ｖ経験+1
+	ENDIF
+	;依存度変化
+	CALL ADD_DEPEND(50, 20)
+ENDIF
+
+
+;────────────────────────────────────
+;童貞喪失のチェック
+;────────────────────────────────────
+;童貞時
+IF TCVAR:MASTER:童貞喪失 && TALENT:MASTER:童貞
+	;地の文表示
+	PRINTW 童貞喪失
+	CALL MARK_CHECK_GET("童貞喪失")	;【屈服:58】童貞喪失	新仕様に変更@revkoishi(14/05/26)
+	;童貞喪失
+	TALENT:MASTER:童貞 = 0
+	TCVAR:MASTER:調教内童貞喪失 = 1
+	CFLAG:MASTER:童貞喪失済み = 1
+	;依存度変化
+	CALL ADD_DEPEND(20, 50)
+ENDIF
+
+
+;童貞時
+IF TCVAR:童貞喪失 && TALENT:童貞
+	;地の文表示
+	PRINTFORMW 童貞喪失（%CALLNAME:TARGET%）
+	;童貞喪失
+	TALENT:童貞 = 0
+	TCVAR:調教内童貞喪失 = 1
+	CFLAG:童貞喪失済み = 1
+	;依存度変化
+	CALL ADD_DEPEND(50, 20)
+ENDIF
+
+;────────────────────────────────────
+;絶頂経験
+;────────────────────────────────────
+;調教対象絶頂総計を取得
+LOCAL = NOWEX:MASTER:Ｃ絶頂 + NOWEX:MASTER:Ｖ絶頂 + NOWEX:MASTER:Ａ絶頂 + NOWEX:MASTER:Ｂ絶頂
+;正であれば
+IF LOCAL > 0
+	;絶頂経験に追加
+	EXP:MASTER:絶頂経験 += LOCAL
+	;イかせ経験に追加
+	EXP:イかせ経験 += LOCAL
+	;地の文表示
+	PRINT 絶頂経験+
+	PRINTVL LOCAL
+ENDIF
+
+;調教者絶頂総計を取得
+LOCAL = NOWEX:Ｃ絶頂 + NOWEX:Ｖ絶頂 + NOWEX:Ａ絶頂 + NOWEX:Ｂ絶頂
+;正であれば
+IF LOCAL > 0
+	;イかせたを記録
+	TFLAG:イかせた = 2 + RAND:3
+	;絶頂経験に追加
+	EXP:絶頂経験 += LOCAL
+	;イかせ経験に追加
+	EXP:MASTER:イかせ経験 += LOCAL
+	;地の文表示
+	PRINTFORM （%CALLNAME:TARGET%）絶頂経験+
+	PRINTVL LOCAL
+ENDIF
+
+;────────────────────────────────────
+;射精/噴乳/潮吹き経験 潮吹き経験を追加@revkoishi(14/05/26)
+;────────────────────────────────────
+;調教対象噴乳時
+IF NOWEX:MASTER:噴乳
+	;噴乳経験加算
+	EXP:MASTER:噴乳経験 += NOWEX:MASTER:噴乳
+	;地の文表示
+	PRINT 噴乳経験+
+	PRINTVL NOWEX:MASTER:噴乳
+ENDIF
+;調教対象射精時
+IF NOWEX:MASTER:射精
+	;射精経験加算
+	EXP:MASTER:射精経験 += NOWEX:MASTER:射精
+	;地の文表示
+	PRINT 射精経験+
+	PRINTVL NOWEX:MASTER:射精
+ENDIF
+IF NOWEX:MASTER:潮吹き	;調教対象潮吹き時
+	EXP:MASTER:潮吹き経験 += NOWEX:MASTER:潮吹き	;潮吹き経験加算
+	PRINTFORML 潮吹き経験+{NOWEX:MASTER:潮吹き}
+ENDIF
+;調教者噴乳時
+IF NOWEX:噴乳
+	;噴乳経験加算
+	EXP:噴乳経験 += NOWEX:噴乳
+	;地の文表示
+	PRINTFORM （%CALLNAME:TARGET%）噴乳経験+
+	PRINTVL NOWEX:噴乳
+ENDIF
+;調教者射精時
+IF NOWEX:射精
+	;射精経験加算
+	EXP:射精経験 += NOWEX:射精
+	;地の文表示
+	PRINTFORM （%CALLNAME:TARGET%）射精経験+
+	PRINTVL NOWEX:射精
+ENDIF
+
+;────────────────────────────────────
+;性交経験/性知識/自慰経験/被写経験（性知識をどう扱うかはまだわかりませんがここでも保留しておきましょう。今は会話の知識だけで上がります）
+;────────────────────────────────────
+;性交時
+IF TEQUIP:性交中 || TEQUIP:性交奉仕中
+	;性交経験加算
+	EXP:MASTER:性交経験 += 1
+	EXP:性交経験 += 1
+	;助手参加時には助手にも加算
+	IF ASSI:1 > 0 && TCVAR:(ASSI:1):助手方針 == 1
+		EXP:(ASSI:1):性交経験 += 1
+		PRINTFORML （三人）性交経験+1
+	ELSE
+		PRINTL （二人）性交経験+1
+	ENDIF
+ENDIF
+
+;性についての話をする
+IF IS_NOWACTNAME("性についての話をする")
+	;1～3を性知識に追加
+	LOCAL = 1 + RAND:3
+	EXP:MASTER:性知識 += LOCAL
+	PRINT 性知識+
+	PRINTVL LOCAL
+ENDIF
+
+;自慰経験、調教自慰経験を追加
+IF TEQUIP:自慰中 == 1
+	EXP:MASTER:自慰経験 += 1
+	EXP:MASTER:調教自慰経験 += 1
+	PRINTL 自慰経験+1
+ELSEIF TEQUIP:自慰中 == 2
+	EXP:自慰経験 += 1
+	PRINTFORML （%CALLNAME:TARGET%）自慰経験+1
+ELSEIF TEQUIP:自慰中 == 3
+	EXP:MASTER:自慰経験 += 1
+	EXP:MASTER:調教自慰経験 += 1
+	EXP:自慰経験 += 1
+	PRINTL （二人）自慰経験+1
+ENDIF
+
+;被写経験追加
+IF NOWASSIACTNAME(ASSI:1) == "写真撮影" || NOWASSIACTNAME(ASSI:2) == "写真撮影"
+	EXP:MASTER:被写経験 += 1
+	PRINTL 被写経験+1
+ENDIF
+
+;────────────────────────────────────
+;放尿経験/精液経験/フェラ経験/手淫経験/道具使用経験
+;────────────────────────────────────
+;放尿時
+IF (IS_COMGRONAME("消極的従う/積極的従う") && IS_NOWACTNAME("放尿")) || NOWEX:MASTER:放尿 > 0
+	;放尿経験加算
+	EXP:MASTER:放尿経験 += 1
+	PRINTL 放尿経験+1
+ENDIF
+
+;調教者射精時
+IF NOWEX:射精 && NOWEX:射精 != 1
+	;精液経験加算
+	EXP:MASTER:精液経験 += DOWNBASE:射精 / 300
+	PRINT 精液経験+
+	PRINTVL DOWNBASE:射精 / 300
+ENDIF
+
+;調教対象射精時
+IF NOWEX:MASTER:射精 && NOWEX:MASTER:射精 != 1
+	;精液経験加算
+	EXP:精液経験 += DOWNBASE:MASTER:射精 / 300
+	PRINTFORM （%CALLNAME:TARGET%）精液経験+
+	PRINTVL DOWNBASE:MASTER:射精 / 300
+ENDIF
+
+;奉仕系能力をうまく上がらせるため愛撫も手淫、クンニも口淫経験として扱います
+;口淫経験追加
+IF IS_NOWACTNAME("口で愛撫を強制/パイズリ")
+	EXP:MASTER:口淫経験 += 1
+	PRINTL 口淫経験+1
+ENDIF
+
+;LOCAL初期化
+VARSET LOCAL
+;口淫経験追加
+IF IS_NOWACTNAME("口で愛撫/パイズリする") || (IS_NOWACTNAME("胸愛撫") && TFLAG:ACT派生 == 1) || NOWASSIACTNAME(ASSI:1) == "調教者とキス" || NOWASSIACTNAME(ASSI:2) == "調教者とキス" || TEQUIP:調教対象Ｃ使用 == 2
+	EXP:口淫経験 += 1
+	IF ASSI:1 > 0 && TCVAR:(ASSI:1):助手方針 == 1
+		EXP:(ASSI:1):口淫経験 += 1
+		PRINTFORML （%CALLNAME:TARGET%・%CALLNAME:(ASSI:1)%）口淫経験+1
+	ELSE
+		PRINTFORML （%CALLNAME:TARGET%）口淫経験+1
+	ENDIF
+ENDIF
+
+;キス経験追加
+IF IS_NOWACTNAME("キス")
+	EXP:キス経験 += 1
+	EXP:MASTER:キス経験 += 1
+	;助手参加時には助手にも加算
+	IF ASSI:1 > 0 && TCVAR:(ASSI:1):助手方針 == 1
+		EXP:(ASSI:1):キス経験 += 1
+		PRINTL （三人）キス経験+1
+	ELSE
+		PRINTL （二人）キス経験+1
+	ENDIF
+ENDIF
+
+;調教対象手淫経験追加
+IF IS_NOWACTNAME("手で愛撫を強制") || (IS_NOWACTNAME("胸愛撫") && TFLAG:ACT派生 == 2)
+	EXP:MASTER:手淫経験 += 1
+	PRINTL 手淫経験+1
+ENDIF
+
+;調教者手淫経験追加
+IF IS_NOWACTNAME("手で愛撫/アナル愛撫") || TEQUIP:調教対象Ｃ使用 == 1
+	EXP:手淫経験 += 1
+	;助手参加時には助手にも加算
+	IF ASSI:1 > 0 && TCVAR:(ASSI:1):助手方針 == 1
+		EXP:(ASSI:1):手淫経験 += 1
+		PRINTFORML （%CALLNAME:TARGET%・%CALLNAME:(ASSI:1)%）手淫経験+1
+	ELSE
+		PRINTFORML （%CALLNAME:TARGET%）手淫経験+1
+	ENDIF
+ENDIF
+
+;道具使用経験追加
+;自慰でバイブ使用も計算します
+IF TEQUIP:自慰中 && TFLAG:REACT分類 < 6
+	IF TEQUIP:バイブ || TEQUIP:アナルバイブ || TEQUIP:アナルビーズ
+		EXP:MASTER:道具使用経験 += 1
+		PRINTL 道具使用経験+1
+	ENDIF
+ENDIF
+
+;会話経験追加
+IF TFLAG:ACT分類 == 0 && SELECTCOM > 0 && SELECTCOM < 10
+	EXP:会話経験 += 1
+	EXP:MASTER:会話経験 += 1
+	PRINTFORML （二人）会話経験+1
+ENDIF
+
+;────────────────────────────────────
+;奉仕快楽経験/苦痛快楽経験/恥辱快楽経験
+;────────────────────────────────────
+;調教対象奉仕快楽経験追加
+IF ((TFLAG:ACT分類 == 5 || TFLAG:ACT分類 == 10  || TEQUIP:性交中 == 3 ) && IS_COMGRONAME("積極的従う")) && CUP:MASTER:快Ｃ + CUP:MASTER:快Ｖ + CUP:MASTER:快Ａ + CUP:MASTER:快Ｂ > 750
+	EXP:MASTER:奉仕快楽経験 += 1
+	PRINTL 奉仕快楽経験+1
+ENDIF
+
+;調教者奉仕快楽経験追加
+IF TFLAG:ACT分類 == 1
+	IF CUP:快Ｃ + CUP:快Ｖ + CUP:快Ａ + CUP:快Ｂ + CUP:MASTER:恭順 > 1000 || (BASE:満足 > BASE:苛立ち && CUP:MASTER:反抗 < CUP:MASTER:屈服 + CUP:MASTER:恭順)
+		EXP:奉仕快楽経験 += 1
+		PRINTFORML （%CALLNAME:TARGET%）奉仕快楽経験+1
+	ENDIF
+ENDIF
+
+;苦痛時
+IF CUP:MASTER:苦痛 > 200 
+	;快Ｘが不快に勝れば
+	IF (CUP:MASTER:快Ｃ + CUP:MASTER:快Ｖ + CUP:MASTER:快Ａ + CUP:MASTER:快Ｂ > CUP:MASTER:不快) && (CUP:MASTER:快Ｃ + CUP:MASTER:快Ｖ + CUP:MASTER:快Ａ + CUP:MASTER:快Ｂ > 500)
+		;苦痛快楽経験追加
+		EXP:MASTER:苦痛快楽経験 += 1
+		PRINTL 苦痛快楽経験+1
+	;異常経験と苦痛系強度が十分にあれば
+	ELSEIF (CUP:MASTER:欲情 + CUP:MASTER:苦痛 + CUP:MASTER:不快 > 1500 - EXP:異常経験 * 50) && (EXP:異常経験 > RAND:5)
+		;苦痛快楽経験追加
+		EXP:MASTER:苦痛快楽経験 += 1
+		PRINTL 苦痛快楽経験+1
+	ENDIF
+ENDIF
+
+;恥辱快楽経験追加
+IF CUP:MASTER:恥情 > 200 
+	IF (CUP:MASTER:快Ｃ + CUP:MASTER:快Ｖ + CUP:MASTER:快Ａ + CUP:MASTER:快Ｂ > CUP:MASTER:不快) && (CUP:MASTER:快Ｃ + CUP:MASTER:快Ｖ + CUP:MASTER:快Ａ + CUP:MASTER:快Ｂ > 500)
+		EXP:MASTER:恥辱快楽経験 += 1
+		PRINTL 恥辱快楽経験+1
+	ENDIF
+ENDIF
+
+;────────────────────────────────────
+;愛情経験
+;この将来的に新妻プレイヘビーローテーションみたいなものを起こしそうな
+;経験は今のうちに何とかしておいた方がいいんではないかとも思う今日この頃@これみ
+;────────────────────────────────────
+IF CUP:MASTER:恭順 > 5000 || IS_NOWCOMNAME("愛情を込めてやる")
+	EXP:愛情経験 += 1
+	EXP:MASTER:愛情経験 += 1
+	PRINTL （二人）愛情経験+1
+ENDIF
+
+;────────────────────────────────────
+;レズ経験/ＢＬ経験
+;────────────────────────────────────
+;接触が多いほど多く経験値が入ります
+;レズ経験加算
+IF !TALENT:MASTER:オトコ && !TALENT:オトコ
+	LOCAL = 1 + SOURCE:MASTER:接触 / 200
+	SIF LOCAL > 10
+		LOCAL = 10
+	EXP:MASTER:レズ経験 += LOCAL
+	EXP:レズ経験 += LOCAL
+	PRINT （二人）レズ経験+
+	PRINTVL LOCAL
+;ＢＬ経験加算
+ELSEIF TALENT:MASTER:オトコ && TALENT:オトコ
+	LOCAL = 1 + SOURCE:MASTER:接触 / 200
+	SIF LOCAL > 10
+		LOCAL = 10
+	EXP:MASTER:ＢＬ経験 += LOCAL
+	EXP:ＢＬ経験 += LOCAL
+	PRINT （二人）ＢＬ経験+
+	PRINTVL LOCAL
+ENDIF
+
+;────────────────────────────────────
+;緊縛経験/拡張経験
+;────────────────────────────────────
+;LOCAL初期化
+VARSET LOCAL
+;強緊縛時ほど多く緊縛経験追加
+SIF TEQUIP:縄
+	LOCAL += 1
+SIF TEQUIP:縄 > 4
+	LOCAL += 1
+SIF TEQUIP:アイマスク
+	LOCAL += 1
+SIF TEQUIP:ボールギャグ
+	LOCAL += 1
+SIF TEQUIP:三角木馬
+	LOCAL += 1
+IF LOCAL > 0
+	EXP:MASTER:緊縛経験 += LOCAL
+	PRINT 緊縛経験+
+	PRINTVL LOCAL
+ENDIF
+
+;REACTが暴れる以外
+IF !IS_COMGRONAME("暴れる")
+	;フィスト系時対応する拡張経験追加
+	IF IS_NOWACTNAME("フィストファック")
+		EXP:MASTER:Ｖ拡張経験 += 1
+		PRINTL Ｖ拡張経験+1
+	ELSEIF IS_NOWACTNAME("アナルフィスト")
+		EXP:MASTER:Ａ拡張経験 += 1
+		PRINTL Ａ拡張経験+1
+	ELSEIF IS_NOWACTNAME("両穴フィスト")
+		EXP:MASTER:Ｖ拡張経験 += 1
+		EXP:MASTER:Ａ拡張経験 += 1
+		PRINTL Ｖ拡張＆Ａ拡張経験+1
+	ENDIF
+ENDIF
+
+;────────────────────────────────────
+;触手経験
+;────────────────────────────────────
+IF TEQUIP:触手調教中
+	LOCAL = 1
+	EXP:MASTER:触手経験 += LOCAL
+	PRINT 触手経験+
+	PRINTVL LOCAL
+ENDIF
+
+;────────────────────────────────────
+;異常経験/屈服経験/恐怖経験/露出経験
+;────────────────────────────────────
+;異常経験追加
+IF SOURCE:MASTER:逸脱 > 200 + CFLAG:MASTER:調教レベル * 50 + MARK:屈服刻印 * 50 + EXP:MASTER:異常経験 * 20
+	EXP:MASTER:異常経験 += 1
+	PRINTL 異常経験+1
+ENDIF
+
+;屈服経験追加
+IF CUP:MASTER:屈服 > 100 + EXP:MASTER:屈服経験 * 10 + MARK:屈服刻印 * 20
+	EXP:MASTER:屈服経験 += 1
+	PRINTL 屈服経験+1
+ENDIF
+
+;恐怖経験追加
+IF CUP:MASTER:恐怖 > 200 + EXP:MASTER:恐怖経験 * 10 + MARK:MASTER:トラウマ * 20
+	EXP:MASTER:恐怖経験 += 1
+	PRINTL 恐怖経験+1
+ENDIF
+
+;露出経験追加
+IF SOURCE:MASTER:露出 > 200 + EXP:MASTER:露出経験 * 10 + CFLAG:MASTER:調教レベル * 20
+	EXP:MASTER:露出経験 += 1
+	PRINTL 露出経験+1
+ENDIF
+
+;助手について経験追加 ｃｖｂを大文字に修正@revkoishi(14/05/26)
+SIF ASSI:1 > 0
+	PRINTL 
+FOR LOCAL, 1, 3
+	IF ASSI:LOCAL > 0
+		;ｃ経験
+		IF TCVAR:(ASSI:LOCAL):助手ACT == 2 || TCVAR:(ASSI:LOCAL):助手ACT == 41 || TCVAR:(ASSI:LOCAL):助手ACT == 32
+			EXP:(ASSI:LOCAL):Ｃ経験 += 1
+			PRINTFORML （%CALLNAME:(ASSI:LOCAL)%）Ｃ経験+1
+		ENDIF
+		;ｖ経験
+		IF TCVAR:(ASSI:LOCAL):助手ACT == 6
+			EXP:(ASSI:LOCAL):Ｖ経験 += 1
+			PRINTFORML （%CALLNAME:(ASSI:LOCAL)%）Ｖ経験+1
+		ENDIF
+		;ｂ経験
+		IF TCVAR:(ASSI:LOCAL):助手ACT == 3
+			EXP:(ASSI:LOCAL):Ｂ経験 += 1
+			PRINTFORML （%CALLNAME:(ASSI:LOCAL)%）Ｂ経験+1
+		ENDIF
+		IF TCVAR:(ASSI:LOCAL):助手ACT == 6 || TCVAR:(ASSI:LOCAL):助手ACT == 32
+			EXP:(ASSI:LOCAL):性交経験 += 1
+			EXP:MASTER:性交経験 += 1
+			PRINTFORML （%CALLNAME:(ASSI:LOCAL)%・%CALLNAME:MASTER%）性交経験+1
+		ENDIF
+		IF TCVAR:(ASSI:LOCAL):助手ACT == 50
+			EXP:(ASSI:LOCAL):自慰経験 += 1
+			PRINTFORML （%CALLNAME:(ASSI:LOCAL)%）自慰経験+1
+		ENDIF
+		IF NOWEX:MASTER:射精 && NOWEX:MASTER:射精 != 1 && !(TEQUIP:性交奉仕中 || TFLAG:前回中出し == 2 || TFLAG:前回中出し == 4 || TFLAG:前回中出し == 6 || TFLAG:前回中出し == 8)
+			EXP:(ASSI:LOCAL):精液経験 += 1
+			PRINTFORML （%CALLNAME:(ASSI:LOCAL)%）精液経験+1
+		ENDIF
+		IF TCVAR:(ASSI:LOCAL):助手ACT== 1 || TCVAR:(ASSI:LOCAL):助手ACT == 3 || TCVAR:(ASSI:LOCAL):助手ACT == 11 || TCVAR:(ASSI:LOCAL):助手ACT == 21
+			EXP:(ASSI:LOCAL):口淫経験 += 1
+			PRINTFORML （%CALLNAME:(ASSI:LOCAL)%）口淫経験+1
+		ENDIF
+		IF TCVAR:(ASSI:LOCAL):助手ACT == 7 || TCVAR:(ASSI:LOCAL):助手ACT == 10 || TCVAR:(ASSI:LOCAL):助手ACT == 20 || TCVAR:(ASSI:LOCAL):助手ACT == 30
+			EXP:(ASSI:LOCAL):手淫経験 += 1
+			PRINTFORML （%CALLNAME:(ASSI:LOCAL)%）手淫経験+1
+		ENDIF
+		IF TCVAR:(ASSI:LOCAL):助手ACT == 5 || TCVAR:(ASSI:LOCAL):助手ACT == 12 || TCVAR:(ASSI:LOCAL):助手ACT == 13 || TCVAR:(ASSI:LOCAL):助手ACT == 22 || TCVAR:(ASSI:LOCAL):助手ACT == 31
+			EXP:(ASSI:LOCAL):道具使用経験 += 1
+			PRINTFORML （%CALLNAME:(ASSI:LOCAL)%）道具使用経験+1
+		ENDIF
+		IF TCVAR:(ASSI:LOCAL):助手ACT == 40 || TCVAR:(ASSI:LOCAL):助手ACT == 53
+			EXP:(ASSI:LOCAL):キス経験 += 1
+			EXP:キス経験 += 1
+			PRINTFORML （%CALLNAME:TARGET%・%CALLNAME:(ASSI:LOCAL)%）キス経験+1
+		ENDIF
+		SIF MASTER_EX(4 * LOCAL,10)
+			EXP:(ASSI:LOCAL):イかせ経験 += 1
+	ENDIF
+NEXT

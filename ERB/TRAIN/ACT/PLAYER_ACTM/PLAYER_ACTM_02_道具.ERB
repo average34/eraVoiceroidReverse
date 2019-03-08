@@ -1,0 +1,523 @@
+﻿;────────────────────────────────────
+;道具 (ﾛｰﾀｰ20/バイ21/Aﾊﾞｲ22/Aﾋﾞｰ23/Ｃ愛24/ﾆﾌﾟﾙ25/Ｐ帯26/浣腸68)
+;────────────────────────────────────
+@ACT_M2(ARG = 0)
+;1以上なら判定を行わない
+#DIM LCOUNT, 1
+
+;関数初期化
+CALL ACT_M_INIT(2)
+
+;処理開始
+
+LOCALS = ACT_ACTM2
+
+CALL CHA_CRI_VAR, "基準値"
+CALLFORM %LOCALS%_REFERENCE
+
+CALL CHA_CRI_VAR, @"本日の方針(%POLICY("今日")%)"
+CALLFORM %LOCALS%_POLYCY
+
+CALL CHA_CRI_VAR, @"ターン方針(%POLICY("今")%)"
+CALLFORM %LOCALS%_MENU
+
+CALL CHA_CRI_VAR, "調教者の素質"
+CALLFORM %LOCALS%_TALENT_T
+
+CALL CHA_CRI_VAR, "調教対象の素質"
+CALLFORM %LOCALS%_TALENT_M
+
+CALL CHA_CRI_VAR, "調教対象が処女"
+CALLFORM %LOCALS%_MAIDEN_M
+
+CALL CHA_CRI_VAR, "調教者の能力"
+CALLFORM %LOCALS%_ABL_T
+
+CALL CHA_CRI_VAR, "調教対象の能力"
+CALLFORM %LOCALS%_ABL_M
+
+CALL CHA_CRI_VAR, "調教対象の潤滑"
+CALLFORM %LOCALS%_MOIST_M
+
+CALL CHA_CRI_VAR, "調教者の罪悪感"
+CALLFORM %LOCALS%_SIN_T
+
+CALL CHA_CRI_VAR, "調教者のALI"
+CALLFORM %LOCALS%_ALI_T
+
+CALL CHA_CRI_VAR, "調教対象の体力"
+CALLFORM %LOCALS%_PHYSICAL_M
+
+CALL CHA_CRI_VAR, @"調教者の状態(%CONDITION(TCVAR:状態変化)%)"
+CALLFORM %LOCALS%_CONDITION_T
+
+CALL CHA_CRI_VAR, "調教対象自慰中"
+CALLFORM %LOCALS%_MASTURBATION_M
+
+CALL CHA_CRI_VAR, "調教者自慰中"
+CALLFORM %LOCALS%_MASTURBATION_T
+
+CALL CHA_CRI_VAR, "もっとハードにして"
+CALLFORM %LOCALS%_PLEASE_HARD
+
+CALL CHA_CRI_VAR, "許しを乞う"
+CALLFORM %LOCALS%_PLEASE_HELP
+
+CALL CHA_CRI_VAR, "連続行動補正"
+CALLFORM %LOCALS%_PREV
+
+CALL CHA_CRI_VAR, "調教対象の服装"
+CALLFORM %LOCALS%_CLOTH_M
+
+CALL CHA_CRI_VAR, "お仕置き"
+CALLFORM %LOCALS%_OSHIOKI
+
+CALL CHA_CRI_VAR, "口上補正値"
+CALL ACT_ACTM_KOJO_CORRECTION_T, 2
+
+CALL CHA_CRI_VAR, "ACT補正値"
+CALLFORM %LOCALS%_CORRECTION(ARG)
+
+
+;ARGが1以上なら処理中断
+SIF ARG
+	RETURN RESULT
+
+CALL CHA_CRI_VAR, "実行判定"
+CALLFORM %LOCALS%_ABLE
+
+;────────────────────────────────────
+;最終判定
+;────────────────────────────────────
+CALL DEF_CRI_VAR("最大前者")
+LOCAL = GET_CRI_VAR("決定")
+IF LOCAL == -1
+	SIF FLAG:デバッグ
+		PRINTL (道具ACT分類に実行可能なACTが存在しません)
+	TFLAG:ACT = -1
+	CALL ACT_MENU_RESULT(2, "道具")
+ELSE
+	TFLAG:ACT = GET_ACTNUM(RESULTS)
+ENDIF
+CALL ANA_CRI_VAR()
+
+;-------------------------------------------------------------------------
+;基準値
+;-------------------------------------------------------------------------
+@ACT_ACTM2_REFERENCE
+
+;要らないかもと思ったので試しに無効化@これみ
+[SKIPSTART]
+CALL ADD_CRI_VAR("ローター", 10)
+CALL ADD_CRI_VAR("バイブ", 12 - TEQUIP:バイブ * 3)
+CALL ADD_CRI_VAR("アナルバイブ", 10 - TEQUIP:アナルバイブ * 3)
+CALL ADD_CRI_VAR("アナルビーズ", 10 + TEQUIP:アナルビーズ * 2)
+CALL ADD_CRI_VAR("Ｃ愛撫道具", 15 - TEQUIP:クリキャップ * 5 - TEQUIP:オナホール * 5)
+CALL ADD_CRI_VAR("ニプルキャップ", 15 - TEQUIP:ニプルキャップ * 5)
+CALL ADD_CRI_VAR("浣腸セット", 4 + TEQUIP:浣腸器＋プラグ * 2)
+[SKIPEND]
+
+;-------------------------------------------------------------
+;本日の方針
+;本日の方針(0=いつもどおり/1=A開発/2=お仕置き/3=ハード/4=イチャイチャ/5=異常/6=野外/7=異常/8=休憩)
+;-------------------------------------------------------------
+@ACT_ACTM2_POLYCY
+
+;本日の方針がＡ開発
+IF TFLAG:今日の方針 == 1
+	CALL ADD_CRI_VAR("アナルバイブ", 10)
+	CALL ADD_CRI_VAR("アナルビーズ", 10)
+ENDIF
+
+;-------------------------------------------------------------------------
+;調教方針(1=休憩/2=ソフト/3=ノーマル/4=ハード/5=異常)
+;-------------------------------------------------------------------------
+@ACT_ACTM2_MENU
+SELECTCASE POLICY("今")
+	CASE "ハード"
+		CALL ADD_CRI_VAR("浣腸セット", 6)
+	CASE "異常"
+		CALL ADD_CRI_VAR("浣腸セット", 4)
+ENDSELECT
+
+;-------------------------------------------------------------------------
+;調教者の素質を参照
+;-------------------------------------------------------------------------
+@ACT_ACTM2_TALENT_T
+
+;調教者が臆病/気丈
+IF TALENT:臆病
+	CALL ADD_CRI_VAR("アナルバイブ", TEQUIP:アナルバイブ ? 0 # -3)
+	CALL ADD_CRI_VAR("アナルビーズ", TEQUIP:アナルビーズ ? 0 # -2)
+	CALL ADD_CRI_VAR("浣腸セット", -5)
+ELSEIF TALENT:気丈
+	CALL ADD_CRI_VAR("アナルバイブ", TEQUIP:アナルバイブ ? 0 # 3, TEQUIP:アナルバイブ ? 0 # 2)
+	CALL ADD_CRI_VAR("アナルビーズ", TEQUIP:アナルビーズ ? 0 # 2, TEQUIP:アナルバイブ ? 0 # 4)
+	CALL ADD_CRI_VAR("浣腸セット", , 6)
+ENDIF
+
+;調教者が抑圧/解放
+IF TALENT:抑圧
+	CALL ADD_CRI_VAR("バイブ", TEQUIP:バイブ ? 0 # -3)
+	CALL ADD_CRI_VAR("アナルバイブ", TEQUIP:アナルバイブ ? 0 # -5)
+	CALL ADD_CRI_VAR("アナルビーズ", TEQUIP:アナルビーズ ? 0 # -3)
+	CALL ADD_CRI_VAR("浣腸セット", TEQUIP:浣腸器＋プラグ ? 0 # -5)
+ELSEIF TALENT:解放
+	CALL ADD_CRI_VAR("バイブ", , TEQUIP:バイブ ? 0 # 4)
+	CALL ADD_CRI_VAR("アナルバイブ", , TEQUIP:アナルバイブ ? 0 # 7)
+	CALL ADD_CRI_VAR("アナルビーズ", , TEQUIP:アナルビーズ ? 0 # 4)
+	CALL ADD_CRI_VAR("浣腸セット", , TEQUIP:浣腸器＋プラグ ? 0 # 7)
+ENDIF
+
+;調教者が汚臭敏感
+SIF TALENT:汚臭敏感
+	CALL ADD_CRI_VAR("浣腸セット", -8)
+
+;調教者が心根優しい
+SIF TALENT:心根優しい
+	CALL ADD_CRI_VAR("浣腸セット", TEQUIP:浣腸器＋プラグ ? 0 # -5)
+
+;調教者が狂気
+SIF TALENT:狂気
+	CALL ADD_CRI_VAR("浣腸セット", , TEQUIP:浣腸器＋プラグ ? 0 # 8)
+
+;-------------------------------------------------------------------------
+;調教対象の素質を参照
+;-------------------------------------------------------------------------
+@ACT_ACTM2_TALENT_M
+
+;調教対象が淫核／淫茎
+IF TALENT:MASTER:淫核／淫茎
+	CALL ADD_CRI_VAR("ローター", 3, 3)
+	CALL ADD_CRI_VAR("Ｃ愛撫道具", (TEQUIP:クリキャップ || TEQUIP:オナホール) ? 0 # 4, (TEQUIP:クリキャップ || TEQUIP:オナホール) ? 0 # 5)
+ENDIF
+
+;調教対象が淫壷
+SIF TALENT:MASTER:淫壷
+	CALL ADD_CRI_VAR("バイブ", TEQUIP:バイブ ? 0 # 4, TEQUIP:バイブ ? 0 # 5)
+
+;調教対象が淫尻
+IF TALENT:MASTER:淫尻
+	CALL ADD_CRI_VAR("アナルバイブ", TEQUIP:アナルバイブ ? 0 # 3, TEQUIP:アナルバイブ ? 0 # 7)
+	CALL ADD_CRI_VAR("アナルビーズ", 2, 2)
+	CALL ADD_CRI_VAR("浣腸セット", , TEQUIP:浣腸器＋プラグ ? 0 # 14)
+ENDIF
+
+;調教対象が淫乳
+IF TALENT:MASTER:淫乳
+	CALL ADD_CRI_VAR("ニプルキャップ", TEQUIP:ニプルキャップ ? 0 # 4, TEQUIP:ニプルキャップ ? 0 # 5)
+ENDIF
+
+;調教対象がＣ敏感/鈍感
+IF TALENT:MASTER:Ｃ敏感
+	CALL ADD_CRI_VAR("ローター", 3, 2)
+	CALL ADD_CRI_VAR("Ｃ愛撫道具", (TEQUIP:クリキャップ || TEQUIP:オナホール) ? 0 # 1, (TEQUIP:クリキャップ || TEQUIP:オナホール) ? 0 # 6)
+ELSEIF TALENT:MASTER:Ｃ鈍感
+	CALL ADD_CRI_VAR("ローター", -3, -3)
+	CALL ADD_CRI_VAR("Ｃ愛撫道具", (TEQUIP:クリキャップ || TEQUIP:オナホール) ? 0 # -1, (TEQUIP:クリキャップ || TEQUIP:オナホール) ? 0 # 6)
+ENDIF
+
+;調教対象がＶ敏感/鈍感
+IF TALENT:MASTER:Ｖ敏感
+	CALL ADD_CRI_VAR("バイブ", TEQUIP:バイブ ? 0 # 4, TEQUIP:バイブ ? 0 # 2)
+	CALL ADD_CRI_VAR("ペニスバンド", TEQUIP:ペニスバンド ? 0 # 3, TEQUIP:ペニスバンド ? 0 # 1)
+ELSEIF TALENT:MASTER:Ｖ鈍感
+	CALL ADD_CRI_VAR("バイブ", TEQUIP:バイブ ? 0 # -4, TEQUIP:バイブ ? 0 # -2)
+	CALL ADD_CRI_VAR("ペニスバンド", TEQUIP:ペニスバンド ? 0 # -3, TEQUIP:ペニスバンド ? 0 # -1)
+ENDIF
+
+;調教者がＶ敏感/鈍感
+IF TALENT:TARGET:Ｖ敏感
+	CALL ADD_CRI_VAR("ペニスバンド", TEQUIP:ペニスバンド ? 0 # 3, TEQUIP:ペニスバンド ? 0 # 1)
+ELSEIF TALENT:TARGET:Ｖ鈍感
+	CALL ADD_CRI_VAR("ペニスバンド", TEQUIP:ペニスバンド ? 0 # -3, TEQUIP:ペニスバンド ? 0 # -1)
+ENDIF
+
+;調教対象がＡ敏感/鈍感
+IF TALENT:MASTER:Ａ敏感
+	CALL ADD_CRI_VAR("アナルバイブ", TEQUIP:アナルバイブ ? 0 # 3, TEQUIP:アナルバイブ ? 0 # 2)
+	CALL ADD_CRI_VAR("アナルビーズ", 2, 4)
+ELSEIF TALENT:MASTER:Ａ鈍感
+	CALL ADD_CRI_VAR("アナルバイブ", TEQUIP:アナルバイブ ? 0 # -3, TEQUIP:アナルバイブ ? 0 # -2)
+	CALL ADD_CRI_VAR("アナルビーズ", -2, -4)
+ENDIF
+
+;調教対象がＢ敏感/鈍感
+IF TALENT:MASTER:Ｂ敏感
+	CALL ADD_CRI_VAR("ニプルキャップ", TEQUIP:ニプルキャップ ? 0 # 3, TEQUIP:ニプルキャップ ? 0 # 3)
+ELSEIF TALENT:MASTER:Ｂ鈍感
+	CALL ADD_CRI_VAR("ニプルキャップ", TEQUIP:ニプルキャップ ? 0 # -3, TEQUIP:ニプルキャップ ? 0 # -3)
+ENDIF
+
+;調教対象がふたなり
+SIF TALENT:MASTER:ふたなり
+	CALL ADD_CRI_VAR("Ｃ愛撫道具", (TEQUIP:クリキャップ || TEQUIP:オナホール) ? 0 # TALENT:好奇心 * 3 - TALENT:無関心, (TEQUIP:クリキャップ || TEQUIP:オナホール) ? 0 # 2)
+
+;-----------------------------------------
+;調教対象が処女
+;-----------------------------------------
+@ACT_ACTM2_MAIDEN_M
+
+IF TALENT:MASTER:処女
+	CALL ADD_CRI_VAR("バイブ", CFLAG:合意 ? -5 # -10, CFLAG:合意 ? 5 # 0)
+	CALL ADD_CRI_VAR("ペニスバンド", CFLAG:合意 ? -5 # -10, CFLAG:合意 ? 5 # 0)
+ENDIF
+
+;-------------------------------------------------------------------------
+;調教者の能力を参照
+;-------------------------------------------------------------------------
+@ACT_ACTM2_ABL_T
+
+;調教者の加虐が[0→0, 5→5]を加算(0～5)
+CALL ADD_CRI_VAR("浣腸セット", LINE_CALC(ABL:加虐, "0→0,5→5,LIMIT/0～5"))
+
+;-------------------------------------------------------------------------
+;調教対象の能力を参照
+;-------------------------------------------------------------------------
+@ACT_ACTM2_ABL_M
+
+;調教対象のＣ感覚が[0→0～1, 4→0～9]を加算(0～9)
+CALL ADD_CRI_VAR("ローター", , LINE_CALC(ABL:MASTER:Ｃ感覚, "0→1,4→9,LIMIT/0～9"))
+;調教対象のＣ感覚が[0→1, 5→6]を加算(1～6)(クリキャップ、オナホールともに非着用時)
+SIF !TEQUIP:クリキャップ && !TEQUIP:オナホール
+	CALL ADD_CRI_VAR("Ｃ愛撫道具", LINE_CALC(ABL:MASTER:Ｃ感覚, "0→1,5→6,LIMIT/1～6"))
+
+;調教対象のＶ感覚が[0→0, 1→1～2, 5→3～8]を加算(0～8)(バイブ非着用時)
+IF !TEQUIP:バイブ
+	CALL ADD_CRI_VAR("バイブ", LINE_CALC(ABL:MASTER:Ｖ感覚, "1→1,5→3,LIMIT/0～3"), LINE_CALC(ABL:MASTER:Ｖ感覚, "0→0,5→5,LIMIT/0～5"))
+	CALL ADD_CRI_VAR("ペニスバンド", LINE_CALC(ABL:MASTER:Ｖ感覚, "1→1,5→3,LIMIT/0～3"), LINE_CALC(ABL:MASTER:Ｖ感覚, "0→0,5→5,LIMIT/0～5"))
+ENDIF
+
+;調教対象のＡ感覚が[0→0, 1→1～2, 5→3～8]を加算(0～8)
+CALL ADD_CRI_VAR("アナルビーズ", LINE_CALC(ABL:MASTER:Ａ感覚, "1→1,5→3,LIMIT/0～3"), LINE_CALC(ABL:MASTER:Ａ感覚, "0→0,5→5,LIMIT/0～5"))
+;調教対象のＡ感覚が[0→0, 1→1～2, 5→3～8]を加算(0～8)(Aバイブ非着用時)
+SIF !TEQUIP:アナルバイブ
+	CALL ADD_CRI_VAR("アナルバイブ", LINE_CALC(ABL:MASTER:Ａ感覚, "1→1,5→3,LIMIT/0～3"), LINE_CALC(ABL:MASTER:Ａ感覚, "0→0,5→5,LIMIT/0～5"))
+
+;調教対象のＢ感覚が[0→0, 1→1～2, 5→3～8]を加算(0～8)(Bキャップ非着用時)
+SIF !TEQUIP:ニプルキャップ
+	CALL ADD_CRI_VAR("ニプルキャップ", LINE_CALC(ABL:MASTER:Ｂ感覚, "1→1,5→3,LIMIT/0～3"), LINE_CALC(ABL:MASTER:Ｂ感覚, "0→0,5→5,LIMIT/0～5"))
+
+;-------------------------------------------------------------------------
+;PALAM群
+;ここは個別に
+;-------------------------------------------------------------------------
+;------------------------------------------
+;潤滑
+;------------------------------------------
+@ACT_ACTM2_MOIST_M
+
+;調教者に調合知識が無い場合、潤滑のチェック
+IF !TALENT:調合知識
+	;調教対象の潤滑が[0→-5, 100→-3, 250→-1, 500→0]を加算(-5～0)
+	CALL ADD_CRI_VAR("バイブ", LINE_CALC(PALAM:MASTER:潤滑, "0→-5,100→-3,250→-1,5→0,LIMIT/-5～0"))
+	CALL ADD_CRI_VAR("ペニスバンド", LINE_CALC(PALAM:MASTER:潤滑, "0→-5,100→-3,250→-1,5→0,LIMIT/-5～0"))
+	CALL ADD_CRI_VAR("アナルバイブ", LINE_CALC(PALAM:MASTER:潤滑, "0→-5,100→-3,250→-1,5→0,LIMIT/-5～0"))
+	;調教対象の潤滑が[0→-5, 100→-1, 250→0]を加算(-5～0)
+	CALL ADD_CRI_VAR("アナルビーズ", LINE_CALC(PALAM:MASTER:潤滑, "0→-5,100→-1,250→0,LIMIT/-5～0"))
+ENDIF
+
+;-------------------------------------
+;調教者の罪悪感
+;-------------------------------------
+@ACT_ACTM2_SIN_T
+
+;罪悪感が[80→0, 100→-1]を加算(-1～0)
+CALL ADD_CRI_VAR("アナルビーズ", LINE_CALC(CFLAG:罪悪感, "80→0,100→-1,LIMIT/-1～0"))
+;罪悪感が[60→0, 80→-1, 100→-2]を加算(-2～0)
+CALL ADD_CRI_VAR("アナルバイブ", LINE_CALC(CFLAG:罪悪感, "60→0,100→-2,LIMIT/-2～0"))
+;罪悪感が[0→0, 20→-1, 100→-5]を加算(-5～0)
+CALL ADD_CRI_VAR("浣腸セット", LINE_CALC(CFLAG:罪悪感, "0→0,100→-5,LIMIT/-5～0"))
+
+;-------------------------------------
+;調教者のALI
+;-------------------------------------
+@ACT_ACTM2_ALI_T
+
+;アライメントが[-50→-3, 50→3]を加算(-3～3)
+CALL ADD_CRI_VAR("ローター", LINE_CALC(CFLAG:アライメント, "-50→-3,50→3,LIMIT/-3～3"))
+;アライメントが[-50→3, 50→-3]を加算(-3～3)
+CALL ADD_CRI_VAR("浣腸セット", LINE_CALC(CFLAG:アライメント, "-50→3,50→-3,LIMIT/-3～3"))
+
+;────────────────────────────────────
+;ゲージや状態による変動
+;────────────────────────────────────
+;-------------------------------------
+;調教対象の体力
+;-------------------------------------
+@ACT_ACTM2_PHYSICAL_M
+
+;調教対象の体力が[0→-3, 50→-1, 250→0]を加算(-3～0)
+CALL ADD_CRI_VAR("ローター", LINE_CALC(BASE:MASTER:体力, "0→3,50→1,250→0,LIMIT/0～3"))
+;※持続して責める道具を止める
+;調教対象の体力が[0→+-5, 50→+-3, 250→+-1, 500→0]を加算(-5～5)
+LOCAL = TEQUIP:バイブ ? 1 # -1
+CALL ADD_CRI_VAR("バイブ", LOCAL * LINE_CALC(BASE:MASTER:体力, "0→5,50→3,250→1,500→0,LIMIT/0～5"))
+LOCAL = TEQUIP:ペニスバンド ? 1 # -1
+CALL ADD_CRI_VAR("ペニスバンド", LOCAL * LINE_CALC(BASE:MASTER:体力, "0→5,50→3,250→1,500→0,LIMIT/0～5"))
+LOCAL = TEQUIP:アナルバイブ ? 1 # -1
+CALL ADD_CRI_VAR("アナルバイブ", LOCAL * LINE_CALC(BASE:MASTER:体力, "0→5,50→3,250→1,500→0,LIMIT/0～5"))
+;調教対象の体力が[0→-4/8, 50→-2/4, 250→0]を加算(-4～8)
+LOCAL = TEQUIP:アナルビーズ ? 2 # -1
+CALL ADD_CRI_VAR("アナルビーズ", LOCAL * LINE_CALC(BASE:MASTER:体力, "0→4,50→2,250→0,LIMIT/0～4"))
+;調教対象の体力が[0→+-3, 50→+-1, 250→0]を加算(-3～3)
+LOCAL = TEQUIP:クリキャップ ? 1 # -1
+CALL ADD_CRI_VAR("Ｃ愛撫道具", LOCAL * LINE_CALC(BASE:MASTER:体力, "0→3,50→1,250→0,LIMIT/0～3"))
+LOCAL = TEQUIP:ニプルキャップ ? 1 # -1
+CALL ADD_CRI_VAR("ニプルキャップ", LOCAL * LINE_CALC(BASE:MASTER:体力, "0→3,50→1,250→0,LIMIT/0～3"))
+;調教対象の体力が[0→-7/14, 50→-5/10, 250→-2/4]を加算(-7～14)
+LOCAL = TEQUIP:浣腸器＋プラグ ? 2 # -1
+CALL ADD_CRI_VAR("浣腸セット", LOCAL * LINE_CALC(BASE:MASTER:体力, "0→7,50→5,250→2,500→0,LIMIT/0～7"))
+
+;-------------------------------------
+;調教者の状態(0=通常/1=疲弊/2=衰弱/3=無気力/4=朦朧/5=情欲/6=怒り/7=退屈/8=鬱屈)
+;-------------------------------------
+@ACT_ACTM2_CONDITION_T
+SELECTCASE GET_CONDITION(TARGET)
+	CASE "情欲"
+		CALL ADD_CRI_VAR("ペニスバンド", TEQUIP:ペニスバンド ? 0 # 8)
+	CASE "退屈"
+		CALL ADD_CRI_VAR("バイブ", TEQUIP:バイブ ? 5 # 0)
+		CALL ADD_CRI_VAR("ペニスバンド", TEQUIP:ペニスバンド ? 5 # 0)
+		CALL ADD_CRI_VAR("アナルバイブ", TEQUIP:アナルバイブ ? 5 # 0)
+		CALL ADD_CRI_VAR("アナルビーズ", TEQUIP:アナルビーズ ? 5 # 0, TEQUIP:アナルビーズ ? 4 # 0)
+		CALL ADD_CRI_VAR("Ｃ愛撫道具", (TEQUIP:クリキャップ || TEQUIP:オナホール) ? 5 # 0)
+		CALL ADD_CRI_VAR("ニプルキャップ", TEQUIP:ニプルキャップ ? 5 # 0)
+		CALL ADD_CRI_VAR("浣腸セット", TEQUIP:浣腸器＋プラグ ? 5 # 0, TEQUIP:浣腸器＋プラグ ? 4 # 0)
+	CASE "鬱屈"
+		CALL ADD_CRI_VAR("浣腸セット", , 10)
+ENDSELECT
+
+;────────────────────────────────────
+;前回の行動や状況による変動
+;────────────────────────────────────
+;-------------------------------------
+;調教対象が自慰中
+;-------------------------------------
+@ACT_ACTM2_MASTURBATION_M
+
+IF GETBIT(TEQUIP:自慰中, 0)
+	CALL ADD_CRI_VAR("バイブ", TEQUIP:バイブ ? 0 # 3, TEQUIP:バイブ ? 0 # 6)
+	CALL ADD_CRI_VAR("ペニスバンド", TEQUIP:ペニスバンド ? 0 # 3, TEQUIP:ペニスバンド ? 0 # 6)
+	CALL ADD_CRI_VAR("アナルバイブ", TEQUIP:アナルバイブ ? 0 # 1, TEQUIP:アナルバイブ ? 0 # 8)
+	CALL ADD_CRI_VAR("Ｃ愛撫道具", (TEQUIP:クリキャップ || TEQUIP:オナホール) ? 0 # 4, (TEQUIP:クリキャップ || TEQUIP:オナホール) ? 0 # 5)
+	CALL ADD_CRI_VAR("ニプルキャップ", TEQUIP:ニプルキャップ ? 0 # 4, TEQUIP:ニプルキャップ ? 0 # 5)
+ENDIF
+
+;-------------------------------------
+;調教者自慰中
+;-------------------------------------
+@ACT_ACTM2_MASTURBATION_T
+IF GETBIT(TEQUIP:自慰中, 1)
+	CALL ADD_CRI_VAR("浣腸セット", -3)
+ENDIF
+
+;-------------------------------------
+;もっとハードにして
+;-------------------------------------
+@ACT_ACTM2_PLEASE_HARD
+IF IS_NOWCOMNAME("もっとハードにして")
+	CALL ADD_CRI_VAR("浣腸セット", TEQUIP:浣腸器＋プラグ ? 0 # 2, TEQUIP:浣腸器＋プラグ ? 0 # 2)
+ENDIF
+
+
+;-------------------------------------
+;許しを乞ったかつ、調教者の状態が鬱屈以外
+;-------------------------------------
+@ACT_ACTM2_PLEASE_HELP
+IF IS_NOWCOMNAME("許しを乞う") && TCVAR:状態変化 < 8
+	CALL ADD_CRI_VAR("バイブ", TEQUIP:バイブ ? 3 # 0)
+	CALL ADD_CRI_VAR("ペニスバンド", TEQUIP:ペニスバンド ? 3 # 0)
+	CALL ADD_CRI_VAR("アナルバイブ", TEQUIP:アナルバイブ ? 3 # 0)
+	CALL ADD_CRI_VAR("アナルビーズ", TEQUIP:アナルビーズ ? 5 # 0)
+	CALL ADD_CRI_VAR("Ｃ愛撫道具", (TEQUIP:クリキャップ || TEQUIP:オナホール) ? 2 # 0)
+	CALL ADD_CRI_VAR("ニプルキャップ", TEQUIP:ニプルキャップ ? 2 # 0)
+	CALL ADD_CRI_VAR("浣腸セット", TEQUIP:浣腸器＋プラグ > 1 ? 5 # 0)
+ENDIF
+
+;────────────────────────────────────
+;同じ行動連続実行の確率をダウンします
+;────────────────────────────────────
+@ACT_ACTM2_PREV
+
+SELECTCASE TFLAG:前ACT
+	CASE 20 TO 26, 68
+		CALL ADD_CRI_VAR(GET_ACTNAME(TFLAG:前ACT), -3 * TFLAG:同一行動ボーナス, -4 * TFLAG:同一行動ボーナス)
+ENDSELECT
+
+;────────────────────────────────────
+;TEQUIP処理
+;────────────────────────────────────
+;道具は壁抜けで透過できないことにする。
+;--------------------------------------
+;調教対象の服装
+;-------------------------------------
+@ACT_ACTM2_CLOTH_M
+
+;調教対象の下半身上着に妨害されるとき
+IF CLOTHESTYPE(1, 1) == 2
+	CALL ADD_CRI_VAR("ローター", -3)
+	CALL ADD_CRI_VAR("Ｃ愛撫道具", -5)
+;調教対象の下半身上着があるとき
+ELSEIF CLOTHESTYPE(1, 1)
+	CALL ADD_CRI_VAR("ローター", -1)
+	CALL ADD_CRI_VAR("バイブ", -3)
+	CALL ADD_CRI_VAR("ペニスバンド", -3)
+	CALL ADD_CRI_VAR("アナルバイブ", -3)
+	CALL ADD_CRI_VAR("アナルビーズ", -2)
+	CALL ADD_CRI_VAR("Ｃ愛撫道具", -1)
+	CALL ADD_CRI_VAR("浣腸セット", -2)
+ENDIF
+
+;調教対象の上半身上着があるとき
+SIF CLOTHESTYPE(1, 3)
+	CALL ADD_CRI_VAR("ニプルキャップ", -3)
+
+;調教対象の下半身下着があるとき
+IF CLOTHESTYPE(1, 0)
+	CALL ADD_CRI_VAR("ローター", -1)
+	CALL ADD_CRI_VAR("バイブ", -3)
+	CALL ADD_CRI_VAR("ペニスバンド", -3)
+	CALL ADD_CRI_VAR("アナルバイブ", -3)
+	CALL ADD_CRI_VAR("アナルビーズ", -2)
+	CALL ADD_CRI_VAR("Ｃ愛撫道具", -1)
+ENDIF
+
+;調教対象の上半身下着があるとき
+SIF CLOTHESTYPE(1, 2)
+	CALL ADD_CRI_VAR("ニプルキャップ", -3)
+
+;-------------------------------------
+;お仕置き中
+;-------------------------------------
+@ACT_ACTM2_OSHIOKI
+
+SIF TFLAG:お仕置きフラグ
+	CALL ADD_CRI_VAR("浣腸セット", 3, 3)
+
+;────────────────────────────────────
+;補正値計算
+;────────────────────────────────────
+@ACT_ACTM2_CORRECTION(ARG)
+#DIM LCOUNT
+
+;ARGが0以外なら補正値を計算し、以後の処理を行わない
+IF ARG
+	;68に関してはここで計算しない
+	FOR LCOUNT, 20, 30
+		CALL ACT_M_RES_CALC(LCOUNT, GET_CRI_VAR(GET_ACTNAME(LCOUNT) + "累計"))
+	NEXT
+ELSE
+	;補正値を判定値に加算する
+	CALL ACT_ACTM_CORRECTION(2)
+ENDIF
+
+;────────────────────────────────────
+;その他変動や実行不可能の判定
+;────────────────────────────────────
+@ACT_ACTM2_ABLE
+#DIM LCOUNT
+
+;不可能判定
+CALL ACT_ACTM_ABLE(2)
+

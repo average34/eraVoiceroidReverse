@@ -1,0 +1,134 @@
+﻿;────────────────────────────────────
+;コマンド選択後のTFLAGリセット
+;────────────────────────────────────
+@EVENTCOM
+#PRI
+;強制終了させる際にSHOW_USERCOM内でBEGINできないのでここに持ってきて終わらせる
+SIF SELECTCOM == 999
+	BEGIN AFTERTRAIN
+DRAWLINE
+;TFLAG:0-39初期化
+FOR LOCAL, 0, 40
+	TFLAG:LOCAL = 0
+NEXT
+
+
+;────────────────────────────────────
+;調教終了時の回復
+;────────────────────────────────────
+@BASE_RECOVERY
+#DIM 残存体力
+;CHARA全員を順番に回復
+FOR LOCAL, 0, CHARANUM
+	;残存体力を記憶
+	残存体力 = BASE:LOCAL:体力
+	
+	;体力回復
+	BASE:LOCAL:体力 += (400 + TIME * 100 + MAXBASE:LOCAL:体力 / 5) * (4 + TIME + TALENT:LOCAL:回復早い - TALENT:LOCAL:回復遅い + TALENT:LOCAL:不死 * 2) * 3 / (10 + CFLAG:LOCAL:消耗)
+	;体力が上限を突破しないよう調整
+	SIF BASE:LOCAL:体力 > MAXBASE:LOCAL:体力
+		BASE:LOCAL:体力 = MAXBASE:LOCAL:体力
+	
+	;精液ゲージ回復
+	SIF MAXBASE:LOCAL:射精 > 0
+		BASE:LOCAL:射精 += MAXBASE:LOCAL:射精 * (50 + TIME * 20 + TALENT:LOCAL:精力絶倫 * 10 - TALENT:LOCAL:精力薄弱 * 10) / (100 + CFLAG:LOCAL:消耗 * 10)
+	;精液ゲージが上限を突破しないよう調整
+	SIF BASE:LOCAL:射精 > MAXBASE:LOCAL:射精
+		BASE:LOCAL:射精 = MAXBASE:LOCAL:射精
+	
+	;噴乳ゲージ回復
+	SIF MAXBASE:LOCAL:母乳 > 0
+		BASE:LOCAL:母乳 += (1200 + TIME * 400 + CFLAG:LOCAL:調教レベル * 80) * (3 + TIME + TALENT:LOCAL:回復早い - TALENT:LOCAL:回復遅い) * (3 + ABL:LOCAL:従順) / (7 + CFLAG:LOCAL:消耗)
+	;噴乳ゲージが上限を突破しないよう調整
+	SIF BASE:LOCAL:母乳 > MAXBASE:LOCAL:母乳
+		BASE:LOCAL:母乳 = MAXBASE:LOCAL:母乳
+	
+	;理性回復(上限まで)
+	BASE:LOCAL:理性 = MAXBASE:LOCAL:理性
+	
+	;興味の回復(上限まで)、苛立ち/満足のリセット
+	BASE:LOCAL:興味 = MAXBASE:LOCAL:興味
+	BASE:LOCAL:苛立ち = 0
+	BASE:LOCAL:満足 = 0
+	
+	;罪悪感軽減
+	IF CFLAG:LOCAL:罪悪感 > 0
+		;固定値軽減
+		CFLAG:LOCAL:罪悪感 -= 3
+		;アライメントによって割合で軽減
+		CFLAG:LOCAL:罪悪感 = CFLAG:LOCAL:罪悪感 * (200 + CFLAG:LOCAL:アライメント) / 500
+		;アライメントによって減算
+		CFLAG:LOCAL:罪悪感 += LIMIT(CFLAG:LOCAL:アライメント / 9 - 9, -14, 0)
+		;アライメントが-75未満なら消滅
+		SIF CFLAG:LOCAL:アライメント < -75
+			CFLAG:LOCAL:罪悪感 = 0
+		;罪悪感は0未満にならない
+		SIF CFLAG:LOCAL:罪悪感 < 0
+			CFLAG:LOCAL:罪悪感 = 0
+	ENDIF
+	
+	;気力回復
+	BASE:LOCAL:気力 += (240 + TIME * 60 + 残存体力 + MAXBASE:LOCAL:気力 / 5) * (4 + TIME * 2 + TALENT:LOCAL:回復早い - TALENT:LOCAL:回復遅い + TALENT:LOCAL:不死) * (3 + TALENT:LOCAL:精力絶倫 - TALENT:LOCAL:精力薄弱) / (10 + CFLAG:LOCAL:消耗)
+	;気力が上限を突破しないよう調整
+	SIF BASE:LOCAL:気力 > MAXBASE:LOCAL:気力
+		BASE:LOCAL:気力 = MAXBASE:LOCAL:気力
+	
+	;疲弊フラグの軽減
+	;疲弊が20超過であれば固定値軽減
+	SIF CFLAG:LOCAL:消耗 > 20
+		CFLAG:LOCAL:消耗 -= 5
+	;時間経過によって軽減
+	CFLAG:LOCAL:消耗 -= 1 + CFLAG:LOCAL:消耗 / 3 + TIME
+	;体力が全快に近ければさらに軽減
+	SIF BASE:LOCAL:体力 > MAXBASE:LOCAL:体力 * 4 / 5
+		CFLAG:LOCAL:消耗 -= 1
+	;気力が全快に近ければさらに軽減
+	SIF BASE:LOCAL:気力 > MAXBASE:LOCAL:気力 * 4 / 5
+		CFLAG:LOCAL:消耗 -= 1
+	;疲弊フラグは0未満にならない
+	SIF CFLAG:LOCAL:消耗 < 0
+		CFLAG:LOCAL:消耗 = 0
+NEXT
+;調教者が治療素質を持っている場合
+IF TARGET > -1 && TALENT:治療
+	;調教対象体力、気力を割合回復
+	TIMES BASE:MASTER:体力, 1.2
+	TIMES BASE:MASTER:気力, 1.2
+	;体力、気力が上限を突破しないよう調整
+	SIF BASE:MASTER:体力 > MAXBASE:MASTER:体力
+		BASE:MASTER:体力 = MAXBASE:MASTER:体力
+	SIF BASE:MASTER:気力 > MAXBASE:MASTER:気力
+		BASE:MASTER:気力 = MAXBASE:MASTER:気力
+ENDIF
+
+;日時の更新
+;午前なら午後に、午後なら次の日にする
+;日時更新処理が２箇所あったのが気になったので関数にまとめた
+;それにしても酷い関数名だぜ…英語とかわかんないよね
+@NEXTTIME
+IF TIME++
+	;総日数/日/年/季節/昼夜の更新
+	DAY++
+	FLAG:日数 = DAY % 120
+	FLAG:年数 = DAY / 120
+	FLAG:季節 = FLAG:年数 / 30
+	TIME = 0
+	PRINTW 一日が終わった・・・
+
+	;30日目以降ならエンディング条件を参照する(シナリオモードができたらシナリオ時に変更するかも)
+	IF DAY >= 30 && !FLAG:END達成
+		CALL ENDING
+		SIF RESULT > 0
+			FLAG:END達成 = 1
+	ENDIF
+	
+ELSE
+	PRINTW 夜が更ける・・・
+ENDIF
+CALL DAY_EFFECT
+
+;────────────────────────────────────
+;NEWDAYを呼び出し
+;────────────────────────────────────
+@EVENTSHOP
+#PRI

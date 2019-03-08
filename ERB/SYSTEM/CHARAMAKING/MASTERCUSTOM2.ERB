@@ -1,0 +1,560 @@
+﻿;こういう画面なら設定しやすいんじゃね？という電波を受信したので、やってみた結果がこれだよ！！！
+;画面の情報量が思っていた以上に多過ぎてパッと見、訳が判らん。こりゃ失敗ですな。
+;改良の余地は…あるのだろうか？
+@MASTER_CUSTOM2
+;-----------------------------------------------------------
+;表示部分
+;-----------------------------------------------------------
+PRINTFORML %CALLNAME:MASTER%のステータスを設定出来ます。
+PRINTL 変更したい項目を選んでください。
+PRINTW (極端な設定により難易度が大きく変わる場合もありますのでご注意ください)
+
+WHILE 1
+	DRAWLINE
+	LOCAL:1 = 0
+	LOCAL:2 = GETCOLOR()
+	PRINT 名前： 
+	PRINTBUTTON @"[{LOCAL:1,2}] %CALLNAME:MASTER%", LOCAL:1++
+	PRINTL 
+	PRINTL □ 素質 □-----------------------------------------------------------------------
+	PRINT 性別： 
+	SETCOLOR !TALENT:MASTER:ふたなり && !TALENT:MASTER:オトコ ? 0x00FF00 # 0xA0A0A0
+	PRINTBUTTON @"[{LOCAL:1,2}] 女の子      　", LOCAL:1++
+	SETCOLOR TALENT:MASTER:ふたなり ? 0x00FF00 # 0xA0A0A0
+	PRINTFORM [{LOCAL:1++,2}] %TALENTNAME:121,12,LEFT%　
+	SETCOLOR TALENT:MASTER:オトコ ? 0x00FF00 # 0xA0A0A0
+	PRINTFORML [{LOCAL:1++,2}] %TALENTNAME:122,12,LEFT%
+	SETCOLOR LOCAL:2
+
+	LOCAL:3 = 4
+	PRINT 性格： 
+	FOR LOCAL, 10, 94
+		IF LOCAL == 10
+			;最初はPRINTBUTTONを使わないと、『性格：』とくっつく
+			LOCAL:3--
+			SETCOLOR TALENT:MASTER:LOCAL ? 0x00FF00 # 0xA0A0A0
+			PRINTBUTTON @"[{LOCAL:1,2}] %TALENTNAME:LOCAL,12,LEFT%", LOCAL:1++
+			CONTINUE
+		ELSEIF LOCAL:3
+			;空白
+			PRINT 　
+		ELSE
+			;改行
+			PRINTL 
+			PRINT 　　　 
+			LOCAL:3 = 4
+		ENDIF
+		LOCAL:3--
+		SETCOLOR TALENT:MASTER:LOCAL ? 0x00FF00 # 0xA0A0A0
+		PRINTFORM [{LOCAL:1++,2}] %TALENTNAME:LOCAL,12,LEFT%
+		;性格に分類されない素質を飛ばす
+		SELECTCASE LOCAL
+			CASE 17
+				LOCAL += 2
+			CASE 37
+				LOCAL += 25
+			CASE 63, 88, 90
+				LOCAL += 1
+			CASE 65
+				LOCAL += 14
+		ENDSELECT
+	NEXT
+	PRINTL 
+	SETCOLOR LOCAL:2
+
+	LOCAL:3 = 4
+	LOCAL:4 = GETSTYLE()
+	PRINT 体質： 
+	FOR LOCAL, 40, 127
+		IF LOCAL == 40
+			LOCAL:3--
+			SETCOLOR TALENT:MASTER:LOCAL ? 0x00FF00 # 0xA0A0A0
+			PRINTBUTTON @"[{LOCAL:1,2}] %TALENTNAME:LOCAL,12,LEFT%", LOCAL:1++
+			CONTINUE
+		ELSEIF LOCAL:3
+			PRINT 　
+		ELSE
+			PRINTL 
+			PRINT 　　　 
+			LOCAL:3 = 4
+		ENDIF
+		LOCAL:3--
+		;女の子/オトコで選択できない素質に取り消し線を入れてみる
+		SELECTCASE LOCAL
+			CASE 102, 103, 108, 109
+				SIF TALENT:MASTER:オトコ
+					FONTSTYLE 4
+			CASE 123, 124
+				SIF !TALENT:MASTER:ふたなり && !TALENT:MASTER:オトコ
+					FONTSTYLE 4
+		ENDSELECT
+		SETCOLOR TALENT:MASTER:LOCAL ? 0x00FF00 # 0xA0A0A0
+		PRINTFORM [{LOCAL:1++,2}] %TALENTNAME:LOCAL,12,LEFT%
+		FONTSTYLE LOCAL:4
+		SELECTCASE LOCAL
+			CASE 43
+				LOCAL += 16
+			CASE 62
+				LOCAL += 7
+			CASE 71
+				LOCAL += 28
+			CASE 113
+				LOCAL += 2
+			CASE 116
+				LOCAL += 6
+		ENDSELECT
+	NEXT
+	PRINTL 
+	SETCOLOR LOCAL:2
+
+	PRINT 技能： 
+	SETCOLOR TALENT:MASTER:習得早い ? 0x00FF00 # 0xA0A0A0
+	PRINTBUTTON @"[{LOCAL:1,2}] %TALENTNAME:50,12,LEFT%　", LOCAL:1++
+	SETCOLOR TALENT:MASTER:習得遅い ? 0x00FF00 # 0xA0A0A0
+	PRINTFORML [{LOCAL:1++,2}] %TALENTNAME:51,12,LEFT%
+	SETCOLOR LOCAL:2
+
+	PRINTL □ 経験 □-----------------------------------------------------------------------
+	LOCAL:1 = 100
+	PRINT 性経験： 
+	SETCOLOR !EXP:MASTER:性交経験 ? 0x00FF00 # 0xA0A0A0
+	PRINTBUTTON @"[{LOCAL:1,3}] なし　　", LOCAL:1++
+	SETCOLOR EXP:MASTER:性交経験 == 1 ? 0x00FF00 # 0xA0A0A0
+	PRINTFORM [{LOCAL:1++,3}] 少し　　
+	SETCOLOR EXP:MASTER:性交経験 > 1 ? 0x00FF00 # 0xA0A0A0
+	PRINTFORML [{LOCAL:1++,3}] 多め
+	SETCOLOR LOCAL:2
+
+	PRINT 性知識： 
+	SETCOLOR !MASTER_CUSTOMV(-1) ? 0x00FF00 # 0xA0A0A0
+	PRINTBUTTON @"[{LOCAL:1,3}] 皆無　　", LOCAL:1++
+	SETCOLOR MASTER_CUSTOMV(-1) == 1 ? 0x00FF00 # 0xA0A0A0
+	PRINTFORM [{LOCAL:1++,3}] 少し　　
+	SETCOLOR MASTER_CUSTOMV(-1) > 1 ? 0x00FF00 # 0xA0A0A0
+	PRINTFORML [{LOCAL:1++,3}] 豊富
+	SETCOLOR LOCAL:2
+
+	DRAWLINE
+	ALIGNMENT RIGHT
+	PRINT [997] - 設定モード変更　　
+	PRINT [998] - リセット　　
+	PRINTL  [999] - 設定完了　
+	ALIGNMENT LEFT
+
+;-----------------------------------------------------------
+;入力処理部分
+;-----------------------------------------------------------
+	$INPUT_LOOP
+	INPUT
+	SELECTCASE RESULT
+		;名前の変更
+		CASE 0
+			PRINTL 名前を入力してください。
+			INPUTS
+			CALLNAME:MASTER = %RESULTS%
+;-----------------------------------------------------------
+		;女の子→ふたなり/オトコ/早漏/遅漏をOFF
+		CASE 1
+			TALENT:MASTER:ふたなり = 0
+			TALENT:MASTER:オトコ = 0
+			TALENT:MASTER:早漏 = 0
+			TALENT:MASTER:遅漏 = 0
+		;ふたなり→ふたなりをON。オトコをOFF
+		CASE 2
+			TALENT:MASTER:ふたなり = 1
+			TALENT:MASTER:オトコ = 0
+		;オトコ→オトコをON。Ｖ敏感/Ｖ鈍感/貧乳/巨乳/ふたなりをOFF
+		CASE 3
+			TALENT:MASTER:Ｖ敏感 = 0
+			TALENT:MASTER:Ｖ鈍感 = 0
+			TALENT:MASTER:貧乳 = 0
+			TALENT:MASTER:巨乳 = 0
+			TALENT:MASTER:ふたなり = 0
+			TALENT:MASTER:オトコ = 1
+;-----------------------------------------------------------
+		;臆病→臆病を反転。気丈をOFF
+		CASE 4
+			TALENT:MASTER:臆病 = !TALENT:MASTER:臆病
+			TALENT:MASTER:気丈 = 0
+		;反抗的→反抗的を反転。素直をOFF
+		CASE 5
+			TALENT:MASTER:反抗的 = !TALENT:MASTER:反抗的
+			TALENT:MASTER:素直 = 0
+		;気丈→気丈を反転。臆病をOFF
+		CASE 6
+			TALENT:MASTER:臆病 = 0
+			TALENT:MASTER:気丈 = !TALENT:MASTER:気丈
+		;素直→素直を反転。反抗的をOFF
+		CASE 7
+			TALENT:MASTER:反抗的 = 0
+			TALENT:MASTER:素直 = !TALENT:MASTER:素直
+		;大人しい→大人しいを反転。生意気をOFF
+		CASE 8
+			TALENT:MASTER:大人しい = !TALENT:MASTER:大人しい
+			TALENT:MASTER:生意気 = 0
+		;プライド高い→プライド高いを反転。プライド低いをOFF
+		CASE 9
+			TALENT:MASTER:プライド高い = !TALENT:MASTER:プライド高い
+			TALENT:MASTER:プライド低い = 0
+		;生意気→生意気を反転。素直をOFF
+		CASE 10
+			TALENT:MASTER:大人しい = 0
+			TALENT:MASTER:生意気 = !TALENT:MASTER:生意気
+		;プライド低い→プライド低いを反転。プライド高いをOFF
+		CASE 11
+			TALENT:MASTER:プライド高い = 0
+			TALENT:MASTER:プライド低い = !TALENT:MASTER:プライド低い
+		;自制的→自制的を反転。衝動的をOFF
+		CASE 12
+			TALENT:MASTER:自制的 = !TALENT:MASTER:自制的
+			TALENT:MASTER:衝動的 = 0
+		;衝動的→衝動的を反転。自制的をOFF
+		CASE 13
+			TALENT:MASTER:自制的 = 0
+			TALENT:MASTER:衝動的 = !TALENT:MASTER:衝動的
+		;無関心→無関心を反転。好奇心をOFF
+		CASE 14
+			TALENT:MASTER:無関心 = !TALENT:MASTER:無関心
+			TALENT:MASTER:好奇心 = 0
+		;好奇心→好奇心を反転。無関心をOFF
+		CASE 15
+			TALENT:MASTER:無関心 = 0
+			TALENT:MASTER:好奇心 = !TALENT:MASTER:好奇心
+		;感情乏しい→感情乏しいを反転。情緒豊かをOFF
+		CASE 16
+			TALENT:MASTER:感情乏しい = !TALENT:MASTER:感情乏しい
+			TALENT:MASTER:情緒豊か = 0
+		;情緒豊か→情緒豊かを反転。感情乏しいをOFF
+		CASE 17
+			TALENT:MASTER:感情乏しい = 0
+			TALENT:MASTER:情緒豊か = !TALENT:MASTER:情緒豊か
+		;楽観的→楽観的を反転。悲観的をOFF
+		CASE 18
+			TALENT:MASTER:楽観的 = !TALENT:MASTER:楽観的
+			TALENT:MASTER:悲観的 = 0
+		;悲観的→悲観的を反転。楽観的をOFF
+		CASE 19
+			TALENT:MASTER:楽観的 = 0
+			TALENT:MASTER:悲観的 = !TALENT:MASTER:悲観的
+		;一線越えない→一線越えないを反転
+		CASE 20
+			TALENT:MASTER:一線越えない = !TALENT:MASTER:一線越えない
+		;目立ちたがり→目立ちたがりを反転
+		CASE 21
+			TALENT:MASTER:目立ちたがり = !TALENT:MASTER:目立ちたがり
+		;貞操観念→貞操観念を反転。貞操無頓着をOFF
+		CASE 22
+			TALENT:MASTER:貞操観念 = !TALENT:MASTER:貞操観念
+			TALENT:MASTER:貞操無頓着 = 0
+		;貞操無頓着→貞操無頓着を反転。貞操観念をOFF
+		CASE 23
+			TALENT:MASTER:貞操観念 = 0
+			TALENT:MASTER:貞操無頓着 = !TALENT:MASTER:貞操無頓着
+		;抑圧→抑圧を反転。解放をOFF
+		CASE 24
+			TALENT:MASTER:抑圧 = !TALENT:MASTER:抑圧
+			TALENT:MASTER:解放 = 0
+		;解放→解放を反転。抑圧をOFF
+		CASE 25
+			TALENT:MASTER:抑圧 = 0
+			TALENT:MASTER:解放 = !TALENT:MASTER:解放
+		;恥じらい→恥じらいを反転。恥薄いをOFF
+		CASE 26
+			TALENT:MASTER:恥じらい = !TALENT:MASTER:恥じらい
+			TALENT:MASTER:恥薄い = 0
+		;恥薄い→恥薄いを反転。恥じらいをOFF
+		CASE 27
+			TALENT:MASTER:恥じらい = 0
+			TALENT:MASTER:恥薄い = !TALENT:MASTER:恥薄い
+		;好色→好色を反転。清楚をOFF
+		CASE 28
+			TALENT:MASTER:好色 = !TALENT:MASTER:好色
+			TALENT:MASTER:清楚 = 0
+		;清楚→清楚を反転。好色をOFF
+		CASE 29
+			TALENT:MASTER:好色 = 0
+			TALENT:MASTER:清楚 = !TALENT:MASTER:清楚
+		;献身的→献身的を反転。受け身をOFF
+		CASE 30
+			TALENT:MASTER:献身的 = !TALENT:MASTER:献身的
+			TALENT:MASTER:受け身 = 0
+		;受け身→受け身を反転。献身的をOFF
+		CASE 31
+			TALENT:MASTER:献身的 = 0
+			TALENT:MASTER:受け身 = !TALENT:MASTER:受け身
+		;倒錯的→倒錯的を反転
+		CASE 32
+			TALENT:MASTER:倒錯的 = !TALENT:MASTER:倒錯的
+		;両刀→両刀を反転。男嫌いをOFF
+		CASE 33
+			TALENT:MASTER:両刀 = !TALENT:MASTER:両刀
+			TALENT:MASTER:男嫌い = 0
+		;男嫌い→男嫌いを反転。両刀をOFF
+		CASE 34
+			TALENT:MASTER:両刀 = 0
+			TALENT:MASTER:男嫌い = !TALENT:MASTER:男嫌い
+		;サド→サドを反転
+		CASE 35
+			TALENT:MASTER:サド = !TALENT:MASTER:サド
+		;慎重→慎重を反転。短気をOFF
+		CASE 36
+			TALENT:MASTER:慎重 = !TALENT:MASTER:慎重
+			TALENT:MASTER:短気 = 0
+		;短気→短気を反転。慎重をOFF
+		CASE 37
+			TALENT:MASTER:慎重 = 0
+			TALENT:MASTER:短気 = !TALENT:MASTER:短気
+		;意地悪→意地悪を反転。心根優しいをOFF
+		CASE 38
+			TALENT:MASTER:意地悪 = !TALENT:MASTER:意地悪
+			TALENT:MASTER:心根優しい = 0
+		;心根優しい→心根優しいを反転。意地悪をOFF
+		CASE 39
+			TALENT:MASTER:意地悪 = 0
+			TALENT:MASTER:心根優しい = !TALENT:MASTER:心根優しい
+		;幼稚→幼稚を反転
+		CASE 40
+			TALENT:MASTER:幼稚 = !TALENT:MASTER:幼稚
+		;威圧感→威圧感を反転
+		CASE 41
+			TALENT:MASTER:威圧感 = !TALENT:MASTER:威圧感
+		;親しみやすい→親しみやすいを反転。近寄り難いをOFF
+		CASE 42
+			TALENT:MASTER:親しみやすい = !TALENT:MASTER:親しみやすい
+			TALENT:MASTER:近寄り難い = 0
+		;近寄り難い→近寄り難いを反転。親しみやすいをOFF
+		CASE 43
+			TALENT:MASTER:親しみやすい = 0
+			TALENT:MASTER:近寄り難い = !TALENT:MASTER:近寄り難い
+;-----------------------------------------------------------
+		;痛みに弱い→痛みに弱いを反転。痛みに強いをOFF
+		CASE 44
+			TALENT:MASTER:痛みに弱い = !TALENT:MASTER:痛みに弱い
+			TALENT:MASTER:痛みに強い = 0
+		;痛みに強い→痛みに強いを反転。痛みに弱いをOFF
+		CASE 45
+			TALENT:MASTER:痛みに弱い = 0
+			TALENT:MASTER:痛みに強い = !TALENT:MASTER:痛みに強い
+		;濡れやすい→濡れやすいを反転。濡れにくいをOFF
+		CASE 46
+			TALENT:MASTER:濡れやすい = !TALENT:MASTER:濡れやすい
+			TALENT:MASTER:濡れにくい = 0
+		;濡れにくい→濡れにくいを反転。濡れやすいをOFF
+		CASE 47
+			TALENT:MASTER:濡れやすい = 0
+			TALENT:MASTER:濡れにくい = !TALENT:MASTER:濡れにくい
+		;自慰しやすい→自慰しやすいを反転。
+		CASE 48
+			TALENT:MASTER:自慰しやすい = !TALENT:MASTER:自慰しやすい
+		;汚臭鈍感→汚臭鈍感を反転。汚臭敏感をOFF
+		CASE 49
+			TALENT:MASTER:汚臭鈍感 = !TALENT:MASTER:汚臭鈍感
+			TALENT:MASTER:汚臭敏感 = 0
+		;汚臭敏感→汚臭敏感を反転。汚臭鈍感をOFF
+		CASE 50
+			TALENT:MASTER:汚臭鈍感 = 0
+			TALENT:MASTER:汚臭敏感 = !TALENT:MASTER:汚臭敏感
+		;快感に素直→快感に素直を反転。快感の否定をOFF
+		CASE 51
+			TALENT:MASTER:快感に素直 = !TALENT:MASTER:快感に素直
+			TALENT:MASTER:快感の否定 = 0
+		;快感の否定→快感の否定を反転。快感に素直をOFF
+		CASE 52
+			TALENT:MASTER:快感に素直 = 0
+			TALENT:MASTER:快感の否定 = !TALENT:MASTER:快感の否定
+		;Ｃ敏感→Ｃ敏感を反転。Ｃ鈍感をOFF
+		CASE 53
+			TALENT:MASTER:Ｃ敏感 = !TALENT:MASTER:Ｃ敏感
+			TALENT:MASTER:Ｃ鈍感 = 0
+		;Ｃ鈍感→Ｃ鈍感を反転。Ｃ敏感をOFF
+		CASE 54
+			TALENT:MASTER:Ｃ敏感 = 0
+			TALENT:MASTER:Ｃ鈍感 = !TALENT:MASTER:Ｃ鈍感
+		;Ｖ敏感→オトコの場合は入力エラー。Ｖ敏感を反転。Ｖ鈍感をOFF
+		CASE 55
+			IF TALENT:MASTER:オトコ
+				CLEARLINE 1
+				REUSELASTLINE オトコですよね？
+				GOTO INPUT_LOOP
+			ENDIF
+			TALENT:MASTER:Ｖ敏感 = !TALENT:MASTER:Ｖ敏感
+			TALENT:MASTER:Ｖ鈍感 = 0
+		;Ｖ鈍感→オトコの場合は入力エラー。Ｖ鈍感を反転。Ｖ敏感をOFF
+		CASE 56
+			IF TALENT:MASTER:オトコ
+				CLEARLINE 1
+				REUSELASTLINE オトコですよね？
+				GOTO INPUT_LOOP
+			ENDIF
+			TALENT:MASTER:Ｖ敏感 = 0
+			TALENT:MASTER:Ｖ鈍感 = !TALENT:MASTER:Ｖ鈍感
+		;Ａ敏感→Ａ敏感を反転。Ａ鈍感をOFF
+		CASE 57
+			TALENT:MASTER:Ａ敏感 = !TALENT:MASTER:Ａ敏感
+			TALENT:MASTER:Ａ鈍感 = 0
+		;Ａ鈍感→Ａ鈍感を反転。Ａ敏感をOFF
+		CASE 58
+			TALENT:MASTER:Ａ敏感 = 0
+			TALENT:MASTER:Ａ鈍感 = !TALENT:MASTER:Ａ鈍感
+		;Ｂ敏感→Ｂ敏感を反転。Ｂ鈍感をOFF
+		CASE 59
+			TALENT:MASTER:Ｂ敏感 = !TALENT:MASTER:Ｂ敏感
+			TALENT:MASTER:Ｂ鈍感 = 0
+		;Ｂ鈍感→Ｂ鈍感を反転。Ｂ敏感をOFF
+		CASE 60
+			TALENT:MASTER:Ｂ敏感 = 0
+			TALENT:MASTER:Ｂ鈍感 = !TALENT:MASTER:Ｂ鈍感
+		;貧乳→オトコの場合は入力エラー。貧乳を反転。巨乳をOFF
+		CASE 61
+			IF TALENT:MASTER:オトコ
+				CLEARLINE 1
+				REUSELASTLINE オトコですよね？
+				GOTO INPUT_LOOP
+			ENDIF
+			TALENT:MASTER:貧乳 = !TALENT:MASTER:貧乳
+			TALENT:MASTER:巨乳 = 0
+		;巨乳→オトコの場合は入力エラー。巨乳を反転。貧乳をOFF
+		CASE 62
+			IF TALENT:MASTER:オトコ
+				CLEARLINE 1
+				REUSELASTLINE オトコですよね？
+				GOTO INPUT_LOOP
+			ENDIF
+			TALENT:MASTER:貧乳 = 0
+			TALENT:MASTER:巨乳 = !TALENT:MASTER:巨乳
+		;小柄体型→小柄体型を反転。長身をOFF
+		CASE 63
+			TALENT:MASTER:小柄 = !TALENT:MASTER:小柄
+			TALENT:MASTER:長身 = 0
+		;長身→長身を反転。小柄体型をOFF
+		CASE 64
+			TALENT:MASTER:小柄 = 0
+			TALENT:MASTER:長身 = !TALENT:MASTER:長身
+		;回復早い→回復早いを反転。回復遅いをOFF
+		CASE 65
+			TALENT:MASTER:回復早い = !TALENT:MASTER:回復早い
+			TALENT:MASTER:回復遅い = 0
+		;回復遅い→回復遅いを反転。回復早いをOFF
+		CASE 66
+			TALENT:MASTER:回復早い = 0
+			TALENT:MASTER:回復遅い = !TALENT:MASTER:回復遅い
+		;おもらし癖→おもらし癖を反転
+		CASE 67
+			TALENT:MASTER:おもらし癖 = !TALENT:MASTER:おもらし癖
+		;早漏→女の子の場合は入力エラー。早漏を反転。遅漏をOFF
+		CASE 68
+			IF !TALENT:MASTER:ふたなり && !TALENT:MASTER:オトコ
+				CLEARLINE 1
+				REUSELASTLINE 女の子ですよね？
+				GOTO INPUT_LOOP
+			ENDIF
+			TALENT:MASTER:早漏 = !TALENT:MASTER:早漏
+			TALENT:MASTER:遅漏 = 0
+		;遅漏→女の子の場合は入力エラー。遅漏を反転。早漏をOFF
+		CASE 69
+			IF !TALENT:MASTER:ふたなり && !TALENT:MASTER:オトコ
+				CLEARLINE 1
+				REUSELASTLINE 女の子ですよね？
+				GOTO INPUT_LOOP
+			ENDIF
+			TALENT:MASTER:早漏 = 0
+			TALENT:MASTER:遅漏 = !TALENT:MASTER:遅漏
+		;精力絶倫→精力絶倫を反転。精力薄弱をOFF
+		CASE 70
+			TALENT:MASTER:精力絶倫 = !TALENT:MASTER:精力絶倫
+			TALENT:MASTER:精力薄弱 = 0
+		;精力薄弱→精力薄弱を反転。精力絶倫をOFF
+		CASE 71
+			TALENT:MASTER:精力絶倫 = 0
+			TALENT:MASTER:精力薄弱 = !TALENT:MASTER:精力薄弱
+		;習得早い→習得早いを反転。習得遅いをOFF
+		CASE 72
+			TALENT:MASTER:習得早い = !TALENT:MASTER:習得早い
+			TALENT:MASTER:習得遅い = 0
+		;習得遅い→習得遅いを反転。習得早いをOFF
+		CASE 73
+			TALENT:MASTER:習得早い = 0
+			TALENT:MASTER:習得遅い = !TALENT:MASTER:習得遅い
+;-----------------------------------------------------------
+		;性経験なし
+		CASE 100
+			EXP:MASTER:性交経験 = 0
+		;性経験少し
+		CASE 101
+			EXP:MASTER:性交経験 = 1
+		;性経験多め
+		CASE 102
+			EXP:MASTER:性交経験 = 3
+		;性知識皆無
+		CASE 103
+			CALLF MASTER_CUSTOMV(0)
+		;性知識少し
+		CASE 104
+			CALLF MASTER_CUSTOMV(1)
+		;性知識豊富
+		CASE 105
+			CALLF MASTER_CUSTOMV(2)
+;-----------------------------------------------------------
+		CASE 997
+			JUMP MASTER_CUSTOM
+		CASE 998
+			REPEAT 300
+				TALENT:MASTER:COUNT = 0
+			REND
+			REPEAT 100
+				EXP:MASTER:COUNT = 0
+			REND
+			CALLF MASTER_CUSTOMV(0)
+			TALENT:MASTER:オトコ = 1
+		;設定完了
+		CASE 999
+			BREAK
+		CASEELSE
+			CLEARLINE 1
+			GOTO INPUT_LOOP
+	ENDSELECT
+WEND
+
+;-----------------------------------------------------------
+;後処理部分
+;-----------------------------------------------------------
+;性経験による後処理
+SELECTCASE EXP:MASTER:性交経験
+	CASE 0
+		;性経験なし
+		TALENT:MASTER:処女 = !TALENT:MASTER:オトコ
+		TALENT:MASTER:童貞 = TALENT:MASTER:ふたなり || TALENT:MASTER:オトコ
+		EXP:MASTER:射精経験 = (TALENT:MASTER:ふたなり || TALENT:MASTER:オトコ) ? TALENT:MASTER:自慰しやすい # 0
+		EXP:MASTER:性知識 = MASTER_CUSTOMV(-1) * 5
+	CASE 1
+		;性経験少し
+		TALENT:MASTER:童貞 = 0
+		EXP:MASTER:Ｃ経験 = 4
+		EXP:MASTER:Ｖ経験 = TALENT:MASTER:オトコ ? 0 # 2
+		EXP:MASTER:Ｂ経験 = TALENT:MASTER:オトコ ? 0 # 3
+		EXP:MASTER:射精経験 = (TALENT:MASTER:ふたなり || TALENT:MASTER:オトコ) ? 3 + TALENT:MASTER:自慰しやすい # 0
+		EXP:MASTER:性知識 = 5 + MASTER_CUSTOMV(-1) * 5
+	CASE IS > 1
+		;性経験多め
+		TALENT:MASTER:童貞 = 0
+		ABL:MASTER:欲望 = 1
+		EXP:MASTER:Ｃ経験 = 10
+		EXP:MASTER:Ｖ経験 = TALENT:MASTER:オトコ ? 0 # 10
+		EXP:MASTER:Ｂ経験 = TALENT:MASTER:オトコ ? 0 # 10
+		EXP:MASTER:射精経験 = (TALENT:MASTER:ふたなり || TALENT:MASTER:オトコ) ? 12 + TALENT:MASTER:自慰しやすい # 0
+		EXP:MASTER:性知識 = 10 + MASTER_CUSTOMV(-1) * 5
+ENDSELECT
+
+;自慰経験。自慰しやすい場合、+10
+EXP:MASTER:自慰経験 = TALENT:MASTER:自慰しやすい * 10
+
+;-----------------------------------------------------------
+;MASTER_CUSTOMで利用する変数(MASTER性知識の程度)を保持
+;-----------------------------------------------------------
+@MASTER_CUSTOMV(ARG)
+#FUNCTION
+;ARGを保持し、ARGが-1であればその値を返す
+SIF ARG != -1
+	LOCAL = ARG
+RETURNF LOCAL
+

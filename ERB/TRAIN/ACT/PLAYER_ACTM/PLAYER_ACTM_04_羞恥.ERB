@@ -1,0 +1,620 @@
+﻿;────────────────────────────────────
+;羞恥 (自慰40/開帳41/見せ42/大鏡43/野外44/放尿45/コス(未実装)46/放置73)
+;────────────────────────────────────
+@ACT_M4(ARG = 0)
+;1以上なら判定を行わない
+#DIM LCOUNT, 1
+
+;関数初期化
+CALL ACT_M_INIT(4)
+
+;処理開始
+
+LOCALS = ACT_ACTM4
+
+CALL CHA_CRI_VAR, "基準値"
+CALLFORM %LOCALS%_REFERENCE
+
+CALL CHA_CRI_VAR, "調教者の素質"
+CALLFORM %LOCALS%_TALENT_T
+
+CALL CHA_CRI_VAR, "調教対象の素質"
+CALLFORM %LOCALS%_TALENT_M
+
+CALL CHA_CRI_VAR, "調教対象の能力"
+CALLFORM %LOCALS%_ABL_M
+
+CALL CHA_CRI_VAR, "調教者の能力"
+CALLFORM %LOCALS%_ABL_T
+
+CALL CHA_CRI_VAR, "調教対象の欲情"
+CALLFORM %LOCALS%_DESIRE_M
+
+CALL CHA_CRI_VAR, "調教者の罪悪感"
+CALLFORM %LOCALS%_SIN_T
+
+CALL CHA_CRI_VAR, "調教者のALI"
+CALLFORM %LOCALS%_ALI_T
+
+CALL CHA_CRI_VAR, "調教対象の体力"
+CALLFORM %LOCALS%_PHYSICAL_M
+
+CALL CHA_CRI_VAR, "調教対象の気力"
+CALLFORM %LOCALS%_MENTAL_M
+
+CALL CHA_CRI_VAR, "調教者の興味"
+CALLFORM %LOCALS%_INTEREST_T
+
+CALL CHA_CRI_VAR, "調教者の満足"
+CALLFORM %LOCALS%_SATISFACTION_T
+
+CALL CHA_CRI_VAR, @"調教者の状態(%CONDITION(TCVAR:状態変化)%)"
+CALLFORM %LOCALS%_CONDITION_T
+
+CALL CHA_CRI_VAR, @"調教対象の状態(%CONDITION(TCVAR:MASTER:状態変化)%)"
+CALLFORM %LOCALS%_CONDITION_M
+
+CALL CHA_CRI_VAR, "媚薬"
+CALLFORM %LOCALS%_DRAG
+
+CALL CHA_CRI_VAR, "利尿剤"
+CALLFORM %LOCALS%_DIURETIC
+
+CALL CHA_CRI_VAR, "装着道具"
+CALLFORM %LOCALS%_TOOLS
+
+CALL CHA_CRI_VAR, "縄"
+CALLFORM %LOCALS%_ROPE
+
+CALL CHA_CRI_VAR, "アイマスク"
+CALLFORM %LOCALS%_EYEMASK
+
+CALL CHA_CRI_VAR, "ボールギャグ"
+CALLFORM %LOCALS%_GAG
+
+CALL CHA_CRI_VAR, "三角木馬"
+CALLFORM %LOCALS%_HORSE
+
+CALL CHA_CRI_VAR, "野外プレイ"
+CALLFORM %LOCALS%_OUT
+
+CALL CHA_CRI_VAR, "大鏡"
+CALLFORM %LOCALS%_T_MILLER
+
+CALL CHA_CRI_VAR, "道具をはずした"
+CALLFORM %LOCALS%_TAKE_OFF_TOOLS
+
+CALL CHA_CRI_VAR, "調教者自慰中"
+CALLFORM %LOCALS%_MASTURBATION_T
+
+CALL CHA_CRI_VAR, "調教対象自慰中"
+CALLFORM %LOCALS%_MASTURBATION_M
+
+CALL CHA_CRI_VAR, "調教対象の衣服"
+CALLFORM %LOCALS%_CLOTH_M
+
+CALL CHA_CRI_VAR, "もっとハードにして"
+CALLFORM %LOCALS%_PLEASE_HARD
+
+CALL CHA_CRI_VAR, "許しを乞う"
+CALLFORM %LOCALS%_PLEASE_HELP
+
+CALL CHA_CRI_VAR, "連続行動補正"
+CALLFORM %LOCALS%_PREV
+
+CALL CHA_CRI_VAR, "口上補正値"
+CALL ACT_ACTM_KOJO_CORRECTION_T, 4
+
+CALL CHA_CRI_VAR, "ACT補正値"
+CALLFORM %LOCALS%_CORRECTION(ARG)
+
+;ARGが1以上なら処理中断
+SIF ARG
+	RETURN RESULT
+
+CALL CHA_CRI_VAR, "実行判定"
+CALLFORM %LOCALS%_ABLE
+
+;────────────────────────────────────
+;最終判定
+;────────────────────────────────────
+CALL DEF_CRI_VAR("最大前者")
+LOCAL = GET_CRI_VAR("決定")
+IF LOCAL == -1
+	SIF FLAG:デバッグ
+		PRINTL (羞恥ACT分類に実行可能なACTが存在しません)
+	TFLAG:ACT = -1
+	CALL ACT_MENU_RESULT(2, "羞恥")
+ELSE
+	TFLAG:ACT = GET_ACTNUM(RESULTS)
+ENDIF
+CALL ANA_CRI_VAR()
+
+;-------------------------------------------------------------------------
+;基準値
+;-------------------------------------------------------------------------
+@ACT_ACTM4_REFERENCE
+
+;要らないかもと思ったので試しに無効化@これみ
+[SKIPSTART]
+CALL ADD_CRI_VAR("自慰", 10)
+CALL ADD_CRI_VAR("秘貝開帳", 10)
+CALL ADD_CRI_VAR("自慰みせつけ", 8)
+CALL ADD_CRI_VAR("羞恥プレイ", 8)
+CALL ADD_CRI_VAR("野外プレイ", 0)
+CALL ADD_CRI_VAR("放尿", 5)
+CALL ADD_CRI_VAR("コスプレ", 5)
+CALL ADD_CRI_VAR("放置プレイ", 0)
+[SKIPEND]
+
+;-------------------------------------------------------------------------
+;調教者の素質を参照
+;-------------------------------------------------------------------------
+@ACT_ACTM4_TALENT_T
+
+;調教者がプライド高い/低い
+IF TALENT:プライド高い
+	CALL ADD_CRI_VAR("自慰みせつけ", GETBIT(TEQUIP:自慰中, 1) ? 0 # -5)
+ELSEIF TALENT:プライド低い
+	CALL ADD_CRI_VAR("自慰みせつけ", GETBIT(TEQUIP:自慰中, 1) ? 0 # 5)
+ENDIF
+
+;調教者が自制的/衝動的
+IF TALENT:自制的
+	CALL ADD_CRI_VAR("自慰みせつけ", GETBIT(TEQUIP:自慰中, 1) ? 0 # -3)
+	CALL ADD_CRI_VAR("野外プレイ", -3)
+ELSEIF TALENT:衝動的
+	CALL ADD_CRI_VAR("自慰みせつけ", GETBIT(TEQUIP:自慰中, 1) ? 0 # 3)
+	CALL ADD_CRI_VAR("野外プレイ", 3)
+ENDIF
+
+;調教者が無関心/好奇心
+IF TALENT:無関心
+	CALL ADD_CRI_VAR("自慰", GETBIT(TEQUIP:自慰中, 0) ? 0 # -2)
+	CALL ADD_CRI_VAR("秘貝開帳", -3)
+	CALL ADD_CRI_VAR("放置プレイ", 3, 4)
+ELSEIF TALENT:好奇心
+	CALL ADD_CRI_VAR("自慰", GETBIT(TEQUIP:自慰中, 0) ? 0 # 1, GETBIT(TEQUIP:自慰中, 0) ? 0 # 3)
+	CALL ADD_CRI_VAR("秘貝開帳", 2, 3)
+ENDIF
+
+;調教者が一線越えない
+SIF TALENT:一線越えない && !TEQUIP:野外プレイ
+	CALL ADD_CRI_VAR("野外プレイ", -5)
+
+;調教者が目立ちたがりかつ、調教者が自慰していない
+SIF TALENT:目立ちたがり && !GETBIT(TEQUIP:自慰中, 1)
+	CALL ADD_CRI_VAR("自慰みせつけ", 5, 5)
+
+;調教者が抑圧/解放
+IF TALENT:抑圧
+	CALL ADD_CRI_VAR("自慰みせつけ", GETBIT(TEQUIP:自慰中, 1) ? 0 # -3)
+	CALL ADD_CRI_VAR("野外プレイ", TEQUIP:野外プレイ ? 0 # -5)
+	CALL ADD_CRI_VAR("放尿", -5)
+	CALL ADD_CRI_VAR("コスプレ", -5)
+ELSEIF TALENT:解放
+	CALL ADD_CRI_VAR("自慰みせつけ", , GETBIT(TEQUIP:自慰中, 1) ? 0 # 5)
+	CALL ADD_CRI_VAR("野外プレイ", , TEQUIP:野外プレイ ? 0 # 7)
+	CALL ADD_CRI_VAR("放尿", , 7)
+	CALL ADD_CRI_VAR("コスプレ", , 7)
+ENDIF
+
+;調教者が恥じらい/恥薄い
+IF TALENT:恥じらい
+	CALL ADD_CRI_VAR("自慰みせつけ", GETBIT(TEQUIP:自慰中, 1) ? 0 # -7)
+	CALL ADD_CRI_VAR("羞恥プレイ", TEQUIP:大鏡 ? 0 # -5)
+ELSEIF TALENT:恥薄い
+	CALL ADD_CRI_VAR("自慰みせつけ", , GETBIT(TEQUIP:自慰中, 1) ? 0 # 5)
+	CALL ADD_CRI_VAR("羞恥プレイ", TEQUIP:大鏡 ? 0 # 5)
+ENDIF
+
+;調教者が濡れやすい
+SIF TALENT:濡れやすい
+	CALL ADD_CRI_VAR("秘貝開帳", , 2)
+
+;調教者が自慰しやすいかつ、調教者が自慰していない
+SIF TALENT:自慰しやすい && !GETBIT(TEQUIP:自慰中, 1)
+	CALL ADD_CRI_VAR("自慰みせつけ", 3, 1)
+
+;調教者が汚れ無視、汚臭鈍感/敏感
+IF TALENT:汚れ無視 || TALENT:汚臭鈍感
+	CALL ADD_CRI_VAR("放尿", 1, 4)
+ELSEIF TALENT:汚臭敏感
+	CALL ADD_CRI_VAR("放尿", 4)
+ENDIF
+
+;調教者が快感に素直/否定
+IF TALENT:快感に素直
+	CALL ADD_CRI_VAR("自慰みせつけ", GETBIT(TEQUIP:自慰中, 1) ? 0 # 3)
+ELSEIF TALENT:快感の否定
+	CALL ADD_CRI_VAR("自慰みせつけ", , GETBIT(TEQUIP:自慰中, 1) ? 0 # -6)
+ENDIF
+
+;調教者が男嫌いかつ、調教対象がオトコ
+SIF TALENT:男嫌い && TALENT:MASTER:オトコ
+	CALL ADD_CRI_VAR("自慰", -5)
+
+;調教者がサド
+IF TALENT:サド
+	CALL ADD_CRI_VAR("野外プレイ", , TEQUIP:野外プレイ ? 0 # 4)
+	CALL ADD_CRI_VAR("放尿", 3, 3)
+ENDIF
+
+;調教者が慎重かつ、野外プレイ中でない
+SIF TALENT:慎重 && !TEQUIP:野外プレイ
+	CALL ADD_CRI_VAR("野外プレイ", -3)
+
+;調教者が意地悪
+IF TALENT:意地悪
+	CALL ADD_CRI_VAR("羞恥プレイ", TEQUIP:大鏡 ? 0 # 3)
+	CALL ADD_CRI_VAR("野外プレイ", TEQUIP:野外プレイ ? 0 # 1)
+	CALL ADD_CRI_VAR("放尿", 3)
+	CALL ADD_CRI_VAR("放置プレイ", 3)
+ENDIF
+
+;調教者が幼稚
+SIF TALENT:幼稚
+	CALL ADD_CRI_VAR("放尿", , 4)
+
+;調教者が魅惑かつ、調教対象が自慰していない
+SIF TALENT:魅惑 && !GETBIT(TEQUIP:自慰中, 0)
+	CALL ADD_CRI_VAR("自慰", , 6)
+
+;-------------------------------------------------------------------------
+;調教対象の素質を参照
+;-------------------------------------------------------------------------
+@ACT_ACTM4_TALENT_M
+
+;調教対象が自慰しやすいかつ、調教対象が自慰していない
+SIF TALENT:MASTER:自慰しやすい && !GETBIT(TEQUIP:自慰中, 0)
+	CALL ADD_CRI_VAR("自慰", 3, 1)
+
+;────────────────────────────────────
+;能力、パラメーターによる変動
+;────────────────────────────────────
+;-------------------------------------------------------------------------
+;調教対象の能力を参照
+;-------------------------------------------------------------------------
+@ACT_ACTM4_ABL_M
+
+;調教対象の露出癖。調教が進んだ状態でよりハードなメニューを選択する傾向
+;が[0→2, 5→-5]を加算(0～7)
+CALL ADD_CRI_VAR("秘貝開帳", LINE_CALC(ABL:MASTER:露出癖, "0→2,5→-5,LIMIT/-5～2"))
+;が[2→0, 5→2～8]を加算(0～8)
+CALL ADD_CRI_VAR("放尿", LINE_CALC(ABL:MASTER:露出癖, "2→0,5→2,LIMIT/0～2"), LINE_CALC(ABL:MASTER:露出癖, "2→0,5→6,LIMIT/0～6"))
+;が[1→0, 5→0～9]を加算(0～9)
+CALL ADD_CRI_VAR("コスプレ", , LINE_CALC(ABL:MASTER:露出癖, "1→0,5→9,LIMIT/0～9"))
+;が[2→0, 5→0～7]を加算(0～7)
+CALL ADD_CRI_VAR("放置プレイ", , LINE_CALC(ABL:MASTER:露出癖, "2→0,5→7,LIMIT/0～7"))
+;が[0→0, 2→0～4, 4→0]を加算(0～4)
+CALL ADD_CRI_VAR("自慰", , LINE_CALC(ABL:MASTER:露出癖, "0→0,2→4,4→0,LIMIT/0～4"))
+;が[0→0, 2→2, 4→0]を加算(0～2)
+CALL ADD_CRI_VAR("自慰みせつけ", LINE_CALC(ABL:MASTER:露出癖, "0→0,2→2,4→0,LIMIT/0～2"))
+;※キャンセルに補正は付かない
+;が[0→0/0, 4→0/3～5, 8→0/0]を加算(0～5)
+SIF !TEQUIP:大鏡
+	CALL ADD_CRI_VAR("羞恥プレイ", LINE_CALC(ABL:MASTER:露出癖, "0→0,4→3,8→0,LIMIT/0～3"), LINE_CALC(ABL:MASTER:露出癖, "0→0,4→2,8→0,LIMIT/0～2"))
+;が[2→0/0, 5→0/4～8]を加算(0～8)
+SIF !TEQUIP:野外プレイ
+	CALL ADD_CRI_VAR("野外プレイ", LINE_CALC(ABL:MASTER:露出癖, "2→0,5→4,LIMIT/0～4"), LINE_CALC(ABL:MASTER:露出癖, "2→0,5→4,LIMIT/0～4"))
+
+;-------------------------------------------------------------------------
+;調教者の能力を参照
+;-------------------------------------------------------------------------
+@ACT_ACTM4_ABL_T
+
+;調教者の異常が[0→0, 5→3～5]を加算(0～5)
+CALL ADD_CRI_VAR("放置プレイ", LINE_CALC(ABL:異常, "0→0,5→3,LIMIT/0～3"), LINE_CALC(ABL:異常, "0→0,5→2,LIMIT/0～2"))
+
+;-------------------------------------------------------------------------
+;PALAM群
+;ここは個別に
+;-------------------------------------------------------------------------
+;----------------------------------
+;欲情
+;----------------------------------
+@ACT_ACTM4_DESIRE_M
+
+;暫定の処理。調教者が意地悪なら、欲情した調教対象を…
+IF TALENT:意地悪
+	;調教対象が自慰中
+	IF GETBIT(TEQUIP:自慰中, 0)
+		;調教者の欲情が[3000→0, 7500→5]を加算(0～5)
+		CALL ADD_CRI_VAR("自慰", LINE_CALC(PALAM:MASTER:欲情, "3000→0,7500→5,LIMIT/0～5"))
+	;調教対象は自慰していない
+	ELSE
+		;調教者の欲情が[3000→0/2, 7500→5/7]を加算(0～7)(調教者自慰によって増加)
+		CALL ADD_CRI_VAR("放置プレイ", LINE_CALC(PALAM:MASTER:欲情, "3000→0,7500→5,LIMIT/0～5") + GETBIT(TEQUIP:自慰中, 1))
+	ENDIF
+ENDIF
+
+;-------------------------------------
+;調教者の罪悪感
+;-------------------------------------
+@ACT_ACTM4_SIN_T
+
+;罪悪感が[0→0, 100→-5～-2]を加算(-5～0)
+CALL ADD_CRI_VAR("放尿", LINE_CALC(CFLAG:罪悪感, "0→0,100→-2,LIMIT/-2～0"), LINE_CALC(CFLAG:罪悪感, "0→0,100→-3,LIMIT/-3～0"))
+;罪悪感が[0→0, 100→-7～-4]を加算(-7～0)
+CALL ADD_CRI_VAR("放置プレイ", LINE_CALC(CFLAG:罪悪感, "0→0,100→-4,LIMIT/-4～0"), LINE_CALC(CFLAG:罪悪感, "0→0,100→-3,LIMIT/-3～0"))
+;※キャンセルに補正は付かない
+;罪悪感が[0→0, 100→0/-5～-2]を加算(-5～0)
+SIF !TEQUIP:野外プレイ
+	CALL ADD_CRI_VAR("野外プレイ", LINE_CALC(CFLAG:罪悪感, "0→0,100→-2,LIMIT/-2～0"), LINE_CALC(CFLAG:罪悪感, "0→0,100→-3,LIMIT/-3～0"))
+
+;-------------------------------------
+;調教者のALI
+;-------------------------------------
+@ACT_ACTM4_ALI_T
+
+;アライメントが[0→0, 50→0/3]を加算(0～3)(調教対象自慰中は補正なし)
+SIF !GETBIT(TEQUIP:自慰中, 0)
+	CALL ADD_CRI_VAR("自慰", LINE_CALC(CFLAG:アライメント, "0→0,50→3,LIMIT/0～3"))
+;アライメントが[0→0, 50→0/3]を加算(0～3)
+CALL ADD_CRI_VAR("秘貝開帳", LINE_CALC(CFLAG:アライメント, "0→0,50→3,LIMIT/0～3"))
+;アライメントが[-50→3, 50→-3]を加算(-3～3)
+CALL ADD_CRI_VAR("放置プレイ", LINE_CALC(CFLAG:アライメント, "-50→3,50→-3,LIMIT/-3～3"))
+;アライメントが[-50→3, 0→0]を加算(0～3)(キャンセルには補正なし)
+SIF !TEQUIP:野外プレイ
+	CALL ADD_CRI_VAR("野外プレイ", LINE_CALC(CFLAG:アライメント, "-50→3,0→0,LIMIT/0～3"))
+;アライメントが[-50→3, 0→0]を加算(0～3)
+CALL ADD_CRI_VAR("放尿", LINE_CALC(CFLAG:アライメント, "-50→3,0→0,LIMIT/0～3"))
+
+;────────────────────────────────────
+;ゲージや状態による変動
+;────────────────────────────────────
+;-------------------------------------
+;調教対象の体力
+;-------------------------------------
+@ACT_ACTM4_PHYSICAL_M
+
+;調教者の体力が[0→-1, 500→0]を加算(-1～0)
+CALL ADD_CRI_VAR("羞恥プレイ", LINE_CALC(BASE:体力, "0→-1,500→0,LIMIT/-1～0"))
+;調教者の体力が[0→3/-3, 1500→0/0]を加算(-3～3)(調教者自慰中は正)
+LOCAL = GETBIT(TEQUIP:自慰中, 1) ? 1 # -1
+CALL ADD_CRI_VAR("自慰みせつけ", LOCAL * LINE_CALC(BASE:体力, "0→3,1500→0,LIMIT/0～3"))
+;調教者の体力が[0→3/-3, 1500→0/0]を加算(-3～3)(実行中は正)
+LOCAL = TEQUIP:野外プレイ ? 1 # -1
+CALL ADD_CRI_VAR("野外プレイ", LOCAL * LINE_CALC(BASE:体力, "0→3,1500→0,LIMIT/0～3"))
+
+;-------------------------------------
+;調教対象の気力
+;-------------------------------------
+@ACT_ACTM4_MENTAL_M
+
+;調教者の気力が[0→-2, 500→0]を加算(-2～0)
+CALL ADD_CRI_VAR("秘貝開帳", LINE_CALC(BASE:気力, "0→-2,500→0,LIMIT/-2～0"))
+;調教者の気力が[0→2, 500→0]を加算(0～2)
+CALL ADD_CRI_VAR("放置プレイ", LINE_CALC(BASE:気力, "0→2,500→0,LIMIT/0～2"))
+;調教者の気力が[0→5/-5, 500→0/0]を加算(-5～5)(調教者自慰中は正)
+LOCAL = GETBIT(TEQUIP:自慰中, 1) ? 1 # -1
+CALL ADD_CRI_VAR("自慰みせつけ", LOCAL * LINE_CALC(BASE:気力, "0→5,750→0,LIMIT/0～5"))
+;調教者の気力が[0→3/-3, 500→0/0]を加算(-3～3)(実行中は正)
+LOCAL = TEQUIP:野外プレイ ? 1 # -1
+CALL ADD_CRI_VAR("野外プレイ", LOCAL * LINE_CALC(BASE:気力, "0→3,500→0,LIMIT/0～3"))
+
+;-------------------------------------
+;調教者の興味
+;-------------------------------------
+@ACT_ACTM4_INTEREST_T
+
+;調教者の興味が[500→1～2, 750→3～6]を加算(-2～6)
+CALL ADD_CRI_VAR("秘貝開帳", LINE_CALC(BASE:興味, "500→1,750→3,LIMIT/-1～3"), LINE_CALC(BASE:興味, "500→1,750→3,LIMIT/-1～3"))
+;調教者の興味が500未満なら
+IF BASE:興味 < 500
+	CALL ADD_CRI_VAR("コスプレ", , 4)
+	CALL ADD_CRI_VAR("放置プレイ", 3)
+ENDIF
+
+;-------------------------------------
+;調教者の満足
+;-------------------------------------
+@ACT_ACTM4_SATISFACTION_T
+
+;調教者の満足が[500→3/-3, 750→5/-5]を加算(-5～5)(実行中は正)
+LOCAL = TEQUIP:野外プレイ ? 1 # -1
+CALL ADD_CRI_VAR("野外プレイ", LOCAL * LINE_CALC(BASE:満足, "500→3,750→5,LIMIT/0～5"))
+
+;-------------------------------------
+;調教者の状態
+;-------------------------------------
+@ACT_ACTM4_CONDITION_T
+
+;調教者の状態(0=通常/1=疲弊/2=衰弱/3=無気力/4=朦朧/5=情欲/6=怒り/7=退屈/8=鬱屈)
+SELECTCASE TCVAR:状態変化
+	CASE 1 TO 3
+		CALL ADD_CRI_VAR("自慰みせつけ", GETBIT(TEQUIP:自慰中, 1) ? 5 # -5)
+		CALL ADD_CRI_VAR("野外プレイ", TEQUIP:野外プレイ ? 5 # -5)
+	CASE 7
+		CALL ADD_CRI_VAR("自慰", GETBIT(TEQUIP:自慰中, 0) ? 5 # 0)
+		CALL ADD_CRI_VAR("コスプレ", TEQUIP:MASTER:コスプレ ? 5 # 0)
+		CALL ADD_CRI_VAR("放置プレイ", GETBIT(TEQUIP:自慰中, 0) ? 0 # 5)
+	CASE 8
+		CALL ADD_CRI_VAR("放尿", , 6)
+ENDSELECT
+
+;-------------------------------------
+;調教対象の状態
+;-------------------------------------
+@ACT_ACTM4_CONDITION_M
+
+;調教対象の状態が疲弊/衰弱/無気力
+IF 1 <= TCVAR:MASTER:状態変化 && TCVAR:MASTER:状態変化 <= 3
+	CALL ADD_CRI_VAR("自慰", (GETBIT(TEQUIP:自慰中, 0) ? 1 # -1) * (TFLAG:消耗度 * 2 + TCVAR:MASTER:状態変化 + 1))
+	CALL ADD_CRI_VAR("羞恥プレイ", (TEQUIP:大鏡 && TCVAR:MASTER:状態変化 == 3 ? 1 # -1) * (TFLAG:消耗度 + 3))
+	CALL ADD_CRI_VAR("野外プレイ", (TEQUIP:野外プレイ ? 1 # -1) * (TFLAG:消耗度 * 2 + TCVAR:MASTER:状態変化), (TEQUIP:野外プレイ ? 1 # -1) * 5)
+ENDIF
+
+;────────────────────────────────────
+;前回の行動や状況による変動
+;────────────────────────────────────
+;-------------------------------------
+;媚薬
+;-------------------------------------
+@ACT_ACTM4_DRAG
+SIF TEQUIP:媚薬
+	CALL ADD_CRI_VAR("放置プレイ", TALENT:意地悪 * 3 - TALENT:心根優しい * 3, 4)
+
+;-------------------------------------
+;利尿剤
+;-------------------------------------
+@ACT_ACTM4_DIURETIC
+SIF TEQUIP:利尿剤
+	CALL ADD_CRI_VAR("放尿", 3, 4)
+
+;-------------------------------------
+;装着道具類
+;-------------------------------------
+@ACT_ACTM4_TOOLS
+
+;バイブ/Ａバイブ/クリキャップ/オナホール/ニプルキャップ装着中で、調教対象自慰中でない
+SIF (TEQUIP:バイブ || TEQUIP:アナルバイブ || TEQUIP:クリキャップ || TEQUIP:オナホール || TEQUIP:ニプルキャップ) && !GETBIT(TEQUIP:自慰中, 0)
+	CALL ADD_CRI_VAR("自慰", 3 + TEQUIP:バイブ + TEQUIP:アナルバイブ + TEQUIP:クリキャップ + TEQUIP:オナホール + TEQUIP:ニプルキャップ)
+
+;-------------------------------------
+;縄
+;-------------------------------------
+@ACT_ACTM4_ROPE
+SIF TEQUIP:縄
+	CALL ADD_CRI_VAR("放置プレイ", 5)
+
+;-------------------------------------
+;アイマスク
+;-------------------------------------
+@ACT_ACTM4_EYEMASK
+IF TEQUIP:アイマスク
+	CALL ADD_CRI_VAR("羞恥プレイ", TEQUIP:大鏡 ? 0 # -10)
+	CALL ADD_CRI_VAR("放置プレイ", 3)
+ENDIF
+
+;-------------------------------------
+;ボールギャグ
+;-------------------------------------
+@ACT_ACTM4_GAG
+SIF TEQUIP:ボールギャグ
+	CALL ADD_CRI_VAR("放置プレイ", , 3)
+
+;-------------------------------------
+;三角木馬
+;-------------------------------------
+@ACT_ACTM4_HORSE
+SIF TEQUIP:三角木馬
+	CALL ADD_CRI_VAR("放置プレイ", , 7)
+
+;-------------------------------------
+;野外プレイ
+;-------------------------------------
+@ACT_ACTM4_OUT
+SIF TEQUIP:野外プレイ
+	CALL MUL_CRI_VAR("放置プレイ", 150)
+
+;-------------------------------------
+;大鏡
+;-------------------------------------
+@ACT_ACTM4_T_MILLER
+IF TEQUIP:大鏡
+	CALL ADD_CRI_VAR("自慰", GETBIT(TEQUIP:自慰中, 0) ? 0 # 3)
+	CALL ADD_CRI_VAR("放尿", , 4)
+ENDIF
+
+;-------------------------------------
+;要求されて道具をはずした
+;-------------------------------------
+@ACT_ACTM4_TAKE_OFF_TOOLS
+
+;キャンセルに応じて装着を躊躇
+SIF !TEQUIP:野外プレイ
+	CALL ADD_CRI_VAR("野外プレイ", -CANCEL_TEQUIP_COUNT("野外プレイ") / 20)
+SIF !TEQUIP:大鏡
+	CALL ADD_CRI_VAR("羞恥プレイ", -CANCEL_TEQUIP_COUNT("大鏡") / 20)
+
+;-------------------------------------
+;調教者自慰中
+;-------------------------------------
+@ACT_ACTM4_MASTURBATION_T
+
+;調教者のみ
+IF TEQUIP:自慰中 == 2
+	CALL ADD_CRI_VAR("自慰", 5)
+	CALL ADD_CRI_VAR("放置プレイ", , 10)
+ENDIF
+
+;-------------------------------------
+;調教対象自慰中
+;-------------------------------------
+@ACT_ACTM4_MASTURBATION_M
+
+;調教対象のみ
+IF TEQUIP:自慰中 == 1
+	CALL ADD_CRI_VAR("秘貝開帳", -5)
+	;調教者の下半身上着で妨害されないとき
+	SIF CLOTHESTYPE(0, 1) != 2
+		CALL ADD_CRI_VAR("自慰みせつけ", 5)
+	CALL ADD_CRI_VAR("放尿", -3)
+ENDIF
+
+;-------------------------------------
+;調教対象の衣服
+;-------------------------------------
+@ACT_ACTM4_CLOTH_M
+
+;調教対象の下半身上着で妨害されるとき
+IF CLOTHESTYPE(1, 1) == 2
+	CALL ADD_CRI_VAR("自慰", -5)
+	CALL ADD_CRI_VAR("羞恥プレイ", TEQUIP:大鏡 ? 0 # -5)
+	CALL ADD_CRI_VAR("放尿", -10)
+ENDIF
+
+;-------------------------------------
+;もっとハードにして
+;-------------------------------------
+@ACT_ACTM4_PLEASE_HARD
+IF IS_NOWCOMNAME("もっとハードにして")
+	CALL ADD_CRI_VAR("羞恥プレイ", TEQUIP:大鏡 ? -5 # 5)
+	CALL ADD_CRI_VAR("野外プレイ", TEQUIP:野外プレイ ? -5 # 5)
+ENDIF
+
+;-------------------------------------
+;許しを乞う
+;-------------------------------------
+@ACT_ACTM4_PLEASE_HELP
+;許しを乞ったかつ、調教者の状態が鬱屈以外
+IF IS_NOWCOMNAME("許しを乞う") && TCVAR:状態変化 < 8
+	CALL ADD_CRI_VAR("羞恥プレイ", TEQUIP:大鏡 ? 5 # -5)
+	CALL ADD_CRI_VAR("野外プレイ", TEQUIP:野外プレイ ? 5 # -5)
+ENDIF
+
+;────────────────────────────────────
+;同じ行動連続実行の確率をダウンします
+;────────────────────────────────────
+@ACT_ACTM4_PREV
+SELECTCASE TFLAG:前ACT
+	CASE 40 TO 47, 73
+		CALL ADD_CRI_VAR(GET_ACTNAME(TFLAG:前ACT), -3 * TFLAG:同一行動ボーナス, -4 * TFLAG:同一行動ボーナス)
+ENDSELECT
+
+;────────────────────────────────────
+;補正値計算
+;────────────────────────────────────
+@ACT_ACTM4_CORRECTION(ARG)
+#DIM LCOUNT
+
+;ARGが0以外なら補正値を計算し、以後の処理を行わない
+IF ARG
+	;73に関してはここで計算しない
+	FOR LCOUNT, 40, 47
+		CALL ACT_M_RES_CALC(LCOUNT, GET_CRI_VAR(GET_ACTNAME(LCOUNT) + "累計"))
+	NEXT
+ELSE
+	;補正値を判定値に加算する
+	CALL ACT_ACTM_CORRECTION(4)
+ENDIF
+
+;────────────────────────────────────
+;その他変動や実行不可能の判定
+;────────────────────────────────────
+@ACT_ACTM4_ABLE
+#DIM LCOUNT
+
+;不可能判定
+CALL ACT_ACTM_ABLE(4)

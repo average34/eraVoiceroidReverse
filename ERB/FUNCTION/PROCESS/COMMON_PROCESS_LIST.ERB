@@ -1,0 +1,646 @@
+﻿;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+;
+;	Module		:SELECT_CHARA.ERB
+;	Facility	:条件を満たしているキャラクタをリストアップし、その中から一人をプレイヤーが選択してその結果を返す
+;				 関数・@SELECT_CHARA_LISTとその関連関数をまとめたファイル
+;
+;	Licence		:ライセンスフリー。
+;
+;	Modification Data:
+;
+;	Edit	Date			Author					Reason
+;	001		20XX/XX/XX		----					新規作成
+;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+;=============================================================================
+;キャラリスト表示＋入力関数@SELECT_CHARA_LIST
+;
+;ARGS == オプション
+;『<指定>内容』の形で記述し、実行を制御します。
+;
+;<識別> 識別文字列。
+;	他と重複しない名称を指定しておけばオプションを記憶しておけます。
+;
+;<説明> 説明文
+;
+;<対象> リストに表示するキャラクタの分類
+;	"関係者" 既に登場したキャラクタ(デフォルト)
+;		※登録番号で処理を行う
+;	"登場可" 今後登場の可能性があるキャラクタ
+;		※csv番号で処理を行う
+;
+;<条件> 表示の可否を判断する関数名
+;	第一引数に番号("関係者"指定では登録番号、"登場可"指定ではcsv番号)を渡すので、
+;	特定の条件を満たしたかどうかを判定し、
+;	表示可能な場合は1、表示できない場合は0を返す関数を別途に作ってください。
+;	指定した関数が存在しない場合は無条件で全てのキャラを表示します。
+;
+;<上部> 上部追加表示を行う関数名
+;<下部> 下部追加表示を行う関数名
+;	それぞれリストの上部、下部に何か特殊な表示をしたい時に指定します。
+;	単なる表示処理のみを想定しており、返り値が参照される事もありません。
+;
+;<口上> 指定すると文字色を口上指定色に変えます
+;	現在は"調教者"(調教者指定口上)のみ有効です
+;
+;<選択> 選択肢を追加するための関数名
+;	キャラ選択、ページ送り、キャンセル以外の選択肢が必要な場合に指定します。
+;	この関数は選択肢の表示時(引数=-1)とINPUT直後(引数=RESULT)の2回呼び出されます。
+;	引数が-1の時に選択肢の表示、それ以外の時に選択後の処理を行うよう設計してください。
+;	また、新たに関数をCALLする事でRESULTの値が変化する事に留意してください。
+;	選択後に呼び出した後はRESULTを参照します。
+;	RESULTが0であれば現在のRESULTで処理を終了、
+;	-1ならRESTART、-2で入力のやり直し、それ以外なら続行します。
+;
+;<取消> "キャンセル不可"を指定するとキャンセル処理が無効化されます。
+;	また、その他の文字列を指定するとキャンセル選択肢部分にそれが表示されます。
+;
+;<項目> キャラリストに表示する項目
+;	詳細は@SHOW_CHARA_LISTにて
+;<行数> キャラリスト行数
+;<列数> キャラリスト最大列数(表示がはみ出す場合は自動で削減されます)
+;
+;<固定> "表示変更不可"を指定すると表示変更処理が無効化されます。
+;
+;=============================================================================
+@SELECT_CHARA_LIST(C_ARGS)
+
+;汎用関数宣言
+#LOCALSSIZE 5
+#DIM LCOUNT
+
+;開始行位置(再描画用)
+#DIM LINE
+
+;最終ページ
+#DIM MPAGE
+
+;オプション変数
+#DIMS 説明
+#DIMS 条件
+#DIMS 上部
+#DIMS 下部
+#DIMS 選択
+#DIMS 取消
+#DIMS 固定
+
+;オプション切り出し
+説明 = %SELECT_CHARA_LIST_CUT(C_ARGS, "説明")%
+条件 = %SELECT_CHARA_LIST_CUT(C_ARGS, "条件")%
+上部 = %SELECT_CHARA_LIST_CUT(C_ARGS, "上部")%
+下部 = %SELECT_CHARA_LIST_CUT(C_ARGS, "下部")%
+選択 = %SELECT_CHARA_LIST_CUT(C_ARGS, "選択")%
+取消 = %SELECT_CHARA_LIST_CUT(C_ARGS, "取消")%
+固定 = %SELECT_CHARA_LIST_CUT(C_ARGS, "固定")%
+C_LINM = TOINT(CHARA_LIST_R("行数", C_G_LINM))
+C_ROWM = TOINT(CHARA_LIST_R("列数", C_G_ROWM))
+C_IDES = %SELECT_CHARA_LIST_CUT(C_ARGS, "識別")%
+C_TARS = %SELECT_CHARA_LIST_CUT(C_ARGS, "対象")%
+C_KOJS = %SELECT_CHARA_LIST_CUT(C_ARGS, "口上")%
+
+;開始行位置記憶
+REDRAW 0
+LINE = LINECOUNT
+
+;表示させるキャラを抽出
+;リスト初期化
+VARSET CHARA_LIST, -1
+;条件指定が変更されていれば現在ページを初期化
+SIF LOCALS != 条件
+	C_PAGE = 0
+;現在の条件指定を記憶
+LOCALS = %条件%
+;対象となるキャラクタから条件に当てはまるものをリストに追加
+LOCAL = 0
+FOR LCOUNT, 0, C_TARS == "登場可" ? FLAG:Cha総数 + 1 # CHARANUM
+	;条件関数呼び出し
+	TRYCCALLFORM %条件%, LCOUNT
+	;関数がなければ許容
+	CATCH
+		RESULT = 1
+	ENDCATCH
+	;拒否された場合次のキャラクタへ
+	SIF RESULT == 0
+		CONTINUE
+	;許容されればリストに追加
+	CHARA_LIST:LOCAL = LCOUNT
+	LOCAL++
+NEXT
+
+;行数指定
+C_LINE = MIN(C_LINM, LOCAL)
+;必要文字数を取得
+C_CHAR = 0
+CALL SHOW_CHARA_LIST_ITEM(0)
+RESETCOLOR
+;改行を行うことで描画開始時に取得用文字列を消す
+PRINTL 
+;列数指定
+C_ROW = MIN(C_ROWM, (WIDTH() + 2) / (C_CHAR + 2))
+C_ROW = MAX(C_ROW, 1)
+
+;最終ページを取得
+MPAGE = (LOCAL - 1) / C_LINE / C_ROW
+
+;現在ページをページ範囲内に収める
+C_PAGE = LIMIT(C_PAGE, 0, MPAGE)
+
+;描画開始
+$PRINT_LIST
+;表を消去
+REDRAW 0
+CLEARLINE LINECOUNT - LINE
+DRAWLINE
+;上部関数呼び出し
+TRYCALLFORM %上部%
+;説明表示
+SIF 説明 != ""
+	PRINTFORML %説明%
+SIF 上部 != "" || 説明 != ""
+	DRAWLINE
+;本体表示処理
+CALL SHOW_CHARA_LIST()
+DRAWLINE
+;ページ数表示
+SIF LOCAL > C_LINE
+	PRINTFORML %" "*25%＜page.{C_PAGE}/{MPAGE}＞
+;キャンセル用文字列が存在しなければ戻るを指定
+取消 = % 取消 == "" ? "戻る" # 取消 %
+;ページ制御ボタン表示
+LOCALS:1 = 　\@ MPAGE > 0 ? [-]前のページ # \@
+LOCALS:2 = 　[/]\@ 取消 != "キャンセル不可" ? %取消% # ---- \@
+LOCALS:3 = 　\@ MPAGE > 0 ? [+]次のページ # \@
+LOCALS:4 = 　[*]\@ 固定 != "表示変更不可" && C_IDES != "" && C_IDES != "" ? 表示変更 # ---- \@
+PRINTBUTTON @"%LOCALS:1 , 25 , LEFT%" , "-"
+PRINTBUTTON @"%LOCALS:2 , 25 , LEFT%" , "/"
+PRINTBUTTON @"%LOCALS:3 , 25 , LEFT%" , "+"
+PRINTBUTTON @"%LOCALS:4 , 25 , LEFT%" , "*"
+PRINTL
+;追加選択肢表示
+TRYCALLFORM %選択%("-1")
+;下部関数呼び出し
+TRYCALLFORM %下部%
+
+;入力制御開始
+$INPUT_LOOP_1
+REDRAW 1
+INPUTS
+;追加選択肢処理
+TRYCCALLFORM %選択%(RESULTS)
+	;返り値0で処理終了。TOINT(RESULTS)を返す
+	SIF RESULT == 0
+		RETURN TOINT(RESULTS)
+	;返り値-1でRESTART
+	SIF RESULT == -1
+		RESTART
+	;返り値-2で入力のやり直し
+	SIF RESULT == -2
+		GOTO PRINT_LIST
+	;その他の返り値で続行
+CATCH
+ENDCATCH
+;選択肢処理
+SELECTCASE RESULTS
+	;無入力
+	CASE ""
+		GOTO INPUT_LOOP_1
+	;処理キャンセル(キャンセル不可の場合入力のやり直し)
+	CASE "/"
+		SIF 取消 != "キャンセル不可"
+			RETURN -1
+		CLEARLINE 1
+		GOTO INPUT_LOOP_1
+	;前のページ(範囲外になる場合最終ページへ)
+	CASE "-"
+		C_PAGE = C_PAGE <= 0 ? MPAGE # C_PAGE - 1
+	;次のページ(範囲外になる場合最初のページへ)
+	CASE "+"
+		C_PAGE = C_PAGE >= MPAGE ? 0 # C_PAGE + 1
+	;表示変更
+	CASE "*"
+		SIF 固定 == "表示変更不可" || C_IDES == ""
+			GOTO INPUT_LOOP_1
+		CALL SELECT_CHARA_LIST_OPT()
+		RESTART
+	;キャラクタ選択
+	CASEELSE
+		;キャラクタ指定が不正であれば入力のやり直し
+		;該当キャラの不在
+		SIF MATCH(CHARA_LIST, TOINT(RESULTS), 0) == 0
+			GOTO INPUT_LOOP_1
+		;キャラクタ選択成功
+		RETURN TOINT(RESULTS)
+ENDSELECT
+;再描画
+GOTO PRINT_LIST
+
+;-------------------------------------------------
+;表示変更関数
+;-------------------------------------------------
+@SELECT_CHARA_LIST_OPT()
+#LOCALSSIZE 10
+#DIMS LTEMPS, 10
+#DIM LCOUNT
+#DIM SELECT
+#DIM LINE
+#DIM 項目数
+SELECT = -1
+;項目呼び出し/切り出し
+LOCALS = %CHARA_LIST_R("項目", C_G_ITES)%
+IF LOCALS == "空"
+	LOCALS = 
+	LOCAL = 0
+ELSE
+	SPLIT LOCALS, "/", LOCALS, LOCAL
+ENDIF
+;その他項目切り出し
+SPLIT "←表示/名前/二つ名/体力・気力/経験値/性別", "/", LTEMPS, 項目数
+;その他項目を配置
+FOR LCOUNT, 0, 項目数
+	IF FINDELEMENT(LOCALS, LTEMPS:LCOUNT, , , 1) == -1
+		LOCALS:LOCAL = %LTEMPS:LCOUNT%
+		LOCAL++
+	ENDIF
+NEXT
+;開始行位置記憶
+LINE = LINECOUNT
+$PRINT_OPTION
+;記述を消去
+REDRAW 0
+CLEARLINE LINECOUNT - LINE
+;設定を表示
+DRAWLINE
+PRINTBUTTON @"[行数({C_LINM})]", 1001
+PRINTBUTTON @"[列数({C_ROWM})]", 1002
+PRINTL
+DRAWLINE
+PRINTFORML <表示項目>
+;項目表示
+FOR LCOUNT, 0, 項目数
+	SIF LCOUNT == SELECT
+		SETCOLOR 0xC07070
+	PRINTBUTTON @"%"["+LOCALS:LCOUNT+"]",24,LEFT% > ", LCOUNT
+	SIF LCOUNT % 4 == 3
+		PRINTL 
+	RESETCOLOR
+NEXT
+PRINTL 
+DRAWLINE
+PRINTFORML [-1]戻る
+$INPUT_LOOP
+REDRAW 1
+INPUT
+SELECTCASE RESULT
+	;戻る
+	CASE -1
+		;表示指定ポインタの位置を取得
+		LOCAL = FINDELEMENT(LOCALS, "←表示", , , 1)
+		;表示指定部分を積み上げて作成
+		LTEMPS = 
+		FOR LCOUNT, 0, LOCAL
+			SIF LCOUNT > 0
+				LTEMPS += "/"
+			LTEMPS += LOCALS:LCOUNT
+		NEXT
+		;内容が無かった場合ダミー文字列を記憶
+		SIF LTEMPS == ""
+			LTEMPS = 空
+		;記憶処理
+		CALLF CHARA_LIST_W(C_G_ITES, LTEMPS)
+		RETURN 0
+	;表示指定並べ替え処理
+	CASE 0 TO 項目数 - 1
+		;既にどれかを選択していれば入れ替えを行う
+		IF 0 <= SELECT && SELECT < 項目数
+			SWAP LOCALS:SELECT, LOCALS:RESULT
+			SELECT = -1
+		;まだ選択していなければ選択状態にする
+		ELSE
+			SELECT = RESULT
+		ENDIF
+		GOTO PRINT_OPTION
+	;行数指定
+	CASE 1001
+		CALL INPUT_MANY, 1, 20
+		C_LINM = RESULT
+		CALLF CHARA_LIST_W(C_G_LINM, TOSTR(RESULT))
+		GOTO PRINT_OPTION
+	;列数指定
+	CASE 1002
+		CALL INPUT_MANY, 1, 4
+		C_ROWM = RESULT
+		CALLF CHARA_LIST_W(C_G_ROWM, TOSTR(RESULT))
+		GOTO PRINT_OPTION
+ENDSELECT
+GOTO INPUT_LOOP
+
+;-------------------------------------------------
+;キャラ一覧表示処理・基本
+;<項目>オプション……『/』区切りで表示項目を指定
+;-------------------------------------------------
+@SHOW_CHARA_LIST(ARGS)
+#DIM LLINE
+#DIM LROW
+;行ループ
+FOR LLINE, 0, C_LINE
+	;列ループ
+	FOR LROW, 0, C_ROW
+		;二行目以降はスペースを空ける
+		SIF LROW > 0
+			PRINT 　
+		;現在行のキャラクタを読み込み
+		LOCAL = CHARA_LIST:(C_LINE * C_ROW * C_PAGE + C_LINE * LROW + LLINE)
+		;キャラクタが存在しなければ空行を出力
+		SIF LOCAL < 0
+			CONTINUE
+		;項目を順に表示
+		CALL SHOW_CHARA_LIST_ITEM(LOCAL)
+		RESETCOLOR
+	NEXT
+	PRINTL 
+NEXT
+RESETCOLOR
+PRINTL 　　　　★：調教中　☆：助手　○：休憩中　を表しています
+PRINTL 　　　　また、ご主人様は赤色で表示されます
+
+;項目を順に表示する
+@SHOW_CHARA_LIST_ITEM(ARG)
+#LOCALSSIZE 10
+#DIM LCOUNT
+;実際列数初期化
+LOCALS = %CHARA_LIST_R("項目", C_G_ITES)%
+SPLIT LOCALS, "/", LOCALS, LOCAL
+;ヘッダー呼び出し
+CALL SHOW_CHARA_LIST_HEADER(ARG)
+;オプション項目を順に呼び出し
+FOR LCOUNT, 0, LOCAL
+	CALL SHOW_CHARA_LIST_C(LOCALS:LCOUNT, ARG)
+NEXT
+
+;ヘッダー関数
+@SHOW_CHARA_LIST_HEADER(ARG)
+;調教者・助手などのアイコン表示
+CALL ARRANGE_TARGETSIGN, ARG
+;キャラ番号を表示
+CALL ARRANGE_CHARANUM, ARG
+
+;呼び出し処理
+@SHOW_CHARA_LIST_C(ARGS, ARG)
+;項目追加時は@SELECT_CHARA_LIST_OPTにも追加すること
+SELECTCASE ARGS
+	;キャラ名を表示
+	CASE "名前"
+		CALL ARRANGE_CHARANAME, ARG
+	;二つ名を表示
+	CASE "二つ名"
+		CALL ARRANGE_AKA, ARG
+	;体力・気力表示
+	CASE "体力・気力"
+		CALL ARRANGE_CHARALIFE, ARG
+	;経験値表示
+	CASE "経験値"
+		CALL ARRANGE_EXP, ARG
+	;性別表示
+	CASE "性別"
+		CALL ARRANGE_SEX, ARG
+ENDSELECT
+
+;=============================================================================
+;情報表示補助処理
+;(※対象キャラによって表示文字数が変化しないように設定する)
+;=============================================================================
+;-------------------------------------------------
+;調教者・助手などの設定を表示させる処理
+;-------------------------------------------------
+@ARRANGE_TARGETSIGN, ARG
+;表示文字数加算
+C_CHAR += 2
+;csv番号での指定であれば登録番号を割り出す
+SIF C_TARS == "登場可"
+	ARG = GETCHARA(ARG)
+;登録番号から対象の属性を割り出す
+IF ARG == -1
+	LOCAL = 0
+ELSE
+	LOCAL = EQUALCHECK_TURN(1, ARG == TARGET, ARG != 0 && FINDELEMENT(ASSI, ARG) != -1, ARG != MASTER)
+ENDIF
+;属性を出力する
+CALL COLORPRINT(\@ ARG == FLAG:ご主人様 ? /0xFF0000/ # \@ + AUTO_SPLIT("　_★_☆_○", "_", LOCAL), "/")
+
+;-------------------------------------------------
+;キャラ一覧表示時にキャラ番号を表示させる処理
+;-------------------------------------------------
+@ARRANGE_CHARANUM, ARG
+;口上色に変更のオプションがあれば
+IF C_KOJS == "調教者"
+	;csv番号を読み込む
+	LOCAL = C_TARS == "登場可" ? ARG # NO:ARG
+	;口上色にする
+	TRYCCALLFORM KOJO_COLOR_K{LOCAL}
+	CATCH
+		SETCOLOR 160, 160, 160
+	ENDCATCH
+ENDIF
+;キャラ番号の表示(キャラ番号の最大幅を取得し、それに合わせる)
+LOCAL = STRLENS(@"{MAXARRAY(CHARA_LIST)}")
+PRINTFORM [{ARG, LOCAL}] 
+;表示文字数加算
+C_CHAR += LOCAL
+
+;-------------------------------------------------
+;キャラ一覧表示時にキャラ名を表示させる処理
+;-------------------------------------------------
+@ARRANGE_CHARANAME, ARG
+#DIM LCOUNT
+;行数取得
+LOCAL = 0
+FOR LCOUNT, 0, C_TARS == "登場可" ? FLAG:Cha総数 + 1 # CHARANUM
+	LOCAL = MAX(LOCAL, STRLENS(\@ C_TARS == "登場可" ? CSVNAME(LCOUNT) # CALLNAME:LCOUNT \@))
+NEXT
+;キャラ名称の読み込み(csv番号の場合はキャラクタcsvから読み込み)
+IF C_TARS == "登場可"
+	PRINTFORM %ARRANGE_STRLENS(CSVNAME(ARG), LOCAL), LOCAL, LEFT%
+ELSE
+	PRINTFORM %ARRANGE_STRLENS(CALLNAME:ARG, LOCAL), LOCAL, LEFT%
+ENDIF
+PRINT  
+;表示文字数加算
+C_CHAR += LOCAL + 1
+
+;-------------------------------------------------
+;キャラ一覧表示時に二つ名を表示させる処理
+;-------------------------------------------------
+@ARRANGE_AKA, ARG
+#DIM LCOUNT
+;行数取得
+LOCAL = 0
+FOR LCOUNT, 0, C_TARS == "登場可" ? FLAG:Cha総数 + 1 # CHARANUM
+	LOCAL = MAX(LOCAL, STRLENS(C_TARS == "登場可" ? CSVCSTR(LCOUNT, 10) # CSTR:LCOUNT:二つ名))
+NEXT
+;二つ名の読み込み(csv番号の場合はキャラクタcsvから読み込み)
+IF C_TARS == "登場可"
+	PRINTFORM %ARRANGE_STRLENS(CSVCSTR(ARG, 10), LOCAL), LOCAL, LEFT%
+ELSE
+	PRINTFORM %ARRANGE_STRLENS(CSTR:ARG:二つ名, LOCAL), LOCAL, LEFT%
+ENDIF
+PRINT  
+;表示文字数加算
+C_CHAR += LOCAL + 1
+
+;-------------------------------------------------
+;キャラ一覧表示時に体力・気力を表示させる処理
+;-------------------------------------------------
+@ARRANGE_CHARALIFE, ARG
+;表示文字数加算
+C_CHAR += 16
+LOCAL = ARG
+;csv番号での指定であれば登録番号を割り出す
+SIF C_TARS == "登場可"
+	ARG = GETCHARA(ARG)
+;登録番号が存在しなければ専用の表示を行う
+IF ARG == -1
+	PRINTFORM 体力(----/{CSVBASE(LOCAL, 0), 4}) 
+	PRINTFORM 気力(----/{CSVBASE(LOCAL, 1), 4}) 
+ELSE
+	PRINTFORM 体力({BASE:ARG:体力, 4}/{MAXBASE:ARG:体力, 4}) 
+	PRINTFORM 気力({BASE:ARG:気力, 4}/{MAXBASE:ARG:気力, 4}) 
+ENDIF
+
+;-------------------------------------------------
+;キャラ一覧表示時にLV・必要経験値を表示させる処理
+;-------------------------------------------------
+@ARRANGE_EXP, ARG
+;表示文字数加算
+C_CHAR += 16
+LOCAL = ARG
+;csv番号での指定であれば登録番号を割り出す
+SIF C_TARS == "登場可"
+	ARG = GETCHARA(ARG)
+;登録番号が存在しなければ専用の表示を行う
+IF ARG == -1
+	PRINTFORM [LV -- 
+	PRINTFORM NEXT ------] 
+ELSE
+	PRINTFORM [LV {CFLAG:ARG:調教レベル, 2} 
+	PRINTFORM NEXT {CFLAG:ARG:必要経験値 - CFLAG:ARG:調教経験, 6}] 
+ENDIF
+
+;-------------------------------------------------
+;性別表示
+;-------------------------------------------------
+@ARRANGE_SEX, ARG
+;表示文字数加算
+C_CHAR += 2
+LOCAL = ARG
+;csv番号での指定であれば登録番号を割り出す
+SIF C_TARS == "登場可"
+	ARG = GETCHARA(ARG)
+;登録番号が存在しなければ専用の表示を行う
+IF ARG == -1
+	LOCAL = EQUALCHECK_TURN(1, CSVTALENT(LOCAL, 122))
+	PRINTFORM %AUTO_SPLIT("♀_♂","_",LOCAL)% 
+ELSE
+	LOCAL = EQUALCHECK_TURN(1, TALENT:ARG:オトコ)
+	PRINTFORM %AUTO_SPLIT("♀_♂","_",LOCAL)% 
+ENDIF
+
+;;-------------------------------------------------
+;;陥落素質表示
+;;-------------------------------------------------
+;@ARRANGE_FALLTALENT,ARG
+;LOCAL = EQUALCHECK_TURN(1,TALENT:ARG:恋慕,TALENT:ARG:淫乱,TALENT:ARG:服従,TALENT:ARG:親愛,TALENT:ARG:娼婦,TALENT:ARG:隷属,TALENT:ARG:崩壊)
+;PRINTFORM %AUTO_SPLIT("－ ,恋 ,淫 ,服 ,親 ,娼 ,隷 ,崩 ,",",",LOCAL)%
+
+;-------------------------------------------------
+;オプション切り出し関数
+;-------------------------------------------------
+@SELECT_CHARA_LIST_CUT(ARGS:0 = "", ARGS:1 = "")
+#FUNCTIONS
+;オプションを探す
+LOCAL:0 = STRFINDU(ARGS:0, "<" + ARGS:1 + ">")
+;無ければ空文字を返す
+SIF LOCAL:0 == -1
+	RETURNF ""
+;有れば内容の範囲を探す
+LOCAL:0 += STRLENSU(ARGS:1) + 2
+LOCAL:1 = STRFINDU(ARGS:0, "<", LOCAL:0)
+;内容を切り出す
+LOCALS = %SUBSTRINGU(ARGS:0, LOCAL:0, LOCAL:1 - LOCAL:0)%
+;内容を返す
+RETURNF LOCALS
+
+;-------------------------------------------------
+;オプション記憶呼び出し関数
+;-------------------------------------------------
+@CHARA_LIST_R(ARGS, LREF)
+#FUNCTIONS
+#DIMS REF LREF
+;表示項目を思い出す
+LOCALS = %SELECT_CHARA_LIST_CUT(LREF, C_IDES)%
+;記憶している表示項目が無い場合、関数呼び出し時指定の値に
+IF LOCALS == ""
+	LOCALS = %SELECT_CHARA_LIST_CUT(C_ARGS, ARGS)%
+	;無指定の場合デフォルトの設定に
+	SIF LOCALS == ""
+		LOCALS = %C_DEFAULT:FINDELEMENT(C_OPTION, ARGS, , , 1)%
+	;オプションを記憶
+	SIF C_IDES != ""
+		CALLF CHARA_LIST_W(LREF, LOCALS)
+ENDIF
+RETURNF LOCALS
+
+;-------------------------------------------------
+;オプション記憶書き込み関数
+;-------------------------------------------------
+@CHARA_LIST_W(LREF, ARGS)
+#FUNCTION
+#DIMS REF LREF
+;記憶を消去
+LOCAL:0 = STRFINDU(LREF, "<" + C_IDES + ">")
+LOCAL:1 = STRFINDU(LREF, "<", LOCAL:0 + 1)
+IF LOCAL:0 < LOCAL:1
+	LREF = %SUBSTRINGU(LREF, 0, LOCAL:0) + SUBSTRINGU(LREF, LOCAL:1)%
+ELSE
+	LREF = %SUBSTRINGU(LREF, 0, LOCAL:0)%
+ENDIF
+;オプションを記憶
+LREF += "<" + C_IDES + ">" + ARGS
+RETURNF 0
+
+;-------------------------------------------------
+;等値チェック関数@EQUALCHECK_TURN
+;	引数0：チェックされる対象
+;	引数1～20：チェックに用いられる数値
+;@EQUALCHECKと同様ですが、一致した場合に返す値は1ではなく、最初に一致した引数の番号になります。
+;-------------------------------------------------
+@EQUALCHECK_TURN(ARG, ARG:1, ARG:2, ARG:3, ARG:4, ARG:5, ARG:6, ARG:7, ARG:8, ARG:9, ARG:10, ARG:11, ARG:12, ARG:13, ARG:14, ARG:15, ARG:16, ARG:17, ARG:18, ARG:19, ARG:20)
+#FUNCTION
+#LOCALSIZE 2
+IF ARG
+	FOR LOCAL:1, 1, 20
+		SIF ARG == ARG:(LOCAL:1)
+			RETURNF LOCAL:1
+	NEXT
+ELSE
+	;指定の変数が0の場合のみ別挙動
+	LOCAL = 0
+	FOR LOCAL:1, 0, 20
+		SIF ARG:(20-(LOCAL:1)) && !LOCAL
+			LOCAL = (LOCAL:1)
+	NEXT
+	FOR LOCAL:1, 1, 20-LOCAL
+		SIF ARG == ARG:(LOCAL:1)
+			RETURNF LOCAL:1
+	NEXT
+ENDIF
+RETURNF 0
+
+;-------------------------------------------------
+;ARGSの長さがARGを超えている場合、最後の3文字を...にして返す
+;-------------------------------------------------
+@ARRANGE_STRLENS(ARGS, ARG)
+#FUNCTIONS
+IF STRLENS(ARGS) > ARG
+	ARGS = %SUBSTRING(ARGS , 0 , ARG - 3)%...
+ENDIF
+RETURNF ARGS

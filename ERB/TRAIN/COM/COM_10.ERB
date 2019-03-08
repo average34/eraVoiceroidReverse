@@ -1,0 +1,281 @@
+﻿;────────────────────────────────────
+;010,恥ずかしがる（露出逆、屈従、反抗、消極的従う、お仕置きポイント）
+;────────────────────────────────────
+@COM10
+LOCAL = 200 + MARK:反抗刻印 * 10 - CFLAG:MASTER:調教レベル * 15
+;露出SOURCE減少
+SOURCE:MASTER:露出 -= LOCAL
+;露出SOURCEは負にならない
+IF SOURCE:MASTER:露出 < 0
+	SOURCE:MASTER:露出 = 0
+	LOCAL = 0
+ENDIF
+;屈従、反抗SOURCE増加
+SOURCE:MASTER:屈従 += 200 - LOCAL / 2
+SOURCE:MASTER:反抗 += LOCAL / 10
+;お仕置きポイント加算
+SIF LOCAL > 0 && BASE:苛立ち / 100 + RAND:5 > BASE:満足 / 100 + MARK:屈服刻印 + ABL:MASTER:従順 + CFLAG:アライメント / 10
+	TFLAG:お仕置きポイント += 1 + RAND:3
+;快感により派生
+IF SOURCE:MASTER:快Ｃ + SOURCE:MASTER:快Ｖ + SOURCE:MASTER:快Ａ + SOURCE:MASTER:快Ｂ > 10
+	;派生：快感に恥ずかしがる
+	TFLAG:REACT派生 = 1
+ELSE
+	;派生：状況に恥ずかしがる
+	TFLAG:REACT派生 = 0
+ENDIF
+;COM分類
+CALL SET_COMGRO("消極的従う")
+;依存度変化
+CALL ADD_DEPEND(+1, 0)
+RETURN 1
+
+
+;────────────────────────────────────
+;011,嫌がる（トラウマ、反抗、暴れる、お仕置きポイント）
+;────────────────────────────────────
+@COM11
+;トラウマ化加速
+TIMES SOURCE:MASTER:トラウマ , 1.20
+;反抗SOURCE増加
+LOCAL = 200 + SOURCE:MASTER:トラウマ / 3 - MARK:屈服刻印 * 20 - GET_ABL(MASTER, "従順") * 5 + MARK:反抗刻印 * 20
+LOCAL = LIMIT(LOCAL, 0, 1000)
+SOURCE:MASTER:反抗 += LOCAL
+;COM32の暴れるより判定が弱い
+LOCAL:1 = MARK:反抗刻印 + BASE:MASTER:体力 / 150 + BASE:MASTER:気力 / 100 - TALENT:MASTER:小柄 * 5 + TALENT:MASTER:長身 * 5 + PALAM:MASTER:反抗 / 1000 - (TEQUIP:縄) * 3 - TEQUIP:アイマスク * 4 - TEQUIP:ボールギャグ
+LOCAL:3 = BASE:体力 / 120 + BASE:気力 / 80 - TALENT:小柄 * 5 + TALENT:長身 * 5 + GET_TRAINLV(TARGET) * 2
+;助手の人数と体格
+SIF ASSI:1 > 0
+	LOCAL:3 += 6 + TALENT:(ASSI:1):長身 * 3 - TALENT:(ASSI:1):小柄 * 3
+SIF ASSI:2 > 0
+	LOCAL:3 += 6 + TALENT:(ASSI:2):長身 * 3 - TALENT:(ASSI:2):小柄 * 3
+;ACT補正値
+IF IS_NOWACTNAME("口で愛撫")
+	LOCAL:2 = 2
+ELSEIF IS_NOWACTNAME("キス")
+	LOCAL:2 = 5
+ELSEIF IS_NOWACTNAME("パイズリする")
+	LOCAL:2 = 3
+ELSEIF IS_NOWACTNAME("足コキする")
+	LOCAL:2 = 0
+ELSEIF IS_NOWACTNAME("アナルバイブ/アナルビーズ")
+	LOCAL:2 = 12
+ELSEIF IS_NOWACTNAME("イラマチオ")
+	LOCAL:2 = 14
+ELSEIF IS_NOWACTNAME("スパンキング")
+	LOCAL:2 = 12
+ELSEIF IS_NOWACTNAME("鞭")
+	LOCAL:2 = 15
+ELSEIF IS_NOWACTNAME("針")
+	LOCAL:2 = 14
+ELSEIF IS_NOWACTNAME("縄")
+	LOCAL:2 = 12
+ELSEIF IS_NOWACTNAME("アイマスク")
+	LOCAL:2 = 12
+ELSEIF IS_NOWACTNAME("治療する")
+	LOCAL:2 = -10
+ELSEIF IS_NOWACTNAME("正常位") || TEQUIP:性交中 == 1
+	LOCAL:2 = 12
+ELSEIF IS_NOWACTNAME("後背位") || TEQUIP:性交中 == 2
+	LOCAL:2 = 18
+ELSEIF IS_NOWACTNAME("騎乗位") || TEQUIP:性交中 == 3
+	LOCAL:2 = 7
+ELSEIF IS_NOWACTNAME("対面座位") || TEQUIP:性交中 == 4
+	LOCAL:2 = 15
+ELSEIF IS_NOWACTNAME("背面座位") || TEQUIP:性交中 == 5
+	LOCAL:2 = 16
+ELSEIF IS_NOWACTNAME("アナルセックス") || TEQUIP:性交中 == 6
+	LOCAL:2 = 20
+ELSEIF IS_NOWACTNAME("正常位させる") || TEQUIP:性交奉仕中 == 1
+	LOCAL:2 = 10
+ELSEIF IS_NOWACTNAME("後背位させる") || TEQUIP:性交奉仕中 == 2
+	LOCAL:2 = 10
+ELSEIF IS_NOWACTNAME("逆レイプ") || TEQUIP:性交奉仕中 == 3
+	LOCAL:2 = 12
+ELSEIF IS_NOWACTNAME("対面座位させる") || TEQUIP:性交奉仕中 == 4
+	LOCAL:2 = 12
+ELSEIF IS_NOWACTNAME("背面座位させる") || TEQUIP:性交奉仕中 == 5
+	LOCAL:2 = 12
+ELSEIF IS_NOWACTNAME("アナルセックスさせる") || TEQUIP:性交奉仕中 == 6
+	LOCAL:2 = 22
+ELSE
+	LOCAL:2 = 10
+ENDIF
+;助手存在時補正
+SIF ASSI > 0
+	LOCAL:2 += GET_TRAINLV(ASSI) / 2 + 3
+;ＳＰ行動
+SIF TFLAG:ＳＰ行動 > 199
+	LOCAL:2 += 10
+;補正値を満足すれば		逆レイプ抵抗できなくてよいらしいので、暴れる扱いにならないように変更@/L
+IF LOCAL:1 > LOCAL:2 + LOCAL:3 && TEQUIP:三角木馬 == 0 && !IS_NOWACTNAME("逆レイプ")
+	;お仕置きポイント加算
+	TFLAG:お仕置きポイント += (LOCAL:1 - LOCAL:3) / 2 + 3
+	;COM分類
+	CALL SET_COMGRO("暴れる")
+ELSE
+	;お仕置きポイント加算
+	TFLAG:お仕置きポイント += LOCAL:1 / 5 + 2
+ENDIF
+IF !IS_COMGRONAME("暴れる") || IS_NOWACTNAME("逆レイプ")
+	;COM分類
+	CALL SET_COMGRO("消極的従う")
+	;COM印象
+	CALL SET_COMIMP("悪印象小")
+	;派生：嫌がるがACTは妨害せず
+	TFLAG:REACT派生 = 0
+ELSE
+	DOWNBASE:体力 += 5 * (4 + MARK:反抗刻印 + TALENT:MASTER:長身 * 2 - TALENT:MASTER:小柄 * 2)
+	DOWNBASE:気力 += 8 * (7 + CFLAG:MASTER:反抗強度 + TALENT:MASTER:反抗的 * 3 + TALENT:MASTER:生意気 * 3 - TALENT:MASTER:素直 * 3 - TALENT:MASTER:大人しい * 3)
+	;COM印象
+	CALL SET_COMIMP("悪印象大")
+	;派生：嫌がってACT妨害
+	TFLAG:REACT派生 = 1
+ENDIF
+;依存度変化
+CALL ADD_DEPEND(-1, -1)
+RETURN 1
+
+
+;────────────────────────────────────
+;012,下手だと罵る（達成逆、反抗、お仕置きポイント）
+;────────────────────────────────────
+@COM12
+LOCAL = 20 + TALENT:MASTER:プライド高い * 5 + TALENT:MASTER:気丈 * 5 + MARK:反抗刻印 + PALAM:MASTER:反抗 / 500 - GET_ABL(MASTER, "従順") * 3 / 10 - CFLAG:MASTER:調教レベル
+LOCAL:1 = SOURCE:MASTER:快Ｃ * (1 + TALENT:MASTER:Ｃ敏感) + SOURCE:MASTER:快Ｖ * (1 + TALENT:MASTER:Ｖ敏感) + SOURCE:MASTER:快Ａ * (1 + TALENT:MASTER:Ａ敏感) + SOURCE:MASTER:快Ｂ * (1 + TALENT:MASTER:Ｂ敏感)
+LOCAL -= LOCAL:1 / (500 - TALENT:快感に素直 * 100 + TALENT:快感の否定 * 50)
+SIF LOCAL < 0
+	LOCAL = 0
+;達成SOURCE減少
+SOURCE:MASTER:達成 -= LOCAL * 50
+;反抗SOURCE増加
+SOURCE:MASTER:反抗 += 200 + LOCAL * 30
+;お仕置きポイント加算
+TFLAG:お仕置きポイント += LOCAL / 4 + 5
+IF LOCAL > 0
+	;COM印象
+	CALL SET_COMIMP("悪印象大")
+	;派生：こきおろす
+	TFLAG:REACT派生 = 0
+	;COM分類
+	CALL SET_COMGRO("平然と従う")
+ELSE
+	;COM印象
+	CALL SET_COMIMP("悪印象小")
+	;派生：強がる
+	TFLAG:REACT派生 = 1
+	;COM分類
+	CALL SET_COMGRO("消極的従う")
+ENDIF
+;依存度変化
+CALL ADD_DEPEND(-2, -3)
+RETURN 1
+
+
+;────────────────────────────────────
+;013,不敵に笑う（トラウマ逆、反抗、消極的従う、お仕置きポイント）
+;────────────────────────────────────
+@COM13
+;トラウマ化減速
+TIMES SOURCE:MASTER:トラウマ , 0.80
+;反抗SOURCE増加
+SOURCE:MASTER:反抗 += 500 - SOURCE:MASTER:快Ｃ / 50 * (1 + TALENT:MASTER:Ｃ敏感) + SOURCE:MASTER:快Ｖ / 50 * (1 + TALENT:MASTER:Ｖ敏感) + SOURCE:MASTER:快Ａ / 50 * (1 + TALENT:MASTER:Ａ敏感) + SOURCE:MASTER:快Ｂ / 50 * (1 + TALENT:MASTER:Ｂ敏感)
+SIF SOURCE:MASTER:反抗 < 0
+	SOURCE:MASTER:反抗 = 0
+;お仕置きポイント加算
+TFLAG:お仕置きポイント += BASE:苛立ち / 80 - BASE:興味 / 150 + 1 + RAND:3
+;COM分類
+CALL SET_COMGRO("平然と従う")
+;COM印象
+CALL SET_COMIMP("悪印象小")
+;依存度変化
+CALL ADD_DEPEND(0, -1)
+RETURN 1
+
+
+;────────────────────────────────────
+;014,快感を我慢する（快ＣＶＡＢ補正、不快追加、達成、悦楽、反抗、哀願、お仕置きポイント）
+;────────────────────────────────────
+@COM14
+;快ＸSOURCE減少
+TIMES SOURCE:MASTER:快Ｃ , 0.80
+TIMES SOURCE:MASTER:快Ｖ , 0.80
+TIMES SOURCE:MASTER:快Ａ , 0.80
+TIMES SOURCE:MASTER:快Ｂ , 0.80
+;不快PALAM加算
+CUP:MASTER:不快 += SOURCE:MASTER:快Ｃ / 25 + SOURCE:MASTER:快Ｖ / 25 + SOURCE:MASTER:快Ａ / 25 + SOURCE:MASTER:快Ｂ / 25
+;達成、悦楽SOURCE増加
+SOURCE:MASTER:達成 += 100 + SOURCE:MASTER:快Ｃ / 50 + SOURCE:MASTER:快Ｖ / 50 + SOURCE:MASTER:快Ａ / 50 + SOURCE:MASTER:快Ｂ / 50
+SOURCE:MASTER:悦楽 += 100 + SOURCE:MASTER:快Ｃ / 50 + SOURCE:MASTER:快Ｖ / 50 + SOURCE:MASTER:快Ａ / 50 + SOURCE:MASTER:快Ｂ / 50
+LOCAL = (MARK:反抗刻印 + 1) * (100 + SOURCE:MASTER:快Ｃ + SOURCE:MASTER:快Ｖ + SOURCE:MASTER:快Ａ + SOURCE:MASTER:快Ｂ) / 500
+SIF LOCAL > 500
+	LOCAL = 500
+;反抗SOURCE増加
+SOURCE:MASTER:反抗 += LOCAL
+;我慢フラグ
+TCVAR:MASTER:我慢 = 3
+;哀願成立の判定
+IF SOURCE:MASTER:反抗 < 500 && (TALENT:心根優しい * 5 - TALENT:意地悪 * 5 - BASE:苛立ち / 100 + BASE:満足 / 100 > 0 + CFLAG:アライメント / 10) && TEQUIP:ボールギャグ == 0
+	;COM分類
+	CALL SET_COMGRO("許しを乞う")
+	;COM印象
+	CALL SET_COMIMP("0に近づく")
+	;派生：哀願
+	TFLAG:REACT派生 = 1
+ELSE
+	;COM分類
+	CALL SET_COMGRO("消極的従う")
+	;派生：耐久
+	TFLAG:REACT派生 = 0
+ENDIF
+;依存度変化
+CALL ADD_DEPEND(+1, -1)
+RETURN 1
+
+
+;────────────────────────────────────
+;015,快感を受け入れる（快ＣＶＡＢ補正、屈従、達成、悦楽、受け入れる）
+;ほとんど気持ち良い！と同じですが、自分が依存しやすい
+;────────────────────────────────────
+@COM15
+;逸脱SOURCE減少
+TIMES SOURCE:MASTER:逸脱 , 0.70
+;トラウマ化減速
+TIMES SOURCE:MASTER:トラウマ , 0.80
+;屈従、達成、悦楽SOURCE増加
+SOURCE:MASTER:屈従 += 50 + (MARK:MASTER:快楽刻印 + 1) * (SOURCE:MASTER:快Ｃ + SOURCE:MASTER:快Ｖ + SOURCE:MASTER:快Ａ + SOURCE:MASTER:快Ｂ) * CFLAG:MASTER:調教レベル / 200
+SOURCE:MASTER:達成 += 100 + (CFLAG:MASTER:調教レベル + 5) * (SOURCE:MASTER:快Ｃ + SOURCE:MASTER:快Ｖ + SOURCE:MASTER:快Ａ + SOURCE:MASTER:快Ｂ) / 100
+SOURCE:MASTER:悦楽 += 100 + SOURCE:MASTER:快Ｃ / 25 + SOURCE:MASTER:快Ｖ / 25 + SOURCE:MASTER:快Ａ / 25 + SOURCE:MASTER:快Ｂ / 25
+;COM分類
+CALL SET_COMGRO("受け入れる")
+;COM印象
+CALL SET_COMIMP("好印象大")
+;我慢フラグ解消
+TCVAR:MASTER:我慢 = 0
+;依存度変化
+CALL ADD_DEPEND(+1, +5)
+RETURN 1
+
+
+;────────────────────────────────────
+;016,気持ち良い！（快ＣＶＡＢ補正、屈従、達成、悦楽、受け入れる）
+;ほとんど快感を受け入れると同じですが、ご主人様側の依存を誘いやすい
+;────────────────────────────────────
+@COM16
+;逸脱SOURCE減少
+TIMES SOURCE:MASTER:逸脱 , 0.70
+;トラウマ化減速
+TIMES SOURCE:MASTER:トラウマ , 0.80
+;屈従、達成、悦楽SOURCE増加
+SOURCE:MASTER:屈従 += 50 + (MARK:MASTER:快楽刻印 + 1) * (SOURCE:MASTER:快Ｃ + SOURCE:MASTER:快Ｖ + SOURCE:MASTER:快Ａ + SOURCE:MASTER:快Ｂ) * CFLAG:MASTER:調教レベル / 200
+SOURCE:MASTER:達成 += 100 + (CFLAG:MASTER:調教レベル + 5) * (SOURCE:MASTER:快Ｃ + SOURCE:MASTER:快Ｖ + SOURCE:MASTER:快Ａ + SOURCE:MASTER:快Ｂ) / 100
+SOURCE:MASTER:悦楽 += 100 + SOURCE:MASTER:快Ｃ / 25 + SOURCE:MASTER:快Ｖ / 25 + SOURCE:MASTER:快Ａ / 25 + SOURCE:MASTER:快Ｂ / 25
+;COM分類
+CALL SET_COMGRO("受け入れる")
+;COM印象
+CALL SET_COMIMP("好印象大")
+;我慢フラグ解消
+TCVAR:MASTER:我慢 = 0
+;依存度変化
+CALL ADD_DEPEND(+4, +1)
+RETURN 1

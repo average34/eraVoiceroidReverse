@@ -1,0 +1,96 @@
+﻿;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+;		加虐系メッセージ
+
+;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+;────────────────────────────────────
+;060,スパンキング
+;────────────────────────────────────
+@TRAIN_MESSAGE_60
+PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("たまま、")%%CALLNAME:MASTER%の
+PRINTFORML 尻を平手で強く叩いた…
+
+;────────────────────────────────────
+;061,鞭
+;────────────────────────────────────
+@TRAIN_MESSAGE_61
+PRINTFORML %CALLNAME:TARGET%が鞭を大きく振り上げ思いっきり振り下ろすと、
+PRINTFORML %CALLNAME:MASTER%の肌に真っ赤な筋が幾本も刻まれていった…
+
+;────────────────────────────────────
+;062,針
+;────────────────────────────────────
+@TRAIN_MESSAGE_62
+IF PENIS(MASTER)              ;調教対象がペニスを持っている
+	PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("たまま、")%%CALLNAME:MASTER%の
+	PRINTFORML 体に針を突きたてた…
+ELSE                          ;その他
+	PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("たまま、")%%CALLNAME:MASTER%の
+	PRINTFORML 乳首やクリトリスに針を突きたてた…
+ENDIF
+
+;────────────────────────────────────
+;063,縄
+;────────────────────────────────────
+@TRAIN_MESSAGE_63
+IF TFLAG:ACT派生 == 0         ;拘束時
+	PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%を縄で縛ろうとした…
+ELSE                          ;解除時
+	PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の縄をほどいた…
+ENDIF
+
+;────────────────────────────────────
+;064,アイマスク
+;────────────────────────────────────
+@TRAIN_MESSAGE_64
+IF TFLAG:ACT派生 == 0         ;装着時
+	PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("つつ、")%%CALLNAME:MASTER%に
+	PRINTFORML アイマスクを着けさせようとした…
+ELSE                          ;解除時
+	PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%からアイマスクをはずしてやった…
+ENDIF
+
+;────────────────────────────────────
+;065,ボールギャグ
+;────────────────────────────────────
+@TRAIN_MESSAGE_65
+IF TFLAG:ACT派生 == 0         ;装着時
+	PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("つつ、")%%CALLNAME:MASTER%に
+	PRINTFORML ボールギャグを嵌めさせようとした…
+ELSE                          ;解除時
+	PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%からボールギャグを取ってやった…
+ENDIF
+
+;────────────────────────────────────
+;066,罵倒
+;────────────────────────────────────
+@TRAIN_MESSAGE_66
+PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("たまま、")%%EQUIPACTION_DESCRIPTION()%挑発するかのように
+PRINTFORML %CALLNAME:MASTER%の痴態を声に出した…
+
+;────────────────────────────────────
+;067,三角木馬
+;────────────────────────────────────
+@TRAIN_MESSAGE_67
+IF TFLAG:ACT派生 == 0         ;開始時
+	PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%を木馬に乗せようとした…
+ELSE                          ;終了時
+	PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%を木馬から降ろしてやった…
+ENDIF
+
+;────────────────────────────────────
+;068,浣腸器＋プラグ
+;────────────────────────────────────
+@TRAIN_MESSAGE_68
+SELECTCASE TFLAG:ACT派生
+	CASE 0                    ;ACT派生が注入
+		PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("つつ、")%%CALLNAME:MASTER%の菊穴に
+		PRINTFORML 浣腸液を流し込み、栓をした…
+	CASE 1                    ;ACT派生が排出
+		PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("ながら、")%%CALLNAME:MASTER%から
+		PRINTFORML 肛門栓を抜いて、腸内の汚物を肛門から撒き散らさせた…
+	CASEELSE                  ;ACT派生が追加
+		PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("ながら、")%%CALLNAME:MASTER%の腸内に
+		PRINTFORML さらに浣腸液を注入しようとした…
+ENDSELECT

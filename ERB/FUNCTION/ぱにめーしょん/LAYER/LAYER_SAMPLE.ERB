@@ -1,0 +1,166 @@
+﻿@LAYER_TEST
+DRAWLINE
+PRINTFORML [ 0] LAYER HTMLサンプル      <font color='0xFF0000' face = 'ＭＳ ゴシック'>文章本文</font># の形式
+PRINTFORML [-1] 終了
+INPUT
+SELECTCASE RESULT
+	CASE 0
+		CALL LAYER_TEST_HTML
+	CASE -1
+		RETURN
+ENDSELECT
+RESTART
+
+@LAYER_TEST_HTML
+X:0 = 18
+Y:0 =  9
+
+X:1 = 32
+Y:1 =  9
+
+X:2 = 46
+Y:2 =  9
+
+X:3 = 4
+Y:3 = 2
+
+LOCALS:0 = <font face='ＭＳ ゴシック' color='#C06060'>【HTML】</font>
+LOCALS:1 = <font face='ＭＳ 明朝' color='#60C060'>【HTML】</font>
+LOCALS:2 = <font face='HG行書体' color='#6060C0'>【HTML】</font>
+LOCALS:4 =
+LOCAL = 0
+LOCAL:1 = LINECOUNT
+LOCAL:2 = 0
+DO
+REDRAW 0
+
+Z:2 = GETMILLISECOND()
+	;半角10スケール
+	FOR COUNT, 0, 56*2
+		PRINTFORM \@ COUNT%10 == 0 ? * # _ \@
+	NEXT
+;	PRINTL 
+	;半角 1スケール
+	FOR COUNT, 0, 56*2
+		PRINTFORM {COUNT%10,1}
+	NEXT
+	PRINTL 
+;	;全角スケール
+;	FOR COUNT, 0, 56
+;		PRINTFORM {COUNT,2}
+;	NEXT
+;	PRINTL 
+
+
+
+; 初期化 (区切り文字を"#"に)
+CALL LAYER_INIT("`")
+
+; 大枠
+
+CALL LAYER_SET(@"┏%"━"*54%┓",0,0)
+FOR COUNT, 1,39
+	CALL LAYER_SET(@"┃`<button value='P'>%"  "*54%</button>`┃",COUNT,0)
+NEXT
+CALL LAYER_SET(@"<button value='P'><I>全画面ボタン</I></button>",19,50)
+CALL LAYER_SET(@"┗%"━"*54%┛",39,0)
+
+; 情報画面
+
+CALL LAYER_SET(@"┏━━━━━┓",Y:3 + 0,X:3)
+CALL LAYER_SET(@"┃`%HTML_SETTAG( LOCALS:LOCAL , @"選択NO.{LOCAL}  " )%`┃",Y:3 + 1,X:3)
+CALL LAYER_SET(@"┃ X:{X:LOCAL,2} Y:{Y:LOCAL,2}┃",Y:3 + 2,X:3)
+CALL LAYER_SET(@"┃描画速度  ┃",Y:3 + 3,X:3)
+CALL LAYER_SET(@"┃%@"{Z:1}",7%/ms┃",Y:3 + 4,X:3)
+CALL LAYER_SET(@"┃ループ速度┃",Y:3 + 5,X:3)
+CALL LAYER_SET(@"┃`%LAYER_CBAR(LOCAL:2,10,10,UNICODE(0x2584),UNICODE(0x2584),0xFFFF00,0x606060)%`┃",Y:3 + 6,X:3)
+CALL LAYER_SET(@"┃%@"{Z:3}",7%/ms┃",Y:3 + 7,X:3)
+CALL LAYER_SET(@"┃TINPUT速度┃",Y:3 + 8,X:3)
+CALL LAYER_SET(@"┃%@"{Z:5}",7%/ms┃",Y:3 + 9,X:3)
+CALL LAYER_SET(@"┃差        ┃",Y:3 + 10,X:3)
+CALL LAYER_SET(@"┃%@"{Z:3-Z:5}",7%/ms┃",Y:3 + 11,X:3)
+CALL LAYER_SET(@"┗━━━━━┛",Y:3 + 12,X:3)
+
+
+; レイヤ0
+CALL LAYER_SET(@"┏━━━━━┓",Y:0 + 0,X:0)
+CALL LAYER_SET(@"┃`%HTML_SETTAG(LOCALS:0,"あいうえお")%`┃",Y:0 + 1,X:0)
+CALL LAYER_SET(@"┃`%HTML_SETTAG(LOCALS:0,"かきくけこ")%`┃",Y:0 + 2,X:0)
+CALL LAYER_SET(@"┃`%HTML_SETTAG(LOCALS:0,"さしすせそ")%`┃",Y:0 + 3,X:0)
+CALL LAYER_SET(@"┃`%HTML_SETTAG(LOCALS:0,"たちつてと")%`┃",Y:0 + 4,X:0)
+CALL LAYER_SET(@"┗━━━━━┛",Y:0 + 5,X:0)
+
+
+; レイヤ1
+CALL LAYER_SET(@"┏━━━━━┓",Y:1 + 0,X:1)
+CALL LAYER_SET(@"┃`%HTML_SETTAG(LOCALS:1,"なにぬねの")%`┃",Y:1 + 1,X:1)
+CALL LAYER_SET(@"┃`%HTML_SETTAG(LOCALS:1,"はひふへほ")%`┃",Y:1 + 2,X:1)
+CALL LAYER_SET(@"┃`%HTML_SETTAG(LOCALS:1,"まみむめも")%`┃",Y:1 + 3,X:1)
+CALL LAYER_SET(@"┃`%HTML_SETTAG(LOCALS:1,"や　ゆ　よ")%`┃",Y:1 + 4,X:1)
+CALL LAYER_SET(@"┗━━━━━┛",Y:1 + 5,X:1)
+
+
+; レイヤ2
+CALL LAYER_SET(@"┏━━━━━┓",Y:2 + 0,X:2)
+CALL LAYER_SET(@"┃`%HTML_SETTAG(LOCALS:2,"らりるれろ")%`┃",Y:2 + 1,X:2)
+CALL LAYER_SET(@"┃`%HTML_SETTAG(LOCALS:2,"わ　を　ん")%`┃",Y:2 + 2,X:2)
+CALL LAYER_SET(@"┃`%HTML_SETTAG(LOCALS:2,"１２３４５")%`┃",Y:2 + 3,X:2)
+CALL LAYER_SET(@"┃`%HTML_SETTAG(LOCALS:2,"６７８９０")%`┃",Y:2 + 4,X:2)
+CALL LAYER_SET(@"┗━━━━━┛",Y:2 + 5,X:2)
+
+CALL LAYER_SET(@"8426で移動、0で対象変更、-で抜け", 39,  70)
+
+Z = GETMILLISECOND()
+CALL LAYER_PRINT(,40)
+Z:1 = GETMILLISECOND() - Z
+
+Z:4 = GETMILLISECOND()
+TONEINPUTS 100,"",0
+;ONEINPUTS
+Z:5 = GETMILLISECOND() - Z:4
+Z:6 = 100 - Z:5
+CLEARLINE 1
+;SIF Z:5 < 100
+;	TWAIT (Z:6), 1
+SELECTCASE RESULTS
+	CASE "8"
+		SIF Y:LOCAL > 1
+			Y:LOCAL -= 1
+	CASE "6"
+		SIF X:LOCAL < 96
+			X:LOCAL += 2
+	CASE "4"
+		SIF X:LOCAL >= 4
+			X:LOCAL -= 2
+	CASE "2"
+		SIF Y:LOCAL < 33
+			Y:LOCAL += 1
+	CASE "0"
+		LOCAL += 1
+		SIF LOCAL > 2
+			LOCAL = 0
+	CASE "P"
+		; 全画面ボタンテスト
+		CALL FLASHTEST
+	CASE "-"
+		RETURN
+ENDSELECT
+$DO_LOOP
+CLEARLINE LINECOUNT - LOCAL:1
+LOCAL:2 = LOCAL:2 == 10 ? 0 # LOCAL:2 +1
+Z:3 = GETMILLISECOND() - Z:2
+LOOP 1
+
+
+
+
+
+@FLASHTEST
+FOR COUNT,0,200
+	SETBGCOLOR GETDEFBGCOLOR() 
+	IF COUNT % 100 == 0
+		SETBGCOLOR 0x606060
+		TWAIT 100,1
+	ENDIF
+NEXT
+SETBGCOLOR GETDEFBGCOLOR() 

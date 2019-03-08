@@ -1,0 +1,1149 @@
+﻿;------------------------------------------------------------------------
+;EDIT	001		KOremi		2011/11/10		地の文をACT_MESSAGE_OTHERS.ERBに分離
+;											脱衣実行処理をここに移動
+;------------------------------------------------------------------------
+
+;────────────────────────────────────
+;拒絶処理(リアクションによって調教がキャンセルされる)
+;────────────────────────────────────
+
+;────────────────────────────────────
+;性交のキャンセル（快Ｃ、快Ｖ、快Ａ、接触、情愛、性行動、痛み、逸脱、中毒充足、トラウマ）
+;────────────────────────────────────
+@CANCEL_INSERT_TO_M
+;アナルセックス選択時、アナルセックス状態であれば
+IF IS_NOWACTNAME("アナルセックス") || TEQUIP:性交中 == 6
+	;快Ａ/快ｃSOURCE減衰
+	SOURCE:MASTER:快Ａ /= 3
+	SOURCE:快Ｃ /= 5
+;アナルセックス以外選択時、アナルセックス以外の性交状態であれば
+ELSEIF TEQUIP:性交中 < 6
+	;快Ｖ/快ｃSOURCE減衰
+	SOURCE:MASTER:快Ｖ /= 3
+	SOURCE:快Ｃ /= 5
+ENDIF
+;接触、性行動、痛み、逸脱、トラウマSOURCEは減衰
+;情愛SOURCEは減算、中毒充足SOURCEは抹消
+SOURCE:MASTER:接触 /= 3
+SOURCE:MASTER:情愛 -= 500
+SOURCE:MASTER:性行動 /= 3
+SOURCE:MASTER:痛み /= 3
+SOURCE:MASTER:逸脱 /= 3
+SOURCE:MASTER:中毒充足 = 0
+SOURCE:MASTER:トラウマ /= 3
+;調教者、調教対象相互の挿入を解除
+TEQUIP:性交中     = 0
+TEQUIP:性交奉仕中 = 0
+TFLAG:抜かず      = 0
+;────────────────────────────────────
+;性交奉仕のキャンセル（快Ｃ、快Ｖ、快Ａ、接触、情愛、性行動、痛み、逸脱、中毒充足、トラウマ）
+;────────────────────────────────────
+@CANCEL_INSERT_TO_T
+;アナルセックス状態であれば
+IF TEQUIP:性交奉仕中 == 6
+	;快Ｃ/快ａSOURCE減衰
+	SOURCE:MASTER:快Ｃ /= 3
+	SOURCE:快Ａ /= 5
+;アナルセックス以外の性交状態であれば
+ELSE
+	;快Ｃ/快ｖSOURCE減衰
+	SOURCE:MASTER:快Ｃ /= 3
+	SOURCE:快Ｖ /= 5
+ENDIF
+;接触、性行動、痛み、逸脱、トラウマSOURCEは減衰
+;情愛SOURCEは減算、中毒充足SOURCEは抹消
+SOURCE:MASTER:接触 /= 3
+SOURCE:MASTER:情愛 -= 500
+SOURCE:MASTER:性行動 /= 3
+SOURCE:MASTER:痛み /= 3
+SOURCE:MASTER:逸脱 /= 3
+SOURCE:MASTER:中毒充足 = 0
+SOURCE:MASTER:トラウマ /= 3
+;調教者、調教対象相互の挿入を解除
+TEQUIP:性交中     = 0
+TEQUIP:性交奉仕中 = 0
+TFLAG:抜かず      = 0
+;────────────────────────────────────
+;加虐、露出プレイのキャンセル（痛み、拘束、露出、逸脱）
+;────────────────────────────────────
+;拘束キャンセル
+@CANCEL_TEQUIP_RESTRAINT
+;発生カウント
+CALLF CANCEL_TEQUIP_COUNT("拘束", "発生")
+;拘束SOURCE減衰
+SOURCE:MASTER:拘束 /= 3
+;縄、アイマスク、ボールギャグ解除
+TEQUIP:縄 = 0
+TEQUIP:アイマスク = 0
+TEQUIP:ボールギャグ = 0
+
+;三角木馬キャンセル
+@CANCEL_TEQUIP_W_HORSE
+;発生カウント
+CALLF CANCEL_TEQUIP_COUNT("三角木馬", "発生")
+;痛み、拘束SOURCE減衰
+SOURCE:MASTER:痛み /= 2
+SOURCE:MASTER:拘束 /= 3
+;三角木馬中断
+TEQUIP:三角木馬 = 0
+
+;野外プレイキャンセル
+@CANCEL_TEQUIP_OUTDOOR
+;発生カウント
+CALLF CANCEL_TEQUIP_COUNT("野外プレイ", "発生")
+;露出、逸脱SOURCE減衰
+SOURCE:MASTER:露出 /= 2
+SOURCE:MASTER:逸脱 /= 3
+;野外プレイ中断
+TEQUIP:野外プレイ = 0
+
+;大鏡キャンセル
+@CANCEL_TEQUIP_MIRROR
+;発生カウント
+CALLF CANCEL_TEQUIP_COUNT("大鏡", "発生")
+;露出SOURCE減衰
+SOURCE:MASTER:露出 /= 3
+;大鏡をしまう
+TEQUIP:大鏡 = 0
+
+;コスプレキャンセル
+@CANCEL_TEQUIP_COSPLAY
+;発生カウント
+CALLF CANCEL_TEQUIP_COUNT("コスプレ", "発生")
+;露出、逸脱SOURCE減衰
+SOURCE:MASTER:露出 /= 3
+SOURCE:MASTER:逸脱 /= 3
+;コスプレを脱ぐ
+TEQUIP:MASTER:コスプレ = 0
+;デフォルトの服装に戻る
+TEQUIP:MASTER:アクセサリ = EQUIP:MASTER:アクセサリ
+TEQUIP:MASTER:靴下 = EQUIP:MASTER:靴下
+TEQUIP:MASTER:下半身下着 = EQUIP:MASTER:下半身下着
+TEQUIP:MASTER:上半身下着 = EQUIP:MASTER:上半身下着
+;欲情が高い状態なら上着を着ない
+IF PALAM:MASTER:欲情 < 5000
+	TEQUIP:MASTER:下半身上着 = EQUIP:MASTER:下半身上着
+	TEQUIP:MASTER:上半身上着 = EQUIP:MASTER:上半身上着
+	TEQUIP:MASTER:全身上着 = EQUIP:MASTER:全身上着
+ENDIF
+
+;キャンセル履歴管理
+@CANCEL_TEQUIP_COUNT(ARGS = "", ARGS:1 = "")
+#FUNCTION
+IF ARGS != ""
+	IF ARGS:1 == "発生"
+		IF CFLAG:@"%ARGS%キャンセル補正" <= 33
+			CFLAG:@"%ARGS%キャンセル補正" = 100
+		ELSE
+			CFLAG:@"%ARGS%キャンセル補正" *= 3
+		ENDIF
+	ELSE
+		RETURNF CFLAG:@"%ARGS%キャンセル補正"
+	ENDIF
+ELSE
+	SPLIT "拘束/三角木馬/野外プレイ/大鏡/コスプレ", "/", LOCALS
+	FOR LOCAL, 0, RESULT
+		CFLAG:@"%LOCALS:LOCAL%キャンセル補正" -= 5 + CFLAG:@"%LOCALS:LOCAL%キャンセル補正" / 100
+	NEXT
+ENDIF
+RETURNF 0
+
+;────────────────────────────────────
+;使用検討処理(調教者が道具や消耗品の使用不使用を決定する)
+;────────────────────────────────────
+
+;────────────────────────────────────
+;媚薬とローションの使用（潤滑、尿意）
+;
+;呼び出されると現在の状況を勘案し、
+;必要だと判断されれば媚薬/ローションが使われる
+;────────────────────────────────────
+;実は媚薬の使用も拒否されたり抵抗されたりのが普通と思うが、処理が面倒なので使ったら絶対成功ようにしました
+@LOVEPOTION_USE
+
+VARSET LOCAL
+
+;今の薬力残量をチェック
+SELECTCASE TEQUIP:媚薬
+	CASE IS < 1
+		LOCAL += 20
+	CASE IS < 3
+		LOCAL += 10
+	CASE IS < 5
+		LOCAL += 5
+	CASE IS < 7
+		LOCAL += 1
+	CASE IS < 9
+		LOCAL -= 5
+	CASE IS < 11
+		LOCAL -= 10
+	CASEELSE
+		LOCAL -= 15
+ENDSELECT
+;欲情がすでに高まってる状態なら使わなくてよし
+SELECTCASE PALAM:MASTER:欲情
+	CASE IS > 6999
+		LOCAL -= 15
+	CASE IS > 5199
+		LOCAL -= 8
+	CASE IS > 3799
+		LOCAL -= 2
+	CASE IS > 2599
+		LOCAL += 1
+	CASE IS > 1599
+		LOCAL += 3
+	CASE IS > 699
+		LOCAL += 6
+	CASE IS > 299
+		LOCAL += 10
+	CASEELSE
+		LOCAL += 15
+ENDSELECT
+;ヒート値を差し引きます。ヒート値とは計算の概念で実際は薬の残量だと認知してください
+;(連続使用を抑制する)
+LOCAL -= FLAG:媚薬ヒート
+
+;使用する場合
+IF LOCAL > 0
+	;薬効追加
+	;調教者調合知識素質に応じて薬効増大
+	TEQUIP:媚薬 += 5 + TALENT:調合知識 * 4 + (1 + RAND:4) * (TALENT:調合知識 + 2)
+	;助手が手伝った場合、助手調合知識、技巧によって薬効増大
+	TEQUIP:媚薬 += TFLAG:助手ACT == 71 ? 3 + (TALENT:ASSI:調合知識 * 2 + RAND:3) * (ABL:ASSI:技巧 + RAND:2) # 0
+	;ヒート値に加算
+	;調教者調合知識素質、調教レベル、技巧、禁断の知識素質によって軽減
+	LOCAL:1 = 40 - (TALENT:調合知識 * 5 + GET_TRAINLV(TARGET) + 1) * (4 + ABL:技巧 + TALENT:禁断の知識 * 2) / 8
+	;助手が手伝った場合、助手調合知識、技巧によって軽減
+	LOCAL:1 -= TFLAG:助手ACT == 71 ? LOCAL:1 / (4 - TALENT:ASSI:調合知識) + (TALENT:ASSI:調合知識 * 3 + RAND:2) * (ABL:ASSI:技巧 + 1 + RAND:3) # 0
+	;現在媚薬ヒートが正であれば、乱数で2-4を追加
+	LOCAL:1 += FLAG:媚薬ヒート > 0 ? 2 + RAND:3 # 0
+	;媚薬ヒートに加算、このとき0以下であれば乱数で1-3を加算
+	FLAG:媚薬ヒート += LOCAL:1 < 1 ? 1 + RAND:3 # LOCAL:1
+	;乱数に応じて尿意追加
+	BASE:MASTER:尿意 += 100 + RAND:5 * 50
+	;フラグセット
+	TFLAG:媚薬等使用 |= 2
+	TFLAG:媚薬等使用口上 |= 2
+	TFLAG:媚薬等使用地の文スキップ |= 2
+ENDIF
+
+
+@LOTION_USE
+
+VARSET LOCAL
+
+;今の薬力残量をチェック
+SELECTCASE TEQUIP:ローション
+	CASE IS < 1
+		LOCAL += 20
+	CASE IS < 3
+		LOCAL += 10
+	CASE IS < 5
+		LOCAL += 5
+	CASE IS < 7
+		LOCAL -= 1
+	CASE IS < 9
+		LOCAL -= 5
+	CASE IS < 11
+		LOCAL -= 10
+	CASEELSE
+		LOCAL -= 15
+ENDSELECT
+;潤滑がすでに高まってる状態なら使わなくてよし
+SELECTCASE PALAM:MASTER:潤滑
+	CASE IS > 5999
+		LOCAL -= 15
+	CASE IS > 4799
+		LOCAL -= 8
+	CASE IS > 3799
+		LOCAL -= 2
+	CASE IS > 2499
+		LOCAL += 1
+	CASE IS > 1199
+		LOCAL += 3
+	CASE IS > 499
+		LOCAL += 6
+	CASE IS > 299
+		LOCAL += 10
+	CASEELSE
+		LOCAL += 15
+ENDSELECT
+;ヒート値を差し引きます
+;(連続使用を抑制する)
+LOCAL -= FLAG:ロシヒート
+
+;上着がまだ残っている(かつ強制脱衣の設定や縄装着がない)なら強制脱衣を呼び出し
+IF (TEQUIP:MASTER:下半身上着 || TEQUIP:MASTER:上半身上着 || TEQUIP:MASTER:全身上着) && !TFLAG:強制脱衣 && !TEQUIP:縄
+	;半々の確率で上＋下上着、アクセサリ－まで強制脱衣
+	TFLAG:強制脱衣 = 3 + (RAND:2 * 4)
+	;強制脱衣最適化
+	CALL KYOUSEI_DATUI
+ENDIF
+;それでも上着がまだ残っている場合はローション使用を断念
+SIF TEQUIP:MASTER:下半身上着 || TEQUIP:MASTER:上半身上着 || TEQUIP:MASTER:全身上着
+	LOCAL = 0
+
+;使用する場合
+IF LOCAL > 0
+	;薬効追加
+	;調教者調合知識素質に応じて薬効増大
+	TEQUIP:ローション += 5 + TALENT:調合知識 * 4 + (1 + RAND:4) * (TALENT:調合知識 + 2)
+	;助手が手伝った場合、助手調合知識、技巧によって薬効増大
+	TEQUIP:ローション += TFLAG:助手ACT == 71 ? 3 + (TALENT:ASSI:調合知識 * 2 + RAND:3) * (ABL:ASSI:技巧 + RAND:2) # 0
+	;ヒート値に加算
+	;調教者調合知識素質、調教レベル、技巧、禁断の知識素質によって軽減
+	LOCAL:1 = 40 - (TALENT:調合知識 * 5 + GET_TRAINLV(TARGET) + 1) * (4 + ABL:技巧 + TALENT:禁断の知識 * 2) / 8
+	;助手が手伝った場合、助手調合知識、技巧によって軽減
+	LOCAL:1 -= TFLAG:助手ACT == 71 ? LOCAL:1 / (4 - TALENT:ASSI:調合知識) + (TALENT:ASSI:調合知識 * 3 + RAND:2) * (ABL:ASSI:技巧 + 1 + RAND:3) # 0
+	;現在ローションヒートが正であれば、乱数で2-4を追加
+	LOCAL:1 += FLAG:ロシヒート > 0 ? 2 + RAND:3 # 0
+	;ローションヒートに加算、このとき0以下であれば乱数で1-3を加算
+	FLAG:ロシヒート += LOCAL:1 < 1 ? 1 + RAND:3 # LOCAL:1
+	;潤滑追加
+	PALAM:MASTER:潤滑 += 200
+	;フラグセット
+	TFLAG:媚薬等使用 |= 1
+	TFLAG:媚薬等使用口上 |= 1
+	TFLAG:媚薬等使用地の文スキップ |= 1
+ENDIF
+
+;────────────────────────────────────
+;効果計算処理(調教効果の計算を行う)
+;────────────────────────────────────
+
+;────────────────────────────────────
+;潤滑不足時計算処理
+;────────────────────────────────────
+;引数には『/』区切りで文字列を代入
+;第0ブロック：十分潤滑値
+;	潤滑不足を取られなくなるPALAM:MASTER:潤滑を指定
+;第1ブロック以降：『,』区切りで文字列を代入
+;	第0ブロック：補正SOURCE
+;		補正を行うSOURCEを指定
+;	第1ブロック：補正法
+;		補正計算の方法を指定
+;	第2ブロック：指定値
+;		補正法によって扱いは異なる
+;
+;指定例："500/M快Ａ,T,50/M痛み,A,500"
+;　　　　"2000/M快Ｖ,T,80/M快Ａ,T,80/M痛み,A,600"
+@SHORTAGE_LUBRICATION(ARGS)
+#LOCALSSIZE 100
+;COUNT変数
+#DIM LCOUNT
+;十分潤滑値：PALAM:MASTER:潤滑がこの値に達すると補正が無くなる
+#DIM LMAX
+;指定値：計算方法によって扱いは異なる
+#DIM LSPEC
+;対象者：SOURCE指定対象者
+#DIM LCHA
+;汎用文字列変数
+#DIMS LTEMPS, 3
+
+;LOCALS,LCOUNTの初期化
+VARSET LOCALS
+VARSET LCOUNT
+
+;ARGSを刻んでLOCALSへ代入
+SPLIT ARGS, "/", LOCALS
+
+;十分潤滑値を設定
+LMAX = TOINT(LOCALS)
+
+DO
+	;LTEMPS初期化
+	VARSET LTEMPS
+	;LOCALSを刻んでLTEMPSへ代入
+	SPLIT LOCALS:(LCOUNT + 1), ",", LTEMPS
+	;補正SOURCE指定からSOURCE対象者を抜き出す(M=MASTER,T=TARGET)
+	SELECTCASE SUBSTRINGU(LTEMPS, 0, 1)
+		CASE "M"
+			LCHA = MASTER
+		CASE "T"
+			LCHA = TARGET
+		CASEELSE
+			CALLF PRINT_ERRORMESSAGE(@"@SHORTAGE_LUBRICATION に無効なSOURCE対象者(%SUBSTRINGU(LTEMPS, 0, 1)%)が渡されました")
+			LCHA = MASTER
+	ENDSELECT
+	LTEMPS = %SUBSTRINGU(LTEMPS, 1)%
+	;指定値を設定
+	LSPEC = TOINT(LTEMPS:2)
+	;Times補正法を採用
+	IF LTEMPS:1 == "T"
+		;Times補正法
+		;対象に1以下の値をかけて減少させる。
+		;値は『指定値%』から始まる(0超過、100未満の値を指定する。特に0以下は指定禁止)
+		;PALAM:MASTER:潤滑の上昇に応じて1に近づいていくが、近づく速度は遅くなっていく
+		;
+		;補正結果一覧(対象に[X%]をかける)
+		;
+		;指定値  十分潤滑値を100%とした時のPALAM:MASTER:潤滑
+		;           0%  20%  40%  60%  80% 100%
+		;
+		;40     [  40%  66%  77%  86%  93% 100%]
+		;50     [  50%  72%  81%  88%  94% 100%]
+		;60     [  60%  77%  85%  90%  95% 100%]
+		;70     [  70%  83%  88%  93%  96% 100%]
+		;80     [  80%  88%  92%  95%  97% 100%]
+		;
+		LOCAL = LSPEC + GET_REVISION_SQRT(PALAM:MASTER:潤滑, LMAX, 100 - LSPEC)
+		SOURCE:LCHA:LTEMPS = SOURCE:LCHA:LTEMPS * LIMIT(LOCAL, 0, 100) / 100
+	;Add補正法を採用
+	ELSEIF LTEMPS:1 == "A"
+		;Add補正法
+		;対象に0以上の値を加算する
+		;値は『指定値』から始まる(0超過の値を指定する)
+		;PALAM:MASTER:潤滑の上昇に応じて0に近づいていくが、近づく速度は遅くなっていく
+		;
+		;補正結果一覧(対象に[X]を足す)
+		;
+		;指定値  十分潤滑値を100%とした時のPALAM:MASTER:潤滑
+		;           0%  20%  40%  60%  80% 100%
+		;
+		; 250   [ 250  140   92   57   27    0 ]
+		; 500   [ 500  280  185  115   55    0 ]
+		; 750   [ 750  420  277  172   82    0 ]
+		;1000   [1000  560  370  230  110    0 ]
+		;1500   [1500  840  555  345  165    0 ]
+		;3000   [3000 1680 1110  690  330    0 ]
+		;
+		LOCAL = LSPEC - GET_REVISION_SQRT(PALAM:MASTER:潤滑, LMAX, LSPEC)
+		SOURCE:LCHA:LTEMPS += LIMIT(LOCAL, 0, LSPEC)
+	ENDIF
+	;カウント加算
+	LCOUNT++
+;処理するものが無くなれば脱出
+LOOP LOCALS:(LCOUNT + 1) != ""
+
+;────────────────────────────────────
+;自慰関連処理
+;────────────────────────────────────
+
+;────────────────────────────────────
+;自慰の実行関数
+;────────────────────────────────────
+@ONANIE_APPLY
+;部位補正値
+#DIM L_C
+#DIM L_V
+#DIM L_A
+#DIM L_B
+;露出(Exposure)補正値
+#DIM L_E
+
+;調教対象欲望、技巧、調教レベル、器用な指先素質に応じてC、B部位補正値上昇
+;その他補正値は0に初期化
+L_C = 20 + GET_ABL(MASTER, "欲望") * (GET_ABL(MASTER, "技巧") + 10) * CFLAG:MASTER:調教レベル / 50 + GET_ABL(MASTER, "技巧") * 25 * (TALENT:MASTER:器用な指先 + 1) / 10
+L_V = 0
+L_A = 0
+L_B = L_C
+L_E = 0
+
+;バイブ使用
+IF TEQUIP:バイブ
+	;調教対象欲望、調教レベル、道具使い素質、技巧、道具強化に応じてV部位補正値上昇
+	L_V = 50 + GET_ABL(MASTER, "欲望") * (CFLAG:MASTER:調教レベル + 1) / 2 + (TALENT:MASTER:道具使い + 1) * GET_ABL(MASTER, "技巧") * (ITEM:9 + 1) * 3
+	;C部位補正値は減少
+	TIMES L_C, 0.80
+ENDIF
+
+;アナルバイブ使用
+IF TEQUIP:アナルバイブ && ABL:MASTER:Ａ感覚 > 1
+	;調教対象欲望、調教レベル、道具使い素質、技巧、道具強化に応じてA部位補正値上昇
+	L_A = (GET_ABL(MASTER, "欲望") + 10) * (CFLAG:MASTER:調教レベル + 1) * 6 + (TALENT:MASTER:道具使い + 1) * GET_ABL(MASTER, "技巧") * (ITEM:9 + 1) * 25 / 10
+	;B部位補正値は大きく減少
+	TIMES L_B, 0.60
+ENDIF
+
+;積極的やるなら部位補正値にボーナス
+IF IS_COMGRONAME("積極的従う")
+	TIMES L_C, 1.20
+	TIMES L_V, 1.10
+	TIMES L_A, 1.10
+	TIMES L_B, 1.20
+ENDIF
+
+;部位補正値に応じて快Ｘ発生
+;(オトコであれば快Ｂは発生しない)
+SOURCE:MASTER:快Ｃ += L_C * 2
+SOURCE:MASTER:快Ｖ += L_V
+SOURCE:MASTER:快Ａ += L_A
+SOURCE:MASTER:快Ｂ += TALENT:MASTER:オトコ ? 0 # L_B * 2
+
+;調教対象技巧、調教レベル、バイブ、アナルバイブ装着に応じて性行動SOURCE増加
+SOURCE:MASTER:性行動 += 50 + GET_ABL(MASTER, "技巧") * 2 + CFLAG:MASTER:調教レベル * 10 + TEQUIP:バイブ * 50 + TEQUIP:アナルバイブ * 50
+;調教者調教レベル、野外プレイ中、大鏡使用中、部位補正値に応じて露出補正値上昇
+L_E = 150 + GET_TRAINLV(TARGET) * 10 + TEQUIP:野外プレイ * 200 + TEQUIP:大鏡 * 150 + L_C / 2 + L_V / 3 + L_A / 3 + L_B / 2
+;露出補正値に応じて露出SOURCE増加
+SOURCE:MASTER:露出 += L_E
+;露出補正値に応じて増加し、露出癖、調教対象調教レベルに応じて減少する値が正であれば逸脱SOURCEに加算
+LOCAL = L_E / 2 - GET_ABL(MASTER, "露出癖") * 2 - CFLAG:MASTER:調教レベル * 10
+SOURCE:MASTER:逸脱 += LOCAL > 0 ? LOCAL # 0
+;補正値総計、自慰中毒に応じて中毒充足SOURCE増加
+SOURCE:MASTER:中毒充足 += (L_C + L_V + L_A + L_B + L_E) * (50 + GET_ABL(MASTER, "自慰中毒")) / 500
+
+;調教対象自慰中をセット
+TEQUIP:自慰中 |= 1
+;────────────────────────────────────
+;自慰絶頂処理
+;────────────────────────────────────
+@ONANIE_EX
+;自慰の実行関数呼び出し
+CALL ONANIE_APPLY
+
+;────────────────────────────────────
+;脱衣関連処理
+;────────────────────────────────────
+
+;────────────────────────────────────
+;自主脱衣/強制脱衣最適化(脱衣対象が存在しない場合、脱衣指定を変更する)
+;ARG	脱衣対象
+;────────────────────────────────────
+;旧名での呼び出しを処理
+@KYOUSEI_DATUI
+CALL DATUI_OPTIMIZE(MASTER)
+
+@JISHU_DATUI
+CALL DATUI_OPTIMIZE(TARGET)
+
+;処理本体
+@DATUI_OPTIMIZE(ARG)
+
+;脱衣対象がMASTERであれば強制脱衣、それ以外なら自主脱衣
+;(現在この二つ以外は処理できません)
+LOCAL = (ARG == MASTER ? 102 # 103)
+
+;現在の服装によるフラグ変動（たとえば上半身上着を剥ぐように指定したがすでに脱がれた場合、ブラジャーを剥ぐように）
+;上半身上着脱衣時、上半身上着と全身上着が存在しない
+IF TFLAG:LOCAL == 1 && !TEQUIP:ARG:上半身上着 && !TEQUIP:ARG:全身上着
+	;上半身下着が存在すれば上半身全部脱衣、それ以外は脱衣しない
+	TFLAG:LOCAL = TEQUIP:ARG:上半身下着 ? 4 # 0
+;下半身上着脱衣時、下半身上着と全身上着が存在しない
+ELSEIF TFLAG:LOCAL == 2 && !TEQUIP:ARG:下半身上着 && !TEQUIP:ARG:全身上着
+	;下半身下着が存在すれば下半身全部脱衣、それ以外は脱衣しない
+	TFLAG:LOCAL = TEQUIP:ARG:下半身下着 ? 5 # 0
+;上＋下上着脱衣時、下半身上着と上半身上着、全身上着が存在しない
+ELSEIF TFLAG:LOCAL == 3 && !TEQUIP:ARG:下半身上着 && !TEQUIP:ARG:上半身上着 && !TEQUIP:ARG:全身上着
+	;上半身下着/下半身下着が存在すればアクセサリ－まで脱衣、それ以外は脱衣しない
+	TFLAG:LOCAL = TEQUIP:ARG:上半身下着 || TEQUIP:ARG:下半身下着 ? 7 # 0
+;上半身全部脱衣時、上半身下着と上半身上着、全身上着が存在しない
+ELSEIF TFLAG:LOCAL == 4 && !TEQUIP:ARG:上半身下着 && !TEQUIP:ARG:上半身上着 && !TEQUIP:ARG:全身上着
+	;脱衣しない
+	TFLAG:LOCAL = 0
+;下半身全部脱衣時、下半身下着と下半身上着、全身上着が存在しない
+ELSEIF TFLAG:LOCAL == 5 && !TEQUIP:ARG:下半身下着 && !TEQUIP:ARG:下半身上着 && !TEQUIP:ARG:全身上着
+	;脱衣しない
+	TFLAG:LOCAL = 0
+;アクセサリー脱衣時、アクセサリと靴下が存在しない
+ELSEIF TFLAG:LOCAL == 6 && !TEQUIP:ARG:アクセサリ && !TEQUIP:ARG:靴下
+	;脱衣しない
+	TFLAG:LOCAL = 0
+;アクセサリ－まで脱衣時
+ELSEIF TFLAG:LOCAL == 7
+	;アクセサリと靴下が存在しない場合、全裸まで脱衣
+	SIF !TEQUIP:ARG:アクセサリ && !TEQUIP:ARG:靴下
+		TFLAG:LOCAL = 8
+	;下半身下着と上半身下着、下半身上着、上半身上着、全身上着が存在しない場合、脱衣しない
+	SIF !TEQUIP:ARG:下半身下着 && !TEQUIP:ARG:上半身下着 && !TEQUIP:ARG:下半身上着 && !TEQUIP:ARG:上半身上着 && !TEQUIP:ARG:全身上着
+		TFLAG:LOCAL = 0
+;全裸まで脱衣時、下半身下着と上半身下着、下半身上着、上半身上着、全身上着が存在しない
+ELSEIF TFLAG:LOCAL == 8 && !TEQUIP:ARG:下半身下着 && !TEQUIP:ARG:上半身下着 && !TEQUIP:ARG:下半身上着 && !TEQUIP:ARG:上半身上着 && !TEQUIP:ARG:全身上着
+	;アクセサリと靴下が存在する場合アクセサリー脱衣、それ以外は脱衣しない
+	TFLAG:LOCAL = TEQUIP:ARG:アクセサリ || TEQUIP:ARG:靴下 ? 6 # 0
+;下着だけ脱衣時、下半身下着と上半身下着が存在しない
+ELSEIF TFLAG:LOCAL == 9 && !TEQUIP:ARG:下半身下着 && !TEQUIP:ARG:上半身下着
+	;脱衣しない
+	TFLAG:LOCAL = 0
+ENDIF
+
+;────────────────────────────────────
+;強制脱衣成否判定
+;────────────────────────────────────
+@KYOUSEI_DATUI_CHECK
+
+;強制脱衣が行われない場合、判定を行わない
+SIF TFLAG:強制脱衣 <= 0
+	RETURN 0
+
+;脱衣成功するかの判定
+;LOCALが高いほど失敗しやすくなります
+
+;素質等による補正
+
+;調教対象体力、気力、反抗強度、反抗刻印、屈服刻印、反抗、屈服、恭順に応じて増減
+LOCAL = BASE:MASTER:体力 / 500 + BASE:MASTER:気力 / 200 + CFLAG:MASTER:反抗強度 + MARK:反抗刻印 - MARK:屈服刻印 + PALAM:MASTER:反抗 / 1000 - PALAM:MASTER:屈服 / 1200 - PALAM:MASTER:恭順 / 1200
+;調教対象気丈、臆病、反抗的、素直、生意気、大人しい、長身、小柄素質に応じて増減
+LOCAL += TALENT:MASTER:気丈 * 2 - TALENT:MASTER:臆病 * 2 + TALENT:MASTER:反抗的 * 5 - TALENT:MASTER:素直 * 5 + TALENT:MASTER:生意気 * 3 - TALENT:MASTER:大人しい * 3 + TALENT:MASTER:長身 * 4 - TALENT:MASTER:小柄 * 4
+;調教者調教レベル、技巧、長身、小柄素質、体力、気力に応じて増減
+LOCAL -= GET_TRAINLV(TARGET) + ABL:技巧 + TALENT:長身 * 3 - TALENT:小柄 * 3 + BASE:体力 / 600 + BASE:気力 / 300
+;今回調教種別の調教者技巧に応じて減少
+LOCAL -= ABL:(TFLAG:ACT分類 + 20) * 3 / 2
+
+;目標パーツによる補正
+
+;上半身上着強制脱衣(+0～+1)
+IF TFLAG:強制脱衣 == 1
+	LOCAL += RAND:2
+;下半身上着強制脱衣(+0～)
+ELSEIF TFLAG:強制脱衣 == 2
+	;下半身上着を見て、脱がしにくいものほど大きく加算(+0～)
+	LOCAL += TEQUIP:MASTER:下半身上着
+	;全身上着は一律+2
+	SIF TEQUIP:MASTER:全身上着
+		LOCAL += 2
+;上＋下上着強制脱衣(+1～)
+ELSEIF TFLAG:強制脱衣 == 3
+	;下半身上着を見て、脱がしにくいものほど大きく加算(+1～)
+	LOCAL += 1 + TEQUIP:MASTER:下半身上着
+	;全身上着は一律+3
+	SIF TEQUIP:MASTER:全身上着
+		LOCAL += 3
+;上半身全部強制脱衣(-2～+2)
+ELSEIF TFLAG:強制脱衣 == 4
+	;2を減算
+	LOCAL -= 2
+	;上半身上着か全身上着が存在すれば一律+4
+	SIF TEQUIP:MASTER:上半身上着 || TEQUIP:MASTER:全身上着
+		LOCAL += 4
+;下半身全部強制脱衣(-2～)
+ELSEIF TFLAG:強制脱衣 == 5
+	;2を減算
+	LOCAL -= 2
+	;下半身上着が存在すれば脱がしにくいものほど大きく加算(+4～)
+	SIF TEQUIP:MASTER:下半身上着
+		LOCAL += 4 + TEQUIP:MASTER:下半身上着
+	;全身上着が存在すれば一律+5
+	SIF TEQUIP:MASTER:全身上着
+		LOCAL += 5
+;アクセサリー強制脱衣(-3)
+ELSEIF TFLAG:強制脱衣 == 6
+	LOCAL -= 3
+;アクセサリ－まで/全裸まで強制脱衣(+2～)
+ELSEIF TFLAG:強制脱衣 == 7 || TFLAG:強制脱衣 == 8
+	;下半身上着を見て、脱がしにくいものほど大きく加算(+2～)
+	LOCAL += 2 + TEQUIP:MASTER:下半身上着
+	;上半身上着が存在すれば一律+2
+	SIF TEQUIP:MASTER:上半身上着
+		LOCAL += 2
+	;全身上着が存在すれば一律+4
+	SIF TEQUIP:MASTER:全身上着
+		LOCAL += 4
+;下着だけ強制脱衣(-2～)
+ELSEIF TFLAG:強制脱衣 == 9
+	;下半身上着を見て、脱がしにくいものほど大きく加算(-2～)
+	LOCAL += TEQUIP:MASTER:下半身上着 - 2
+	;全身上着が存在すれば一律+1
+	SIF TEQUIP:MASTER:全身上着
+		LOCAL += 1
+ENDIF
+
+;その他の補正
+
+;アイマスク装着時は2を減算
+SIF TEQUIP:アイマスク
+	LOCAL -= 2
+;ちょっとずるしてるけどこの処理がないといろいろ大変
+;縄拘束時、加虐、異常、使役系調教時はLOCALを0に
+SIF TEQUIP:縄 || TFLAG:ACT分類 == 6 || TFLAG:ACT分類 == 7 || TFLAG:ACT分類 == 8
+	LOCAL = 0
+
+;成否判定
+;(実行失敗時はTFLAG:強制脱衣を-1に、実行不可能時は0にする)
+
+;木馬による実行不可能判定
+IF TEQUIP:三角木馬
+	TFLAG:強制脱衣 = 0
+;助手の手伝うで必ず成功に、反抗の程度によって拘束のソース若干入ります
+ELSEIF (ASSI:1 >= 0 && TCVAR:(ASSI:1):助手ACT == GET_ASSIACTNUM("脱衣")) || (ASSI:2 >= 0 && TCVAR:(ASSI:2):助手ACT == GET_ASSIACTNUM("脱衣"))
+	SIF LOCAL > 0
+		SOURCE:MASTER:拘束 += (LOCAL + RAND:3) * 20
+;縄による実行不可能判定(例外としてアクセサリー、下着だけ脱衣は可能)
+ELSEIF TEQUIP:縄 && TFLAG:強制脱衣 != 6 && TFLAG:強制脱衣 != 9
+	TFLAG:強制脱衣 = 0
+;乱数で成否判定(4以上で絶対失敗、0以下で絶対成功)
+ELSEIF LOCAL > RAND:4
+	;補正値、調教対象反抗強度、反抗的、素直素質、調教レベル、従順に応じて反抗SOURCE増減
+	SOURCE:MASTER:反抗 += 80 * (2 + LOCAL) * (4 + CFLAG:MASTER:反抗強度 + TALENT:MASTER:反抗的 * 3 - TALENT:MASTER:素直 * 3) / (5 + CFLAG:MASTER:調教レベル + ABL:MASTER:従順)
+	;調教者苛立ちに応じてお仕置きポイント増加
+	TFLAG:お仕置きポイント += 2 + RAND:5 + BASE:苛立ち / 150
+	;強制脱衣失敗
+	TFLAG:強制脱衣 = -1
+ENDIF
+
+;強制脱衣成功時
+IF TFLAG:強制脱衣 > 0
+	;野外プレイ、大鏡使用時、強制脱衣内容、調教対象恥じらい、恥薄い素質、調教レベルに応じて露出SOURCE増減
+	SOURCE:MASTER:露出 += 100 * (3 + TEQUIP:野外プレイ * 3 + TEQUIP:大鏡 * 2) * (3 + TFLAG:強制脱衣 + TALENT:MASTER:恥じらい * 2 - TALENT:MASTER:恥薄い * 2) / (5 + CFLAG:MASTER:調教レベル)
+	;強制脱衣内容、調教対象トラウマ(刻印)、調教レベル、従順に応じてトラウマSOURCE増減
+	SOURCE:MASTER:トラウマ += 50 * (TFLAG:強制脱衣 + 5) * (5 + MARK:MASTER:トラウマ) / (10 + CFLAG:MASTER:調教レベル + ABL:MASTER:従順 * 2)
+	;アクセサリー/下着だけ強制脱衣時は露出、トラウマSOURCE軽減
+	IF TFLAG:強制脱衣 == 6
+		TIMES SOURCE:MASTER:露出 , 0.10
+		TIMES SOURCE:MASTER:トラウマ , 0.25
+	ELSEIF TFLAG:強制脱衣 == 9
+		TIMES SOURCE:MASTER:露出 , 0.75
+	ENDIF
+	;助手が手伝った場合露出SOURCE増加
+	SIF TFLAG:助手ACT == 70
+		TIMES SOURCE:MASTER:露出 , 1.20
+ENDIF
+
+;-----------EDIT 001 START--------------
+;地の文分離の一環として独立させる
+;内部処理をビット演算に変更
+;将来的に強制脱衣、自主脱衣をビットで扱えるように
+;---------------------------------------
+;────────────────────────────────────
+;強制脱衣、自主脱衣時の脱衣処理
+;────────────────────────────────────
+;※前提として自主脱衣/強制脱衣最適化、強制脱衣成否判定が行われている必要がある
+@DATUI_PROCESS
+
+;LOCAL初期化
+VARSET LOCAL
+
+;調教対象、調教者脱衣部位確認
+FOR LOCAL, 1, 3
+	;強制脱衣、自主脱衣によって分岐
+	SELECTCASE TFLAG:(101 + LOCAL)
+		;上半身上着
+		CASE 1
+			;上半身上着/全身上着
+			SETBIT LOCAL:LOCAL, 5
+			SETBIT LOCAL:LOCAL, 6
+		;下半身上着
+		CASE 2
+			;下半身上着/全身上着
+			SETBIT LOCAL:LOCAL, 4
+			SETBIT LOCAL:LOCAL, 6
+		;上＋下上着
+		CASE 3
+			;下半身上着/上半身上着/全身上着
+			SETBIT LOCAL:LOCAL, 4
+			SETBIT LOCAL:LOCAL, 5
+			SETBIT LOCAL:LOCAL, 6
+		;上半身全部
+		CASE 4
+			;上半身下着/上半身上着/全身上着
+			SETBIT LOCAL:LOCAL, 3
+			SETBIT LOCAL:LOCAL, 5
+			SETBIT LOCAL:LOCAL, 6
+		;下半身全部
+		CASE 5
+			;下半身下着/下半身上着/全身上着
+			SETBIT LOCAL:LOCAL, 2
+			SETBIT LOCAL:LOCAL, 4
+			SETBIT LOCAL:LOCAL, 6
+		;アクセサリー
+		CASE 6
+			;アクセサリ/靴下
+			SETBIT LOCAL:LOCAL, 0
+			SETBIT LOCAL:LOCAL, 1
+		;アクセサリ－まで
+		CASE 7
+			;下半身下着/上半身下着/下半身上着/上半身上着/全身上着
+			SETBIT LOCAL:LOCAL, 2
+			SETBIT LOCAL:LOCAL, 3
+			SETBIT LOCAL:LOCAL, 4
+			SETBIT LOCAL:LOCAL, 5
+			SETBIT LOCAL:LOCAL, 6
+		;全裸まで
+		CASE 8
+			;アクセサリ/靴下/下半身下着/上半身下着/下半身上着/上半身上着/全身上着
+			SETBIT LOCAL:LOCAL, 0
+			SETBIT LOCAL:LOCAL, 1
+			SETBIT LOCAL:LOCAL, 2
+			SETBIT LOCAL:LOCAL, 3
+			SETBIT LOCAL:LOCAL, 4
+			SETBIT LOCAL:LOCAL, 5
+			SETBIT LOCAL:LOCAL, 6
+		;下着だけ
+		CASE 9
+			;下半身下着/上半身下着
+			SETBIT LOCAL:LOCAL, 2
+			SETBIT LOCAL:LOCAL, 3
+	ENDSELECT
+NEXT
+
+;脱衣対象最適化処理(脱衣指定箇所に着衣が存在しなければ指定を解除)
+FOR LOCAL, 0, 7
+	SIF GETBIT(LOCAL:1, LOCAL) && !TEQUIP:MASTER:LOCAL
+		CLEARBIT LOCAL:1, LOCAL
+	SIF GETBIT(LOCAL:2, LOCAL) && !TEQUIP:TARGET:LOCAL
+		CLEARBIT LOCAL:2, LOCAL
+NEXT
+
+;脱衣寸前での地の文/口上表示
+CALL DATUI_MESSAGE(LOCAL:1, LOCAL:2)
+
+;脱衣処理(実際の脱衣はここで行われる)
+FOR LOCAL, 0, 7
+	SIF GETBIT(LOCAL:1, LOCAL)
+		TEQUIP:MASTER:LOCAL = 0
+	SIF GETBIT(LOCAL:2, LOCAL)
+		TEQUIP:TARGET:LOCAL = 0
+NEXT
+
+;着衣露出解消
+IF TFLAG:強制脱衣 > 0
+	;調教対象下半身下着が無ければ性器着衣露出解消
+	SIF TEQUIP:MASTER:下半身下着 == 0
+		TEQUIP:着衣露出 &= ~4
+	;調教対象上半身下着、上半身上着、全身上着が無ければ胸着衣露出解消
+	SIF TEQUIP:MASTER:上半身下着 == 0 && TEQUIP:MASTER:上半身上着 == 0 && TEQUIP:MASTER:全身上着 == 0
+		TEQUIP:着衣露出 &= ~8
+ENDIF
+IF TFLAG:自主脱衣 > 0
+	;調教者下半身下着が無ければ性器着衣露出解消
+	SIF TEQUIP:下半身下着 == 0
+		TEQUIP:着衣露出 &= ~1
+	;調教者上半身下着、上半身上着、全身上着が無ければ胸着衣露出解消
+	SIF TEQUIP:上半身下着 == 0 && TEQUIP:上半身上着 == 0 &&  TEQUIP:全身上着 == 0
+		TEQUIP:着衣露出 &= ~2
+ENDIF
+
+;脱衣直後での地の文/口上表示
+CALL DATUI_MESSAGE2(LOCAL:1, LOCAL:2)
+
+RETURN RESULT
+;-----------EDIT 001 END  --------------
+
+[SKIPSTART]
+;────────────────────────────────────
+;補正値代入処理(元々の値を使うと増加が直線的で使いにくい場合に利用)
+;※全てGET_ABL, GET_TRAINLV, ACT_FROM, ACT_TOに置き換えたはず！
+;　なので以下はすべて旧記述となります@これみ
+;────────────────────────────────────
+;@ABL_REVISION
+#DIM LCOUNT
+
+kapnaluqa氏による解析をこれみが修正。修正個所は『』内
+
+・ABLによる補正係数を決定する関数
+『A:1-29　TARGETのABL:1-29の係数
+　B:1-29　MASTERのABL:1-29の係数
+　C:1-29  ASSIのABL:1-29の係数』
+
+ABL:1-29は100 - 500/(ABL + 5)で補正値が定義される
+すなわち
+Lv0   0		Lv6　55
+Lv1  17		Lv7　59
+Lv2　29		Lv8　62
+Lv3　38		Lv9　65
+Lv4　45		Lv10 67
+Lv5　50
+
+まぁつまり、レベルがあがるごとに補正値の伸びが悪くなるタイプの式です
+
+A:30、C:30はABLではなく、調教レベルによる補正です
+こちらは 50 - 2000(調教レベル+40)で定義されます
+
+『なお、従順の補正値はB(MASTER)のみ存在し、B:30に格納されます
+　本来B:0に格納されるべきものがそのままB:30に入っていると考えてください』
+
+実際にこの係数を使っている箇所は
+20,会話　21,愛撫　22,道具　23,性交　24,羞恥
+25,奉仕　26,加虐　27,異常　28,使役
+
+これらのABLの補正値の1/5がメニュー決定の際に基礎値に加算されます（性奉は性交の補正を用いる）
+Lv0のとき0除算しそうなのにしてないあたり、僕にもよくわからない謎がありそう
+
+あとは結構いろんな箇所でちらほらつかってますが一例をだしておくと
+;────────────────────────────────────
+;010,愛撫/手淫する（Ｓ/Ｎ/Ｈ）（快Ｃ、快Ｂ、接触、情愛、性行動、不潔）
+;────────────────────────────────────
+ELSEIF IS_NOWACTNAME("手で愛撫")
+	SOURCE:MASTER:快Ｃ = 75 + S:1 * (2 + TALENT:器用な指先) / 4
+	;脱衣の処理
+	;壁抜けがあると3/4で無視する
+	IF !TALENT:壁抜け || !RAND:4
+		IF TALENT:抑圧 == 0 && TALENT:恥じらい == 0 && TALENT:着衣プレイ好き == 0
+			IF TALENT:解放 * 4 + A:1 / 10 + A:30 / 5 > 3 + RAND:3
+				TFLAG:強制脱衣 = 8
+				SIF RAND:3 > 0
+					TFLAG:強制脱衣 = 7
+			ELSEIF RAND:3 > 1
+				TFLAG:強制脱衣 = 3
+			ENDIF
+		ENDIF
+	ENDIF
+TFLAG:強制脱衣 は　3で下着を全てはぐ。7でアクセサリーまで全部剥ぐ。8で全裸まで剥ぐ
+この時はA:1、つまりTARGETの欲望の補正値とA:30、つまり調教レベルによる補正値で脱がしの大成功率を補正しています
+他にはソースの追加なんかにもけっこうつかわれてそう
+呼び出しが多いのは一文字がグローバルな関係で中身の保全が不安だからっぽい
+常に再計算する方式なので呼び出しが頻繁でも中身は大丈夫
+
+S配列は快楽を与えるコマンドの際の補正値です
+S:1－4　 CVAB愛撫　S5－6 VA性交　S7-8 VA性交奉仕　S:11-14　CVAB道具のTARGET→MASTERの補正値
+S:21-24  ASSI→MASTERの補正値になります
+S:41-48　MASTER→TARGETの補正値になります
+S:51-58  MASTER→ASSIの補正値になります
+※MASTER→はS:11-14の道具がないので配列が少ないです
+
+補正値はまず基礎値を以下の式で算出します
+LOCAL:1 = MAX(愛撫する側の調教レベル  * 10 / (愛撫を受ける側の調教レベル + 1) , MIN(愛撫実行者への好意/ 200 , 30), 10)
+受ける側の調教レベルが高いと調教レベル部分は伸びなくなるんで、実質的には好意キャップの補正値30がキャップっぽい気がします
+
+次に技巧-感覚による補正値を以下の式で算出します
+LOCAL = MAX(2 * 愛撫実行者の技巧 - 被愛撫者の感覚 , 屈服刻印)
+
+最後に(LOCAL + 10) * (LOCAL + 10) * LOCAL:1  / 10で補正値を確定します
+ちなみに(LOCAL + 10) * (LOCAL + 10)部分は以下のとおりだそうです
+;基本値		技巧－感覚
+;100		0
+;121		1
+;144		2
+;169		3
+;196		4
+;225		5
+;256		6
+;289		7
+;324		8
+;361		9
+;400		10
+
+使用の実例を示すと
+SOURCE:MASTER:快Ｃ = 75 + S:1 * (2 + TALENT:器用な指先) / 4（愛撫のC感覚ソース）
+※TALENT:57は器用な指先
+補正値が30*400/10なら1200で、75+600で675となります
+
+あとまぁ、このあと処理おっかけてみたんですが
+SOURCE:MASTER:0をUP:0に変換するまでに、C感覚見てる様子が見つけらんなかったんで
+C感覚は、あがるとCで感じやすくなるのではなく、感じにくくなるものっぽい
+これはもとのRevからそうでしたっけか
+
+なお、一文字だよりから脱却するために式中関数をつくってて、余裕があれば置き換えていきたいとかそんなんっぽい？
+
+;────────────────────────────────────
+;ABL,CFLAG:**:調教レベル 補正
+;今後は GET_ABL, GET_TRAINLV を使用すること
+;────────────────────────────────────
+
+;元々の条件では TARGET,ASSI > 0 だったが、
+;調教者および助手が『あなた』の時でも処理されるべきだと思ったので修正
+
+;元々のREPEATでは1-30の範囲で回していたが、
+;30で代入した値が直後に上書きされて無駄になっていたので1-29に変更(無駄なこだわり)
+
+;調教者が存在する
+IF TARGET > -1
+	;A:1-29にABL:TARGET:1-29の補正値を代入
+	FOR LCOUNT, 1, 30
+		A:LCOUNT = (100 - 500/(ABL:LCOUNT + 5))
+	NEXT
+	;A:30にCFLAG:TARGET:調教レベルの補正値を代入
+	A:30 = 50 - 2000 / (CFLAG:調教レベル + 40)
+ENDIF
+;B:1-29にABL:MASTER:1-29の補正値を代入
+FOR LCOUNT, 1, 30
+	B:LCOUNT = (100 - 500/(ABL:MASTER:LCOUNT + 5))
+NEXT
+;B:30にABL:MASTER:0の補正値を代入
+B:30 = (100 - 500/(ABL:MASTER:従順 + 5))
+;助手が存在する
+;(助手二人目以降は考慮されないが、
+; そもそもGET_ABL, GET_TRAINLV を使うべきなので無視)
+IF ASSI > -1
+	;C:1-29にABL:ASSI:1-29の補正値を代入
+	FOR LCOUNT, 1, 30
+	C:LCOUNT = (100 - 500/(ABL:ASSI:LCOUNT + 5))
+	NEXT
+	;C:30にCFLAG:ASSI:調教レベルの補正値を代入
+	C:30 = 50 - 2000 / (CFLAG:ASSI:調教レベル + 40)
+ENDIF
+
+;────────────────────────────────────
+;愛撫効果補正
+;今後は ACT_FROM, ACT_TO を使用すること
+;────────────────────────────────────
+
+;大幅に短縮することは可能だが、
+;その結果が ACT_FROM, ACT_TO に他ならないのでそちらを参照
+
+;TARGET愛撫(TARGET存在時計算)
+IF TARGET > 0
+	;調教者調教レベルが過剰な場合増加する値、
+	;調教対象から調教者への好意が大きい場合増加する値(最大30)
+	;10 ……の中から最大の値を選ぶ(10-1000)
+	LOCAL:1 = MAX(CFLAG:調教レベル  * 10 / (CFLAG:MASTER:調教レベル + 1) , MIN(CFLAG:M好意 / 200 , 30), 10)
+	LOCAL:1 = LIMIT(LOCAL:1, 10, 1000)
+	
+	;愛撫系
+	;調教者技巧 + 愛撫 から 調教対象対応感覚を引いたものと屈服刻印を比べ、
+	;大きいものに10を足して二乗し、LOCAL:1 をかけて10で割る
+	;C愛撫
+	LOCAL = MAX(ABL:技巧 + ABL:愛撫 - ABL:MASTER:Ｃ感覚 , MARK:屈服刻印)
+	S:1 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 / 10
+	;V愛撫
+	LOCAL = MAX(ABL:技巧 + ABL:愛撫 - ABL:MASTER:Ｖ感覚 , MARK:屈服刻印)
+	S:2 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 / 10
+	;A愛撫
+	LOCAL = MAX(ABL:技巧 + ABL:愛撫 - ABL:MASTER:Ａ感覚 , MARK:屈服刻印)
+	S:3 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 / 10
+	;B愛撫
+	LOCAL = MAX(ABL:技巧 + ABL:愛撫 - ABL:MASTER:Ｂ感覚 , MARK:屈服刻印)
+	S:4 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 / 10
+	
+	;性交系
+	;調教者技巧 + 性交 から 調教対象対応感覚を引いたものと屈服刻印を比べ、
+	;大きいものに10を足して二乗し、LOCAL:1 をかけて10で割る
+	;V性交
+	LOCAL = MAX(ABL:技巧 + ABL:性交- ABL:MASTER:Ｖ感覚 , MARK:屈服刻印)
+	S:5 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 / 10
+	;A性交
+	LOCAL = MAX(ABL:技巧 + ABL:性交 - ABL:MASTER:Ａ感覚 , MARK:屈服刻印)
+	S:6 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 / 10
+	
+	;性交奉仕系
+	;調教者技巧 + 性交 + 調教者対応感覚 から 調教対象対応感覚を引いたものと屈服刻印を比べ、
+	;大きいものに10を足して二乗し、LOCAL:1 をかけて10で割る
+	;V性交奉仕
+	LOCAL = MAX(ABL:技巧 + ABL:性交 + ABL:Ｖ感覚 - ABL:MASTER:Ｃ感覚 , MARK:屈服刻印)
+	S:7 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 / 10
+	;A性交奉仕
+	LOCAL = MAX(ABL:技巧 + ABL:性交 + ABL:Ａ感覚 - ABL:MASTER:Ｃ感覚 , MARK:屈服刻印)
+	S:8 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 / 10
+	
+	;道具系
+	;調教者技巧 + 道具 から 調教対象対応感覚を引いたものと屈服刻印を比べ、
+	;大きいものに10を足して二乗し、LOCAL:1 をかけて10で割る
+	;C道具
+	LOCAL = MAX(ABL:技巧 + ABL:道具 - ABL:MASTER:Ｃ感覚 , MARK:屈服刻印)
+	S:11 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 / 10
+	;V道具
+	LOCAL = MAX(ABL:技巧 + ABL:道具 - ABL:MASTER:Ｖ感覚 , MARK:屈服刻印)
+	S:12 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 / 10
+	;A道具
+	LOCAL = MAX(ABL:技巧 + ABL:道具 - ABL:MASTER:Ａ感覚 , MARK:屈服刻印)
+	S:13 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 / 10
+	;B道具
+	LOCAL = MAX(ABL:技巧 + ABL:道具 - ABL:MASTER:Ｂ感覚 , MARK:屈服刻印)
+	S:14 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 / 10
+ENDIF
+
+;以後、基本的にはTARGET愛撫と同様なので詳細略
+
+;ASSI愛撫(ASSI存在時計算)
+IF ASSI > 0
+	LOCAL:1 = MAX(CFLAG:ASSI:調教レベル  * 10 / (CFLAG:MASTER:調教レベル + 1) , MIN(CFLAG:ASSI:M好意 / 200 , 30), 10)
+	LOCAL:1 = LIMIT(LOCAL:1, 10, 1000)
+	
+	;C愛撫
+	LOCAL = MAX(ABL:ASSI:技巧 + ABL:ASSI:愛撫 - ABL:MASTER:Ｃ感覚 , MARK:ASSI:屈服刻印)
+	S:21 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 / 10
+	;V愛撫
+	LOCAL = MAX(ABL:ASSI:技巧 + ABL:ASSI:愛撫 - ABL:MASTER:Ｖ感覚 , MARK:ASSI:屈服刻印)
+	S:22 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 / 10
+	;A愛撫
+	LOCAL = MAX(ABL:ASSI:技巧 + ABL:ASSI:愛撫 - ABL:MASTER:Ａ感覚 , MARK:ASSI:屈服刻印)
+	S:23 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 / 10
+	;B愛撫
+	LOCAL = MAX(ABL:ASSI:技巧 + ABL:ASSI:愛撫 - ABL:MASTER:Ｂ感覚 , MARK:ASSI:屈服刻印)
+	S:24 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 / 10
+
+	;V性交
+	LOCAL = MAX(ABL:ASSI:技巧 + ABL:ASSI:性交 - ABL:MASTER:Ｖ感覚 , MARK:ASSI:屈服刻印)
+	S:25 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 / 10
+	;A性交
+	LOCAL = MAX(ABL:ASSI:技巧 + ABL:ASSI:性交 - ABL:MASTER:Ａ感覚 , MARK:ASSI:屈服刻印)
+	S:26 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 / 10
+	
+	;V性交奉仕
+	LOCAL = MAX(ABL:ASSI:技巧 + ABL:ASSI:性交 + ABL:ASSI:Ｖ感覚 - ABL:MASTER:Ｃ感覚 , MARK:ASSI:屈服刻印)
+	S:27 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 / 10
+	;A性交奉仕
+	LOCAL = MAX(ABL:ASSI:技巧 + ABL:ASSI:性交 + ABL:ASSI:Ａ感覚 - ABL:MASTER:Ｃ感覚 , MARK:ASSI:屈服刻印)
+	S:27 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 / 10
+
+	;C道具
+	LOCAL = MAX(ABL:ASSI:技巧 + ABL:ASSI:道具 - ABL:MASTER:Ｃ感覚 , MARK:屈服刻印)
+	S:31 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 / 10
+	;V道具
+	LOCAL = MAX(ABL:ASSI:技巧 + ABL:ASSI:道具 - ABL:MASTER:Ｖ感覚 , MARK:屈服刻印)
+	S:32 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 / 10
+	;A道具
+	LOCAL = MAX(ABL:ASSI:技巧 + ABL:ASSI:道具 - ABL:MASTER:Ａ感覚 , MARK:屈服刻印)
+	S:33 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 / 10
+	;B道具
+	LOCAL = MAX(ABL:ASSI:技巧 + ABL:ASSI:道具 - ABL:MASTER:Ｂ感覚 , MARK:屈服刻印)
+	S:34 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 / 10
+ENDIF
+
+;以後V愛撫など一部補正計算が行われていないが無視
+;(今後利用する場合はここの計算を必要としないため)
+
+;愛撫系など系列ABLが存在しないため技巧の値を二倍にして対応している
+
+;MASTER→TARGET愛撫
+IF TARGET > 0
+	LOCAL:1 = MAX(CFLAG:MASTER:調教レベル  * 10 / (CFLAG:調教レベル + 1) , MIN(CFLAG:好意 / 200 , 30), 10)
+	LOCAL:1 = LIMIT(LOCAL:1, 10, 1000)
+	
+	;C愛撫
+	LOCAL = MAX(2 * ABL:MASTER:技巧 - ABL:Ｃ感覚 , MARK:屈服刻印)
+	S:41 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 * (FLAG:3185 + 100) / 1000
+	;A愛撫
+	LOCAL = MAX(2 * ABL:MASTER:技巧 - ABL:Ａ感覚 , MARK:屈服刻印)
+	S:43 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 * (FLAG:3185 + 100) / 1000
+	;B愛撫
+	LOCAL = MAX(2 * ABL:MASTER:技巧 - ABL:Ｂ感覚 , MARK:屈服刻印)
+	S:44 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 * (FLAG:3185 + 100) / 1000
+	
+	;V性交
+	LOCAL = MAX(ABL:MASTER:技巧 + ABL:MASTER:Ｖ感覚 - ABL:Ｃ感覚 , MARK:屈服刻印)
+	S:45 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 * (FLAG:3185 + 100) / 1000
+	;A性交
+	LOCAL = MAX(ABL:MASTER:技巧 + ABL:MASTER:Ａ感覚 - ABL:Ｃ感覚 , MARK:屈服刻印)
+	S:46 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 * (FLAG:3185 + 100) / 1000
+	
+	;V性交奉仕
+	LOCAL = MAX(2 * ABL:MASTER:技巧 - ABL:Ｖ感覚 , MARK:屈服刻印)
+	S:47 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 * (FLAG:3185 + 100) / 1000
+	;A性交奉仕
+	LOCAL = MAX(2 * ABL:MASTER:技巧 - ABL:Ａ感覚 , MARK:屈服刻印)
+	S:48 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 * (FLAG:3185 + 100) / 1000
+ENDIF
+
+;MASTER→ASSI愛撫
+IF ASSI > 0
+	LOCAL:1 = MAX(CFLAG:MASTER:調教レベル  * 10 / (CFLAG:ASSI:調教レベル + 1) , MIN(CFLAG:好意 / 200 , 30), 10)
+	LOCAL:1 = LIMIT(LOCAL:1, 10, 1000)
+	;C愛撫
+	LOCAL = MAX(2 * ABL:MASTER:技巧 - ABL:ASSI:Ｃ感覚 , MARK:ASSI:屈服刻印)
+	S:51 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 * (FLAG:3185 + 100) / 1000
+	;A愛撫
+	LOCAL = MAX(2 * ABL:MASTER:技巧 - ABL:ASSI:Ａ感覚 , MARK:ASSI:屈服刻印)
+	S:53 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 * (FLAG:3185 + 100) / 1000
+	;B愛撫
+	LOCAL = MAX(2 * ABL:MASTER:技巧 - ABL:ASSI:Ｂ感覚 , MARK:ASSI:屈服刻印)
+	S:54 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 * (FLAG:3185 + 100) / 1000
+	
+	;V性交
+	LOCAL = MAX(ABL:MASTER:技巧 + ABL:MASTER:Ｖ感覚 - ABL:ASSI:Ｃ感覚 , MARK:ASSI:屈服刻印)
+	S:55 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 * (FLAG:3185 + 100) / 1000
+	;A性交
+	LOCAL = MAX(ABL:MASTER:技巧 + ABL:MASTER:Ａ感覚 - ABL:ASSI:Ｃ感覚 , MARK:ASSI:屈服刻印)
+	S:56 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 * (FLAG:3185 + 100) / 1000
+	
+	;V性交奉仕
+	LOCAL = MAX(2 * ABL:MASTER:技巧 - ABL:ASSI:Ｖ感覚 , MARK:ASSI:屈服刻印)
+	S:57 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 * (FLAG:3185 + 100) / 1000
+	;A性交奉仕
+	LOCAL = MAX(2 * ABL:MASTER:技巧 - ABL:ASSI:Ａ感覚 , MARK:ASSI:屈服刻印)
+	S:58 = (LOCAL + 10) * (LOCAL + 10) * LOCAL:1 * (FLAG:3185 + 100) / 1000
+ENDIF
+
+;基本値		技巧－感覚
+;100		0
+;121		1
+;144		2
+;169		3
+;196		4
+;225		5
+;256		6
+;289		7
+;324		8
+;361		9
+;400		10
+[SKIPEND]
+

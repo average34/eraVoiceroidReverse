@@ -1,0 +1,40 @@
+﻿@INFO_1112
+DRAWLINE
+PRINTL 　ＩＮＦＯＭＡＴＩＯＮ　　　　[2017-07-29 v.1.112]
+DRAWLINE
+PRINTL New Features
+PRINTL ************
+PRINTL *更新履歴の実装(https://blueprints.launchpad.net/eratohoreverse/+spec/changelog-implement)
+PRINTL 　・タイトル画面の[2] INFO から更新履歴を見ることができます
+PRINTL 　・ボタンは３つ、[4] 前のINFO [9] INFO終了 [6] 次のINFO
+PRINTL 　・マウスとキーボードの入力を受け付けます。履歴はЯ以降の物のみ
+PRINTL *アリス口上v1.76を格納
+PRINTL 
+PRINTL Improvements
+PRINTL ************
+PRINTL *AI行動方針の強化-2(https://blueprints.launchpad.net/eratohoreverse/+spec/menu-cource-reform)
+PRINTL 　・@ACT_COURCE_OF_TODAYに於ける補正の見直し
+PRINTL 　・@ACT_COURCE_TALENT_Tに於ける素質毎、方針毎の補正の見直し
+PRINTL 　・@ACT_COURCE_CONDITION_Tに於ける補正の見直し
+PRINTL 　・コード整形。その他
+PRINTL *興味補正の改変(https://blueprints.launchpad.net/eratohoreverse/+spec/interested-correction-reform)
+PRINTL 　・これまで極一部のselectcomによる対応だったものを修正
+PRINTL 　・各act毎react分類、selectcom等で入力に対して漏れなく対応できるように
+PRINTL 　・特定の状況及び素質による補正の追加
+PRINTL 　　　素質：プライド高いは愛撫系、性交系で下手だと罵られた場合ムキになるよう+補正
+PRINTL 　　　素質：サドに対しての許しを乞う行為、悲鳴等はむしろ喜ばせる結果になるよう+補正
+PRINTL 　　　奉仕系、性交奉仕系に於ける"愛情を込めてやる"にはより強い+補正
+PRINTL 　・加虐系actに於けるネガティブな反応は、より素質：サドの興味を引くように
+PRINTL 　・調教の進展に応じてネガティブな反応の効果がより大きくなるように
+PRINTL 　・その他細かな調整
+PRINTL *Emuera1821+v5を格納
+PRINTL 　・STRFORMに特定の状況で"0"が代入されてしまうバグが修正されています
+PRINTL 　・当バリアントでは刻印処理で使っていますが、使い方的にこれまでも問題はなかったはず
+PRINTL *GameBase.csvにウィンドウタイトルを設定。今後は"eratohoЯeverse 1.1.12"のような感じで表示されます
+PRINTL *タイトル画像を背景黒から背景透過に
+PRINTL 　・透過画像を有効にする為、_default.configの描画インターフェイスをWINAPIからTEXTRENDERERへ変更
+PRINTL 
+PRINTL Bug Fixes
+PRINTL *********
+PRINTL *@MARK_CHECK_SOURCE_SURRENDERのバグ(https://bugs.launchpad.net/eratohoreverse/+bug/1707355)
+PRINTL *@TRAIN_VARIATION_ACT11に於けるバグ(https://bugs.launchpad.net/eratohoreverse/+bug/1707262)

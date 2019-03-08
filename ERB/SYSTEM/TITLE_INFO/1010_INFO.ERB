@@ -1,0 +1,73 @@
+﻿@INFO_1010
+DRAWLINE
+PRINTL 　ＩＮＦＯＭＡＴＩＯＮ　　　　[2015-01-17 v1.0.10]
+DRAWLINE
+PRINTL New Features
+PRINTL ************
+PRINTL *TCVAR絶頂系前回ターン参照用フラグの新設(https://blueprints.launchpad.net/eratohoreverse/+spec/flag)
+PRINTL *開発情報のドキュメント類を新規追加
+PRINTL *チュートリアル執筆者＆テスター募集のドキュメントを追加
+PRINTL *バグ報告のガイドラインを追加
+PRINTL *藍口上v2014.12.19を格納
+PRINTL *アリス口上v1.74を格納
+PRINTL *雛口上v1.11を格納
+PRINTL *日常イベント口上テンプレートを追加
+PRINTL *関数：@WAIT3_ZWEIの追加
+PRINTL 
+PRINTL Improvements
+PRINTL ************
+PRINTL *バージョン表記を変更。詳細はreadmeにて
+PRINTL *全ファイルのエンコードをUTF-8(BOM付き)に変更
+PRINTL *SOURCE_1, SOURCE_5の仕様変更(https://blueprints.launchpad.net/eratohoreverse/+spec/source)
+PRINTL *EVENT_DAILY(日常)改変(https://blueprints.launchpad.net/eratohoreverse/+spec/system)
+PRINTL *@SYSTEM_TITLEを定義し独自のタイトル画面に変更
+PRINTL *セーブデータがある場合、起動初回の"ＮＥＷ ＧＡＭＥ"開始時点でもコンフィグが適用されるように変更
+PRINTL *EXP:イカせ経験をEXP:イかせ経験に変更。変更に伴う各所の修正
+PRINTL *TEQUIP:自慰中をGETBITで参照するように変更。それに伴う口上類及び各所の修正
+PRINTL *fixed.config
+PRINTL 　1.セーブデータをUTF-8で保存するように変更。(エンコードの変更であってバイナリ化ではないことに注意)
+PRINTL 　2.一行の高さ17から16に変更
+PRINTL 
+PRINTL Bug Fixes
+PRINTL *********
+PRINTL *フラン(助手)の日常会話にて名前が空文字列になる(#1396204：https://bugs.launchpad.net/bugs/1396204)
+PRINTL *日常系イベント(#1387453：https://bugs.launchpad.net/bugs/1387453)
+PRINTL *下手だと罵り心を許す(#1387457：https://bugs.launchpad.net/bugs/1387457)
+PRINTL *抜かずに関する不具合(#1400865：https://bugs.launchpad.net/bugs/1400865)
+PRINTL *SHOP画面からのロード時にデバッグモードが切り替わる(#1402066：https://bugs.launchpad.net/bugs/1402066)
+PRINTL *精力上昇不具合(#1387447：https://bugs.launchpad.net/bugs/1387447)
+PRINTL *口上が一瞬しか表示されない不具合(#1387464：https://bugs.launchpad.net/bugs/1387464)
+PRINTL *イってなくてもイったばかり(#1387466：https://bugs.launchpad.net/bugs/1387466)
+PRINTL *萎えさせちゃって(#1387468：https://bugs.launchpad.net/bugs/1387468)
+PRINTL *おっぱいの小さいオトコあなた(#1387470：https://bugs.launchpad.net/bugs/1387470)
+PRINTL *蓬莱が応答する(#1387472：https://bugs.launchpad.net/bugs/1387472)
+PRINTL *膣内射精(#1387473：https://bugs.launchpad.net/bugs/1387473)
+PRINTL *アナルセックス(#1387476：https://bugs.launchpad.net/bugs/1387476)
+PRINTL *アリスお姉さん(#1387482：https://bugs.launchpad.net/bugs/1387482)
+PRINTL *繋がったままの前の文字色(#1387483：https://bugs.launchpad.net/bugs/1387483)
+PRINTL *拘束のSOURCEで痛みのSOURCEを参照している(#1397044：https://bugs.launchpad.net/bugs/1397044)
+PRINTL *アイマスク中の相互自慰地の文(#1404577：https://bugs.launchpad.net/bugs/1404577)
+PRINTL *誤字脱字関連(#1404587：https://bugs.launchpad.net/bugs/1404587)
+PRINTL *日常イベントＡ性交時にMASTERの性交経験が処理されていない(#1404591：https://bugs.launchpad.net/bugs/1404591)
+PRINTL *イきそう状態化の判定条件に関する不具合(#1408039：https://bugs.launchpad.net/bugs/1408039)
+PRINTL *フェラ継続中の調教対象射精で刻印を取得できない不具合(#1409062：https://bugs.launchpad.net/bugs/1409062)
+PRINTL *日常イベントで条件を満たしていても選択肢が表示されない(#1409241：https://bugs.launchpad.net/bugs/1409241)
+PRINTL *助手変更エラー(#1387443：https://bugs.launchpad.net/bugs/1387443)
+PRINTL *調教者変更エラー(#1387444：https://bugs.launchpad.net/bugs/1387444)
+PRINTL *誤字(#1387484：https://bugs.launchpad.net/bugs/1387484)
+PRINTL *MARK:反抗刻印 MARK:屈服刻印の参照の誤り(#1410894：https://bugs.launchpad.net/bugs/1410894)
+PRINTL *@INFO_GAUGE_TRAINERの不具合(#1411657：https://bugs.launchpad.net/bugs/1411657)
+PRINTL 
+PRINTL Other Changes
+PRINTL *************
+PRINTL *口上テンプレートの修正
+PRINTL 　1.日常イベント口上テンプレートを追加
+PRINTL 　2.ショップイベント口上テンプレートを追加
+PRINTL 　3.ディレクトリ構造を変更。本体の構造を反映したものに
+PRINTL *会話系TRAIN_MESSAGE(地の文)の小修正
+PRINTL *@AFFECTIONをキャラ番号指定が可能なように修正
+PRINTL *@PRINT_KOJO_COLOR系の修正
+PRINTL *@SATIS_BONUSを修正
+PRINTL *一部関数のコメントの誤りを修正
+PRINTL *大妖精口上に於いてEV111(調教者を雇った)、EV112(調教者として加入した)の箇所を修正
+PRINTL *INFO_GAUGE.ERB内の細かな修正

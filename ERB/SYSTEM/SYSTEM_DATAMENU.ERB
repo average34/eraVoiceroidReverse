@@ -1,0 +1,461 @@
+﻿;-------------------------------------------------------------------------------
+;	DATAMENUで使用するマジックナンバー
+;-------------------------------------------------------------------------------
+;	とりあえずSAVEとAUTOで90+10で100枠、オプションで変更できるようにするなら
+;	マジックナンバーのところを適当なFLAGにでもすればおｋ
+;===============================================================================
+@SAVE_AREA(ARG)
+#FUNCTION
+RETURNF LIMIT(100 + ARG, 0, 1000)
+
+@AUTOSAVE_AREA(ARG)
+#FUNCTION
+RETURNF LIMIT(10 + ARG, 0, SAVE_AREA())
+
+;COPYDATA用GLOBAL:x/GLOBALS:x
+;	現段階ではコピー元 = GLOBAL:998、コピー先 = GLOBAL:999を使用
+;	ダイアログ用一時使用 = GLOBALS:99 を使用、TEMPセーブ枠に1000 を使用
+;	ここを変えれば変更可
+@COPYDATA_BY()
+#FUNCTION
+RETURNF 998
+
+@COPYDATA_TO()
+#FUNCTION
+RETURNF 999
+
+@COPYDATA_TEMP()
+#FUNCTION
+RETURNF 1000
+
+@COPYDATA_TAG()
+#FUNCTION
+RETURNF 99
+
+;-------------------------------------------------------------------------------
+;	TITLE_LOADGAME	タイトル画面からロードを選んだ場合の独自処理
+;-------------------------------------------------------------------------------
+;===============================================================================
+@TITLE_LOADGAME
+CALL DATAMENU("TITLELOAD")
+
+;-------------------------------------------------------------------------------
+;	EVENTLOAD
+;-------------------------------------------------------------------------------
+;	Rev#でEVENTLOADが見当たらなかったのでこんなところに
+;	え、まじで？
+;===============================================================================
+@EVENTLOAD
+LOADGLOBAL
+CALLF ANIME_CONFIG("SET", GLOBAL)
+SIF GLOBALS:COPYDATA_TAG() != ""
+	CALL DATAMENU("NOWCOPY")
+
+REDRAW 0
+CALL DAY_EFFECT
+
+;FLAG:2の更新
+FLAG:ご主人様 = FINDTALENT("ご主人様")
+; プレイ時間用
+CALLF PLAYTIME("SET")
+
+;-------------------------------------------------------------------------------
+;	セーブ時用一時変数初期化
+;-------------------------------------------------------------------------------
+;	みたまんま
+;	Rev#のセーブシステムでどれを消していいのかわからないので行頭RETURN
+;===============================================================================
+@VAR_INITIALIZE
+#LOCALSIZE 1
+RETURN RESULT
+
+;↓以下処理-------------------------------------------------
+VARSET TFLAG
+VARSET TSTR
+FOR LOCAL, 0, VARSIZE("TCVAR")
+	CVARSET TCVAR, LOCAL
+NEXT
+FOR LOCAL, 0, VARSIZE("BASE")
+	CVARSET DOWNBASE, LOCAL
+NEXT
+FOR LOCAL, 0, VARSIZE("PALAM")
+	CVARSET PALAM, LOCAL
+	CVARSET GOTJUEL, LOCAL
+	CVARSET CUP, LOCAL
+	CVARSET CDOWN, LOCAL
+NEXT
+FOR LOCAL, 0, VARSIZE("EX")
+	CVARSET EX, LOCAL
+	CVARSET NOWEX, LOCAL
+NEXT
+FOR LOCAL, 0, VARSIZE("SOURCE")
+	CVARSET SOURCE, LOCAL
+NEXT
+FOR LOCAL, 0, VARSIZE("TEQUIP")
+	CVARSET TEQUIP, LOCAL
+NEXT
+RETURN RESULT
+
+;-------------------------------------------------------------------------------
+;	SAVEINFO		(使用せず)
+;-------------------------------------------------------------------------------
+;===============================================================================
+; →SHOP.ERBにてコメントアウト
+
+;-------------------------------------------------------------------------------
+;	SAVEINFOF(式中関数)
+;-------------------------------------------------------------------------------
+;	SAVEINFOの式中関数版  PUTFORM？  何それ美味しいの？
+;===============================================================================
+@SAVEINFOF
+#FUNCTIONS
+#LOCALSSIZE 1
+GETTIME
+LOCALS = %RESULTS% %CALLNAME:MASTER% {DAY+1}日目%GET_TIME()% \@ TARGET >= 0 ? %CALLNAME:TARGET%が%CALLNAME:MASTER%を調教中 # \@【%PLAYTIME("GET")%】
+RETURNF LOCALS
+
+;-------------------------------------------------------------------------------
+;	CHKDATAのRESULTSからセーブ日時を取得する(式中関数)
+;-------------------------------------------------------------------------------
+;	例  2010/04/01 12:34:56  →  20100401123456
+;	式中関数版CHKDATAのRESULTへの日時取得なんてなかった…！
+;===============================================================================
+;	ARGS = CHKDATA直後のRESULTSのみ対応
+@CHKDATA_DATE(ARGS)
+#FUNCTION
+RETURNF TOINT(SUBSTRING(ARGS,0,4))*10000000000 + TOINT(SUBSTRING(ARGS,5,2))*100000000 + TOINT(SUBSTRING(ARGS,8,2))*1000000 + TOINT(SUBSTRING(ARGS,11,2))*10000 + TOINT(SUBSTRING(ARGS,14,2))*100 + TOINT(SUBSTRING(ARGS,17,2))
+
+;-------------------------------------------------------------------------------
+;	セーブデータを全検索して最も新しいセーブデータ番号を取得(式中関数)
+;-------------------------------------------------------------------------------
+;===============================================================================
+;	ARGS = "NOAUTO" オートセーブ含まない / その他 オートセーブ含める
+@ALLCHKDATA_DATE_LATEST(ARGS)
+#FUNCTION
+#LOCALSIZE 4
+#LOCALSSIZE 1
+VARSET LOCAL
+LOCAL:2 = -1
+LOCAL:3 = ARGS == "NOAUTO" ? SAVE_AREA()-AUTOSAVE_AREA() # SAVE_AREA()
+FOR LOCAL, 0, LOCAL:3
+	CHKDATA LOCAL
+	IF RESULT != 0
+		CONTINUE
+	ELSEIF CHKDATA_DATE(RESULTS) > LOCAL:1 
+		LOCAL:1 = CHKDATA_DATE(RESULTS)
+		LOCAL:2 = LOCAL
+		LOCALS = %RESULTS%
+	ENDIF
+NEXT
+RESULTS = %LOCALS%
+RETURNF LOCAL:2
+
+
+;-------------------------------------------------------------------------------
+;	枠拡大オートセーブ
+;-------------------------------------------------------------------------------
+;	SAVE_AREA()-1番から逆算してまでAUTOSAVE_AREA()個
+;	「ゲッ、オートセーブ上書きされちゃった！」な事故防止用
+;===============================================================================
+;	LOCAL = COUNT  LOCAL:1 = DATE一時保存  LOCAL:2 = 比較用DATE  LOCAL:3 = 最終 
+@SYSTEM_AUTOSAVE
+#LOCALSIZE 4
+VARSET LOCAL
+;オートセーブ枠が0以下なら何もしない
+SIF AUTOSAVE_AREA() <= 0
+	RETURN 0
+;デフォルト比較用にありえないDATEを(2999/12/31 23:59:59)セット
+LOCAL:2 = 29991231235959
+;逆算
+;例:SAVE枠100,AUTO枠5 99,                      99-5(94), = 95番から99番まで
+FOR LOCAL, SAVE_AREA(-1), SAVE_AREA(-1)-AUTOSAVE_AREA(), -1
+	CHKDATA LOCAL
+	;既存セーブデータが存在するならDATEを、そうでないなら-1を一時保存
+	LOCAL:1 = RESULT == 0 ? CHKDATA_DATE(RESULTS) # -1
+	;上と比較用DATEを比較してより古いor空いている場合
+	IF LOCAL:1 < LOCAL:2
+		;比較用DATE更新
+		LOCAL:2 = LOCAL:1
+		;最も古いもしくは空きセーブデータ 更新
+		LOCAL:3 = LOCAL
+	ENDIF
+NEXT
+;他所様のバリアントで怖いのでコメントアウト
+;CALL VAR_INITIALIZE
+SAVEDATA LOCAL:3, @"%SAVEINFOF()%"
+RETURN 1
+
+;-------------------------------------------------------------------------------
+;	枠拡大クイックロード
+;-------------------------------------------------------------------------------
+;	最も新しいセーブデータをロード
+;===============================================================================
+@QUICKLOAD
+#LOCALSIZE 1
+VARSET LOCAL
+LOCAL = ALLCHKDATA_DATE_LATEST()
+IF LOCAL == -1
+	CALL PRINT_DIALOG("セーブデータがロードできません",2,2,2)
+	RETURN 0
+ELSE
+	CALL PRINT_DIALOG(@"{LOCAL}番をロードしました",2,2,0)
+	CALL PRINT_DIALOG(RESULTS,0,2,2)
+	LOADDATA LOCAL
+ENDIF
+RETURN 1
+
+;-------------------------------------------------------------------------------
+;	セーブデータ総合
+;-------------------------------------------------------------------------------
+;	セーブ,コメントセーブ,ロード,削除,コピーの各セーブデータ管理を統合
+;
+;	使い方
+;			↓こういう関数を作る
+;	@TITLE_LOADGAME
+;	CALL DATAMENU("TITLELOAD")
+;
+;	SAVEGAMEをCALL DATAMENU("SAVE")に置換
+;	LOADGAMEをCALL DATAMENU("LOAD")に置換
+;
+;	@EVENTLOAD に↓の二行を追加
+;	SIF GLOBALS:COPYDATA_TAG() != ""
+;		CALL DATAMENU("NOWCOPY")
+;																		ENJOY!
+;===============================================================================
+@DATAMENU(ARGS)
+#DIM NOWPAGE,1
+#DIM MAXPAGE,1
+#DIM NOWMODE,1
+#DIM COPYSELECT,1
+#DIM SCREEN,1
+#LOCALSIZE 2
+#LOCALSSIZE 1
+COPYSELECT = -1
+;初期モード選択
+SELECTCASE ARGS
+	;TITLEから飛んできた(LOAD意外不可)
+	CASE "TITLELOAD"
+		NOWMODE = 0
+	;セーブモード
+	CASE "SAVE"
+		NOWMODE = 1
+	;コメント付きセーブモード
+	CASE "SAVECOMMENT"
+		NOWMODE = 2
+	;ロードモード
+	CASE "LOAD"
+		NOWMODE = 3
+	;削除モード
+	CASE "DELETE"
+		NOWMODE = 4
+	;コピーモード
+	CASE "COPY"
+		NOWMODE = 5
+	;コピー中EVENTLOADから飛んできた
+	CASE "NOWCOPY"
+		CALL COPYDATA
+		NOWMODE = 5
+	;引数文字列がおかしかったらRETURN
+	CASEELSE
+		RETURN -1
+ENDSELECT
+;初期ページはオートセーブを含まない最新データのあるところ
+NOWPAGE = ALLCHKDATA_DATE_LATEST("NOAUTO") / 20
+
+;再描写はここから-------------------------------------------
+$PRINT_LIST
+SCREEN = LINECOUNT
+;最新データの取得
+LOCAL:1 = ALLCHKDATA_DATE_LATEST()
+;ダイアログ表示
+CALL PRINT_DIALOG(DATAMENU_LABEL(NOWMODE,1,COPYSELECT),1,1,1)
+;リスト表示
+FOR LOCAL, 0, SAVE_AREA()
+	;20個ずつの表示
+	SIF !RANGE(LOCAL, NOWPAGE * 20, (NOWPAGE + 1) * 20 - 1)
+		CONTINUE
+
+	CHKDATA LOCAL
+	;選択出来ないものを暗色化
+	SIF RESULT != 0 && !( NOWMODE == 1 || NOWMODE == 2 || (NOWMODE == 5 && COPYSELECT != -1) )
+		SETCOLOR 0x808080
+	;行頭情報	COPY/NEW!/AUTO
+	IF LOCAL == COPYSELECT
+		SETCOLOR 0xFFFF00
+		PRINTFORM %" COPY "%
+	ELSEIF LOCAL == LOCAL:1
+		SETCOLOR 0xFFFFFF
+		PRINTFORM %" NEW! "%
+	ELSEIF RANGE(LOCAL,SAVE_AREA()-AUTOSAVE_AREA(),SAVE_AREA(-1))
+		PRINTFORM %" AUTO "%
+	ELSE
+		PRINTFORM %"      "%
+	ENDIF
+	PRINTFORML [{LOCAL,2}] - %RESULTS%
+	RESETCOLOR
+NEXT
+CALL NEWLINE
+
+;最大ページ数
+MAXPAGE = (LOCAL - 1) / 20
+;ページセレクタ
+CALL PRINT_PAGESELECT(NOWPAGE,MAXPAGE)
+;タイトルから飛んできた場合は他機能不可
+IF NOWMODE
+	CALL NEWLINE
+	CALL PRINTC_COMMAND(1010,@"%UNICODE(0x25C0)%%DATAMENU_LABEL(TURNPAGE(NOWMODE, -1, 1, 5))%")
+	CALL PRINTC_COMMAND(1011,@"%UNICODE(0x25B6)%%DATAMENU_LABEL(TURNPAGE(NOWMODE, +1, 1, 5))%")
+ENDIF
+CALL PRINT_RETURN(,,2)
+INPUT
+SELECTCASE RESULT
+	CASE IS < 0
+		RETURN 0
+	CASE 0 TO SAVE_AREA()
+		LOCAL = RESULT
+		CHKDATA LOCAL
+		GOTO DO_PROCESS
+	CASE 1001
+		NOWPAGE = TURNPAGE(NOWPAGE, -1, 0, MAXPAGE)
+	CASE 1003
+		NOWPAGE = TURNPAGE(NOWPAGE, +1, 0, MAXPAGE)
+	CASE 1010
+		NOWMODE = NOWMODE ? TURNPAGE(NOWMODE, -1, 1, 5) # 0
+	CASE 1011
+		NOWMODE = NOWMODE ? TURNPAGE(NOWMODE, +1, 1, 5) # 0
+ENDSELECT
+;コピーモード外れたらコピー元リセット
+SIF NOWMODE != 5 && COPYSELECT != -1
+	COPYSELECT = -1
+$REPRINT
+CLEARLINE LINECOUNT - SCREEN
+GOTO PRINT_LIST
+
+
+;実処理ここから----------------------------------------------
+$DO_PROCESS
+;だみぃ
+IF NOWMODE < 0
+
+;セーブ(コピー先選択)処理-------------------------
+ELSEIF NOWMODE == 1 || NOWMODE == 2 || ( NOWMODE == 5 && ( COPYSELECT != -1 && COPYSELECT != LOCAL) )
+	SELECTCASE RESULT
+		CASE 0,2,3,4
+			CALL PRINT_DIALOG(@"\@ !RESULT ? セーブデータが存在します 上書きしますか？ # 不明なデータが存在します 上書きしますか？ \@",1,1,1)
+			CALL PRINT_CHOICE(,"はい",1,"いいえ",2,)
+			SIF RESULT == 2
+				GOTO REPRINT
+		CASE 1
+	ENDSELECT
+	;コピーモード時二回目はCALL先でコピー元をロードするのでここで終了
+	SIF NOWMODE == 5 && ( COPYSELECT != -1 )
+		CALL COPYDATA(COPYSELECT,LOCAL)
+
+	;変数初期化  こわいのでコメントアウト
+	;CALL VAR_INITIALIZE
+	LOCALS = %SAVEINFOF()%
+	;コメントセーブモード時はコメント入力
+	IF NOWMODE == 2
+		CALL PRINT_DIALOG("コメントを入力してください",1,1,1)
+		INPUTS
+		LOCALS += @" %RESULTS%"
+	ENDIF
+	SAVEDATA LOCAL, LOCALS
+	CALL PRINT_DIALOG(@"{LOCAL}番にセーブしました",2,2,0)
+	CALL PRINT_DIALOG(LOCALS,0,2,2)
+	RETURN 1
+
+;ロード処理---------------------------------------
+ELSEIF NOWMODE == 0 || NOWMODE == 3
+	SELECTCASE RESULT
+		CASE 0
+			CALL PRINT_DIALOG(@"{LOCAL}番をロードしました",2,2,0)
+			CALL PRINT_DIALOG(RESULTS,0,2,2)
+			LOADDATA LOCAL
+		CASE 2,3,4
+			CALL PRINT_DIALOG("ロード可能なデータでは有りません",2,2,2)
+			GOTO REPRINT
+	ENDSELECT
+
+;削除処理-----------------------------------------
+ELSEIF NOWMODE == 4 && RESULT != 1
+	CALL PRINT_DIALOG(@"{LOCAL}番を削除しても良いですか？",1,1,0)
+	CALL PRINT_DIALOG(RESULTS,0,1,1)
+	CALL PRINT_CHOICE(,"はい",1,"いいえ",2,)
+	IF RESULT == 1
+		DELDATA LOCAL
+		CALL PRINT_DIALOG(@"{LOCAL}番を削除しました",2,2,0)
+		CALL PRINT_DIALOG(RESULTS,0,2,2)
+		GOTO PRINT_LIST
+	ENDIF
+
+;コピー元選択処理---------------------------------
+ELSEIF NOWMODE == 5 && COPYSELECT == -1 && RESULT == 0
+	COPYSELECT = LOCAL
+	GOTO PRINT_LIST
+ENDIF
+
+GOTO REPRINT
+
+;-----------------------------------------------------------
+;	DATAMENUで使うラベル表示用関数(式中関数)
+;===========================================================
+;	ARG = NOWMODE  ARG:1 = HEADER用  ARG:2 = コピーモードのHEADER用
+@DATAMENU_LABEL(ARG,ARG:1,ARG:2)
+#FUNCTIONS
+SELECTCASE ARG
+	CASE 1, 2
+		SIF ARG:1
+			RETURNF @"セーブ - 何番にセーブしますか？ \@ ARG == 2 ? (コメントモード) # \@"
+		RETURNF @"\@ARG == 1 ? %FORMCELL("セーブ",PRINTCPERLENGTH(-10),2)% # %FORMCELL("コメントセーブ",PRINTCPERLENGTH(-10),2)% \@"
+	CASE 0, 3
+		SIF ARG:1
+			RETURNF "ロード - 何番をロードしますか？"
+		RETURNF FORMCELL("ロード",PRINTCPERLENGTH(-10),2)
+	CASE 4
+		SIF ARG:1
+			RETURNF "削除 - 何番を削除しますか？"
+		RETURNF FORMCELL("削除",PRINTCPERLENGTH(-10),2)
+	CASE 5
+		SIF ARG:1
+			RETURNF @"\@ ARG:2 == -1 ? コピー - 何番をコピーしますか？ # コピー - {ARG:2}番を何番にコピーしますか？ \@"
+		RETURNF FORMCELL("コピー",PRINTCPERLENGTH(-10),2)
+	CASEELSE
+		RETURNF @"ERROR!{ARG,2}"
+ENDSELECT
+
+
+;-----------------------------------------------------------
+;	セーブデータコピー中用
+;-----------------------------------------------------------
+;	しっかし見難いなぁｗ
+;===========================================================
+;	ARG:0 / COPYDATA_BY() = コピー元  
+;	ARG:1 / COPYDATA_TO() = コピー先
+@COPYDATA(ARG:0, ARG:1)
+;初めて飛んできた
+;現在のデータをTEMP枠に保存し、GLOBAL/Sに元/先/タグ保存してコピー元をLOAD
+IF !GLOBAL:COPYDATA_BY() && !GLOBAL:COPYDATA_TO() && GLOBALS:COPYDATA_TAG() == ""
+	SAVEDATA COPYDATA_TEMP(), @"TEMP"
+	GLOBAL:COPYDATA_BY() = ARG:0
+	GLOBAL:COPYDATA_TO() = ARG:1
+	GLOBALS:COPYDATA_TAG() = {ARG,2}番を{ARG:1,2}番にコピーしました
+	SAVEGLOBAL
+	LOADDATA GLOBAL:COPYDATA_BY()
+;二回目
+;LASTLOAD_NOとコピー元が同一でコピー用タグが真はコピー先にSAVEしてTEMPデータをLOAD
+ELSEIF LASTLOAD_NO == GLOBAL:COPYDATA_BY() && GLOBALS:COPYDATA_TAG() != ""
+	GLOBAL:COPYDATA_BY() = 0
+	SAVEGLOBAL
+	SAVEDATA GLOBAL:COPYDATA_TO(), LASTLOAD_TEXT
+	LOADDATA COPYDATA_TEMP()
+;三回目(最後)
+;LASTLOAD_NOとTEMP枠が同一でコピー用タグが真はタグを表示してTEMP枠を削除
+ELSEIF LASTLOAD_NO == COPYDATA_TEMP() && GLOBALS:COPYDATA_TAG() != ""
+	CALL PRINT_DIALOG(GLOBALS:COPYDATA_TAG(),2,2,2)
+	DELDATA COPYDATA_TEMP()
+	GLOBAL:COPYDATA_TO() = 0
+	GLOBALS:COPYDATA_TAG() =
+	SAVEGLOBAL
+ENDIF
+

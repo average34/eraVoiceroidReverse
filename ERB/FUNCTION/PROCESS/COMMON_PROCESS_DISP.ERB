@@ -1,0 +1,873 @@
+﻿;-------------------------------------------------
+;汎用関数置き場
+;表示フロー、計算処理などを切り出したもの。
+;または内部処理的な関数
+;-------------------------------------------------
+
+;-------------------------------------------------
+;表示関連
+;-------------------------------------------------
+
+;-------------------------------------------------
+;日付エフェクトの表示フロー
+;-------------------------------------------------
+@DAY_EFFECT
+REDRAW 0
+SETFONT "ＭＳ 明朝"
+FONTSTYLE 3
+;昼夜のエフェクト（右クリックでも描画するため、ぱにめーしょんを迂回してコンフィグ参照）
+IF !GETBIT(GLOBAL, 52)
+	IF TIME
+		SETBGCOLOR 0, 0, 30
+	ELSE
+		SETBGCOLOR 20, 10, 0
+	ENDIF
+ENDIF
+CALL FULLCUTIN2(40, 17, @"%TOKANJI(FLAG:日数+1)%日目――","　","　",@"　　　　　　　　――\@ TIME ? 夜 # 昼\@。")
+FONTSTYLE 0
+SETFONT "ＭＳ ゴシック"
+REDRAW 1
+RETURN RESULT
+
+;-------------------------------------------------
+;関数名:HTML_BASE
+;概　要:BASE表示用関数
+;引　数:ARGS …BASEの名前
+;　　　 ARG:0…キャラ登録番号
+;       ARG:1…表示するBASE
+;       ARG:2…BARの長さ(省略した場合32)
+;       ARG:3…真ならBASEの値を0以上に補正する
+;              (省略した場合、補正しない)
+;戻り値:なし
+;-------------------------------------------------
+@HTML_BASE(ARGS, ARG:0, ARG:1, ARG:2 = 32, ARG:3)
+#FUNCTIONS
+#LOCALSIZE 2
+#LOCALSSIZE 1
+#DIM BAR_COLOR,2
+LOCALS '= ""
+;BASEによる色の指定
+;BAR_COLORに色を代入
+SELECTCASE ARG:1
+	;赤：体力・苛立ち
+	CASE 0, 7
+		BAR_COLOR = 0xC07070
+		BAR_COLOR:1 = 0x502020
+	;青：理性
+	CASE 5
+		BAR_COLOR = 0x7070C0
+		BAR_COLOR:1 = 0x202050
+	;緑：気力
+	CASE 1
+		BAR_COLOR = 0x70C070
+		;抵抗不能の調教対象の場合、赤緑
+		SIF ARG == MASTER && TFLAG:抵抗不能
+			BAR_COLOR = 0xC0A040
+		BAR_COLOR:1 = 0x205020
+	;紫：興味
+	CASE 6
+		BAR_COLOR = 0xC070C0
+		BAR_COLOR:1 = 0x502050
+	;黄：尿意
+	CASE 4
+		BAR_COLOR = 0xC0C070
+		BAR_COLOR:1 = 0x505020
+	;青緑：満足
+	CASE 8
+		BAR_COLOR = 0x70C0C0
+		BAR_COLOR:1 = 0x205050
+	;白：母乳・射精
+	CASEELSE
+		BAR_COLOR = 0xC0C0C0
+		BAR_COLOR:1 = 0x202020
+ENDSELECT
+;BASE名表示
+LOCALS += ARGS
+LOCAL:0 = ARG:3 ? MAX(BASE:(ARG:0):(ARG:1), 0) # BASE:(ARG:0):(ARG:1)
+LOCAL:1 = MAXBASE:(ARG:0):(ARG:1)
+LOCALS += LAYER_RECTBAR(LOCAL, LOCAL:1, ARG:2 / 2, BAR_COLOR, BAR_COLOR:1, , , 30)
+LOCALS += @"({LOCAL:0, 5}/{LOCAL:1, 5})　"
+RETURNF LOCALS
+;-------------------------------------------------
+;関数名:PRINT_BASE
+;概　要:BASE表示用関数
+;引　数:ARGS …BASEの名前
+;　　　 ARG:0…キャラ登録番号
+;       ARG:1…表示するBASE
+;       ARG:2…BARの長さ(省略した場合32)
+;       ARG:3…真ならBASEの値を0以上に補正する
+;              (省略した場合、補正しない)
+;戻り値:なし
+;-------------------------------------------------
+@PRINT_BASE (ARGS, ARG:0, ARG:1, ARG:2 = 32, ARG:3)
+HTML_PRINT HTML_BASE(ARGS, ARG:0, ARG:1, ARG:2, ARG:3)
+
+@PRINT_BASEL(ARGS, ARG:0, ARG:1, ARG:2 = 32, ARG:3)
+CALL PRINT_BASE(ARGS, ARG:0, ARG:1, ARG:2, ARG:3)
+PRINTL 
+
+@PRINT_BASEW(ARGS, ARG:0, ARG:1, ARG:2 = 32, ARG:3)
+CALL PRINT_BASE(ARGS, ARG:0, ARG:1, ARG:2, ARG:3)
+WAIT
+
+
+;-------------------------------------------------
+;関数名:CLOTHE_SHOW
+;概　要:脱衣アニメーション関数
+;引　数:ARG:0…キャラ登録番号(MASTERかTARGET。省略したり妙な数値が入るとTARGET)
+;　　　:ARG:1…省略すると脱衣。正にすると着衣。
+;備　考:通常関数
+;保存しておいた服装と現在の服装の差異を見て、脱いだり着たりした部位をフェード表示する
+;もうちょっと効率的な組み方ができる気がするけど、早朝で頭回ってないので汎用化せずにやっちゃおう・・・
+;-------------------------------------------------
+@CLOTHE_SHOW(ARG:0 = -1, ARG:1)
+#LOCALSIZE 20
+#DIM LCOUNT, 2
+#DIM PRICOLOR, 1
+#DIM RED,2
+#DIM GREEN,2
+#DIM BLUE,2
+VARSET RED
+VARSET GREEN
+VARSET BLUE
+VARSET LOCAL
+
+;非表示の場合
+IF !ANIME_CONFIG("USER3")
+	CALL SHOW_EQUIP_3(1+(ARG == MASTER))
+	PRINTL
+	PRINTL
+	RETURN 0
+ENDIF
+
+LOCAL:10 = CURRENTREDRAW()
+REDRAW 0
+
+;デフォルト色でなくてはならない
+RESETCOLOR
+PRICOLOR = GETCOLOR()
+
+;RGBそれぞれのベース値、減少値を各色:0と1に代入
+RED = GETRED()
+GREEN = GETGREEN()
+BLUE = GETBLUE()
+RED:1 = MAX(1, (RED-GETRED(0x0000))/4)
+GREEN:1 = MAX(1, (GREEN-GETGREEN(0x0000))/4)
+BLUE:1 = MAX(1, (BLUE-GETBLUE(0x0000))/4)
+
+SIF ARG != MASTER
+	ARG = TARGET
+;脱いだ・着た位置をLOCALに保存
+FOR LCOUNT, 0, 10
+	LOCAL:LCOUNT = CLOTHE_SAVE(ARG, LCOUNT)
+NEXT
+
+;脱衣の場合
+IF !ARG:1
+	;脱ぐ前の服装を表示し、脱いだ位置はその着衣の文字数をLOCALに入れる
+	PRINTFORMD %CALLNAME:ARG%の衣装：
+	;全身上着
+	IF TEQUIP:ARG:全身上着
+		PRINTFORMD [%DRESS(ARG)%]
+	ELSEIF LOCAL:6
+		PRINTFORM [%DRESS(ARG)%]
+		LOCAL:6 = STRLENS(@"[%DRESS(ARG)%]")
+	ENDIF
+	;上半身上着
+	IF TEQUIP:ARG:上半身上着
+		PRINTFORMD [%OUTER_T(ARG)%]
+	ELSEIF LOCAL:5
+		PRINTFORM [%OUTER_T(ARG)%]
+		LOCAL:5 = STRLENS(@"[%OUTER_T(ARG)%]")
+	ENDIF
+	;下半身上着
+	IF TEQUIP:ARG:下半身上着
+		PRINTFORMD [%OUTER_B(ARG)%]
+	ELSEIF LOCAL:4
+		PRINTFORM [%OUTER_B(ARG)%]
+		LOCAL:4 = STRLENS(@"[%OUTER_B(ARG)%]")
+	ENDIF
+	;上半身下着
+	IF TEQUIP:ARG:上半身下着
+		PRINTFORMD [%INNER_T(ARG)%]
+	ELSEIF LOCAL:3
+		PRINTFORM [%INNER_T(ARG)%]
+		LOCAL:3 = STRLENS(@"[%INNER_T(ARG)%]")
+	ENDIF
+	;下半身下着
+	IF TEQUIP:ARG:下半身下着
+		PRINTFORMD [%INNER_B(ARG)%]
+	ELSEIF LOCAL:2
+		PRINTFORM [%INNER_B(ARG)%]
+		LOCAL:2 = STRLENS(@"[%INNER_B(ARG)%]")
+	ENDIF
+	;靴下
+	IF TEQUIP:ARG:靴下
+		PRINTFORMD [%SOCKS(ARG)%]
+	ELSEIF LOCAL:1
+		PRINTFORM [%SOCKS(ARG)%]
+		LOCAL:1 = STRLENS(@"[%SOCKS(ARG)%]")
+	ENDIF
+	;手袋
+	IF TEQUIP:ARG:アクセサリ
+		PRINTFORMD [%GLOVES(ARG)%]
+	ELSEIF LOCAL:0
+		PRINTFORM [%GLOVES(ARG)%]
+		LOCAL:0 = STRLENS(@"[%GLOVES(ARG)%]")
+	ENDIF
+	;コスプレ
+	IF TEQUIP:ARG:コスプレ
+		PRINTFORMD [%COSPLAY(ARG)%]
+	ELSEIF LOCAL:9
+		PRINTFORM [%COSPLAY(ARG)%]
+		LOCAL:9 = STRLENS(@"[%COSPLAY(ARG)%]")
+	ENDIF
+	PRINTL
+	PRINTL
+	TWAIT 100, 0
+	FOR LCOUNT, 0, 4
+		RED = MAX(0, RED-RED:1)
+		GREEN = MAX(0, GREEN-GREEN:1)
+		BLUE = MAX(0, BLUE-BLUE:1)
+		SETCOLOR RED, GREEN, BLUE
+		CLEARLINE 2
+		PRINTFORMD %CALLNAME:ARG%の衣装：
+		;全身上着
+		IF TEQUIP:ARG:全身上着
+			PRINTFORMD [%DRESS(ARG)%]
+		ELSEIF LOCAL:6
+			PRINTFORM [%DRESS(ARG)%]
+		ENDIF
+		;上半身上着
+		IF TEQUIP:ARG:上半身上着
+			PRINTFORMD [%OUTER_T(ARG)%]
+		ELSEIF LOCAL:5
+			PRINTFORM [%OUTER_T(ARG)%]
+		ENDIF
+		;下半身上着
+		IF TEQUIP:ARG:下半身上着
+			PRINTFORMD [%OUTER_B(ARG)%]
+		ELSEIF LOCAL:4
+			PRINTFORM [%OUTER_B(ARG)%]
+		ENDIF
+		;上半身下着
+		IF TEQUIP:ARG:上半身下着
+			PRINTFORMD [%INNER_T(ARG)%]
+		ELSEIF LOCAL:3
+			PRINTFORM [%INNER_T(ARG)%]
+		ENDIF
+		;下半身下着
+		IF TEQUIP:ARG:下半身下着
+			PRINTFORMD [%INNER_B(ARG)%]
+		ELSEIF LOCAL:2
+			PRINTFORM [%INNER_B(ARG)%]
+		ENDIF
+		;靴下
+		IF TEQUIP:ARG:靴下
+			PRINTFORMD [%SOCKS(ARG)%]
+		ELSEIF LOCAL:1
+			PRINTFORM [%SOCKS(ARG)%]
+		ENDIF
+		;手袋
+		IF TEQUIP:ARG:アクセサリ
+			PRINTFORMD [%GLOVES(ARG)%]
+		ELSEIF LOCAL:0
+			PRINTFORM [%GLOVES(ARG)%]
+		ENDIF
+		;コスプレ
+		IF TEQUIP:ARG:コスプレ
+			PRINTFORMD [%COSPLAY(ARG)%]
+		ELSEIF LOCAL:9
+			PRINTFORM [%COSPLAY(ARG)%]
+		ENDIF
+		PRINTL
+		PRINTL
+		TWAIT 100, 0
+	NEXT
+	FOR LCOUNT, 0, MAXARRAY(LOCAL)/2
+		CLEARLINE 2
+		PRINTFORMD %CALLNAME:ARG%の衣装：
+		;全身上着
+		IF TEQUIP:ARG:全身上着
+			PRINTFORMD [%DRESS(ARG)%]
+		ELSEIF LOCAL:6
+			LOCAL:6 = MAX(0, LOCAL:6-2)
+			PRINTFORM %" "*LOCAL:6%
+		ENDIF
+		;上半身上着
+		IF TEQUIP:ARG:上半身上着
+			PRINTFORMD [%OUTER_T(ARG)%]
+		ELSEIF LOCAL:5
+			LOCAL:5 = MAX(0, LOCAL:5-2)
+			PRINTFORM %" "*LOCAL:5%
+		ENDIF
+		;下半身上着
+		IF TEQUIP:ARG:下半身上着
+			PRINTFORMD [%OUTER_B(ARG)%]
+		ELSEIF LOCAL:4
+			LOCAL:4 = MAX(0, LOCAL:4-2)
+			PRINTFORM %" "*LOCAL:4%
+		ENDIF
+		;上半身下着
+		IF TEQUIP:ARG:上半身下着
+			PRINTFORMD [%INNER_T(ARG)%]
+		ELSEIF LOCAL:3
+			LOCAL:3 = MAX(0, LOCAL:3-2)
+			PRINTFORM %" "*LOCAL:3%
+		ENDIF
+		;下半身下着
+		IF TEQUIP:ARG:下半身下着
+			PRINTFORMD [%INNER_B(ARG)%]
+		ELSEIF LOCAL:2
+			LOCAL:2 = MAX(0, LOCAL:2-2)
+			PRINTFORM %" "*LOCAL:2%
+		ENDIF
+		;靴下
+		IF TEQUIP:ARG:靴下
+			PRINTFORMD [%SOCKS(ARG)%]
+		ELSEIF LOCAL:1
+			LOCAL:1 = MAX(0, LOCAL:1-2)
+			PRINTFORM %" "*LOCAL:1%
+		ENDIF
+		;手袋
+		IF TEQUIP:ARG:アクセサリ
+			PRINTFORMD [%GLOVES(ARG)%]
+		ELSEIF LOCAL:0
+			LOCAL:0 = MAX(0, LOCAL:0-2)
+			PRINTFORM %" "*LOCAL:0%
+		ENDIF
+		;コスプレ
+		IF TEQUIP:ARG:コスプレ
+			PRINTFORMD [%COSPLAY(ARG)%]
+		ELSEIF LOCAL:9
+			LOCAL:9 = MAX(0, LOCAL:9-2)
+			PRINTFORM %" "*LOCAL:9%
+		ENDIF
+		PRINTL
+		PRINTL
+		TWAIT 100, 0
+	NEXT
+;着衣の場合
+ELSE
+	;着る前の服装を表示し、脱いだ位置はその着衣の文字数をLOCALに入れる
+	PRINTFORMD %CALLNAME:ARG%の衣装：
+	;全身上着
+	IF LOCAL:6
+		LOCAL:6 = STRLENS(@"[%DRESS(ARG)%]")
+	ELSEIF TEQUIP:ARG:全身上着 
+		PRINTFORMD [%DRESS(ARG)%]
+	ENDIF
+	;上半身上着
+	IF LOCAL:5
+		LOCAL:5 = STRLENS(@"[%OUTER_T(ARG)%]")
+	ELSEIF TEQUIP:ARG:上半身上着
+		PRINTFORMD [%OUTER_T(ARG)%]
+	ENDIF
+	;下半身上着
+	IF LOCAL:4
+		LOCAL:4 = STRLENS(@"[%OUTER_B(ARG)%]")
+	ELSEIF TEQUIP:ARG:下半身上着
+		PRINTFORMD [%OUTER_B(ARG)%]
+	ENDIF
+	;上半身下着
+	IF LOCAL:3
+		LOCAL:3 = STRLENS(@"[%INNER_T(ARG)%]")
+	ELSEIF TEQUIP:ARG:上半身下着
+		PRINTFORMD [%INNER_T(ARG)%]
+	ENDIF
+	;下半身下着
+	IF LOCAL:2
+		LOCAL:2 = STRLENS(@"[%INNER_B(ARG)%]")
+	ELSEIF TEQUIP:ARG:下半身下着
+		PRINTFORMD [%INNER_B(ARG)%]
+	ENDIF
+	;靴下
+	IF LOCAL:1
+		LOCAL:1 = STRLENS(@"[%SOCKS(ARG)%]")
+	ELSEIF TEQUIP:ARG:靴下
+		PRINTFORMD [%SOCKS(ARG)%]
+	ENDIF
+	;手袋
+	IF LOCAL:0
+		LOCAL:0 = STRLENS(@"[%GLOVES(ARG)%]")
+	ELSEIF TEQUIP:ARG:アクセサリ
+		PRINTFORMD [%GLOVES(ARG)%]
+	ENDIF
+	;コスプレ
+	IF LOCAL:9
+		LOCAL:9 = STRLENS(@"[%COSPLAY(ARG)%]")
+	ELSEIF TEQUIP:ARG:コスプレ
+		PRINTFORMD [%COSPLAY(ARG)%]
+	ENDIF
+	PRINTL
+	PRINTL
+	TWAIT 100, 0
+	FOR LCOUNT, 0, MAXARRAY(LOCAL)/2
+		CLEARLINE 2
+		PRINTFORMD %CALLNAME:ARG%の衣装：
+		;全身上着
+		IF LOCAL:6
+			PRINTFORM %" "*MIN(LCOUNT*2, LOCAL:6)%
+		ELSEIF TEQUIP:ARG:全身上着 
+			PRINTFORMD [%DRESS(ARG)%]
+		ENDIF
+		;上半身上着
+		IF LOCAL:5
+			PRINTFORM %" "*MIN(LCOUNT*2, LOCAL:5)%
+		ELSEIF TEQUIP:ARG:上半身上着
+			PRINTFORMD [%OUTER_T(ARG)%]
+		ENDIF
+		;下半身上着
+		IF LOCAL:4
+			PRINTFORM %" "*MIN(LCOUNT*2, LOCAL:4)%
+		ELSEIF TEQUIP:ARG:下半身上着
+			PRINTFORMD [%OUTER_B(ARG)%]
+		ENDIF
+		;上半身下着
+		IF LOCAL:3
+			PRINTFORM %" "*MIN(LCOUNT*2, LOCAL:3)%
+		ELSEIF TEQUIP:ARG:上半身下着
+			PRINTFORMD [%INNER_T(ARG)%]
+		ENDIF
+		;下半身下着
+		IF LOCAL:2
+			PRINTFORM %" "*MIN(LCOUNT*2, LOCAL:2)%
+		ELSEIF TEQUIP:ARG:下半身下着
+			PRINTFORMD [%INNER_B(ARG)%]
+		ENDIF
+		;靴下
+		IF LOCAL:1
+			PRINTFORM %" "*MIN(LCOUNT*2, LOCAL:1)%
+		ELSEIF TEQUIP:ARG:靴下
+			PRINTFORMD [%SOCKS(ARG)%]
+		ENDIF
+		;手袋
+		IF LOCAL:0
+			PRINTFORM %" "*MIN(LCOUNT*2, LOCAL:0)%
+		ELSEIF TEQUIP:ARG:アクセサリ
+			PRINTFORMD [%GLOVES(ARG)%]
+		ENDIF
+		;コスプレ
+		IF LOCAL:9
+			PRINTFORM %" "*MIN(LCOUNT*2, LOCAL:9)%
+		ELSEIF TEQUIP:ARG:コスプレ
+			PRINTFORMD [%COSPLAY(ARG)%]
+		ENDIF
+		PRINTL
+		PRINTL
+		TWAIT 100, 0
+	NEXT
+	SETCOLOR 0x000000
+	RED = GETRED()
+	GREEN = GETGREEN()
+	BLUE = GETBLUE()
+	FOR LCOUNT, 0, 4
+		RED = MIN(GETRED(PRICOLOR), RED+RED:1)
+		GREEN = MIN(GETGREEN(PRICOLOR), GREEN+GREEN:1)
+		BLUE = MIN(GETBLUE(PRICOLOR), BLUE+BLUE:1)
+		SETCOLOR RED, GREEN, BLUE
+		CLEARLINE 2
+		PRINTFORMD %CALLNAME:ARG%の衣装：
+		;全身上着
+		IF LOCAL:6
+			PRINTFORM [%DRESS(ARG)%]
+		ELSEIF TEQUIP:ARG:全身上着 
+			PRINTFORMD [%DRESS(ARG)%]
+		ENDIF
+		;上半身上着
+		IF LOCAL:5
+			PRINTFORM [%OUTER_T(ARG)%]
+		ELSEIF TEQUIP:ARG:上半身上着
+			PRINTFORMD [%OUTER_T(ARG)%]
+		ENDIF
+		;下半身上着
+		IF LOCAL:4
+			PRINTFORM [%OUTER_B(ARG)%]
+		ELSEIF TEQUIP:ARG:下半身上着
+			PRINTFORMD [%OUTER_B(ARG)%]
+		ENDIF
+		;上半身下着
+		IF LOCAL:3
+			PRINTFORM [%INNER_T(ARG)%]
+		ELSEIF TEQUIP:ARG:上半身下着
+			PRINTFORMD [%INNER_T(ARG)%]
+		ENDIF
+		;下半身下着
+		IF LOCAL:2
+			PRINTFORM [%INNER_B(ARG)%]
+		ELSEIF TEQUIP:ARG:下半身下着
+			PRINTFORMD [%INNER_B(ARG)%]
+		ENDIF
+		;靴下
+		IF LOCAL:1
+			PRINTFORM [%SOCKS(ARG)%]
+		ELSEIF TEQUIP:ARG:靴下
+			PRINTFORMD [%SOCKS(ARG)%]
+		ENDIF
+		;手袋
+		IF LOCAL:0
+			PRINTFORM [%GLOVES(ARG)%]
+		ELSEIF TEQUIP:ARG:アクセサリ
+			PRINTFORMD [%GLOVES(ARG)%]
+		ENDIF
+		;コスプレ
+		IF LOCAL:9
+			PRINTFORM [%COSPLAY(ARG)%]
+		ELSEIF TEQUIP:ARG:コスプレ
+			PRINTFORMD [%COSPLAY(ARG)%]
+		ENDIF
+		;全身上着
+		IF TEQUIP:ARG:全身上着
+			PRINTFORMD [%DRESS(ARG)%]
+		ELSEIF LOCAL:6
+			PRINTFORM [%DRESS(ARG)%]
+		ENDIF
+		PRINTL
+		PRINTL
+		TWAIT 100, 0
+	NEXT
+ENDIF
+CLEARLINE 2
+;結果、現在の服装
+PRINTFORMD %CALLNAME:ARG%の衣装：
+;全身上着
+IF TEQUIP:ARG:全身上着 
+	PRINTFORMD [%DRESS(ARG)%]
+ENDIF
+;上半身上着
+IF TEQUIP:ARG:上半身上着
+	PRINTFORMD [%OUTER_T(ARG)%]
+ENDIF
+;下半身上着
+IF TEQUIP:ARG:下半身上着
+	PRINTFORMD [%OUTER_B(ARG)%]
+ENDIF
+;上半身下着
+IF TEQUIP:ARG:上半身下着
+	PRINTFORMD [%INNER_T(ARG)%]
+ENDIF
+;下半身下着
+IF TEQUIP:ARG:下半身下着
+	PRINTFORMD [%INNER_B(ARG)%]
+ENDIF
+;靴下
+IF TEQUIP:ARG:靴下
+	PRINTFORMD [%SOCKS(ARG)%]
+ENDIF
+;手袋
+IF TEQUIP:ARG:アクセサリ
+	PRINTFORMD [%GLOVES(ARG)%]
+ENDIF
+;コスプレ
+IF TEQUIP:ARG:コスプレ
+	PRINTFORMD [%COSPLAY(ARG)%]
+ENDIF
+REDRAW LOCAL:10
+PRINTL
+PRINTL
+RESETCOLOR
+
+
+;-------------------------------------------------
+;関数名:POSE_SHOW
+;概　要:姿勢変化アニメーション関数
+;引　数:
+;備　考:通常関数
+;保存しておいた服装と現在の服装の差異を見て、脱いだり着たりした部位をフェード表示する
+;もうちょっと効率的な組み方ができる気がするけど、早朝で頭回ってないので汎用化せずにやっちゃおう・・・
+;-------------------------------------------------
+@POSE_SHOW
+#LOCALSIZE 20
+#DIM LCOUNT, 2
+#DIM PRICOLOR, 1
+#DIM RED,2
+#DIM GREEN,2
+#DIM BLUE,2
+#DIMS M前回の姿勢, 1
+#DIMS M今回の姿勢, 1
+#DIMS T前回の姿勢, 1
+#DIMS T今回の姿勢, 1
+VARSET RED
+VARSET GREEN
+VARSET BLUE
+VARSET LOCAL
+
+
+;調教対象
+SELECTCASE TCVAR:MASTER:姿勢
+	CASE 1
+		M今回の姿勢 = 仰向け
+	CASE 2
+		M今回の姿勢 = 座っている
+	CASE 3
+		M今回の姿勢 = 四つん這い
+	CASE 4
+		M今回の姿勢 = 直立
+	CASE 10
+		M今回の姿勢 = 膝立ち
+	CASEELSE
+		M今回の姿勢 = 楽にしている
+ENDSELECT
+SELECTCASE TCVAR:MASTER:前回の姿勢
+	CASE 1
+		M前回の姿勢 = 仰向け
+	CASE 2
+		M前回の姿勢 = 座っている
+	CASE 3
+		M前回の姿勢 = 四つん這い
+	CASE 4
+		M前回の姿勢 = 直立
+	CASE 10
+		M前回の姿勢 = 膝立ち
+	CASEELSE
+		M前回の姿勢 = 楽にしている
+ENDSELECT
+;主人
+SELECTCASE TCVAR:MASTER:位置上下
+	CASE 1
+		T今回の姿勢 = %CALLNAME:MASTER%の上
+	CASE 2
+		T今回の姿勢 = %CALLNAME:MASTER%の下
+	CASEELSE
+		SELECTCASE TCVAR:MASTER:位置前後
+			CASE 1
+				T今回の姿勢 = %CALLNAME:MASTER%の正面
+			CASE 2
+				T今回の姿勢 = %CALLNAME:MASTER%の背後
+			CASE 3
+				T今回の姿勢 = %CALLNAME:MASTER%に背を向けている
+			CASEELSE
+				T今回の姿勢 = %CALLNAME:MASTER%を観察
+		ENDSELECT
+ENDSELECT
+SELECTCASE TCVAR:MASTER:前回の位置上下
+	CASE 1
+		T前回の姿勢 = %CALLNAME:MASTER%の上
+	CASE 2
+		T前回の姿勢 = %CALLNAME:MASTER%の下
+	CASEELSE
+		SELECTCASE TCVAR:MASTER:前回の位置前後
+			CASE 1
+				T前回の姿勢 = %CALLNAME:MASTER%の正面
+			CASE 2
+				T前回の姿勢 = %CALLNAME:MASTER%の背後
+			CASE 3
+				T前回の姿勢 = %CALLNAME:MASTER%に背を向けている
+			CASEELSE
+				T前回の姿勢 = %CALLNAME:MASTER%を観察
+		ENDSELECT
+ENDSELECT
+
+;非表示の場合
+IF !ANIME_CONFIG("USER3")
+	PRINTFORMDL 現在の姿勢：[%CALLNAME:MASTER%：%M今回の姿勢%][%CALLNAME%：%T今回の姿勢%]
+	PRINTL
+	RETURN 0
+ENDIF
+
+LOCAL:12 = CURRENTREDRAW()
+REDRAW 0
+
+;デフォルト色でなくてはならない
+RESETCOLOR
+PRICOLOR = GETCOLOR()
+
+;RGBそれぞれのベース値、減少値を各色:0と1に代入
+RED = GETRED()
+GREEN = GETGREEN()
+BLUE = GETBLUE()
+RED:1 = MAX(1, (RED-GETRED(0x0000))/4)
+GREEN:1 = MAX(1, (GREEN-GETGREEN(0x0000))/4)
+BLUE:1 = MAX(1, (BLUE-GETBLUE(0x0000))/4)
+
+;もとの姿勢を表示する
+PRINTFORMDL 現在の姿勢：[%CALLNAME:MASTER%：%M前回の姿勢%][%CALLNAME%：%T前回の姿勢%]
+PRINTL 
+
+;姿勢の変化があるかないかをLOCAL:0~1
+;変化した文字数をLOCAL:10~11に保存する
+IF M前回の姿勢 != M今回の姿勢
+	LOCAL:0 = 1
+	LOCAL:10 = STRLENS(M今回の姿勢)-STRLENS(M前回の姿勢)
+ENDIF
+IF T前回の姿勢 != T今回の姿勢
+	LOCAL:1 = 1
+	LOCAL:11 = STRLENS(T今回の姿勢)-STRLENS(T前回の姿勢)
+ENDIF
+;どちらも変わっていないなら戻る。念のため
+IF !LOCAL:0 && !LOCAL:1
+	RETURN 0
+ENDIF
+TWAIT 300, 0
+
+;変化のあった部位をフェードアウトさせる
+FOR LCOUNT, 0, 4
+	RED = MAX(0, RED-RED:1)
+	GREEN = MAX(0, GREEN-GREEN:1)
+	BLUE = MAX(0, BLUE-BLUE:1)
+	SETCOLOR RED, GREEN, BLUE
+	CLEARLINE 2
+	PRINTFORMD 現在の姿勢：[%CALLNAME:MASTER%：
+	;調教対象
+	IF LOCAL:0
+		PRINTFORM %M前回の姿勢%
+	ELSE
+		PRINTFORMD %M前回の姿勢%
+	ENDIF
+	PRINTFORMD ][%CALLNAME%：
+	;調教者
+	IF LOCAL:1
+		PRINTFORM %T前回の姿勢%
+	ELSE
+		PRINTFORMD %T前回の姿勢%
+	ENDIF
+	PRINTDL ]
+	PRINTL
+	TWAIT 100, 0
+NEXT
+;枠の成型
+FOR LCOUNT, 0, MAX(ABS(LOCAL:10), ABS(LOCAL:11))
+	CLEARLINE 2
+	PRINTFORMD 現在の姿勢：[%CALLNAME:MASTER%：
+	;調教対象
+	IF !LOCAL:0
+		PRINTFORMD %M今回の姿勢%
+	ELSEIF ABS(LOCAL:10) <= LCOUNT
+		PRINTFORMD %" "*(STRLENS(M今回の姿勢))%
+	ELSEIF LOCAL:10 < 0
+		PRINTFORMD %" "*(STRLENS(M前回の姿勢)-LCOUNT-1)%
+	ELSE
+		PRINTFORMD %" "*(STRLENS(M前回の姿勢)+LCOUNT+1)%
+	ENDIF
+	PRINTFORMD ][%CALLNAME%：
+	;調教者
+	IF !LOCAL:1
+		PRINTFORMD %T今回の姿勢%
+	ELSEIF ABS(LOCAL:11) <= LCOUNT
+		PRINTFORMD %" "*(STRLENS(T今回の姿勢))%
+	ELSEIF LOCAL:11 < 0
+		PRINTFORMD %" "*(STRLENS(T前回の姿勢)-LCOUNT-1)%
+	ELSE
+		PRINTFORMD %" "*(STRLENS(T前回の姿勢)+LCOUNT+1)%
+	ENDIF
+	PRINTDL ]
+	PRINTL
+	TWAIT 100, 0
+NEXT
+;今回の姿勢を表示
+SETCOLOR 0x000000
+RED = GETRED()
+GREEN = GETGREEN()
+BLUE = GETBLUE()
+FOR LCOUNT, 0, 4
+	RED = MIN(GETRED(PRICOLOR), RED+RED:1)
+	GREEN = MIN(GETGREEN(PRICOLOR), GREEN+GREEN:1)
+	BLUE = MIN(GETBLUE(PRICOLOR), BLUE+BLUE:1)
+	SETCOLOR RED, GREEN, BLUE
+	CLEARLINE 2
+	PRINTFORMD 現在の姿勢：[%CALLNAME:MASTER%：
+	;調教対象
+	IF LOCAL:0
+		PRINTFORM %M今回の姿勢%
+	ELSE
+		PRINTFORMD %M今回の姿勢%
+	ENDIF
+	PRINTFORMD ][%CALLNAME%：
+	;調教者
+	IF LOCAL:1
+		PRINTFORM %T今回の姿勢%
+	ELSE
+		PRINTFORMD %T今回の姿勢%
+	ENDIF
+	PRINTDL ]
+	PRINTL
+	TWAIT 100, 0
+NEXT
+CLEARLINE 2
+;結果、現在の姿勢
+PRINTFORMDL 現在の姿勢：[%CALLNAME:MASTER%：%M今回の姿勢%][%CALLNAME%：%T今回の姿勢%]
+REDRAW LOCAL:12
+PRINTW
+RESETCOLOR
+
+;--------------------------------------------------
+;３クリック待機@WAIT_3
+;文字列引数はバー記号。省略すると「…」
+;文字列引数1はフッタ。「。」とかいれればいいとおもうの
+;--------------------------------------------------
+@WAIT_3(ARGS = "…", ARGS:1)
+PRINTL  
+PRINTFORMDW 　%ARGS*3+ARGS:1%
+PRINTFORMDW 　%ARGS*2+ARGS:1%
+PRINTFORMDW 　%ARGS+ARGS:1%
+PRINTL  
+
+;WAIT_3のTWAIT版
+@TWAIT_3(ARGS = "…", ARGS:1)
+PRINTL
+PRINTFORMDL 　%ARGS*3+ARGS:1%
+TWAIT 500, 0
+PRINTFORMDL 　%ARGS*2+ARGS:1%
+TWAIT 500, 0
+PRINTFORMDL 　%ARGS+ARGS:1%
+TWAIT 500, 0
+PRINTL
+
+;--------------------------------------------------
+;WAIT3_ZWEI
+;ARGは省略可。偽にすると間の空行なし
+;文字列引数はバー記号。省略すると「・」
+;文字列引数1はフッタ。使わない気はする
+;基本的にDIGEST、またはOP/ED等でALIGNMENT CENTER時での使用を想定
+;--------------------------------------------------
+@WAIT3_ZWEI(ARG = 1, ARGS = "・", ARGS:1)
+PRINTL
+FONTSTYLE 1
+PRINTFORMDW %ARGS + ARGS:1%
+SIF ARG
+	PRINTL
+PRINTFORMDW %ARGS + ARGS:1%
+SIF ARG
+	PRINTL
+PRINTFORMDW %ARGS + ARGS:1%
+FONTSTYLE 0
+PRINTL
+
+;WAIT_3_ZWEIのTWAIT版
+@TWAIT3_ZWEI(ARG = 1, ARGS = "・", ARGS:1)
+PRINTL
+FONTSTYLE 1
+PRINTFORMDL %ARGS + ARGS:1%
+TWAIT 800, 0
+SIF ARG
+	PRINTL
+PRINTFORMDL %ARGS + ARGS:1%
+TWAIT 800, 0
+SIF ARG
+	PRINTL
+PRINTFORMDL %ARGS + ARGS:1%
+TWAIT 900, 0
+FONTSTYLE 0
+PRINTL
+
+;--------------------------------------------------
+;TWAIT1
+;文字列引数はバー記号。省略すると「―」
+;文字列引数1はフッタ。省略すると「。」
+;--------------------------------------------------
+@TWAIT1(ARGS = "―", ARGS:1 = "。")
+PRINTL
+TWAIT 500, 0
+PRINTFORMDL %ARGS*2 + ARGS:1%
+TWAIT 500, 0
+PRINTL
+
+
+;-------------------------------------------------------------------------------
+;	KOMEIJI_FUNCTIONS由来関数群は最新の関数と差し替えられました。
+;	最新の関数はKOMEIJI_FUNCTIONSフォルダにあります。
+;	
+;	PRINT_CR系			→	HTMLPRINT系を使用してください
+;	PRINT_HEART系		→	HTMLPRINT系を使用してください
+;	PRINT_RAINBOW系		→	新しいPRINT_RAINBOW系を使用してください
+;-------------------------------------------------------------------------------

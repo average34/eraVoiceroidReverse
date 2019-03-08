@@ -1,0 +1,140 @@
+﻿@ASSI_ACT_APPLY, ARG
+SELECTCASE NOWASSIACTNAME(ARG)
+	;手淫
+	CASE "手で愛撫"
+		SOURCE:MASTER:快Ｃ += 100 +ACT_FROM(ASSI, 1) * (2 + TALENT:ASSI:器用な指先) /2
+		TCVAR:MASTER:今回の勃起 += GET_ABL(ASSI, "技巧") + GET_ABL(ASSI, "愛撫") + TALENT:ASSI:器用な指先 * 50
+	;クンニ・フェラチオ
+	CASE "口で愛撫"
+		SOURCE:MASTER:快Ｃ += 150 +ACT_FROM(ASSI, 1) * (3 + TALENT:ASSI:舌使い + TALENT:ASSI:161) / 3
+		TCVAR:MASTER:今回の勃起 += (GET_ABL(ASSI, "技巧") + GET_ABL(ASSI, "愛撫") + TALENT:ASSI:舌使い * 50 + TALENT:ASSI:猫舌 * 50)
+	;素股・貝合わせ
+	CASE "素股"
+		SOURCE:MASTER:快Ｃ += 100 +ACT_FROM(ASSI, 1) * (3 + TALENT:ASSI:濡れやすい - TALENT:ASSI:濡れにくい) / 3
+		TCVAR:MASTER:今回の勃起 += GET_ABL(ASSI, "技巧") + GET_ABL(ASSI, "愛撫")
+	;パイズリ
+	CASE "パイズリする"
+		SOURCE:MASTER:快Ｃ += 100 +ACT_FROM(ASSI, 1) * (4 + TALENT:ASSI:巨乳 - TALENT:ASSI:貧乳) / 4
+		TCVAR:MASTER:今回の勃起 += (GET_ABL(ASSI, "技巧") + GET_ABL(ASSI, "愛撫") + TALENT:ASSI:巨乳 * 50 - TALENT:ASSI:貧乳 * 50 + TALENT:ASSI:淫乳 * 50)
+	;足コキ
+	CASE "足コキする"
+		SOURCE:MASTER:快Ｃ += 50 + ACT_FROM(TARGET, 1) * (3 + TALENT:ASSI:美脚) / 3
+		TCVAR:MASTER:今回の勃起 += GET_ABL(ASSI, "技巧") + GET_ABL(ASSI, "愛撫") + GET_ABL(MASTER, "マゾっ気")
+	;ローター, オナホール
+	CASE "Ｃ道具"
+		SOURCE:MASTER:快Ｃ += 300 + ITEM:9 * 100 + (TALENT:ASSI:道具使い + 3) *ACT_FROM(ASSI, 11) / 3
+		TCVAR:MASTER:今回の勃起 += GET_ABL(ASSI, "技巧") + GET_ABL(ASSI, "道具")
+		SIF TFLAG:助手ACT派生 == 1
+			TEQUIP:オナホール = 1 + ITEM:9
+	;逆レイプ
+	CASE "逆レイプ"
+		SOURCE:MASTER:快Ｃ += 300 + 2 *ACT_FROM(TARGET, 7)
+		;--------EDIT 001 START--------
+		;挿入中フラグの中身をキャラ登録番号に変更
+		;------------------------------
+		TEQUIP:助手性交奉仕中 = ARG
+		TFLAG:助手に挿入中 = ARG == ASSI:1 ? 1 # 2
+		TCVAR:MASTER:勃起度 = 1500
+		;--------EDIT 001 END  --------
+	;アナル愛撫
+	CASE "アナル愛撫"
+		SOURCE:MASTER:快Ａ += 60 +ACT_FROM(ASSI, 3) * (2 + TALENT:ASSI:器用な指先) / 2
+		TCVAR:MASTER:今回の勃起 += (GET_ABL(MASTER, "Ａ感覚") * 10 + GET_ABL(MASTER, "マゾっ気") * GET_ABL(ASSI, "技巧")) / 10
+	;アナル舐め
+	CASE "アナル舐め"
+		SOURCE:MASTER:快Ａ += 60 +ACT_FROM(ASSI, 3) * (3 + TALENT:ASSI:舌使い) / 3
+		TCVAR:MASTER:今回の勃起 += GET_ABL(MASTER, "Ａ感覚")
+	;アナルローター
+	CASE "アナルローター"
+		SOURCE:MASTER:快Ａ += 100 + ITEM:9 * 100 + (TALENT:ASSI:道具使い + 3) *ACT_FROM(ASSI, 13) / 3
+		;オトコはＡで前立腺刺激
+		SIF TALENT:MASTER:オトコ
+			TCVAR:MASTER:前立腺刺激 += 1
+		TCVAR:MASTER:今回の勃起 += GET_ABL(MASTER, "Ａ感覚")
+	;アナルバイブ
+	CASE "アナルバイブ"
+		SOURCE:MASTER:快Ａ += 100 + ITEM:9 * 200 + (TALENT:ASSI:道具使い + 3) *ACT_FROM(ASSI, 13) / 3
+		;オトコはＡで前立腺刺激
+		SIF TALENT:MASTER:オトコ
+			TCVAR:MASTER:前立腺刺激 += 1
+		TCVAR:MASTER:今回の勃起 += (GET_ABL(MASTER, "Ａ感覚") * 10 + GET_ABL(MASTER, "マゾっ気") * GET_ABL(ASSI, "技巧")) / 10
+		TEQUIP:アナルバイブ = 1 + ITEM:9
+	;胸愛撫
+	CASE "胸愛撫"
+		SOURCE:MASTER:快Ｂ += 75 +ACT_FROM(ASSI, 4) * (2 + TALENT:ASSI:器用な指先) / 3
+		TCVAR:MASTER:今回の勃起 += (GET_ABL(ASSI, "技巧") + GET_ABL(ASSI, "愛撫") + TALENT:ASSI:器用な指先 * 50) / 2
+	;乳首舐め
+	CASE "乳首舐め"
+		SOURCE:MASTER:快Ｂ += 150 +ACT_FROM(ASSI, 4) * (3 + TALENT:ASSI:舌使い) / 3
+		TCVAR:MASTER:今回の勃起 += (GET_ABL(ASSI, "技巧") + GET_ABL(ASSI, "愛撫") + TALENT:ASSI:舌使い * 50) / 2
+	;乳首ローター
+	CASE "乳首ローター"
+		SOURCE:MASTER:快Ｂ += 100 + ITEM:9 * 100 + (TALENT:ASSI:道具使い + 3) *ACT_FROM(ASSI, 14) / 3
+		TCVAR:MASTER:今回の勃起 += (GET_ABL(ASSI, "技巧") + GET_ABL(ASSI, "愛撫") + TALENT:ASSI:道具使い * 50)/ 2
+	;指挿入
+	CASE "指挿入"
+		SOURCE:MASTER:快Ｖ +=  100 +ACT_FROM(ASSI, 2) * (2 + TALENT:ASSI:器用な指先) / 2
+		;ふたなりはＶで前立腺刺激
+		SIF TALENT:MASTER:ふたなり
+			TCVAR:MASTER:前立腺刺激 += 1
+		TCVAR:MASTER:今回の勃起 += (GET_ABL(ASSI, "技巧") + GET_ABL(ASSI, "愛撫") + TALENT:ASSI:器用な指先 * 50) / 2
+	;バイブ
+	CASE "バイブ"
+		SOURCE:MASTER:快Ｖ += 150 + ITEM:9 * 200 +ACT_FROM(ASSI, 2) * (TALENT:ASSI:道具使い + 3) / 3
+		;ふたなりはＶで前立腺刺激
+		SIF TALENT:MASTER:ふたなり
+			TCVAR:MASTER:前立腺刺激 += 1
+		TCVAR:MASTER:今回の勃起 += (GET_ABL(MASTER, "Ｖ感覚") + TALENT:ASSI:道具使い * 50 + GET_ABL(ASSI, "技巧"))
+		TEQUIP:バイブ = 1 + ITEM:9
+	;性交
+	CASE "性交"
+		SOURCE:MASTER:快Ｖ +=  300 +ACT_FROM(ASSI, 5) * 3 / 2
+		;ふたなりはＶで前立腺刺激
+		SIF TALENT:MASTER:ふたなり
+			TCVAR:MASTER:前立腺刺激 += 1
+		TCVAR:MASTER:今回の勃起 += (GET_ABL(ASSI, "技巧") + GET_ABL(ASSI, "性交")) / 2
+	;キス
+	CASE "キス"
+		TCVAR:MASTER:今回の勃起 += 50 + (GET_ABL(ASSI, "技巧") + GET_ABL(ASSI, "愛撫") + TALENT:ASSI:舌使い * 50 + TALENT:ASSI:猫舌 * 50) / 2
+	;顔面騎乗
+	CASE "顔面騎乗"
+		TCVAR:MASTER:今回の勃起 += (GET_ABL(MASTER, "欲望") + GET_ABL(MASTER, "マゾっ気")) * 2
+	;足を舐めさせる
+	CASE "足を舐めさせる"
+		TCVAR:MASTER:今回の勃起 += (GET_ABL(ASSI, "加虐") + GET_ABL(MASTER, "マゾっ気")) * 2
+	;自慰見せつけ
+	CASE "自慰見せつけ"
+		TCVAR:MASTER:今回の勃起 += (GET_ABL(MASTER, "欲望") + GET_ABL(ASSI, "羞恥")) * 2
+	;罵倒
+	CASE "罵倒"
+		TCVAR:MASTER:今回の勃起 += (GET_ABL(MASTER, "マゾっ気") + GET_ABL(MASTER, "露出癖"))
+	;写真撮影
+	CASE "写真撮影"
+		TCVAR:MASTER:今回の勃起 += (GET_ABL(MASTER, "マゾっ気") + GET_ABL(MASTER, "露出癖"))
+	;調教者とキス
+	CASE "調教者とキス"
+		TCVAR:MASTER:今回の勃起 += (GET_ABL(MASTER, "マゾっ気") + GET_ABL(MASTER, "欲望"))
+	;痴態を見つめる
+	CASE "痴態を見つめる"
+		TCVAR:MASTER:今回の勃起 += (GET_ABL(MASTER, "マゾっ気") + GET_ABL(MASTER, "露出癖"))
+	;頭を踏みつける
+	CASE "頭を踏みつける"
+		TCVAR:MASTER:今回の勃起 += (GET_ABL(MASTER, "マゾっ気") + TALENT:ASSI:サド * 5) * 10
+	;-------------------------------------------------
+	;SPアクション
+	;-------------------------------------------------
+	CASE "新聞の記事にする"
+		SOURCE:MASTER:露出 += 25 * (2 + ABL:ASSI:技巧 * 2 + ABL:ASSI:異常) * (2 + ITEM:9)
+		SOURCE:MASTER:逸脱 += 20 * SOURCE:MASTER:露出 / (3 + ABL:MASTER:従順 + ABL:MASTER:欲望 + ABL:MASTER:露出癖 * 3 + ABL:MASTER:マゾっ気 * 2 + CFLAG:MASTER:調教レベル + EXP:MASTER:被写経験 + EXP:MASTER:異常経験 / 2)
+		SOURCE:MASTER:トラウマ += (2 + TALENT:MASTER:恥じらい - TALENT:MASTER:恥薄い) * (SOURCE:MASTER:逸脱 + 1000) / (1000 + MARK:反抗刻印 * 100 - MARK:MASTER:トラウマ * 50 + EXP:MASTER:異常経験 * 10 + ABL:MASTER:露出癖 * 250 + EXP:MASTER:被写経験 * 100)
+		SOURCE:MASTER:中毒充足 += SOURCE:MASTER:露出 * (CFLAG:MASTER:調教レベル + ABL:MASTER:露出癖 + 1) * (ABL:MASTER:露出癖 * 2 + 5) / (1000 + SOURCE:MASTER:トラウマ)
+		IF TEQUIP:自慰中 == 1 || TEQUIP:自慰中 == 3
+			SOURCE:MASTER:露出 += 200 + SOURCE:MASTER:露出 / 5
+			TIMES SOURCE:MASTER:逸脱 , 1.35
+			TIMES SOURCE:MASTER:中毒充足 , 1.50
+			TIMES SOURCE:MASTER:達成 , 1.50
+		ENDIF
+		;今回の調教で撮影した回数をカウント
+		TFLAG:51 += 1
+ENDSELECT
+

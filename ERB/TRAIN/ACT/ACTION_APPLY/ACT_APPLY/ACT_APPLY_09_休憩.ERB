@@ -1,0 +1,244 @@
+﻿;────────────────────────────────────
+;090,休ませる
+;────────────────────────────────────
+;リアクション前（Ｒ）
+@ACTION_APPLY_90
+;拘束系を一括解除
+TEQUIP:縄 = 0
+TEQUIP:アイマスク = 0
+TEQUIP:ボールギャグ = 0
+TEQUIP:三角木馬 = 0
+;顔面騎乗系解除
+CALL FACESITTING_SET(0)
+;調教者、調教対象自慰を中断
+TEQUIP:自慰中 = 0
+;助手挿入系解除
+TFLAG:助手に挿入中 = 0
+TFLAG:助手連続交合 = 0
+;汚れ初期化
+CALL STAIN_RESET
+TFLAG:経過時間 += 7
+
+;リアクション後（露出、逸脱、達成、体力、気力、射精、噴乳、尿意）
+@ACTION_APPLY2_90
+;調教者調教レベル、回復早い、回復遅い素質に応じて調教者の体力、気力回復量増減
+LOCAL:3 = 300 + (10 + GET_TRAINLV(TARGET) + TALENT:回復早い * 5 - TALENT:回復遅い * 5) * 10
+LOCAL:4 = 300 + (6 + GET_TRAINLV(TARGET) + TALENT:回復早い * 5 - TALENT:回復遅い * 5) * 20
+BASE:体力 += LOCAL:3
+BASE:気力 += LOCAL:4
+;調教者消耗度減少
+TFLAG:調教者消耗度 -= 2
+;リアクションが自慰し始めるだった場合
+IF IS_NOWCOMNAME("自慰し始める")
+	;ACT派生に勝手に自慰をし始めたをセット
+	TFLAG:ACT派生 = 2
+	;REACT分類に要求に応じないをセット		@COM50.自慰し始めるの改変に伴いコメントアウト@/L
+	;CALL SET_COMGRO("拒否")
+;持続系道具装着中だった場合
+ELSEIF TEQUIP:バイブ || TEQUIP:アナルバイブ || TEQUIP:アナルビーズ || TEQUIP:浣腸器＋プラグ || TEQUIP:ニプルキャップ
+	;道具それぞれの使用中に応じて補正値用意
+	LOCAL = TEQUIP:バイブ * 3 + TEQUIP:アナルバイブ * 3 + TEQUIP:アナルビーズ + TEQUIP:浣腸器＋プラグ * 4 + TEQUIP:ニプルキャップ * 2
+	;調教対象調教レベル、回復早い、回復遅い素質、道具別補正値に応じて調教対象の体力、気力回復量増減
+	LOCAL:1 = 150 + (10 + CFLAG:MASTER:調教レベル + TALENT:MASTER:回復早い * 5 - TALENT:MASTER:回復遅い * 5) * 10 - 20 * LOCAL
+	LOCAL:2 = 150 + (6 + CFLAG:MASTER:調教レベル + TALENT:MASTER:回復早い * 5 - TALENT:MASTER:回復遅い * 5) * 20 - 5 * LOCAL
+	BASE:MASTER:体力 += LOCAL:1
+	BASE:MASTER:気力 += LOCAL:2
+	;ACT派生に道具のせいであまり休めなかったをセット
+	TFLAG:ACT派生 = 1
+;その他の場合
+ELSE
+	;調教対象調教レベル、回復早い、回復遅い素質に応じて調教対象の体力、気力回復量増減
+	LOCAL:1 = 300 + (10 + CFLAG:MASTER:調教レベル + TALENT:MASTER:回復早い * 5 - TALENT:MASTER:回復遅い * 5) * 10
+	LOCAL:2 = 300 + (6 + CFLAG:MASTER:調教レベル + TALENT:MASTER:回復早い * 5 - TALENT:MASTER:回復遅い * 5) * 20
+	BASE:MASTER:体力 += LOCAL:1
+	BASE:MASTER:気力 += LOCAL:2
+	;調教対象消耗度減少
+	TFLAG:消耗度 -= 1
+	;ACT派生に普通に休んだをセット
+	TFLAG:ACT派生 = 0
+ENDIF
+;変数保持処理
+FOR LOCAL, 1, 5
+	CALLF ACTION_APPLY2_90V(-LOCAL, LOCAL:LOCAL)
+NEXT
+
+;変数保持関数
+@ACTION_APPLY2_90V(ARG, ARG:1)
+#FUNCTION
+;ARGが負であればLOCAL:(-ARG)にARG:1を保持し
+;正であればLOCAL:ARGを返す
+;
+;例:(-1, 200) LOCAL:1に200を保持
+;   ( 1)      LOCAL:1の200を返す
+
+;ARGが0の時処理するものは無い
+IF ARG == 0
+;ARGが負なら値を保持
+ELSEIF ARG < 0
+	LOCAL:(-ARG) = ARG:1
+;ARGが正なら値を返す
+ELSE
+	RETURNF LOCAL:ARG
+ENDIF
+RETURNF 0
+
+;────────────────────────────────────
+;091,栄養剤を飲ませる
+;────────────────────────────────────
+;リアクション前（Ｒ）（逸脱）
+@ACTION_APPLY_91
+;必要ならば媚薬を使用
+CALL LOVEPOTION_USE
+;邪魔になるものを一括解除
+TEQUIP:ボールギャグ = 0
+TEQUIP:三角木馬 = 0
+;顔面騎乗系解除
+CALL FACESITTING_SET(0)
+;逸脱SOURCE増加、調教対象調教レベル、従順によって減少
+SOURCE:MASTER:逸脱 = 200 - CFLAG:MASTER:調教レベル * 10 - GET_ABL(MASTER, "従順") * 2
+;逸脱SOURCEが負の値をとらないよう調整
+SOURCE:MASTER:逸脱 = SOURCE:MASTER:逸脱 < 0 ? 0 # SOURCE:MASTER:逸脱
+;調教者、調教対象自慰を中断
+TEQUIP:自慰中 = 0
+;助手挿入系解除
+TFLAG:助手に挿入中 = 0
+TFLAG:助手連続交合 = 0
+TFLAG:経過時間 += 2
+
+;リアクション後（露出、逸脱、達成、体力、気力、射精、噴乳、尿意）
+@ACTION_APPLY2_91
+;リアクションが拒否するだった場合
+IF IS_NOWCOMNAME("拒否する")
+	;調教者消耗度減少
+	TFLAG:調教者消耗度 -= 1
+	;ACT派生に栄養剤を捨てたをセット
+	TFLAG:ACT派生 = 1
+	;REACT分類に要求に応じないをセット
+	CALL SET_COMGRO("拒否")
+;その他の場合
+ELSE
+	;逸脱SOURCE増加
+	SOURCE:MASTER:逸脱 += 250
+	;調教者調合知識、禁断の知識、調教対象薬毒耐性素質、調教者調教レベルに応じて調教対象の体力、気力回復量増減
+	LOCAL:1 = 20 * (2 + TALENT:調合知識 + TALENT:禁断の知識 - TALENT:MASTER:薬毒耐性) * (10 + GET_TRAINLV(TARGET))
+	LOCAL:2 = 10 * (2 + TALENT:調合知識 + TALENT:禁断の知識 - TALENT:MASTER:薬毒耐性) * (15 + GET_TRAINLV(TARGET))
+	BASE:MASTER:体力 += LOCAL:1
+	BASE:MASTER:気力 += LOCAL:2
+	;調教対象尿意増加
+	BASE:MASTER:尿意 += 300 + RAND:7 * 50
+	;調教者、調教対象消耗度減少
+	TFLAG:調教者消耗度 -= 2
+	TFLAG:消耗度 -= 2
+	;ACT派生に栄養剤を飲んだをセット
+	TFLAG:ACT派生 = 0
+	;栄養剤のヒート値上昇(ヒート値が残っていた場合上昇量増加)
+	FLAG:栄養ヒート += FLAG:栄養ヒート > 0 ? 8 # 5
+ENDIF
+;変数保持処理
+FOR LOCAL, 1, 3
+	CALLF ACTION_APPLY2_91V(-LOCAL, LOCAL:LOCAL)
+NEXT
+
+;変数保持関数
+@ACTION_APPLY2_91V(ARG, ARG:1)
+#FUNCTION
+;ARGが負であればLOCAL:(-ARG)にARG:1を保持し
+;正であればLOCAL:ARGを返す
+;
+;例:(-1, 200) LOCAL:1に200を保持
+;   ( 1)      LOCAL:1の200を返す
+
+;ARGが0の時処理するものは無い
+IF ARG == 0
+;ARGが負なら値を保持
+ELSEIF ARG < 0
+	LOCAL:(-ARG) = ARG:1
+;ARGが正なら値を返す
+ELSE
+	RETURNF LOCAL:ARG
+ENDIF
+RETURNF 0
+
+;────────────────────────────────────
+;092,治療する
+;────────────────────────────────────
+;リアクション前（Ｒ）（接触）
+@ACTION_APPLY_92
+;必要ならば媚薬を使用
+CALL LOVEPOTION_USE
+;三角木馬解除
+TEQUIP:三角木馬 = 0
+;顔面騎乗系解除
+CALL FACESITTING_SET(0)
+;調教者調教レベルに応じて接触SOURCE増加
+SOURCE:MASTER:接触 = 100 + GET_TRAINLV(TARGET) * 10
+;調教者、調教対象自慰を中断
+TEQUIP:自慰中 = 0
+;助手挿入系解除
+TFLAG:助手に挿入中 = 0
+TFLAG:助手連続交合 = 0
+TFLAG:経過時間 += 5
+[SKIPSTART]
+これらのTEQUIPをCOM道具を外すで解除すると暴れる扱いになるのは不自然と考える
+
+;その他TEQUIPを解除
+TEQUIP:アイマスク = 0
+TEQUIP:浣腸器＋プラグ = 0
+TEQUIP:アナルバイブ = 0
+TEQUIP:バイブ = 0
+TEQUIP:オナホール = 0
+TEQUIP:クリキャップ = 0
+TEQUIP:ボールギャグ = 0
+TEQUIP:ペニスバンド = 0
+TEQUIP:アナルビーズ = 0
+[SKIPEND]
+;リアクション後（露出、逸脱、達成、体力、気力、射精、噴乳、尿意）
+@ACTION_APPLY2_92
+;REACT分類が暴れるだった場合キャンセル
+IF IS_COMGRONAME("暴れる")
+	;ACT派生に暴れたため治療できなかったをセット
+	TFLAG:ACT派生 = 1
+ELSE
+	;恐怖刻印取得を中断（？）
+	TFLAG:恐怖刻印取得 = 0
+	;調教対象技巧、調教者調教レベルによって補正値を用意
+	LOCAL:1 = 25 * (5 + ABL:MASTER:技巧) * (10 + GET_TRAINLV(TARGET))
+	LOCAL:2 = LOCAL:1 * 2 / 3
+	;補正値に応じて露出、達成SOURCE増加
+	SOURCE:MASTER:露出 += 100 + LOCAL:1 / (1 + RAND:4)
+	SOURCE:MASTER:達成 += LOCAL:1 / 10
+	;補正値に応じて調教対象体力、気力回復
+	BASE:MASTER:体力 += LOCAL:1
+	BASE:MASTER:気力 += LOCAL:2
+	;調教者、調教対象消耗度減少
+	TFLAG:調教者消耗度 -= 1
+	TFLAG:消耗度 -= 3
+	;ACT派生に体の隅々まで撫で回して治療したをセット
+	TFLAG:ACT派生 = 0
+	;治療のヒート値上昇(ヒート値が残っていた場合上昇量増加)
+	FLAG:治療ヒート += FLAG:治療ヒート > 0 ? 8 # 5
+ENDIF
+;変数保持処理
+FOR LOCAL, 1, 3
+	CALLF ACTION_APPLY2_92V(-LOCAL, LOCAL:LOCAL)
+NEXT
+
+;変数保持関数
+@ACTION_APPLY2_92V(ARG, ARG:1)
+#FUNCTION
+;ARGが負であればLOCAL:(-ARG)にARG:1を保持し
+;正であればLOCAL:ARGを返す
+;
+;例:(-1, 200) LOCAL:1に200を保持
+;   ( 1)      LOCAL:1の200を返す
+
+;ARGが0の時処理するものは無い
+IF ARG == 0
+;ARGが負なら値を保持
+ELSEIF ARG < 0
+	LOCAL:(-ARG) = ARG:1
+;ARGが正なら値を返す
+ELSE
+	RETURNF LOCAL:ARG
+ENDIF
+RETURNF 0

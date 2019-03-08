@@ -1,0 +1,353 @@
+﻿;状況に関わらず読心能力が変更可能だったのを修正。他、微調整と修正@revkoishi(14/05/26)
+@CONFIGURE
+#DIMS CONST CONF_FUNC = "ANIMATION_EFFECT", "AI_FREEDOM", "PAD"
+#DIM LINE
+#DIM KOJO_CONF, 21
+LOCAL:1 = RESULT
+LOCAL:2 = CURRENTREDRAW()
+LINE = LINECOUNT
+;口上のコンフィグ設定を参照
+VARSET RESULT, -1
+TRYCALLFORM KOJO_SETUP_K{NO:TARGET}
+ARRAYCOPY "RESULT", "KOJO_CONF"
+REDRAW 0
+DO
+	CLEARLINE LINECOUNT - LINE
+	PRINTL [ 0] 設定終了
+	SIF KOJO_CONF:0 > 0					;推奨設定がある
+		PRINTL [ 1] 現在の調教者口上が推奨するコンフィグ設定にする
+	IF FLAG:デバッグ || KOJO_CONF:1 > 0	;口上側が読心能力オンにしているか、デバッグモードである
+		PRINTFORM %"[ 2] 空気を読む程度の能力(DEBUG・口上限定機能)", 50, LEFT%
+		PRINTFORML %SIGNS(TALENT:MASTER:読心能力 - 1, "相手の気持ちは分からない", "多少空気が読める", "心が見通せる"), 30, RIGHT%
+	ENDIF
+	PRINTFORML %"[ 3] 素質を性格や体質などで分類する", 50, LEFT%%\@ FLAG:素質表示方法 ? 分類する # 登録番号順 \@, 30, RIGHT%
+	PRINTFORML %"[ 4] 日常生活の描写", 50, LEFT%%\@ FLAG:日常 ?ON # OFF \@, 30, RIGHT%
+	PRINTFORML %"[ 5] 調教者の妊娠機能", 50, LEFT%%\@ FLAG:妊娠 ? ON # OFF \@, 30, RIGHT%
+	PRINTFORM %"[ 6] 調教対象の妊娠機能", 50, LEFT%
+	PRINTFORML %SIGNS(FLAG:奴隷妊娠 - 1, "妊娠しない", "愛があるほど妊娠しやすい", "愛に関係なく妊娠する"), 30, RIGHT%
+	PRINTL [ 7] 視覚アニメ効果の表示設定
+	IF FLAG:モード == 1
+		PRINTFORM %"[ 8] AI自由度設定(SANDBOXのみ)", 50, LEFT%
+		PRINTFORML %SIGNS(FLAG:AI自由度 ? FLAG:AI自由度 / 15 # -1, "OFF", "一部ON", "ON"), 30, RIGHT%
+	ENDIF
+	PRINTFORML %"[ 9] 調教中のインターフェース", 50, LEFT%%\@ FLAG:調教UIパッド化 ? パッド # ノーマル \@, 30, RIGHT%
+	DO
+		INPUT
+		LOCAL:0 = !INRANGE(RESULT, 0, 9)								;範囲チェック
+		LOCAL:0 |= (RESULT == 1 && KOJO_CONF:0 <= 0)					;推奨設定が無い
+		LOCAL:0 |= (RESULT == 2 && (FLAG:デバッグ !| KOJO_CONF:1 > 0))	;デバッグモードでも読心能力オンでもない
+		LOCAL:0 |= (RESULT == 8 && FLAG:モード != 1)					;SANDBOXモードでない
+		IF LOCAL:0
+			CLEARLINE 1
+			REUSELASTLINE 入力値が範囲外です
+		ENDIF
+	LOOP LOCAL:0
+	LOCAL:0 = RESULT
+	SELECTCASE LOCAL:0
+		CASE 1
+			CALL KOJO_CONFIG_SET(TARGET)
+			IF ANIME_CONFIG("USER2")	;昼夜のエフェクトをリロード
+				SETBGCOLOR TIME ? 0x00001E # 0x140A00
+			ELSE
+				RESETBGCOLOR
+			ENDIF
+		CASE 2
+			PRINTFORML 空気を読む程度の能力の設定を行います\n[ 0] 相手の気持ちは分からない\n[ 1] 空気や欲が読める程度に\n[ 2] 心が読めるように
+			CALL INPUT_RANGE(0, 2)
+			TALENT:MASTER:読心能力 = RESULT
+		CASE 3
+			PRINTFORMW 素質を\@ FLAG:素質表示方法 ? 登録番号表示に戻し # 性格や体質など、種類ごとに整頓して表示させ \@ます
+			FLAG:素質表示方法 ^= 1
+		CASE 4
+			FLAG:日常 ^= 1
+		CASE 5
+			FLAG:妊娠 ^= 1
+		CASE 6
+			PRINTFORML 調教対象が妊娠するかの設定を行います\n[ 0] 妊娠しない\n[ 1] 愛があるほど妊娠しやすい\n[ 2] 奴隷に愛など必要ない！愛に関係なく妊娠する
+			CALL INPUT_RANGE(0, 2)
+			FLAG:奴隷妊娠 = RESULT
+		CASE 7 TO 9
+			CALLFORM CONFIG_%CONF_FUNC:(LOCAL:0 - 7)%
+	ENDSELECT
+LOOP LOCAL:0
+REDRAW LOCAL:2
+RETURN LOCAL:1
+
+
+;@CONFIG_MASTER_PREGNACY	調教対象の妊娠設定	@CONFIGUREに統合@revkoishi(14/05/26)
+;@CONFIG_MINDREADING		@CONFIGUREに統合@revkoishi(14/05/26)
+;@CONFIG_SHOW_TALENT		@CONFIGUREに統合@revkoishi(14/05/22)
+
+
+;微調整@revkoishi(14/05/22)
+@CONFIG_RENAME_MASTER
+LOCAL:0 = RESULT
+PRINTFORML 現在の名前：%CALLNAME:MASTER%\n名前の変更を行いますか？\n[ 0] はい\n[ 1] いいえ
+CALL INPUT_RANGE
+IF !RESULT
+	PRINTL 新しい名前を入力してください
+	INPUTS
+	CALLNAME:MASTER '= RESULTS
+	PRINTFORMW 名前を%CALLNAME:MASTER%に変更しました
+ENDIF
+RETURN LOCAL:0
+
+
+;アニメ効果の設定
+;REDRAWが変わったまま戻らないのを修正@revkoishi(14/05/19)
+@CONFIG_ANIMATION_EFFECT
+{
+#DIMS CONST CONF = "", "CHARA_CUTIN", "BGM_CUTIN", "USER1", "USER3", "USER2", "FULLCUTIN", "FLASH",
+                   "QUAKE", "SCROLLTEXT", "FADE"
+}
+{
+#DIMS CONST TEXT = "", "キャラ登場カットイン", "ＢＧＭカットイン", "BASE・PALAMバーのアニメーション",
+                   "脱衣・着衣時、姿勢変更時のアニメーション", "昼・夜での背景色変化", "全画面カットイン",
+                   "射精時等の画面フラッシュ効果", "画面振動効果", "文字のスライドアニメ効果",
+                   "文字のフェードイン・アウト効果"
+}
+LOCAL:1 = RESULT
+LOCAL:2 = CURRENTREDRAW()
+REDRAW 2
+DO
+	CALL SAVELINE
+	LOADGLOBAL	;念のため設定をリロード
+	CALLF ANIME_CONFIG("SET", GLOBAL)
+	PRINTL 各種視覚エフェクトの表示設定を行います。チェックボックスをOFFにすると非表示、もしくは省略表示にします
+	PRINTL ※この項目の設定はセーブデータ間で共有されます
+	PRINTFORML \n   [ 0] 戻る
+	FOR LOCAL:0, 1, VARSIZE("CONF")
+		PRINTFORML %UNICODE(ANIME_CONFIG(CONF:(LOCAL:0)) ? 0x2611 # 0x2610)% [{LOCAL:0, 2}] %TEXT:(LOCAL:0)%
+	NEXT
+	CALL INPUT_RANGE(0, 10)
+	LOCAL:0 = RESULT
+	IF LOCAL:0
+		CALLF ANIME_CONFIG(CONF:(LOCAL:0), 2)
+		GLOBAL = ANIME_CONFIG("SAVE")
+		SAVEGLOBAL
+		IF ANIME_CONFIG("USER2")	;昼夜のエフェクトをリロード
+			SETBGCOLOR TIME ? 0x00001E # 0x140A00
+		ELSE
+			RESETBGCOLOR
+		ENDIF
+		CALL RETURNLINE
+	ENDIF
+LOOP LOCAL:0
+REDRAW LOCAL:2
+RETURN LOCAL:1
+
+
+;微調整@revkoishi(14/05/22)
+@CONFIG_AI_FREEDOM
+#DIMS CONST TEXT = "調教者追加(未実装)", "技巧上昇", "知識・技能取得", "道具錬成"
+#DIM LINE
+LINE = LINECOUNT
+LOCAL:1 = RESULT
+DO
+	CLEARLINE LINECOUNT - LINE
+	PRINTFORML AI自由度の設定を行います\n   [ 0] 戻る
+	FOR LOCAL:0, 0, VARSIZE("TEXT")
+	{
+		CALL FPRINTL(@"%UNICODE(GETBIT(FLAG:AI自由度, LOCAL:0) ? 0x2611 # 0x2610)% [{LOCAL:0 + 1, 2}] %TEXT:(LOCAL:0)%", 
+                     GETBIT(FLAG:AI自由度, LOCAL:0) ? 0x70C070 # 0x969696)
+	}
+	NEXT
+	PRINTFORML    [ 8] 全てON\n   [ 9] 全てOFF
+	DO
+		INPUT
+		LOCAL:0 = !GROUPMATCH(RESULT, 0, 1, 2, 3, 4, 8, 9)
+		IF LOCAL:0
+			CLEARLINE 1
+			REUSELASTLINE 範囲外の入力値です
+		ENDIF
+	LOOP LOCAL:0
+	LOCAL:0 = RESULT
+	SELECTCASE LOCAL:0
+		CASE 1 TO 7
+			INVERTBIT FLAG:AI自由度, LOCAL:0 - 1
+		CASE 8, 9
+			FLAG:AI自由度 = LOCAL:0 == 8 ? 15 # 0
+	ENDSELECT
+LOOP LOCAL:0
+RETURN LOCAL:1
+
+
+;関数名変更、微調整@revkoishi(14/05/26)
+@KOJO_CONFIG_SET(ARG:0)
+#DIMS CONST CONF = "CHARA_CUTIN", "BGM_CUTIN", "USER1", "USER3", "USER2", "FULLCUTIN", "FLASH", "QUAKE", "SCROLLTEXT", "FADE"
+LOCAL:1 = RESULT
+;口上のコンフィグ設定を参照
+VARSET RESULT, -1
+TRYCALLFORM KOJO_SETUP_K{NO:ARG}
+IF RESULT:0 > 0
+	CALL PRINT_DIALOG(@"口上推奨のコンフィグ設定を適用しますか？", 1, 1, 0)
+	CALL PRINT_DIALOG(@"（適用後もショップメニューから変更することができます）", 0, 1, 1)
+	CALL PRINT_CHOICE(, "はい", 1, "いいえ", 2, )
+	IF RESULT == 1
+		TALENT:MASTER:読心能力 = RESULT:1  >= 0 ? RESULT:1  # TALENT:MASTER:読心能力	;主人公の読心能力(0=読めない、1=空気が、2=心が)
+		FLAG:素質表示方法      = RESULT:2  >= 0 ? RESULT:2  # FLAG:素質表示方法			;素質の表示分類(0=番号順、1=系統別)
+		FLAG:日常              = RESULT:3  >= 0 ? RESULT:3  # FLAG:日常					;日常イベント(0=オフ、1=オン)
+		FLAG:妊娠              = RESULT:4  >= 0 ? RESULT:4  # FLAG:妊娠					;調教者の妊娠判定(0=オフ、1=オン)
+		FLAG:奴隷妊娠          = RESULT:5  >= 0 ? RESULT:5  # FLAG:奴隷妊娠				;調教対象の妊娠判定(0=オフ、1=愛()があるほど妊娠しやすい、2=普通にオン)
+		FLAG:AI自由度          = RESULT:6  >= 0 ? RESULT:6  # FLAG:AI自由度				;AI自由度（SANDBOX用）(0=余計なことしない、1=人員追加、2=技巧上昇、4=技能取得、8=道具錬成、15=全てを自動で行う)
+		FLAG:口上              = RESULT:10 >= 0 ? RESULT:10 # FLAG:口上					;口上表示設定(0=表示しない、1=表示する)
+		;アニメ設定(0=オフ、1=オン)
+		;11.キャラ登場カットイン/12.ＢＧＭカットイン/13.PALAM獲得アニメ/14.脱衣アニメ/15.昼夜の背景色変化/
+		;16.全画面カットイン/17.フラッシュ効果/18.振動効果/19.文字のスライド/20.文字のフェードイン・アウト
+		FOR LOCAL:0, 11, 21
+			SIF RESULT:(LOCAL:0) >= 0
+				CALLF ANIME_CONFIG(CONF:(LOCAL:0 - 11), RESULT:(LOCAL:0))
+		NEXT
+		GLOBAL = ANIME_CONFIG("SAVE")
+		SAVEGLOBAL
+	ENDIF
+	PRINTFORMW コンフィグ設定を変更しま\@ RESULT == 1 ? した # せん \@
+ELSE
+	PRINTW 口上の推奨するコンフィグ設定はありません
+ENDIF
+RETURN LOCAL:1
+
+
+;Enterを新たに割り当てることが出来なかったので修正。他、微調整@revkoishi(14/05/26)
+@CONFIG_PAD
+#DIM LINE
+LOCAL:1 = RESULT
+LOCAL:2 = GETCOLOR()
+LINE = LINECOUNT
+DO
+	CLEARLINE LINECOUNT - LINE
+	SIF GROUPMATCH("", KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT) == 4
+		CALL SET_KEY_DEFAULT
+	DRAWLINE
+	PRINTL パッドモード設定
+	DRAWLINE
+	PRINTFORML   [ 0] \@FLAG:調教UIパッド化 ? ＯＮ # ＯＦＦ \@
+	DRAWLINE
+	PRINTL ボタン設定
+	PRINTL <>内の文字が実際のキーです。ゲームパッドを使用する際は表示の<>内の文字を各ボタンに割り当ててください
+	PRINTL キーボードで操作する場合でも、自由にキーを割り当てて使用することができます
+	PRINTL ※<>内が空になっている場合(<>とだけ表示されている場合)はEnterキーが割り当てられています
+	PRINTL 
+	CALL HTMLPRINTL("  " + HTMLBUTTON(@"[ 1] L&lt;%KEY_L%&gt;", "1") + " " * 35 + HTMLBUTTON(@"[ 2] R&lt;%KEY_R%&gt;", "2") + "<BR><BR>")
+	CALL HTMLPRINTL(" " * 12 + HTMLBUTTON(@"[ 3] ↑&lt;%KEY_UP%&gt;", "3") + " " * 33 + HTMLBUTTON(@"[ 7] &lt;%KEY_X%&gt;", "7"))
+{
+	CALL HTMLPRINTL("  " + HTMLBUTTON(@"[ 4] ←&lt;%KEY_LEFT%&gt;", "4") + " " * 10 + HTMLBUTTON(@"[ 5] →&lt;%KEY_RIGHT%&gt;", "5") + 
+                    " " * 14 + HTMLBUTTON(@"[ 8] &lt;%KEY_Y%&gt;", "8") + " " * 10 + HTMLBUTTON(@"[ 9] &lt;%KEY_A%&gt;", "9"))
+}
+	CALL HTMLPRINTL(" " * 12 + HTMLBUTTON(@"[ 6] ↓&lt;%KEY_DOWN%&gt;", "6") + " " * 33 + HTMLBUTTON(@"[10] &lt;%KEY_B%&gt;", "10"))
+	DRAWLINE
+	PRINTL 表示モード(画面にボタンとして表示される際のモードです)
+	FOR LOCAL:0, 0, 3
+		SETCOLOR FLAG:調教UIパッド表示モード == LOCAL:0 ? 0x7070C0 # LOCAL:2
+		PRINTBUTTON @"[{LOCAL:0 + 11}] %AUTO_SPLIT("直接表示_ＳＦＣ風_ＰＳ風　", "_", LOCAL:0)%", LOCAL:0 + 11
+		SETCOLOR LOCAL:2
+		PRINTFORML (%AUTO_SPLIT("実際に動作するボタンと同一のものです_ＡＢＸＹを使用します_◯×□△を使用します", "_", LOCAL:0)%)
+	NEXT
+	DRAWLINE
+	PRINTL [99] 戻る
+	DO
+		INPUT
+		LOCAL:0 = INRANGE(RESULT, 0, 13) !| RESULT == 99
+		IF LOCAL:0
+			CLEARLINE 1
+			REUSELASTLINE 入力値が範囲外です
+		ENDIF
+	LOOP LOCAL:0
+	LOCAL:0 = RESULT
+	SELECTCASE LOCAL:0
+		CASE 0
+			INVERTBIT FLAG:調教UIパッド化, 0
+		CASE 1 TO 10
+			PRINTL 設定するキーを押してください
+			ONEINPUTS
+			SELECTCASE RESULT
+				CASE 1
+					KEY_L = %RESULTS%
+				CASE 2
+					KEY_R = %RESULTS%
+				CASE 3
+					KEY_UP    = %RESULTS%
+				CASE 4
+					KEY_LEFT  = %RESULTS%
+				CASE 5
+					KEY_RIGHT = %RESULTS%
+				CASE 6
+					KEY_DOWN  = %RESULTS%
+				CASE 7
+					KEY_X = %RESULTS%
+				CASE 8
+					KEY_Y = %RESULTS%
+				CASE 9
+					KEY_A = %RESULTS%
+				CASE 10
+					KEY_B = %RESULTS%
+			ENDSELECT
+			IF FLAG:調教UIパッド表示モード == 0
+				KEYMARK_UP    = %KEY_UP%
+				KEYMARK_DOWN  = %KEY_DOWN%
+				KEYMARK_LEFT  = %KEY_LEFT%
+				KEYMARK_RIGHT = %KEY_RIGHT%
+				KEYMARK_A = %KEY_A%
+				KEYMARK_B = %KEY_B%
+				KEYMARK_X = %KEY_X%
+				KEYMARK_Y = %KEY_Y%
+				KEYMARK_L = %KEY_L%
+				KEYMARK_R = %KEY_R%
+			ENDIF
+		CASE 11
+			FLAG:調教UIパッド表示モード = 0
+			KEYMARK_UP    = %KEY_UP%
+			KEYMARK_DOWN  = %KEY_DOWN%
+			KEYMARK_LEFT  = %KEY_LEFT%
+			KEYMARK_RIGHT = %KEY_RIGHT%
+			KEYMARK_A = %KEY_A%
+			KEYMARK_B = %KEY_B%
+			KEYMARK_X = %KEY_X%
+			KEYMARK_Y = %KEY_Y%
+			KEYMARK_L = %KEY_L%
+			KEYMARK_R = %KEY_R%
+		CASE 12
+			FLAG:調教UIパッド表示モード = 1
+			KEYMARK_A = A
+			KEYMARK_B = B
+			KEYMARK_X = X
+			KEYMARK_Y = Y
+			KEYMARK_L = L
+			KEYMARK_R = R
+		CASE 13
+			FLAG:調教UIパッド表示モード = 2
+			KEYMARK_A = ◯
+			KEYMARK_B = ×
+			KEYMARK_X = △
+			KEYMARK_Y = □
+			KEYMARK_L = Ｌ
+			KEYMARK_R = Ｒ
+	ENDSELECT
+LOOP LOCAL:0 != 99
+RETURN LOCAL:1
+
+
+;微調整@revkoishi(14/05/22)
+@SET_KEY_DEFAULT
+KEY_UP = 8
+KEY_DOWN = 2
+KEY_LEFT = 4
+KEY_RIGHT = 6
+KEY_A = 
+KEY_B = 9
+KEY_X = 1
+KEY_Y = 3
+KEY_L = +
+KEY_R = -
+
+KEYMARK_UP = 8
+KEYMARK_DOWN = 2
+KEYMARK_LEFT = 4
+KEYMARK_RIGHT = 6
+KEYMARK_A = En
+KEYMARK_B = 9
+KEYMARK_X = 1
+KEYMARK_Y = 3
+KEYMARK_L = +
+KEYMARK_R = -
+RETURN RESULT

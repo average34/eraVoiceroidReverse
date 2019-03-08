@@ -1,0 +1,22 @@
+﻿;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+;
+;	Module		:TIMES_SPLIT.ERB
+;	Facility	:引数として渡されたARGSから、％で乗算した数値を返す
+;
+;	Licence		:ライセンスフリー。
+;
+;	Modification Data:
+;
+;	Edit	Date			Author					Reason
+;	001		2012/09/07		kap 					新規作成
+;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+;
+;@AUTO_SPLIT
+;ARG	計算元となる数値
+;ARGS   倍数のテーブル
+;ARG:1	倍数の番号 
+;================================================
+@TIMES_SPLIT, ARG , ARG:1, ARGS
+#FUNCTION
+RETURNF TIMESF(ARG, AUTO_SPLIT_INT(ARGS, "/", ARG:1))
+

@@ -1,0 +1,83 @@
+﻿;────────────────────────────────────
+;020,腰を振る（快ＣＶＡ補正、悦楽、達成）
+;────────────────────────────────────
+@COM20
+;自分が責める側の場合（性交奉仕、騎乗位等で腰を使って感じさせる）
+IF SEX_INITIATIVE(MASTER)
+	;COM分類
+	CALL SET_COMGRO("積極的従う")
+	;達成SOURCE増加
+	SOURCE:MASTER:達成 += (CFLAG:MASTER:調教レベル + 5) * (GET_ABL(MASTER, "奉仕精神") + 50) + (GET_ABL(MASTER, "技巧") + 50) * 20 / 100
+	;依存度変化
+	CALL ADD_DEPEND(+5, +3)
+;自分が責められる側の場合（逆レイプ、性交系等で迎え腰を使って快感をむさぼる、パイズリや素股で快感を求める）
+ELSE
+	;COM分類
+	CALL SET_COMGRO("受け入れる")
+	;悦楽SOURCE増加
+	SOURCE:MASTER:悦楽 += 250 + SOURCE:MASTER:快Ｃ / 3 + SOURCE:MASTER:快Ｖ / 3 + SOURCE:MASTER:快Ａ / 3 + (CFLAG:MASTER:調教レベル + 1) * (GET_ABL(MASTER, "技巧") + 10) * 1
+	;依存度変化
+	CALL ADD_DEPEND(+4, +8)
+ENDIF
+;COM印象
+CALL SET_COMIMP("好印象大")
+;我慢フラグ解消
+TCVAR:MASTER:我慢 = 0
+RETURN 1
+
+;────────────────────────────────────
+;021,中に出して！（達成、悦楽、積極的従う）
+;────────────────────────────────────
+@COM21
+LOCAL = (CFLAG:M好意 - 500) / 20
+LOCAL = LIMIT(LOCAL, 1, 200)
+;達成SOURCE増加
+SOURCE:MASTER:達成 += 100 + LOCAL * (SOURCE:MASTER:快Ｃ + SOURCE:MASTER:快Ｖ + SOURCE:MASTER:快Ａ) / 1000
+;悦楽SOURCE増加
+IF TEQUIP:性交中 == 6
+	SOURCE:MASTER:悦楽 += 100 + SOURCE:MASTER:快Ａ / 4 + SOURCE:快Ｃ / 3 + (CFLAG:MASTER:調教レベル + 1) * (GET_ABL(MASTER, "技巧") + 10) * CFLAG:M好意 / 1500
+ELSE
+	SOURCE:MASTER:悦楽 += 250 + SOURCE:MASTER:快Ｖ / 2 + SOURCE:快Ｃ / 3 + (CFLAG:MASTER:調教レベル + 1) * (GET_ABL(MASTER, "技巧") + 10) * CFLAG:M好意 / 1000
+ENDIF
+;調教対象がオトコもしくはＡ性交中
+IF TALENT:MASTER:オトコ || TEQUIP:性交中 == 6
+	;派生：Ａに出して
+	TFLAG:REACT派生 = 1
+ELSE
+	;派生：Ｖに出して
+	TFLAG:REACT派生 = 0
+ENDIF
+;COM分類
+CALL SET_COMGRO("受け入れる")
+;COM印象
+CALL SET_COMIMP("好印象大")
+;我慢フラグ解消
+TCVAR:MASTER:我慢 = 0
+;依存度変化
+CALL ADD_DEPEND(+10, +10)
+RETURN 1
+
+;────────────────────────────────────
+;022,中に出さないで！（反抗、恐怖、哀願、お仕置きポイント）
+;────────────────────────────────────
+@COM22
+;反抗、恐怖SOURCE増加
+SOURCE:MASTER:反抗 += 300 + (MARK:反抗刻印 + 5) * 50
+SOURCE:MASTER:恐怖 += (100 + SOURCE:MASTER:快Ｖ / 2 + SOURCE:MASTER:快Ａ / 10) * (MARK:MASTER:トラウマ + 10) / 10
+;願いを聞き入れるかのチェック。かなりアバウト
+IF BASE:満足 / 100 + CFLAG:アライメント / 10 + (CFLAG:M好意 - 500) / 100 > BASE:苛立ち / 100 + RAND:5
+	;COM分類
+	CALL SET_COMGRO("許しを乞う")
+	;派生：中に出さない
+	TFLAG:REACT派生 = 0
+ELSE
+	;お仕置きポイント加算
+	TFLAG:お仕置きポイント += 1 + RAND:3 + BASE:苛立ち / 200
+	;派生：中に出す
+	TFLAG:REACT派生 = 1
+ENDIF
+;COM印象
+CALL SET_COMIMP("悪印象小")
+;依存度変化
+CALL ADD_DEPEND(0, -10)
+RETURN 1

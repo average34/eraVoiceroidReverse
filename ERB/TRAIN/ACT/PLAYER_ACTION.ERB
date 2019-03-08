@@ -1,0 +1,274 @@
+﻿;────────────────────────────────────
+;調教者の行動を選択
+;────────────────────────────────────
+@PLAYER_ACT
+#DIM LCOUNT, 1
+TFLAG:ターン方針 = 0
+TFLAG:ACT分類 = 0
+
+;まずは今回の方針を決定
+;(調教強度に対する方針)
+CALL ACT_COURSE
+;調教方針予約の処理
+IF TFLAG:方針予約
+	TFLAG:ターン方針 = TFLAG:方針予約
+	TFLAG:方針予約 = 0
+	SIF FLAG:デバッグ
+		CALL PRINT_DIALOG(@"方針予約により方針を%POLICY("今")%に変更しました", 2, 2, 2)
+ENDIF
+
+;ACT分類未決定を代入
+TFLAG:ACT分類 = -1
+
+;休憩でなければ続いて今回の調教類別を決定
+IF TFLAG:ターン方針 != 1
+	;ACT個別補正値を調整
+	CALL ACT_M_RESEARCH
+	;調教種別を決定
+	CALL ACT_MENU
+ELSE
+	TFLAG:ACT分類 = 9
+ENDIF
+
+;調教メニュー別処理
+;ACT未決定を代入
+TFLAG:ACT = -1
+
+;調教メニュー予約の処理
+IF TFLAG:ACT分類予約 >= 0
+	;予約を採用
+	TFLAG:ACT分類 = TFLAG:ACT分類予約
+	;実行可否判定
+	CALLFORM ACT_M{TFLAG:ACT分類}
+	IF FLAG:デバッグ
+		IF TFLAG:ACT == -1
+			CALL PRINT_DIALOG(@"メニュー予約によりメニューを%MENU(TFLAG:ACT分類予約)%に変更しようとしましたが、実行不能でした", 2, 2, 2)
+		ELSE
+			CALL PRINT_DIALOG(@"メニュー予約によりメニューを%MENU(TFLAG:ACT分類予約)%に変更しました", 2, 2, 2)
+		ENDIF
+	ENDIF
+	;予約を解除
+	TFLAG:ACT分類予約 = -1
+ENDIF
+
+;ACT未決定なら
+WHILE TFLAG:ACT == -1
+	;ACT分類を指定する(指定済みなら飛ばす)
+	SIF TFLAG:ACT分類 == -1
+		CALL ACT_MENU_RESULT(1)
+	;それでも指定できなければ『今の気分を聞く』ACTに決定
+	IF TFLAG:ACT分類 == -1
+		TFLAG:ACT = 0
+		TFLAG:ACT分類 = 0
+		SIF FLAG:デバッグ
+			PRINTL (採用可能ACT, ACT分類が存在しないので、『今の気分を聞く』ACTを採用しました)
+	;実行可否判定
+	ELSE
+		CALLFORM ACT_M{TFLAG:ACT分類}
+	ENDIF
+WEND
+
+;行動予約の処理
+IF TCVAR:行動予約 >= 0
+	TFLAG:ACT = TCVAR:行動予約
+	TCVAR:行動予約 = -1
+	SIF FLAG:デバッグ
+		CALL PRINT_DIALOG(@"行動予約により行動を%STR:(TFLAG:ACT)%に変更しました", 2, 2, 2)
+	;変更後のACTと、ACT分類が違う場合
+	IF TFLAG:ACT分類 != GET_ACTM(TFLAG:ACT)
+		TFLAG:ACT分類 = GET_ACTM(TFLAG:ACT)
+		SIF FLAG:デバッグ
+			CALL PRINT_DIALOG(@"それに伴い、メニューを%MENU(TFLAG:ACT分類)%に変更しました", 2, 2, 2)
+	ENDIF
+ENDIF
+
+;────────────────────────────────────
+;ACT個別補正値調整
+;────────────────────────────────────
+@ACT_M_RESEARCH
+#DIM LCOUNT, 1
+
+;デバッグ表示をオフにしてACT_Mを行い、補正値を計算
+FLAG:デバッグ表示オフ = 1
+FOR LCOUNT, 0, 11
+	CALLFORM ACT_M{LCOUNT}(1)
+NEXT
+;デバッグ表示をオンに戻す
+FLAG:デバッグ表示オフ = 0
+;デバッグ時、補正値表示
+[SKIPSTART]
+IF FLAG:デバッグ
+	;LOCAL初期化
+	LOCAL = 0
+	LOCAL:1 = GETCOLOR()
+	;全補正値に対し
+	FOR LCOUNT, 0, 200
+		;対応ACTが存在すれば
+		IF STR:LCOUNT != ""
+			;文字数カウント
+			LOCAL += 10
+			;一行を突破すると改行
+			IF LOCAL >= WIDTH()
+				PRINTL 
+				LOCAL = 0
+			ENDIF
+			;補正値取得
+			LOCAL:2 = CFLAG:(400 + LCOUNT)
+			;補正値の表示上下限に収め、色を変える
+			IF LOCAL:2 < -99
+				LOCAL:2 = -99
+				SETCOLOR 0xC07070
+			ELSEIF LOCAL:2 > 999
+				LOCAL:2 = 999
+				SETCOLOR 0x66FFFF
+			ENDIF
+			;補正値表示
+			PRINTFORM %GET_ACTABBNAME(LCOUNT), 4%({LOCAL:2, 3}) 
+			;文字色リセット
+			SETCOLOR LOCAL:1
+		ENDIF
+	NEXT
+	PRINTW 
+ENDIF
+[SKIPEND]
+;RESULT保持
+RETURN RESULT
+
+;補正値加減算処理
+@ACT_M_RES_CALC(ARG, ARG:1)
+;現在値が0ならそのまま採用
+IF CFLAG:(400 + ARG) == 0
+	CFLAG:(400 + ARG) = ARG:1
+;現在値と加減算値の正負が逆ならそのまま加減算
+ELSEIF (CFLAG:(400 + ARG) > 0) == (ARG:1 < 0)
+	CFLAG:(400 + ARG) += ARG:1
+;現在値と加減算値の正負が同じなら徐々に加減算量を0に近づける
+ELSE
+	CFLAG:(400 + ARG) += (ARG:1 * LIMIT(ARG:1 * 100 / CFLAG:(400 + ARG), 0, 100)) / 100
+ENDIF
+;RESULT保持
+RETURN RESULT
+
+;系列別補正値取得関数
+;ARG、またはARGSに系列を指定
+@ACT_M_RES_MENU(ARG = -1, ARGS)
+#DIM LCOUNT
+;系列番号を取得
+IF ARG == -1
+	LOCAL = MENUNUM(ARGS)
+ELSE
+	LOCAL = ARG
+ENDIF
+;系列存在を確認
+SIF MENU(LOCAL) == ""
+	RETURN -999
+;所属ACT全てに対し個別補正値を計算して、最大の物を返す
+CALL ACT_M_RES_FETCH(ACTM_NUM(LOCAL, 0))
+LOCAL:1 = RESULT
+FOR LCOUNT, 1, ACTM_NUM(LOCAL, -1)
+	CALL ACT_M_RES_FETCH(ACTM_NUM(LOCAL, LCOUNT))
+	LOCAL:1 = MAX(LOCAL:1, RESULT)
+NEXT
+;補正値を返す
+RETURN LOCAL:1
+
+;個別補正値取得関数
+@ACT_M_RES_FETCH(ARG = -1, ARGS)
+;系列番号を取得
+IF ARG == -1
+	LOCAL = GET_ACTNUM(ARGS)
+ELSE
+	LOCAL = ARG
+ENDIF
+;ACT存在を確認
+SIF GET_ACTNAME(LOCAL) == "" || GET_ACTNAME(LOCAL) == "ＮＯＮＥ"
+	RETURN -999
+;実行不可時、補正値を-999固定
+CALLFORM ACT_ABLE{LOCAL}
+SIF !RESULT
+	RETURN -999
+;補正値を初期化
+LOCAL:1 = 0
+;短期補正値取得・加算
+LOCAL:1 += CFLAG:(400 + LOCAL)
+;長期補正値取得・加算
+LOCAL:1 += ABCBSI(ARG * 60)
+;補正値を返す
+RETURN LOCAL:1
+
+;────────────────────────────────────
+;ACT長期補正値調整
+;────────────────────────────────────
+;ARG = 0:調教前(初期化) 1:調教後(算入)
+@ACT_M_RESEARCH_L(ARG)
+#LOCALSIZE 200
+#DIM LCOUNT
+#DIM LTEMP, 200
+
+;調教前
+IF ARG == 0
+	;ACT実行回数を保存
+	FOR LCOUNT, 0, 200
+		LOCAL:LCOUNT = FLAG:(1000 + LCOUNT)
+	NEXT
+;調教後
+ELSE
+	FOR LCOUNT, 0, 200
+		;ACT実行回数増分の平方根の正負を逆転し、ACT長期補正値変動値とする
+		LTEMP:LCOUNT =  LOCAL:LCOUNT - FLAG:(1000 + LCOUNT)
+		;素質によって加算方向にボーナス
+		;(※長く行われなかったACTを有利にするため)
+		LTEMP:LCOUNT += 4 + TALENT:好奇心 - TALENT:無関心 + TALENT:短気 - TALENT:慎重
+	NEXT
+	;調教対象反応による興味補正を加算
+	CALL KYOMI_ADD(1)
+	FOR LCOUNT, 0, 200
+		LTEMP:LCOUNT += RESULT:LCOUNT
+	NEXT
+	;実際の加算処理(値が大きくなりすぎないよう調整)
+	FOR LCOUNT, 0, 200
+		;符号が違えば補正値が大きいほど変動が加速
+		IF SIGN(CFLAG:(600 + LCOUNT)) != SIGN(LTEMP:LCOUNT)
+			CFLAG:(600 + LCOUNT) += LTEMP:LCOUNT * MAX(ABS(CFLAG:(600 + LCOUNT)), 50) / 50
+		;符号が同じなら補正値が大きいほど変動が減速(変動時+-1を保証)
+		ELSEIF LTEMP:LCOUNT != 0
+			CFLAG:(600 + LCOUNT) += SIGN(LTEMP:LCOUNT) * MAX(ABS(LTEMP:LCOUNT) * 50 / MAX(ABS(CFLAG:(600 + LCOUNT)), 50), 1)
+		ENDIF
+	NEXT
+	;デバッグ時、補正値表示(ただしオートモードの簡易表意時は除く)
+	IF FLAG:デバッグ && !(FLAG:オートモード > 0 && FLAG:オートモード表示設定 == 1)
+		;LOCAL初期化
+		LOCAL = 0
+		LOCAL:1 = GETCOLOR()
+		;全補正値に対し
+		FOR LCOUNT, 0, 200
+			;対応ACTが存在すれば
+			IF STR:LCOUNT != ""
+				;文字数カウント
+				LOCAL += 10
+				;一行を突破すると改行
+				IF LOCAL >= WIDTH()
+					PRINTL 
+					LOCAL = 0
+				ENDIF
+				;補正値取得
+				LOCAL:2 = CFLAG:(600 + LCOUNT)
+				;補正値の表示上下限に収め、色を変える
+				IF LOCAL:2 < -99
+					LOCAL:2 = -99
+					SETCOLOR 0xC07070
+				ELSEIF LOCAL:2 > 999
+					LOCAL:2 = 999
+					SETCOLOR 0x66FFFF
+				ENDIF
+				;補正値表示
+				PRINTFORM %GET_ACTABBNAME(LCOUNT), 4%({LOCAL:2, 3}) 
+				;文字色リセット
+				SETCOLOR LOCAL:1
+			ENDIF
+		NEXT
+		PRINTW 
+	ENDIF
+ENDIF
+RETURN RESULT
+

@@ -1,0 +1,361 @@
+﻿@ASSI_ACTABLE, ARGS, ARG
+#FUNCTION
+SELECTCASE ARGS
+	;---------------------------------
+	;Ｃ愛撫
+	;---------------------------------
+	CASE "Ｃ愛撫"
+		SIF TFLAG:Ｐ使用中
+			RETURNF 0
+		SIF TFLAG:Ｐ挿入中
+			RETURNF 0
+		SIF TFLAG:助手に挿入中
+			RETURNF 0
+		SIF TEQUIP:性交奉仕中
+			RETURNF 0
+		SIF TEQUIP:オナホール
+			RETURNF 0
+		SIF TEQUIP:ペニスバンド
+			RETURNF 0
+		SIF TEQUIP:三角木馬
+			RETURNF 0
+		SIF TFLAG:お仕置きフラグ
+			RETURNF 0
+		;地の文・口上の矛盾を回避するため
+		SIF TCVAR:MASTER:イきそう
+			RETURNF 0
+	CASE "口で愛撫"
+		SIF TEQUIP:ペニスバンド
+			RETURNF 0
+		SIF TEQUIP:バイブ
+			RETURNF 0
+		SIF CLOTHESTYPE(1, 1) == 2 && !TALENT:ARG:壁抜け
+			RETURNF 0
+	CASE "素股"
+		SIF TALENT:ARG:オトコ
+			RETURNF 0
+		SIF TEQUIP:バイブ
+			RETURNF 0
+		SIF TALENT:ARG:足無し
+			RETURNF 0
+		SIF !TFLAG:仰向け
+			RETURNF 0
+		SIF CLOTHESTYPE(1, 1) == 2 && !TALENT:ARG:壁抜け
+			RETURNF 0
+		;面倒なので弾く
+		SIF TEQUIP:ペニスバンド
+			RETURNF 0
+		;潤滑が不十分
+		SIF PALAM:MASTER:潤滑 < 75
+			RETURNF 0
+	CASE "パイズリする"
+		SIF !PENIS(MASTER)
+			RETURNF 0
+		SIF TALENT:ARG:オトコ
+			RETURNF 0
+		SIF CLOTHESTYPE(1, 1) == 2 && !TALENT:ARG:壁抜け
+			RETURNF 0
+		SIF !PENIS(MASTER)
+			RETURNF 0
+		SIF TEQUIP:ペニスバンド
+			RETURNF 0
+		;潤滑が不十分
+		SIF PALAM:MASTER:潤滑 < 75
+			RETURNF 0
+	CASE "足コキする"
+		SIF TALENT:ARG:足無し
+			RETURNF 0
+		SIF !PENIS(MASTER)
+			RETURNF 0
+		;潤滑が不十分
+		SIF PALAM:MASTER:潤滑 < 75
+			RETURNF 0
+	CASE "Ｃ道具"
+		SIF CLOTHESTYPE(1, 1) == 2
+			RETURNF 0
+		SIF TEQUIP:クリキャップ
+			RETURNF 0
+		SIF TEQUIP:ペニスバンド
+			RETURNF 0
+		IF TALENT:MASTER:オトコ || TALENT:MASTER:ふたなり
+			SIF ITEM:オナホール == 0
+				RETURNF 0
+		ENDIF
+		IF !PENIS(MASTER)
+			SIF ITEM:ローター == 0
+				RETURNF 0
+		ENDIF
+	CASE "逆レイプ"
+		SIF TCVAR:MASTER:勃起度 < 1000
+			RETURNF 0
+		SIF ABL:ARG:Ｖ感覚 < 3
+			RETURNF 0
+		SIF ABL:ARG:性交 < 3
+			RETURNF 0
+		SIF TEQUIP:バイブ
+			RETURNF 0
+		;コンビネーションのことを考えるとなんらかの性交がはいってるときは蹴っといたほうが無難
+		SIF TEQUIP:性交中
+			RETURNF 0
+		SIF TEQUIP:性交奉仕中
+			RETURNF 0
+		SIF TEQUIP:助手性交中
+			RETURNF 0
+		SIF TEQUIP:助手性交奉仕中
+			RETURNF 0
+		SIF !TFLAG:仰向け
+			RETURNF 0
+		SIF TALENT:ARG:オトコ
+			RETURNF 0
+		SIF CLOTHESTYPE(1, 1) == 2 && !TALENT:ARG:壁抜け
+			RETURNF 0
+		SIF !PENIS(MASTER)
+			RETURNF 0
+	CASE "手で愛撫"
+		RETURNF 1
+	;---------------------------------------------------------------
+	;Ａ愛撫
+	;---------------------------------------------------------------
+	CASE "Ａ愛撫"
+		SIF TFLAG:Ａ使用中
+			RETURNF 0
+		SIF TEQUIP:アナルバイブ
+			RETURNF 0
+		SIF TEQUIP:アナルビーズ
+			RETURNF 0
+		SIF TEQUIP:浣腸器＋プラグ
+			RETURNF 0
+		SIF RANGE(TEQUIP:性交中, 3, 5)
+			RETURNF 0
+		SIF TEQUIP:性交奉仕中 == 6
+			RETURNF 0
+		SIF TEQUIP:ペニスバンド
+			RETURNF 0
+		;下半身上着に妨害
+		SIF CLOTHESTYPE(1, 1) == 2 && !TALENT:ARG:壁抜け
+			RETURNF 0
+	CASE "アナル愛撫"
+		;潤滑が不十分
+		SIF PALAM:MASTER:潤滑 < 500
+			RETURNF 0
+		;A経験が不十分
+		SIF EXP:MASTER:Ａ経験 < 11
+			RETURNF 0
+		SIF TEQUIP:ペニスバンド
+			RETURNF 0
+		SIF TFLAG:お仕置きフラグ
+			RETURNF 0
+	CASE "アナル舐め"
+		SIF !TFLAG:仰向け
+			RETURNF 0
+		SIF TEQUIP:性交中 || TEQUIP:性交奉仕中
+			RETURNF 0
+		IF !TALENT:ARG:壁抜け
+			;調教対象の下半身下着で強く妨害される
+			SIF CLOTHESTYPE(1, 0)
+				RETURNF 0
+		ENDIF
+		SIF TEQUIP:ペニスバンド
+			RETURNF 0
+		SIF TFLAG:お仕置きフラグ
+			RETURNF 0
+	CASE "アナルローター"
+		SIF !ITEM:ローター
+			RETURNF 0
+		;調教対象の下半身上着で妨害される
+		SIF CLOTHESTYPE(1, 1) == 2
+			RETURNF 0
+		SIF ABL:MASTER:Ａ感覚 < 2
+			RETURNF 0
+		SIF TEQUIP:ペニスバンド
+			RETURNF 0
+		SIF TFLAG:お仕置きフラグ
+			RETURNF 0
+	CASE "アナルバイブ"
+		SIF !ITEM:アナルバイブ
+			RETURNF 0
+		;調教対象の下半身上着で妨害される
+		SIF CLOTHESTYPE(1, 1) == 2
+			RETURNF 0
+		;調教対象の下半身下着で妨害される
+		SIF CLOTHESTYPE(1, 0) == 2
+			RETURNF 0
+		SIF TEQUIP:ペニスバンド
+			RETURNF 0
+		;潤滑が不十分
+		SIF PALAM:MASTER:潤滑 < 600
+			RETURNF 0
+		;A経験が不十分
+		SIF EXP:MASTER:Ａ経験 < 11
+			RETURNF 0
+	;---------------------------------------------------------------
+	;Ｂ愛撫
+	;---------------------------------------------------------------
+	CASE "Ｂ愛撫"
+		SIF TFLAG:胸使用中
+			RETURNF 0
+		SIF TEQUIP:ニプルキャップ
+			RETURNF 0
+		SIF TFLAG:お仕置きフラグ
+			RETURNF 0
+	CASE "胸愛撫"
+		;調教者に壁抜けがなく、調教対象がオトコ
+		IF !TALENT:ARG:壁抜け && TALENT:MASTER:オトコ
+			;調教対象の上半身上着で妨害される
+			SIF CLOTHESTYPE(1, 3) == 2
+				RETURNF 0
+			;調教対象の上半身下着で妨害される
+			SIF CLOTHESTYPE(1, 2) == 2
+				RETURNF 0
+		ENDIF
+	CASE "乳首舐め"
+		IF !TALENT:ARG:壁抜け
+			SIF TEQUIP:性交中 == 4 || RANGE(TEQUIP:性交奉仕中, 4, 5)
+				RETURNF 0
+			;調教対象の上半身上着で強く妨害される
+			SIF CLOTHESTYPE(1, 3)
+				RETURNF 0
+			;調教対象の上半身下着で強く妨害される
+			SIF CLOTHESTYPE(1, 2)
+				RETURNF 0
+		ENDIF
+	CASE "乳首ローター"
+		SIF !ITEM:ローター
+			RETURNF 0
+		IF !TALENT:MASTER:オトコ
+			;調教対象の上半身上着で妨害される
+			SIF CLOTHESTYPE(1, 3) == 2
+				RETURNF 0
+			;調教対象の上半身下着で妨害される
+			SIF CLOTHESTYPE(1, 2) == 2
+				RETURNF 0
+		ENDIF
+	;---------------------------------------------------------------
+	;∨愛撫
+	;---------------------------------------------------------------
+	CASE "Ｖ愛撫"
+		SIF TALENT:MASTER:処女
+			RETURNF 0
+		SIF TFLAG:Ｖ使用中
+			RETURNF 0
+		SIF TEQUIP:バイブ
+			RETURNF 0
+		SIF RANGE(TEQUIP:性交中, 1, 5)
+			RETURNF 0
+		SIF TEQUIP:ペニスバンド
+			RETURNF 0
+		SIF TEQUIP:助手性交中
+			RETURNF 0
+		SIF TALENT:MASTER:オトコ
+			RETURNF 0
+		;下半身上着に妨害
+		SIF CLOTHESTYPE(1, 1) == 2 && !TALENT:ARG:壁抜け
+			RETURNF 0
+	CASE "指挿入"
+		;潤滑が不十分
+		SIF PALAM:MASTER:潤滑 < 400
+			RETURNF 0
+		SIF TEQUIP:ペニスバンド
+			RETURNF 0
+		;経験が不十分
+		SIF EXP:MASTER:Ｖ経験 < 6
+			RETURNF 0
+		SIF TALENT:MASTER:オトコ
+			RETURNF 0
+		SIF TFLAG:お仕置きフラグ
+			RETURNF 0
+	CASE "バイブ"
+		;調教対象の上半身上着で妨害される
+		SIF CLOTHESTYPE(1, 3) == 2
+			RETURNF 0
+		;調教対象の上半身下着で強く妨害される
+		SIF CLOTHESTYPE(1, 2)
+			RETURNF 0
+		SIF TEQUIP:ペニスバンド
+			RETURNF 0
+		SIF !ITEM:バイブ
+			RETURNF 0
+		;潤滑が不十分
+		SIF PALAM:MASTER:潤滑 < 500
+			RETURNF 0
+		SIF TALENT:MASTER:オトコ
+			RETURNF 0
+		;経験が不十分
+		SIF EXP:MASTER:Ｖ経験 < 6
+			RETURNF 0
+	CASE "性交"
+		;コンビネーションのことを考えるとなんらかの性交がはいってるときは蹴っといたほうが無難
+		SIF TEQUIP:性交奉仕中
+			RETURNF 0
+		SIF TEQUIP:助手性交奉仕中
+			RETURNF 0
+		SIF TEQUIP:ペニスバンド
+			RETURNF 0
+		SIF !PENIS(ASSI)
+			RETURNF 0
+		;潤滑が不十分
+		SIF PALAM:MASTER:潤滑 < 500
+			RETURNF 0
+		SIF TALENT:MASTER:オトコ
+			RETURNF 0
+		;経験が不十分
+		SIF EXP:MASTER:Ｖ経験 < 11 && EXP:MASTER:性交経験 < 9
+			RETURNF 0
+		SIF TFLAG:お仕置きフラグ
+			RETURNF 0
+		SIF TEQUIP:自慰中
+			RETURNF 0
+	;---------------------------------------------------------------
+	;Ｍ愛撫
+	;---------------------------------------------------------------
+	CASE "Ｍ愛撫"
+		SIF TFLAG:口使用中 >= 2
+			RETURNF 0
+		SIF TEQUIP:ボールギャグ
+			RETURNF 0
+	CASE "キス"
+		SIF TFLAG:お仕置きフラグ
+			RETURNF 0
+	CASE "顔面騎乗"
+		SIF TFLAG:口使用中
+			RETURNF 0
+		SIF !TFLAG:仰向け
+			RETURNF 0
+		SIF TFLAG:お仕置きフラグ
+			RETURNF 0
+	CASE "足を舐めさせる"
+		SIF TFLAG:口使用中
+			RETURNF 0
+		SIF TALENT:ARG:足無し
+			RETURNF 0
+	;---------------------------------------------------------------
+	;羞恥
+	;---------------------------------------------------------------
+	CASE "自慰見せつけ"
+		SIF TFLAG:お仕置きフラグ
+			RETURNF 0
+	CASE "罵倒"
+	CASE "写真撮影"
+	SIF !TALENT:ARG:撮影技能
+		RETURNF 0
+	CASE "調教者とキス"
+		SIF TFLAG:お仕置きフラグ
+			RETURNF 0
+	CASE "痴態を見つめる"
+	
+	;---------------------------------------------------------------
+	;加虐
+	;---------------------------------------------------------------
+	CASE "頭を踏みつける"
+		SIF TALENT:ARG:足無し
+			RETURNF 0
+		SIF !TFLAG:仰向け
+			RETURNF 0
+	;---------------------------------------------------------------
+	;その他
+	;---------------------------------------------------------------
+	CASE "脱衣"
+	CASE "薬品"
+	CASE "待機"
+ENDSELECT
+RETURNF 1

@@ -1,0 +1,390 @@
+﻿;-------------------------------------------------
+;虹色表示関連関数
+;-------------------------------------------------
+;Emuera1810以降向け
+;PRINT_RAINBOWなど虹色表示に関するファイル
+;割とネタ要素が強い。良くも悪くも目立つ
+;ぱにめーしょん関数を使用している箇所がある
+;※以前のバージョンで動作させる場合は、GET_RAINBOWを適当に書き直してください
+;-------------------------------------------------
+;関数の概要
+;・PRINT_RAINBOW(|L|W)…虹色でPRINTする関数
+;・BIGPRINT_RAINBOW(L|W)…大きく虹色でPRINTする関数
+;・SMALLPRINT_RAINBOW(|L|W)…小さく虹色でPRINTする関数
+;・PRINT_RAINBOW2(|L|W)…虹色でPRINTする関数。色が変化するアニメーション付き
+;・BIGPRINT_RAINBOW2(L|W)…大きく虹色でPRINTする関数。色が変化するアニメーション付き
+;・SMALLPRINT_RAINBOW2(|L|W)…小さく虹色でPRINTする関数。色が変化するアニメーション付き
+;・GET_RAINBOW…虹色の構成色値(全12色)を返す式中関数
+;-------------------------------------------------
+
+;*************************************************
+;PRINT関数
+;*************************************************
+;・普通の…いえ、異常なPRINT関数です
+;・だが、こんなものは序章に過ぎなかった…！
+;-------------------------------------------------
+
+;-------------------------------------------------
+;関数名:PRINT_RAINBOW(|L|W)
+;概　要:動かない虹色PRINT関数
+;引　数:ARGS:0…表示文字列。FORM文字列を使用する場合は""の前に@を付けること
+;　　　 ARGS:1…[省略可]始めに元の文字色で表示する文字列(例えば"「"や"（"を入れる)
+;　　　 ARGS:2…[省略可]終わりに元の文字色で表示する文字列(例えば"」"や"）"を入れる)
+;　　　 ARG:0 …[省略可]指定値だけ表示開始色をずらす。PRINT_RAINBOWを刻んで使う時用。省略すると0
+;　　　 ARG:1 …[省略可]真の場合、色の進行方向を逆順にする。省略すると偽(正順)
+;戻り値:なし(多分RESULT保護)
+;ついでに少し叩き直したPRINT_RAINBOW。PRINT_RANIBOW2と共通処理で
+;-------------------------------------------------
+@PRINT_RAINBOW(ARGS:0, ARGS:1, ARGS:2, ARG:0, ARG:1)
+PRINTS ARGS:1
+CALL _PRINT_RAINBOW_SUB1(ARGS:0, ARG:0, ARG:1)
+PRINTS ARGS:2
+RETURN RESULT
+
+@PRINT_RAINBOWL(ARGS:0, ARGS:1, ARGS:2, ARG:0, ARG:1)
+CALL PRINT_RAINBOW(ARGS:0, ARGS:1, ARGS:2, ARG:0, ARG:1)
+PRINTL 
+RETURN RESULT
+
+@PRINT_RAINBOWW(ARGS:0, ARGS:1, ARGS:2, ARG:0, ARG:1)
+CALL PRINT_RAINBOW(ARGS:0, ARGS:1, ARGS:2, ARG:0, ARG:1)
+WAIT 
+RETURN RESULT
+
+
+;-------------------------------------------------
+;関数名:BIGPRINT_RAINBOW(L|W)
+;概　要:動かない虹色BIGPRINT関数
+;引　数:ARGS:0…表示文字列。FORM文字列を使用する場合は""の前に@を付けること
+;　　　 ARGS:1…[省略可]始めに元の文字色で表示する文字列(例えば"「"や"（"を入れる)
+;　　　 ARGS:2…[省略可]終わりに元の文字色で表示する文字列(例えば"」"や"）"を入れる)
+;　　　 ARG:0 …[省略可]指定値だけ表示開始色をずらす。省略すると0
+;　　　 ARG:1 …[省略可]真の場合、色の進行方向を逆順にする。省略すると偽(正順)
+;戻り値:なし(多分RESULT保護)
+;PRINT_RAINBOWにBIGとSMALLが仲間入り！
+;例によって例の如く2行使うので必ず改行しちゃう
+;\nはやめたほうがよい予感
+;-------------------------------------------------
+@BIGPRINT_RAINBOWL(ARGS:0, ARGS:1, ARGS:2, ARG:0, ARG:1)
+#LOCALSIZE 1
+#LOCALSSIZE 1
+IF CHKFONT("Raavi")
+	LOCAL:0 = CURRENTREDRAW()
+	LOCALS:0 = %GETFONT()%
+	REDRAW 0
+	SETFONT "Raavi"
+	PRINTS " " + ARGS:1
+	CALL _PRINT_RAINBOW_SUB1(ARGS:0, ARG:0, ARG:1)
+	PRINTSL ARGS:2 + " "
+	SETFONT LOCALS:0
+	PRINTL 
+	REDRAW LOCAL:0
+ELSE
+	CALL PRINT_RAINBOWL(ARGS:0, ARGS:1, ARGS:2, ARG:0, ARG:1)
+ENDIF
+RETURN RESULT
+
+@BIGPRINT_RAINBOWW(ARGS:0, ARGS:1, ARGS:2, ARG:0, ARG:1)
+CALL BIGPRINT_RAINBOWL(ARGS:0, ARGS:1, ARGS:2, ARG:0, ARG:1)
+WAIT
+RETURN RESULT
+
+
+;-------------------------------------------------
+;関数名:SMALLRINT_RAINBOW(|L|W)
+;概　要:動かない虹色SMALLPRINT関数
+;引　数:ARGS:0…表示文字列。FORM文字列を使用する場合は""の前に@を付けること
+;　　　 ARGS:1…[省略可]始めに元の文字色で表示する文字列(例えば"「"や"（"を入れる)
+;　　　 ARGS:2…[省略可]終わりに元の文字色で表示する文字列(例えば"」"や"）"を入れる)
+;　　　 ARG:0 …[省略可]指定値だけ表示開始色をずらす。省略すると0
+;　　　 ARG:1 …[省略可]真の場合、色の進行方向を逆順にする。省略すると偽(正順)
+;戻り値:なし(多分RESULT保護)
+;PRINT_RAINBOWにBIGとSMALLが仲間入り！
+;-------------------------------------------------
+@SMALLPRINT_RAINBOW(ARGS:0, ARGS:1, ARGS:2, ARG:0, ARG:1)
+#LOCALSSIZE 1
+LOCALS:0 = %GETFONT()%
+SETFONT CHKFONT("Estrangelo Edessa") ? "Estrangelo Edessa" # LOCALS:0
+CALL PRINT_RAINBOW(ARGS:0, " " + ARGS:1, ARGS:2 + " ", ARG:0, ARG:1)
+SETFONT LOCALS:0
+RETURN RESULT
+
+@SMALLPRINT_RAINBOWL(ARGS:0, ARGS:1, ARGS:2, ARG:0, ARG:1)
+CALL SMALLPRINT_RAINBOW(ARGS:0, ARGS:1, ARGS:2, ARG:0, ARG:1)
+PRINTL 
+RETURN RESULT
+
+@SMALLPRINT_RAINBOWW(ARGS:0, ARGS:1, ARGS:2, ARG:0, ARG:1)
+CALL SMALLPRINT_RAINBOW(ARGS:0, ARGS:1, ARGS:2, ARG:0, ARG:1)
+WAIT
+RETURN RESULT
+
+
+;*************************************************
+;アニメーション付きPRINT関数
+;*************************************************
+;・アニメーションするPRINT関数…割と特殊な部類？ 何故動かしたし
+;・Rev#こ_Lに組み込んで使用する都合上、ぱにめーしょん拡張として扱う
+;・すなわち、ぱにめーしょん同様のコンフィグ参照を行う
+;・スクロール不可の際は普通のPRINT_RAINBOW同様
+;・ぱにめーしょんと切り離したい場合は、該当箇所のIFネストを外せばOK
+;・行の途中で呼ぶと、CLEARLINEする都合上それ以前の部分が一旦消えるので、そういうの極力控えよう
+;　一応文字列だけは戻す処理を入れたけど、その文字列の色やフォントをコロコロ変えていた場合は多分悲しい結末になる
+;　なんか書式に関するタグ情報取れるっぽい？ので自前で改行しないHTMLParserもどき組めば何とかなるのかもしれないけど…
+;-------------------------------------------------
+
+;-------------------------------------------------
+;関数名:PRINT_RAINBOW2(|L|W)
+;概　要:動く虹色PRINT関数
+;引　数:ARGS:0…表示文字列。FORM文字列を使用する場合は""の前に@を付けること
+;　　　  ARG:0…ずらし回数。1回につき{ARG:1}ミリ秒消費
+;　　　 ARGS:1…[省略可]始めに元の文字色で表示する文字列(例えば"「"や"（"を入れる)
+;　　　 ARGS:2…[省略可]終わりに元の文字色で表示する文字列(例えば"」"や"）"を入れる)
+;　　　  ARG:1…[省略可]1回の描画の後にウェイトするミリ秒。省略すると100
+;　　　  ARG:2…[省略可]機能オプション。省略した場合は0(正順モード)。未定義の値が渡された場合も0扱い
+;　　　                 0.通常の表示(色の進行方向は正順)
+;　　　                 1.色の進行方向を逆順にする
+;　　　                 2.虹色にする対象をARGS:0→ARGS:1＆ARGS:2に変更する。色の進行方向は正順＆正順
+;　　　                 3.虹色にする対象をARGS:0→ARGS:1＆ARGS:2に変更する。色の進行方向は正順＆逆順
+;　　　                 4.虹色にする対象をARGS:0→ARGS:1＆ARGS:2に変更する。色の進行方向は逆順＆正順
+;　　　                 5.虹色にする対象をARGS:0→ARGS:1＆ARGS:2に変更する。色の進行方向は逆順＆逆順
+;　　　 ARGS:3…[省略可]描画フォント。省略した場合や使用できないフォントが指定された場合は変更しない
+;戻り値:なし(多分RESULT保護)
+;悪名高き(?)KOMEIJI_FUNCTIONSより数年…
+;性懲りも無く作った、ぬるぬる動くPRINT_RAINBOW。悪ノリの極み。虹色の中に反省の色は無かった
+;動くせいで、かえって使いどころが限定されるかも
+;表示順は常に%ARGS:1%%ARGS:0%%ARGS:2%
+;オプションで虹色になる箇所を変えられるように機能強化されたので、虹色で囲みたい時にも使えるかも
+;-------------------------------------------------
+@PRINT_RAINBOW2(ARGS:0, ARG:0, ARGS:1, ARGS:2, ARG:1 = 100, ARG:2, ARGS:3)
+#LOCALSIZE 3
+#LOCALSSIZE 2
+ARG:2 = INRANGE(ARG:2, 0, 5) ? ARG:2 # 0
+LOCAL:1 = CURRENTREDRAW()
+LOCAL:2 = STRLENSU(ARGS:1)
+LOCALS:0 = %GETFONT()%
+LOCALS:1 =
+ARGS:3 = \@ CHKFONT(ARGS:3) ? %ARGS:3% # %LOCALS:1% \@
+IF !LINEISEMPTY()
+	REDRAW 0
+	PRINTL 
+	LOCALS:1 = %HTML_TOPLAINTEXT(HTML_GETPRINTEDSTR())%
+	CLEARLINE 1
+	PRINTS LOCALS:1
+	REDRAW LOCAL:1
+ENDIF
+;スクロール可(スクロールしないけど…まぁ、動いて見えるので)
+IF ANIME_CONFIG("SCROLLTEXT")
+	FOR LOCAL:0, 0, ARG:0 - 1
+		SETFONT ARGS:3
+		IF INRANGE(ARG:2, 0, 1)
+			PRINTS ARGS:1
+			CALL _PRINT_RAINBOW_SUB1(ARGS:0, LOCAL:0, ARG:2)
+			PRINTS ARGS:2
+		ELSE
+			CALL _PRINT_RAINBOW_SUB1(ARGS:1, LOCAL:0, INRANGE(ARG:2, 4, 5))
+			PRINTS ARGS:0
+			CALL _PRINT_RAINBOW_SUB1(ARGS:2, GROUPMATCH(ARG:2, 2, 5) ? LOCAL:0 + LOCAL:2 # 12 - LOCAL:2 - LOCAL:0, GROUPMATCH(ARG:2, 3, 5))
+		ENDIF
+		TWAIT ARG:1, 0
+		CLEARLINE 1
+		SETFONT LOCALS:0
+		PRINTS LOCALS:1
+	NEXT
+ENDIF
+SETFONT ARGS:3
+IF INRANGE(ARG:2, 0, 1)
+	PRINTS ARGS:1
+	CALL _PRINT_RAINBOW_SUB1(ARGS:0, LOCAL:0, ARG:2)
+	PRINTS ARGS:2
+ELSE
+	CALL _PRINT_RAINBOW_SUB1(ARGS:1, LOCAL:0, INRANGE(ARG:2, 4, 5))
+	PRINTS ARGS:0
+	CALL _PRINT_RAINBOW_SUB1(ARGS:2, GROUPMATCH(ARG:2, 2, 5) ? LOCAL:0 + LOCAL:2 # 12 - LOCAL:2 - LOCAL:0, GROUPMATCH(ARG:2, 3, 5))
+ENDIF
+SETFONT LOCALS:0
+RETURN RESULT
+
+@PRINT_RAINBOW2L(ARGS:0, ARG:0, ARGS:1, ARGS:2, ARG:1 = 100, ARG:2)
+CALL PRINT_RAINBOW2(ARGS:0, ARG:0, ARGS:1, ARGS:2, ARG:1, ARG:2)
+PRINTL 
+RETURN RESULT
+
+@PRINT_RAINBOW2W(ARGS:0, ARG:0, ARGS:1, ARGS:2, ARG:1 = 100, ARG:2)
+CALL PRINT_RAINBOW2(ARGS:0, ARG:0, ARGS:1, ARGS:2, ARG:1, ARG:2)
+WAIT
+RETURN RESULT
+
+
+;-------------------------------------------------
+;関数名:BIGPRINT_RAINBOW2(L|W)
+;概　要:動く虹色BIGPRINT関数
+;引　数:ARGS:0…表示文字列。FORM文字列を使用する場合は""の前に@を付けること
+;　　　  ARG:0…ずらし回数。1回につき{ARG:1}ミリ秒消費
+;　　　 ARGS:1…[省略可]始めに元の文字色で表示する文字列(例えば"「"や"（"を入れる)
+;　　　 ARGS:2…[省略可]終わりに元の文字色で表示する文字列(例えば"」"や"）"を入れる)
+;　　　  ARG:1…[省略可]1回の描画の後にウェイトするミリ秒。省略すると100
+;　　　  ARG:2…[省略可]機能オプション。省略した場合は0(正順モード)。未定義の値が渡された場合も0扱い
+;　　　                 0.通常の表示(色の進行方向は正順)
+;　　　                 1.色の進行方向を逆順にする
+;　　　                 2.虹色にする対象をARGS:0→ARGS:1＆ARGS:2に変更する。色の進行方向は正順＆正順
+;　　　                 3.虹色にする対象をARGS:0→ARGS:1＆ARGS:2に変更する。色の進行方向は正順＆逆順
+;　　　                 4.虹色にする対象をARGS:0→ARGS:1＆ARGS:2に変更する。色の進行方向は逆順＆正順
+;　　　                 5.虹色にする対象をARGS:0→ARGS:1＆ARGS:2に変更する。色の進行方向は逆順＆逆順
+;戻り値:なし(多分RESULT保護)
+;例によって例の如く2行使うので必ず改行しちゃう
+;\nはやめたほうがよい予感
+;軽くしかテストしていないので過度に期待しないように…
+;しかし…ここまでくると流石に私の頭がアレだと思われても仕方ないわね
+;-------------------------------------------------
+@BIGPRINT_RAINBOW2L(ARGS:0, ARG:0, ARGS:1, ARGS:2, ARG:1 = 100, ARG:2)
+#LOCALSIZE 3
+#LOCALSSIZE 2
+ARG:2 = INRANGE(ARG:2, 0, 5) ? ARG:2 # 0
+LOCAL:1 = CURRENTREDRAW()
+LOCAL:2 = STRLENSU(ARGS:1) + 1
+LOCALS:0 = %GETFONT()%
+LOCALS:1 =
+IF CHKFONT("Raavi")
+	IF !LINEISEMPTY()	;既にPRINTされた文字列があれば確保しておく
+		REDRAW 0
+		PRINTL 
+		LOCALS:1 = %HTML_TOPLAINTEXT(HTML_GETPRINTEDSTR())%
+		CLEARLINE 1
+		PRINTS LOCALS:1
+	ENDIF
+	;スクロール可(スクロールしないけど…まぁ、動いて見えるので)
+	IF ANIME_CONFIG("SCROLLTEXT")
+		FOR LOCAL:0, 0, ARG:0 - 1
+			REDRAW 0
+			SETFONT "Raavi"
+			IF INRANGE(ARG:2, 0, 1)
+				PRINTS " " + ARGS:1
+				CALL _PRINT_RAINBOW_SUB1(ARGS:0, LOCAL:0, ARG:2)
+				PRINTSL ARGS:2 + " "
+			ELSE
+				CALL _PRINT_RAINBOW_SUB1(" " + ARGS:1, LOCAL:0, INRANGE(ARG:2, 4, 5))
+				PRINTS ARGS:0
+				CALL _PRINT_RAINBOW_SUB1(ARGS:2 + " ", GROUPMATCH(ARG:2, 2, 5) ? LOCAL:0 + LOCAL:2 # 12 - LOCAL:2 - LOCAL:0, GROUPMATCH(ARG:2, 3, 5))
+				PRINTL 
+			ENDIF
+			SETFONT LOCALS:0
+			PRINTL 
+			REDRAW 2
+			TWAIT ARG:1, 0
+			CLEARLINE 2
+			PRINTS LOCALS:1
+		NEXT
+	ENDIF
+	REDRAW 0
+	SETFONT "Raavi"
+	IF INRANGE(ARG:2, 0, 1)
+		PRINTS " " + ARGS:1
+		CALL _PRINT_RAINBOW_SUB1(ARGS:0, LOCAL:0, ARG:2)
+		PRINTSL ARGS:2 + " "
+	ELSE
+		CALL _PRINT_RAINBOW_SUB1(" " + ARGS:1, LOCAL:0, INRANGE(ARG:2, 4, 5))
+		PRINTS ARGS:0
+		CALL _PRINT_RAINBOW_SUB1(ARGS:2 + " ", GROUPMATCH(ARG:2, 2, 5) ? LOCAL:0 + LOCAL:2 # 12 - LOCAL:2 - LOCAL:0, GROUPMATCH(ARG:2, 3, 5))
+		PRINTL 
+	ENDIF
+	SETFONT LOCALS:0
+	PRINTL 
+	REDRAW LOCAL:1
+ELSE
+	CALL PRINT_RAINBOW2L(ARGS:0, ARG:0, ARGS:1, ARGS:2, ARG:1, ARG:2)
+ENDIF
+RETURN RESULT
+
+@BIGPRINT_RAINBOW2W(ARGS:0, ARG:0, ARGS:1, ARGS:2, ARG:1 = 100, ARG:2)
+CALL BIGPRINT_RAINBOW2L(ARGS:0, ARG:0, ARGS:1, ARGS:2, ARG:1, ARG:2)
+WAIT
+RETURN RESULT
+
+
+;-------------------------------------------------
+;関数名:SMALLPRINT_RAINBOW2(|L|W)
+;概　要:動く虹色SMALLPRINT関数
+;引　数:ARGS:0…表示文字列。FORM文字列を使用する場合は""の前に@を付けること
+;　　　  ARG:0…ずらし回数。1回につき{ARG:1}ミリ秒消費
+;　　　 ARGS:1…[省略可]始めに元の文字色で表示する文字列(例えば"「"や"（"を入れる)
+;　　　 ARGS:2…[省略可]終わりに元の文字色で表示する文字列(例えば"」"や"）"を入れる)
+;　　　  ARG:1…[省略可]1回の描画の後にウェイトするミリ秒。省略すると100
+;　　　  ARG:2…[省略可]機能オプション。省略した場合は0(正順モード)。未定義の値が渡された場合も0扱い
+;　　　                 0.通常の表示(色の進行方向は正順)
+;　　　                 1.色の進行方向を逆順にする
+;　　　                 2.虹色にする対象をARGS:0→ARGS:1＆ARGS:2に変更する。色の進行方向は正順＆正順
+;　　　                 3.虹色にする対象をARGS:0→ARGS:1＆ARGS:2に変更する。色の進行方向は正順＆逆順
+;　　　                 4.虹色にする対象をARGS:0→ARGS:1＆ARGS:2に変更する。色の進行方向は逆順＆正順
+;　　　                 5.虹色にする対象をARGS:0→ARGS:1＆ARGS:2に変更する。色の進行方向は逆順＆逆順
+;戻り値:なし(多分RESULT保護)
+;軽くしかテストしていないので過度に期待しないように…
+;-------------------------------------------------
+@SMALLPRINT_RAINBOW2(ARGS:0, ARG:0, ARGS:1, ARGS:2, ARG:1 = 100, ARG:2)
+CALL PRINT_RAINBOW2(ARGS:0, ARG:0, " " + ARGS:1, ARGS:2 + " ", ARG:1, ARG:2, "Estrangelo Edessa")
+RETURN RESULT
+
+@SMALLPRINT_RAINBOW2L(ARGS:0, ARG:0, ARGS:1, ARGS:2, ARG:1 = 100, ARG:2)
+CALL SMALLPRINT_RAINBOW2(ARGS:0, ARG:0, ARGS:1, ARGS:2, ARG:1, ARG:2)
+PRINTL 
+RETURN RESULT
+
+@SMALLPRINT_RAINBOW2W(ARGS:0, ARG:0, ARGS:1, ARGS:2, ARG:1 = 100, ARG:2)
+CALL SMALLPRINT_RAINBOW2(ARGS:0, ARG:0, ARGS:1, ARGS:2, ARG:1, ARG:2)
+WAIT
+RETURN RESULT
+
+
+;*************************************************
+;ユーティリティ関数
+;*************************************************
+;・他所で虹色っぽいことをやりたい場合に多少使える？
+;・今のところ虹色の定義関数しかないけど
+;-------------------------------------------------
+
+;-------------------------------------------------
+;関数名:GET_RAINBOW
+;概　要:虹色値取得用関数
+;引　数:ARG:0…何番目の色か(0～11)。範囲外の場合でも順番通りの色を返す
+;戻り値:色値
+;備　考:式中関数
+;他所で虹色を使用するたび再定義するのが面倒になったので関数化
+;引数エラーを返すのもそれを処理するのも面倒なので、範囲外でも順番を崩さずに処理できるように
+;色名および順番は以下の通り
+;Red, Orange, Yellow, Spring, Green, Teal, Cyan, Azure, Blue, Violet, Magenta, Pink
+;-------------------------------------------------
+@GET_RAINBOW(ARG:0)
+#FUNCTION
+#DIM CONST RAINBOW = 0xFF9999, 0xFFCC99, 0xFFFF99, 0xCCFF99, 0x99FF99, 0x99FFCC, 0x99FFFF, 0x99CCFF, 0x9999FF, 0xCC99FF, 0xFF99FF, 0xFF99CC
+RETURNF RAINBOW:((ARG:0 >= 0 ? ARG:0 # 11 - ABS(ARG:0 + 1)) % 12)
+
+
+;*************************************************
+;内部関数
+;*************************************************
+;・本当の意味で虹色に関する事は実質ここだけ
+;・他所から直接呼んだ場合の動作は保証されません
+;・まぁ、元々動作保証なんてどの関数にもないけれど
+;・保証しないだけで使ってもいいのよ。オススメはしないけど
+;-------------------------------------------------
+
+;-------------------------------------------------
+;関数名:_PRINT_RAINBOW_SUB1
+;概　要:虹色PRINT関数の内部処理用関数
+;引　数:ARGS:0…表示文字列
+;　　　  ARG:0…[省略可]色のずらしカウント。省略すると0
+;　　　  ARG:1…[省略可]真の場合、色の進行方向を逆順にする。省略すると偽(正順)
+;戻り値:なし(多分RESULT保護)
+;備　考:内部関数(他所から直接呼んだ場合の動作は保証されません)
+;-------------------------------------------------
+@_PRINT_RAINBOW_SUB1(ARGS:0, ARG:0, ARG:1)
+#LOCALSIZE 3
+LOCAL:0 = GETCOLOR()		;現在の文字色を取得
+LOCAL:1 = STRLENSU(ARGS:0)	;表示文字列の文字数を取得
+FOR LOCAL:2, 0, LOCAL:1	;文字数分ループさせる
+	;12で割った余り、もしくは11からそれを引いた数で色設定。ここにずらしカウントが入る
+	SETCOLOR GET_RAINBOW(ARG:1 ? 11 - (LOCAL:2 + ARG:0) % 12 # (LOCAL:2 + ARG:0) % 12)
+	PRINTS CHARATU(ARGS:0, LOCAL:2)	;ARGSから1文字抜き出して出力。こういう用途にCHARATUは実際便利
+NEXT
+SETCOLOR LOCAL:0	;元の文字色に戻す
+RETURN RESULT

@@ -1,0 +1,313 @@
+﻿
+;==================================================
+;
+;状態表示アニメーションバー処理
+;
+;==================================================
+;勝手に改変。劣化してる可能性は大いにあり@これみ
+@UPCHECK_REV
+;ERHにて専用変数を宣言
+#DIM LCOUNT, 3
+#DIM 始色, 1
+#DIM 終色, 1
+#DIM COLOR, 1
+#DIM 最終値, 2, 14
+#DIM CONST コマ数 = 20
+#DIM LINE
+#DIM CHARA
+#DIM CONST PALAM数 = 14, 4
+#DIMS PALAMS
+#DIM TEMP_PALAM
+;----------------------------
+;バーの長さ(半角n個分で指定してください)
+;----------------------------
+UPC_バー最長 = 16
+;最大長初期値(この値より小さくはならない)
+UPC_MAXBAR = UPC_バー最長
+UPC_MAXNAMELENS = 6
+;Revではほぼ確定で4桁+1になるのでとりあえずいれておく
+UPC_MAXPLENS = 6
+UPC_MAXUPLENS = 6
+UPC_MAXDOWNLENS = 6
+UPC_MAXSTARTPLENS = 6
+UPC_MAXPUPLENS = 6
+
+VARSET LOCAL
+;MASTERのPALAM
+FOR LCOUNT, 0, 14
+	最終値:0:LCOUNT = PALAM:MASTER:LOCAL + CUP:MASTER:LCOUNT + CDOWN:MASTER:LCOUNT
+	PALAM:MASTER:LCOUNT = PALAM:MASTER:LCOUNT <= 0 ? 0 # PALAM:MASTER:LCOUNT
+NEXT
+FOR LCOUNT, 0, 4
+	最終値:1:LCOUNT = PALAM:MASTER:LOCAL + CUP:MASTER:LCOUNT + CDOWN:MASTER:LCOUNT
+	PALAM:MASTER:LCOUNT = PALAM:MASTER:LCOUNT <= 0 ? 0 # PALAM:MASTER:LCOUNT
+NEXT
+;罫線にあわせるために全角サイズに調整
+FOR LCOUNT, 0, VARSIZE("UPC_MAX")
+	UPC_MAX:LCOUNT = (UPC_MAX:LCOUNT + 1) / 2 * 2
+NEXT
+;環境によっては上下にかくつくので抑制
+REDRAW 0
+;表示内容確保
+;ドラムロールオフ
+;IF FLAG:PALAMアニメ == 1
+;	SPLIT "NAME/BAR/PALAM/UP/DOWN/TOTAL", "/", UPC_S
+;	UPC_V = UPC_MAXNAMELENS, UPC_MAXBAR, UPC_MAXSTARTPLENS, UPC_MAXUPLENS, UPC_MAXDOWNLENS, UPC_MAXPLENS
+;ドラムロールオン
+;ELSE
+	SPLIT "NAME/BAR/TOTAL/GET", "/", UPC_S
+	UPC_V = UPC_MAXNAMELENS, UPC_MAXBAR, UPC_MAXPLENS, UPC_MAXUPLENS
+;ENDIF
+;表示処理開始
+;上辺
+CALL UPC_FRAME("頂")
+;表題
+CALL UPC_TITLE(MASTER, "初回")
+;上枠
+CALL UPC_FRAME("上")
+;項目名
+CALL UPC_FRAME("項")
+;中枠
+CALL UPC_FRAME("中")
+;表示済み行数を数える
+LINE = LINECOUNT
+;表示前文字色を記憶
+COLOR = GETCOLOR()
+;初回判定用
+LOCAL = 0
+FOR LCOUNT:2, 0, コマ数 + 1
+	SIF !ANIME_CONFIG("USER1")
+		LCOUNT:2 = コマ数
+	CLEARLINE LINECOUNT - LINE
+	FOR LCOUNT:1, 0, 2
+		CHARA = LCOUNT:1 ? TARGET # MASTER
+		;表示対象(人物)が変更された場合、枠を区切る
+		IF LCOUNT:1 != 0
+			;下枠
+			CALL UPC_FRAME("下")
+			;表題
+			CALL UPC_TITLE(CHARA)
+			;上枠
+			CALL UPC_FRAME("上")
+		ENDIF
+		FOR LCOUNT, 0, PALAM数:(LCOUNT:1)
+			PALAMS '= PALAMNAME:LCOUNT
+			TEMP_PALAM = CUP:CHARA:LCOUNT - CDOWN:CHARA:LCOUNT
+			IF LCOUNT < 4 && NOWEX:CHARA:LCOUNT
+				TEMP_PALAM += 10000
+				SIF CUP:CHARA:LCOUNT + PALAM:CHARA:LCOUNT >= 20000
+					TEMP_PALAM += 10000
+				TEMP_PALAM = TEMP_PALAM * LCOUNT:2 / コマ数 + PALAM:CHARA:LCOUNT
+				TEMP_PALAM = MIN(TEMP_PALAM, 29999)
+			ELSE
+				TEMP_PALAM = TEMP_PALAM * LCOUNT:2 / コマ数 + PALAM:CHARA:LCOUNT
+				TEMP_PALAM = MIN(TEMP_PALAM, 9999)
+			ENDIF
+			LOCALS '= ""
+			LOCALS += @"│%PALAMS,UPC_MAXNAMELENS,LEFT%│"
+			;カンスト
+			IF (TEMP_PALAM >= 9999 && LCOUNT > 3) || TEMP_PALAM >= 10000
+				SELECTCASE PALAMS
+					;赤・快Ｖ/快ｖ/恥情
+					CASE "快Ｖ", "快ｖ", "恥情"
+						始色 =  0x502020
+						終色 =  0xC07070
+					;青・潤滑/恐怖
+					CASE "潤滑", "恐怖"
+						始色 =  0x202050
+						終色 =  0x7070C0
+					;緑・快Ｂ/快ｂ/恭順
+					CASE "快Ｂ", "快ｂ", "恭順"
+						始色 =  0x205020
+						終色 =  0x70C070
+					;紫・欲情/反抗
+					CASE "欲情", "反抗"
+						始色 =  0x502050
+						終色 =  0xC070C0
+					;黄・快Ａ/快ａ/不快
+					CASE "快Ａ", "快ａ", "不快"
+						始色 =  0x505020
+						終色 =  0xC0C070
+					;青緑・屈服/抑鬱
+					CASE "屈服", "抑鬱"
+						始色 =  0x205050
+						終色 =  0x70C0C0
+					;白・快Ｃ/快ｃ
+					CASEELSE
+						始色 =  0x202020
+						終色 =  0xC0C0C0
+				ENDSELECT
+			ELSE
+				SELECTCASE PALAMS
+					;赤・快Ｖ/快ｖ/恥情
+					CASE "快Ｖ", "快ｖ", "恥情"
+						始色 =  0xC07070
+						終色 =  0xC0C0C0
+					;青・潤滑/恐怖
+					CASE "潤滑", "恐怖"
+						始色 =  0x7070C0
+						終色 =  0xC0C0C0
+					;緑・快Ｂ/快ｂ/恭順
+					CASE "快Ｂ", "快ｂ", "恭順"
+						始色 =  0x70C070
+						終色 =  0xC0C0C0
+					;紫・欲情/反抗
+					CASE "欲情", "反抗"
+						始色 =  0xC070C0
+						終色 =  0xC0C0C0
+					;黄・快Ａ/快ａ/不快
+					CASE "快Ａ", "快ａ", "不快"
+						始色 =  0xC0C070
+						終色 =  0xC0C0C0
+					;青緑・屈服/抑鬱
+					CASE "屈服", "抑鬱"
+						始色 =  0x70C0C0
+						終色 =  0xC0C0C0
+					;白・快Ｃ/快ｃ
+					CASEELSE
+						始色 =  0xC0C0C0
+						終色 =  0xFFFFFF
+				ENDSELECT
+			ENDIF
+			;寸止め時は明滅させる
+			SIF (TEMP_PALAM == 9999 && LCOUNT <= 3 && LCOUNT:2 % 2 && LCOUNT:2 < コマ数)
+				始色 = BRIGHTCOLORF(80, 始色)
+			LOCALS += LAYER_RECTBAR(TEMP_PALAM % 10000, 9999, UPC_バー最長 / 2, 始色, GETBGCOLOR(), , , 30)
+			LOCALS += "│"
+			;ドラムロールオフ
+			;IF FLAG:PALAMアニメ == 1
+			;	LOCALS += ADD_FTAG(@"{PALAM:(UPC_対象:LCOUNT):(UPC_要素:LCOUNT), UPC_MAXSTARTPLENS}│", TOSTR(COLOR))
+			;	LOCALS += ADD_FTAG(@"+{CUP:(UPC_対象:LCOUNT):(UPC_要素:LCOUNT), UPC_MAXUPLENS-1}│", TOSTR(COLOR))
+			;	LOCALS += ADD_FTAG(@"-{CDOWN:(UPC_対象:LCOUNT):(UPC_要素:LCOUNT), UPC_MAXDOWNLENS-1}│", TOSTR(COLOR))
+			;	LOCALS += ADD_FTAG(@"{PALAM:(UPC_対象:LCOUNT):(UPC_要素:LCOUNT) + CUP:(UPC_対象:LCOUNT):(UPC_要素:LCOUNT) - CDOWN:(UPC_対象:LCOUNT):(UPC_要素:LCOUNT), UPC_MAXPUPLENS}│", TOSTR(COLOR))
+			;ELSE
+				LOCALS += ADD_FTAG(@"{TEMP_PALAM % 10000, UPC_MAXPLENS}", TOSTR(COLOR))
+				LOCALS += ADD_FTAG(@"│", TOSTR(COLOR))
+				LOCALS += ADD_FTAG(@"\@TEMP_PALAM - PALAM:CHARA:LCOUNT >= 0 ? + # - \@{ABS(TEMP_PALAM - PALAM:CHARA:LCOUNT), UPC_MAXPUPLENS-1}", TOSTR(COLOR))
+				LOCALS += ADD_FTAG(@"│", TOSTR(COLOR))
+			;ENDIF
+			HTML_PRINT LOCALS
+		NEXT
+	NEXT
+	;底枠
+	CALL UPC_FRAME("底")
+	TWAIT 100, 0
+	LOCAL++
+NEXT
+;実際の可減算処理
+FOR LCOUNT, 0, 14
+	PALAM:MASTER:LCOUNT += CUP:MASTER:LCOUNT
+	PALAM:MASTER:LCOUNT -= CDOWN:MASTER:LCOUNT
+NEXT
+FOR LCOUNT, 0, 14
+	PALAM:LCOUNT += CUP:LCOUNT
+	PALAM:LCOUNT -= CDOWN:LCOUNT
+NEXT
+;同一ターン中の増減を抑制
+FOR LOCAL, 0, 2
+	CHARA = LOCAL ? TARGET # MASTER
+	VARSET CUP:CHARA:0
+	VARSET CDOWN:CHARA:0
+	;ここでリセットするとEVENTCOMENDの終端で不具合がでる
+	;VARSET NOWEX:CHARA:0
+NEXT
+
+;REDRAWを通常に
+REDRAW 1
+
+@UPC_FRAME(ARGS, ARGS:1)
+#DIM LCOUNT
+IF ARGS == "頂"
+	SPLIT "┌/─/┐", "/", LOCALS
+ELSEIF ARGS == "上"
+	SPLIT "├/┬/┤", "/", LOCALS
+ELSEIF ARGS == "項"
+	SPLIT "│/│/│", "/", LOCALS
+ELSEIF ARGS == "中"
+	SPLIT "├/┼/┤", "/", LOCALS
+ELSEIF ARGS == "下"
+	SPLIT "├/┴/┤", "/", LOCALS
+ELSEIF ARGS == "底"
+	SPLIT "└/┴/┘", "/", LOCALS
+ENDIF
+PRINTS LOCALS:0
+FOR LCOUNT, 0, VARSIZE("UPC_V")
+	SIF UPC_V:LCOUNT == 0
+		BREAK
+	IF LCOUNT != 0
+		PRINTS LOCALS:1
+	ENDIF
+	IF ARGS == "項"
+		PRINTFORM %UPC_S:LCOUNT,UPC_V:LCOUNT,LEFT%
+	ELSE
+		PRINTFORM %"─"*(UPC_V:LCOUNT/2)%
+	ENDIF
+NEXT
+PRINTSL LOCALS:2
+
+@UPC_TITLE(ARG, ARGS)
+#DIM LCOUNT
+IF ARGS == "初回"
+	LOCAL = -2
+	FOR LCOUNT, 0, VARSIZE("UPC_V")
+		SIF UPC_V:LCOUNT == 0
+			BREAK
+		LOCAL += UPC_V:LCOUNT + 2
+	NEXT
+ENDIF
+;LOCALS = %CALLNAME:(UPC_対象:ARG)%
+LOCALS = %CALLNAME:ARG%
+IF ARG == MASTER
+	 LOCALS += "(調教対象)"
+ELSE
+	LOCALS += "(調教者)"
+ENDIF
+PRINTFORML │%LOCALS,LOCAL,LEFT%│
+
+@UPC_INIT(対象, 要素, 初期化)
+#DIM 対象
+#DIM 要素
+#DIMS 初期化
+IF 初期化 == "初期化"
+	VARSET UPC_バー数
+	RETURN 0
+ENDIF
+;対象を保存
+UPC_対象:UPC_バー数 = 対象
+;要素を保存
+UPC_要素:UPC_バー数 = 要素
+;バー初期長を算出
+UPC_初期値:UPC_バー数 = PALAM:対象:要素 * UPC_バー最大値 / 9999
+;PALAM名最大長を更新
+UPC_MAXNAMELENS = MAX(UPC_MAXNAMELENS, STRLENS(PALAMNAME:要素))
+;最終数値最大長を更新
+UPC_MAXPLENS = MAX(UPC_MAXPLENS, STRLENS(TOSTR(PALAM:対象:要素 + CUP:対象:要素 + CDOWN:対象:要素)))
+;上昇数値最大長を更新
+UPC_MAXUPLENS = MAX(UPC_MAXUPLENS, STRLENS(TOSTR(CUP:対象:要素)))
+;下降数値最大長を更新
+UPC_MAXDOWNLENS = MAX(UPC_MAXDOWNLENS, STRLENS(TOSTR(CDOWN:対象:要素)))
+;前回数値最大長を更新
+UPC_MAXSTARTPLENS = MAX(UPC_MAXSTARTPLENS, STRLENS(TOSTR(PALAM:対象:要素)))
+;快系かつ絶頂の調整 焦らしフラグがたってる時は通常に流す(早漏暴発もこちらへ)
+;早漏はマイナスになりうるのでフォロー
+IF (RANGE(要素, 0, 3) && NOWEX:対象:要素 > 0) || (NOWEX:対象:射精 == 4 && 要素 == 0)
+	UPC_加算値:UPC_バー数 = (UPC_バー最大値 - UPC_初期値:UPC_バー数) + MAX((PALAM:対象:要素 + CUP:対象:要素 - CDOWN:対象:要素) * UPC_バー最大値 / 9999, 0)
+	;大量絶頂はバーを一本追加
+	SIF NOWEX:対象:要素 == 2
+		UPC_加算値:UPC_バー数 += UPC_バー最大値
+	;結果PALAMと加算量の最大の長さを取っておく(快はUPのみ)
+	UPC_MAXPUPLENS = MAX(UPC_MAXPUPLENS, STRLENS(TOSTR(ABS(CUP:対象:UPC_バー数)))+1)
+ELSE
+	UPC_加算値:UPC_バー数 = (CUP:対象:要素 - CDOWN:対象:要素) * UPC_バー最大値 / 9999
+	;加算ゲージの上限調整
+	SIF UPC_加算値:UPC_バー数 + UPC_初期値:UPC_バー数 > UPC_バー最大値
+		UPC_加算値:UPC_バー数 = UPC_バー最大値 - UPC_初期値:UPC_バー数
+	SIF UPC_加算値:UPC_バー数 + UPC_初期値:UPC_バー数 < 0
+		UPC_加算値:UPC_バー数 = UPC_初期値:UPC_バー数
+	UPC_MAXPUPLENS = MAX(UPC_MAXPUPLENS, STRLENS(TOSTR(ABS(CUP:対象:要素 + CDOWN:対象:要素)))+1)
+ENDIF
+UPC_表示値:UPC_バー数 = UPC_初期値:UPC_バー数
+UPC_バー速度:UPC_バー数 = 1 + MIN(ABS(UPC_加算値:UPC_バー数)/16, 18)
+;バー番号を加算
+UPC_バー数++
+

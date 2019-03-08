@@ -1,0 +1,39 @@
+﻿;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+;
+;	Module		:RAND_SPLIT.ERB
+;	Facility	:引数として渡されたARGSから、特定の文字列ARGS:1で区切り
+;				 その中からひとつをランダムで返す（確率は常に等確率）
+;
+;	Licence		:ライセンスフリー。
+;
+;	Modification Data:
+;	Edit	Date			Author					Reason
+;	001		2011/10/17		P						新規作成
+;	002		2013/02/05		ぱ。					SPLITの修正を利用したRESULT保護
+;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+;
+;@AUTO_SPLIT
+;ARGS   操作する文字列
+;ARGS:1 ARGSを区切る文字列
+;ARG    返す数、2個以降はRESULTS:1以降に返していく
+;================================================
+@RAND_SPLIT, ARGS, ARGS:1 = "/", ARG = 1
+#FUNCTIONS
+#LOCALSSIZE 1000
+#LOCALSIZE 1
+#DIM TEMP
+#DIM NUM
+
+VARSET LOCALS
+
+SPLIT ARGS, ARGS:1 , LOCALS, NUM
+
+FOR LOCAL, 0, ARG
+	IF NUM > 0
+		TEMP = RAND:NUM
+		NUM--
+		RESULTS:LOCAL = %LOCALS:TEMP%
+		ARRAYREMOVE LOCALS, TEMP, 1
+	ENDIF
+NEXT
+RETURNF RESULTS

@@ -1,0 +1,166 @@
+﻿;────────────────────────────────────
+;調教終了の処理
+;────────────────────────────────────
+@EVENTEND
+
+;ムラムラリセット
+SIF TARGET > 0
+	CFLAG:むらむら = 0
+SIF ASSI:1 > 0
+	CFLAG:(ASSI:1):むらむら = 0
+SIF ASSI:2 > 0
+	CFLAG:(ASSI:2):むらむら = 0
+
+;MASTER側のCFLAGに誰にどれだけ搾られたかを記録
+;一回で最大5000くらい？
+CFLAG:MASTER:(2200 + NO:TARGET) += TFLAG:取得魔力 * (5 + CFLAG:ランク) / 5
+;ASSIはTARGETの1/5
+FOR LOCAL, 0, 9
+	IF ASSI:(LOCAL + 1) > 0
+		CFLAG:MASTER:(2200 + NO:(ASSI:(LOCAL + 1))) += TFLAG:取得魔力 * (5 + CFLAG:(ASSI:(LOCAL + 1)):ランク) / 25
+	ENDIF
+NEXT
+
+;累積魔力
+SIF TARGET > 0
+	CFLAG:累積魔力 += TFLAG:取得魔力
+
+;調教終了
+FLAG:調教中 = 0
+PRINTW 調教は終わりました。
+
+EXP:MASTER:性知識 += TFLAG:経過時間 / 10
+EXP:性知識 += TFLAG:経過時間 / 10
+
+;調教時間をチェックして記録(最長・最短)
+SIF TFLAG:経過時間 > FLAG:最長調教時間記録
+	FLAG:最長調教時間記録 = TFLAG:経過時間
+SIF TFLAG:経過時間 > 0 && (TFLAG:経過時間 < FLAG:最短調教時間記録 || FLAG:最短調教時間記録 == 0)
+	FLAG:最短調教時間記録 = TFLAG:経過時間
+
+;ACT長期補正値の一括算入
+CALL ACT_M_RESEARCH_L(1)
+
+;データベース記入
+CALL DATABASE_INPUT_T
+
+;────────────────────────────────────
+;母乳の価値の計算
+;────────────────────────────────────
+SIF TALENT:MASTER:母乳体質 && TFLAG:調教時間 > 0
+	CALL SELL_MILK
+
+;────────────────────────────────────
+;レベルアップ。たくさん経験値ためても一回の調教は一度だけレベルアップできる仕様です
+;────────────────────────────────────
+IF TFLAG:一回休み == 0
+	IF CFLAG:MASTER:調教経験 > CFLAG:MASTER:必要経験値
+		CFLAG:MASTER:調教レベル += 1
+		CFLAG:MASTER:調教経験 -= CFLAG:MASTER:必要経験値
+		CFLAG:MASTER:必要経験値 += 100 + CFLAG:MASTER:調教レベル * CFLAG:MASTER:調教レベル * 10
+		;レベル１０以降必要経験値は急に上がりますが、異常経験で軽減できます
+		LOCAL = 250 + (CFLAG:MASTER:調教レベル - 5) * CFLAG:MASTER:必要経験値 / 3 - EXP:MASTER:異常経験 * 20
+		SIF LOCAL > 0 && CFLAG:MASTER:調教レベル > 10
+			CFLAG:MASTER:必要経験値 += LOCAL
+		PRINTFORMW %CALLNAME:MASTER%の調教レベルは[{CFLAG:MASTER:調教レベル}]になりました
+		MAXBASE:MASTER:体力 += 100 + 10 * RAND:6
+		MAXBASE:MASTER:気力 += 50 + 10 * RAND:6
+	ENDIF
+	
+	IF CFLAG:調教経験 > CFLAG:必要経験値
+		CFLAG:調教レベル += 1
+		CFLAG:調教経験 -= CFLAG:必要経験値
+		CFLAG:必要経験値 += 100 + CFLAG:調教レベル * CFLAG:調教レベル * 10
+		LOCAL = 250 + (CFLAG:調教レベル - 5) * CFLAG:必要経験値 / 3 - EXP:MASTER:異常経験 * 20
+		SIF LOCAL > 0 && CFLAG:調教レベル > 10
+			CFLAG:必要経験値 += LOCAL
+		PRINTFORMW %CALLNAME:TARGET%の調教レベルは[{CFLAG:調教レベル}]になりました
+		MAXBASE:体力 += 100 + 10 * RAND:6
+		MAXBASE:気力 += 50 + 10 * RAND:6
+	ENDIF
+	
+	TFLAG:取得魔力 = MAX(TFLAG:取得魔力, 10)
+	PRINTFORMW %CALLNAME:TARGET%は%CALLNAME:MASTER%から吸い取った精力を{TFLAG:取得魔力}の魔力に変換した
+	CFLAG:魔力 += TFLAG:取得魔力
+	
+	[SKIPSTART]
+	IF CFLAG:好意 >= 500 && CFLAG:M恋慕 == 0
+		CFLAG:M恋慕 = 1
+		PRINTFORML %CALLNAME:TARGET%の%CALLNAME:MASTER%を見る目がおかしい…
+		PRINTFORMW %CALLNAME:TARGET%は%CALLNAME:MASTER%に好意を寄せ始めたようだ
+		IF CFLAG:好意 / 250 >= CFLAG:調教レベル - CFLAG:MASTER:調教レベル
+			CFLAG:M恋慕 = 2
+			PRINTFORMW それどころか、%CALLNAME:TARGET%に%CALLNAME:MASTER%への親愛の情が芽生えたようだ
+		ENDIF
+	ENDIF
+	IF CFLAG:好意 / 250 >= CFLAG:調教レベル - CFLAG:MASTER:調教レベル && CFLAG:M恋慕 == 1
+		CFLAG:M恋慕 = 2
+		PRINTFORML %CALLNAME:TARGET%の%CALLNAME:MASTER%を見る目がおかしい…
+		PRINTFORMW %CALLNAME:TARGET%に%CALLNAME:MASTER%への親愛の情が芽生えたようだ
+	ENDIF
+	[SKIPEND]
+ENDIF
+
+;────────────────────────────────────
+;平時アライメントの変動
+;────────────────────────────────────
+LOCAL = 10 * CFLAG:アライメント - CFLAG:平時ア
+LOCAL:1 = (CFLAG:SM性格 + CFLAG:ツンデレ + 200) / 2
+;性格で倍率が決まる。
+;最小値50(Mデレ)、最大値150(Sツン)、素質変動しない/させないキャラではB = 100
+CFLAG:平時ア += LOCAL * (LOCAL >= 0 ? 200 - LOCAL:1 # LOCAL:1) / 500
+IF CFLAG:平時ア > 100 && MARK:5 == 0
+	MARK:5 = 1
+	CFLAG:反発除去 = 1
+ELSEIF CFLAG:平時ア > 200 && MARK:5 == 1
+	MARK:5 = 2
+	CFLAG:反発除去 = 1
+ELSEIF CFLAG:平時ア > 300 && MARK:5 == 2
+	MARK:5 = 3
+	CFLAG:反発除去 = 1
+ELSEIF CFLAG:平時ア > 400 && MARK:5 == 3
+	MARK:5 = 4
+	CFLAG:反発除去 = 1
+ELSEIF CFLAG:平時ア > 500 && MARK:5 == 4
+	MARK:5 = 5
+	CFLAG:反発除去 = 1
+ELSEIF CFLAG:平時ア > 600 && MARK:5 == 5
+	MARK:5 = 6
+	CFLAG:反発除去 = 1
+ELSEIF CFLAG:平時ア > 700 && MARK:5 == 6
+	MARK:5 = 7
+	CFLAG:反発除去 = 1
+ELSEIF CFLAG:平時ア > 800 && MARK:5 == 7
+	MARK:5 = 8
+	CFLAG:反発除去 = 1
+ELSEIF CFLAG:平時ア > 900 && MARK:5 == 8
+	MARK:5 = 9
+	CFLAG:反発除去 = 1
+ELSEIF CFLAG:平時ア > 950 && MARK:5 == 9
+	MARK:5 = 10
+	CFLAG:反発除去 = 1
+ENDIF
+;────────────────────────────────────
+;空射精ボーナス
+;────────────────────────────────────
+IF TCVAR:MASTER:空射精数 > 0 
+	IF MAXBASE:MASTER:射精 < 7500 + CFLAG:MASTER:精力限界 * 500
+		MAXBASE:MASTER:射精 = MIN(MAXBASE:MASTER:射精 + TCVAR:MASTER:空射精数 * 100, 7500 + CFLAG:MASTER:精力限界 * 500)
+		PRINTFORML 限界を超えて搾られたため、%CALLNAME:MASTER%の性的機能が強化されました
+	ELSE
+		PRINTFORML 性的機能の強化が限界に達しています
+	ENDIF
+	TCVAR:MASTER:空射精数 = 0
+ENDIF
+
+;────────────────────────────────────
+;リセット
+;────────────────────────────────────
+;尿意ゲージを消す
+MAXBASE:MASTER:尿意 = TALENT:MASTER:おもらし癖 ? MAXBASE:MASTER:尿意 # 0
+;調教で蓄積した疲弊を日常に加算
+CFLAG:MASTER:消耗 = MIN(CFLAG:MASTER:消耗 + MAX(TFLAG:63, 0), 20)
+SIF TARGET >= 0
+	CFLAG:TARGET:消耗 += MAX(TFLAG:62, 0)
+
+BEGIN TURNEND

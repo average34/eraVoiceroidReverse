@@ -1,0 +1,438 @@
+﻿--------------------------------------------------
+R#時代の更新履歴は開発情報フォルダに置いてあります
+追加、変更、バグ修正のリンクを辿ると詳細を見る事ができます
+リビジョンの履歴、コミットの詳細、差分は下記のURLからどうぞ
+(リビジョン44以前のdiffはエンコードの問題で文字化けします
+*1.2(https://code.launchpad.net/~reversedevgru/eratohoreverse/trunk)
+*1.1(https://code.launchpad.net/~reversedev/eratohoreverse/1.1)
+*1.0(https://code.launchpad.net/~reversedev/eratohoreverse/1.0)
+--------------------------------------------------
+
+Changelog:
+
+_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+[2017-08-11 v.1.120]
+https://launchpad.net/eratohoreverse/1.1/1.12
+_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+
+New Features
+************
+*関数@TWAIT1の追加
+
+
+Improvements
+************
+*関数@OPPAI_DESCRIPTIONへの加筆
+*関数@PENIS_DESCRIPTIONへの加筆
+*@PRINT_SOURCE00_40、抜かず非採用時の条件を変更
+*神子の素質を修正
+　・口上を書いていて気に入らなかったので…
+　・口上作者による素質変更の要望があれば応じます
+
+
+Bug Fixes
+*********
+*@TRAIN_MESSAGE_18の問題点(https://bugs.launchpad.net/eratohoreverse/+bug/1712642)
+*ACT27,押し倒すの問題点(https://bugs.launchpad.net/eratohoreverse/+bug/1712636)
+*@KOJO_ACT_K14_20に於けるreturn抜け(https://bugs.launchpad.net/eratohoreverse/+bug/1713080)
+
+
+_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+[2017-08-11 v.1.116]
+https://launchpad.net/eratohoreverse/1.1/1.116
+_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+
+New Features
+************
+*今日の方針の追加-2(https://blueprints.launchpad.net/eratohoreverse/+spec/policy-reform2)
+　今日の方針[10]"ご主人様にご奉仕したい"を追加
+　・反抗刻印なしかつM好意1000以上で選択可
+　・奉仕系に+補正。その他は-補正
+　・奉仕系ACTに於ける補正
+　　現在の方針"ノーマル"時に…
+　　　口で愛撫を強制+++
+　　　手で愛撫を強制+
+　　　胸愛撫強制+
+　・調教者が母乳体質の場合
+　　　胸愛撫強制++
+　・調教対象が腰使いの場合
+　　　騎乗位+
+　・@POLICY @IS_POLICY @SAIS_BONUS @IS_SATIS_BONUSに於ける定義は"ご奉仕"
+　・Cflag.1220,ご奉仕したい封印の追加
+　・口上テンプレの対応
+*アリス口上v1.78を格納
+*雛口上v1.13を格納
+
+Improvements
+************
+*AI行動方針の強化-4(https://blueprints.launchpad.net/eratohoreverse/+spec/menu-policy-reform3)
+　@ACT_MENU_POLICY
+　・方針"アナル"に於ける補正の調整
+　・性交に派生する際のACT分類:性交以外のマイナス補正をより強化
+　・性交に派生する際の条件を変更
+　　　好意好感度の合計10000以上かつ調教者がふたなりであるかペニスバンドの所持が必要なように
+　@ACT_ACTM3_POLYCY
+　・方針"アナル"の際はアナルセックス以外の性交系にマイナス補正
+　・より本来の目的に沿った行動をするように
+*満足ボーナス選択時にツールチップで内容を表示するように
+　・マウスオーバー時限定。キーボード操作では何もなし
+　・場合により選択後の内容が変わるものにも対応。現在の状態に即したものが表示されるように
+
+Bug Fixes
+*********
+None.
+
+
+_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+[2017-08-05 v.1.115]
+https://launchpad.net/eratohoreverse/1.1/1.115
+_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+
+New Features
+************
+*今日の方針の追加(https://blueprints.launchpad.net/eratohoreverse/+spec/policy-reform)
+　・今日の方針[9]"～さまに抱いてほしい"を追加
+　・要するにご主人様がえっちしてくれるようになります
+　・好意好感度の合計10000から選択可能。条件を満たしていない場合選択肢は表示されない
+　・調教者がふたなり若しくはペニスバンドを所持している必要あり
+　・"孕ませてほしい"ではなく、あくまでも性交系を誘発する為のもの
+　・方針に関連する変数、関数類も全て対応済み。口上側からの封印も可能
+　・関連する各所の補正も調整済み。これが正解かどうかは何とも言えない。あとはフィードバック次第
+*アリス口上v1.77を格納
+
+Improvements
+************
+*AI行動方針の強化-3(https://blueprints.launchpad.net/eratohoreverse/+spec/menu-policy-reform2)
+　・(調教対象が女/ペニスバンドを所持/好意好感度の合計10000)この条件を満たしている場合、
+　　 満足ボーナスの"甘えさせて"は性奉を誘発するように
+　・要するにご主人様がえっちさせてくれるようになります
+　・別方針として切り分けるべきな気がしないでもないので、仕様が変わる可能性あり
+*口上テンプレは仕様変更に対応
+*PLAYER_ACTM/PLAYER_ACTM_10_性奉.ERBに於ける補正値の調整
+
+Bug Fixes
+*********
+*@EVENTCOMENDに於ける地の文の誤字・脱字(https://bugs.launchpad.net/eratohoreverse/+bug/1708802)
+
+
+_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+[2017-08-01 v.1.114]
+https://launchpad.net/eratohoreverse/1.1/1.114
+_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+
+Improvements
+************
+*Emuera1821+v5.1を格納
+*口上類の修正を反映
+
+Bug Fixes
+*********
+*Emuera1821+v5使用時の@PRINT_STATUS2に於ける範囲外エラー(https://bugs.launchpad.net/eratohoreverse/+bug/1707520)
+
+
+_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+[2017-07-29 v.1.113]
+https://launchpad.net/eratohoreverse/1.1/1.113
+_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+
+Bug Fixes
+*********
+*@KYOMI_ADDのバグ(https://bugs.launchpad.net/eratohoreverse/+bug/1707468)
+
+
+_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+[2017-07-29 v.1.112]
+https://launchpad.net/eratohoreverse/1.1/1.112
+_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+
+New Features
+************
+*更新履歴の実装(https://blueprints.launchpad.net/eratohoreverse/+spec/changelog-implement)
+　・タイトル画面の[2] INFO から更新履歴を見ることができます
+　・ボタンは３つ、[4] 前のINFO [9] INFO終了 [6] 次のINFO
+　・マウスとキーボードの入力を受け付けます。履歴はЯ以降の物のみ
+*アリス口上v1.76を格納
+
+Improvements
+************
+*AI行動方針の強化-2(https://blueprints.launchpad.net/eratohoreverse/+spec/menu-cource-reform)
+　・@ACT_COURCE_OF_TODAYに於ける補正の見直し
+　・@ACT_COURCE_TALENT_Tに於ける素質毎、方針毎の補正の見直し
+　・@ACT_COURCE_CONDITION_Tに於ける補正の見直し
+　・コード整形。その他
+*興味補正の改変(https://blueprints.launchpad.net/eratohoreverse/+spec/interested-correction-reform)
+　・これまで極一部のselectcomによる対応だったものを修正
+　・各act毎react分類、selectcom等で入力に対して漏れなく対応できるように
+　・特定の状況及び素質による補正の追加
+　　　素質：プライド高いは愛撫系、性交系で下手だと罵られた場合ムキになるよう+補正
+　　　素質：サドに対しての許しを乞う行為、悲鳴等はむしろ喜ばせる結果になるよう+補正
+　　　奉仕系、性交奉仕系に於ける"愛情を込めてやる"にはより強い+補正
+　・加虐系actに於けるネガティブな反応は、より素質：サドの興味を引くように
+　・調教の進展に応じてネガティブな反応の効果がより大きくなるように
+　・その他細かな調整
+*Emuera1821+v5を格納
+　・STRFORMに特定の状況で"0"が代入されてしまうバグが修正されています
+　・当バリアントでは刻印処理で使っていますが、使い方的にこれまでも問題はなかったはず
+*GameBase.csvにウィンドウタイトルを設定。今後は"eratohoЯeverse 1.1.12"のような感じで表示されます
+*タイトル画像を背景黒から背景透過に
+　・透過画像を有効にする為、_default.configの描画インターフェイスをWINAPIからTEXTRENDERERへ変更
+
+Bug Fixes
+*********
+*@MARK_CHECK_SOURCE_SURRENDERのバグ(https://bugs.launchpad.net/eratohoreverse/+bug/1707355)
+*@TRAIN_VARIATION_ACT11に於けるバグ(https://bugs.launchpad.net/eratohoreverse/+bug/1707262)
+
+
+
+_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+[2017-07-23 v.1.111]
+https://launchpad.net/eratohoreverse/1.1/1.111
+_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+
+New Features
+************
+*菫子及び紺珠伝キャラの追加(https://blueprints.launchpad.net/eratohoreverse/+spec/add-chara)
+
+Improvements
+************
+*@ACT_MENU_POLICYの改変(https://blueprints.launchpad.net/eratohoreverse/+spec/menu-policy-reform)
+　・大満足ボーナス時の各方針毎の差異の明確化
+　・調教者がふたなりかペニスバンド所持している場合、方針"アナル"はより性交が発生しやすいように
+　・方針"子作り"の際はより性奉が発生しやすいように
+　・方針"イチャイチャ"の際に愛撫系、奉仕系がより発生しやすいように
+　・その他細かな変更
+*PLAYER_ACTMの改変(https://blueprints.launchpad.net/eratohoreverse/+spec/playeractm-reform)
+　・PLAYER_ACTMのオーバーホール
+　・各素質毎の差異をより明確に
+　・進展具合に応じてよりはっきりとした変化が現れるように
+　・調教が進むとより過激な方に興味が移り、それまでのものには興味を失うような方向性
+　・素質:男嫌いの-補正は進展度に応じて若干緩和するように
+　・SHOPで購入可能な素質:汚れ無視の強化。口での愛撫の発生が絶望的だったキャラでも発生する可能性
+　　がup。他の後天素質の効果もこれまでよりはっきり出るかと
+　・キャラにもよるでしょうが、動作はこれまでとかなり異なると思われます
+*@ACT_ABLE27 押し倒しを修正
+　・押し倒しの頻発が気になったので条件を絞って抑制
+
+Bug Fixes
+*********
+*@ACT_ACTM3_ABL_Tの不具合(#1705809：https://bugs.launchpad.net/eratohoreverse/+bug/1705809)
+
+
+_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+[2017-07-18 v.1.101]
+https://launchpad.net/eratohoreverse/1.1/1.101
+_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+
+New Features
+************
+*タイトル画像を実装(https://blueprints.launchpad.net/eratohoreverse/+spec/title-img)
+*リリー口上(2017/07/17版)を格納
+*パチュリー口上(v0.002)を格納
+*霊夢口上(v0.91)を格納
+*雛口上(v1.12)を格納
+*橙口上を格納
+
+Improvements
+************
+*同梱のEmueraを1821+v4に
+
+Bug Fixes
+*********
+*関数@GET_COMBIACTNUMの不具合(https://bugs.launchpad.net/bugs/1698917)
+*関数@AFFECTIONの不具合(https://bugs.launchpad.net/bugs/1620276)
+*拘束ソースの処理の誤り(https://bugs.launchpad.net/bugs/1554511)
+*リリー口上の問題点(https://bugs.launchpad.net/bugs/1704931)
+*その他細かな修正等
+
+
+_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+[2016-02-27 v1.0.21]
+https://launchpad.net/eratohoreverse/1.0/1.021
+_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+
+New Features
+************
+*霊夢口上(v0.5)を格納
+*アリス口上(v1.75)を格納
+*永琳口上(2015/11/25版)を格納
+*藍口上(2015/11/25版)を格納
+*入力系関数の新規追加(#1416848)
+	@INPUTINTD
+	@TINPUTINTD
+	@INPUT_MANYD
+	@INPUT_RANGED
+	@TINPUT_RANGE
+	@TINPUT_RANGED
+
+Improvements
+************
+*同梱のEmueraを1821に
+	解説txtの類は"readme\Emuera\資料"フォルダに移設
+*諏訪子口上の現行版テンプレートへの移植(https://blueprints.launchpad.net/eratohoreverse/+spec/porting-of-kojo)
+*_fixed.configのユーザー関数の引数に自動的にTOSTRを補完するをYESに
+*ACT103,逆レイプの地の文の細かな修正
+*キャラの文字色が出力されるINPUTINT使用箇所をINPUTINTDに変更
+*既存の入力系関数の調整(#1416848)
+	@INPUTINT
+	@TINPUTINT
+	@INPUT_MANY
+	@INPUT_RANGE
+*ぱにめーしょんの塗りつぶしHEART系関数の調整(#1420750)
+	@HEARTB
+	@HEARTBW
+	@HEARTCB
+	@HEARTCBW
+	@HEARTDBW
+
+Bug Fixes
+*********
+*Emuera不具合発覚により顕在化したユーザ関数の引数における型の不整合(#1420233：https://bugs.launchpad.net/bugs/1420233)
+*ACT74の調教対象絶頂時における口上の不具合(#1455758：https://bugs.launchpad.net/bugs/1455758)
+*@INPUTINTと@TINPUTINTの問題点(#1416848：https://bugs.launchpad.net/bugs/1416848)
+*ハートマークが下の行の文字を侵食する(#1420750：https://bugs.launchpad.net/bugs/1420750)
+*アリス口上の誤字・脱字(#1514006：https://bugs.launchpad.net/bugs/1514006)
+*@ACT_ABLE73の問題点(#1532426：https://bugs.launchpad.net/bugs/1532426)
+*魔力使用前口上が表示されない不具合(#1540109：https://bugs.launchpad.net/bugs/1540109)
+*アリス口上でのAUTOORDER系の不具合(#1548117：https://bugs.launchpad.net/bugs/1548117)
+*@HEARTWと@HEARTBWの不具合(#1550425：https://bugs.launchpad.net/bugs/1550425)
+
+
+_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+[2015-02-09 v1.0.20]
+https://launchpad.net/eratohoreverse/+milestone/1.020
+_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+
+New Features
+************
+*HTML_PRINT系関数を追加(https://blueprints.launchpad.net/eratohoreverse/+spec/functions)
+*エンコード変換の際にバイナリが書き換わってしまったものを復元(zip/7z/PNGファイル)
+
+Improvements
+************
+*諏訪子口上の改変、修正(https://blueprints.launchpad.net/eratohoreverse/+spec/porting-of-kojo)
+*@REACTION_MESSAGEに於ける奉仕系一括処理の微修正
+*サーバ上のソースコードの改行コードをLFに変更(パッケージの改行コードはCR+LF)
+*_fixed.configのユーザー関数の引数に自動的にTOSTRを補完するをNOに
+	Emueraの実装が設定と逆になっていた箇所(私家版1819+v10で修正された模様)
+	実際に補完しないように設定すると大量のエラーを吐く
+	現状では確認、対応する余裕がない(その気力もない)ので1.1 series向け案件として先送り
+
+Bug Fixes
+*********
+*騎乗位時の姿勢表示の不具合(#1387456：https://bugs.launchpad.net/bugs/1387456)
+*@ACTM_NUMの不具合(#1416878：https://bugs.launchpad.net/bugs/1416878)
+*雛口上に於ける文字列変数への代入の誤り(#1417166：https://bugs.launchpad.net/bugs/1417166)
+
+
+_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+[2015-01-24 v1.0.12]
+https://launchpad.net/eratohoreverse/+milestone/1.012
+_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+
+Bug Fixes
+*********
+*@DAILY_LIFEに於ける無限ループ(#1414292：https://bugs.launchpad.net/bugs/1414292)
+
+
+_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+[2015-01-24 v1.0.11]
+https://launchpad.net/eratohoreverse/+milestone/1.011
+_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+
+Bug Fixes
+*********
+*アヌスフェラ(#1387481：https://bugs.launchpad.net/bugs/1387481)
+*関数@V_SEXの不具合(#1412902：https://bugs.launchpad.net/bugs/1412902)
+*パラメータのバー変動アニメのshapeタグが文字列で表示される(#1396591：https://bugs.launchpad.net/bugs/1396591)
+*SHOP画面のDRAWLINEがMASTERの文字色で出力される(#1404572：https://bugs.launchpad.net/bugs/1404572)
+*アリス口上REACT23の不具合(#1412133：https://bugs.launchpad.net/bugs/1412133)
+*@DAILY_LIFEに於ける範囲外エラー(#1413960：https://bugs.launchpad.net/bugs/1413960)
+*キャラ番号による指定に潜在的不具合を抱えた関数類(#1414114：https://bugs.launchpad.net/bugs/1414114)
+*好感度表示の不具合(#1404579：https://bugs.launchpad.net/bugs/1404579)
+*Ｖ性交中のACT_EXTRA(Ｖ愛撫)(#1404595：https://bugs.launchpad.net/bugs/1404595)[※1]
+
+Other Changes
+*************
+*#1404595 Ｖ性交中のACT_EXTRA(Ｖ愛撫) に関連するコード整理
+*#1412902 V_SEXの不具合修正に伴う口上類の修正
+*#1387481 アヌスフェラの修正に伴う修正
+	1.SOURCE_MESSAGE.ERBの修正
+	2.口上類の修正
+
+※1：Bug#1404595(https://bugs.launchpad.net/bugs/1404595)に関する追加情報がありましたら知らせてください
+
+
+_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+[2015-01-17 v1.0.10]
+https://launchpad.net/eratohoreverse/+milestone/1.010
+_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+
+New Features
+************
+*TCVAR絶頂系前回ターン参照用フラグの新設(https://blueprints.launchpad.net/eratohoreverse/+spec/flag)
+*開発情報のドキュメント類を新規追加
+*チュートリアル執筆者＆テスター募集のドキュメントを追加
+*バグ報告のガイドラインを追加
+*藍口上v2014.12.19を格納
+*アリス口上v1.74を格納
+*雛口上v1.11を格納
+*日常イベント口上テンプレートを追加
+*関数：@WAIT3_ZWEIの追加
+
+Improvements
+************
+*バージョン表記を変更。詳細はreadmeにて
+*全ファイルのエンコードをUTF-8(BOM付き)に変更
+*SOURCE_1, SOURCE_5の仕様変更(https://blueprints.launchpad.net/eratohoreverse/+spec/source)
+*EVENT_DAILY(日常)改変(https://blueprints.launchpad.net/eratohoreverse/+spec/system)
+*@SYSTEM_TITLEを定義し独自のタイトル画面に変更
+*セーブデータがある場合、起動初回の"ＮＥＷ ＧＡＭＥ"開始時点でもコンフィグが適用されるように変更
+*EXP:イカせ経験をEXP:イかせ経験に変更。変更に伴う各所の修正
+*TEQUIP:自慰中をGETBITで参照するように変更。それに伴う口上類及び各所の修正
+*fixed.config
+	1.セーブデータをUTF-8で保存するように変更。(エンコードの変更であってバイナリ化ではないことに注意)
+	2.一行の高さ17から16に変更
+
+Bug Fixes
+*********
+*フラン(助手)の日常会話にて名前が空文字列になる(#1396204：https://bugs.launchpad.net/bugs/1396204)
+*日常系イベント(#1387453：https://bugs.launchpad.net/bugs/1387453)
+*下手だと罵り心を許す(#1387457：https://bugs.launchpad.net/bugs/1387457)
+*抜かずに関する不具合(#1400865：https://bugs.launchpad.net/bugs/1400865)
+*SHOP画面からのロード時にデバッグモードが切り替わる(#1402066：https://bugs.launchpad.net/bugs/1402066)
+*精力上昇不具合(#1387447：https://bugs.launchpad.net/bugs/1387447)
+*口上が一瞬しか表示されない不具合(#1387464：https://bugs.launchpad.net/bugs/1387464)
+*イってなくてもイったばかり(#1387466：https://bugs.launchpad.net/bugs/1387466)
+*萎えさせちゃって(#1387468：https://bugs.launchpad.net/bugs/1387468)
+*おっぱいの小さいオトコあなた(#1387470：https://bugs.launchpad.net/bugs/1387470)
+*蓬莱が応答する(#1387472：https://bugs.launchpad.net/bugs/1387472)
+*膣内射精(#1387473：https://bugs.launchpad.net/bugs/1387473)
+*アナルセックス(#1387476：https://bugs.launchpad.net/bugs/1387476)
+*アリスお姉さん(#1387482：https://bugs.launchpad.net/bugs/1387482)
+*繋がったままの前の文字色(#1387483：https://bugs.launchpad.net/bugs/1387483)
+*拘束のSOURCEで痛みのSOURCEを参照している(#1397044：https://bugs.launchpad.net/bugs/1397044)
+*アイマスク中の相互自慰地の文(#1404577：https://bugs.launchpad.net/bugs/1404577)
+*誤字脱字関連(#1404587：https://bugs.launchpad.net/bugs/1404587)
+*日常イベントＡ性交時にMASTERの性交経験が処理されていない(#1404591：https://bugs.launchpad.net/bugs/1404591)
+*イきそう状態化の判定条件に関する不具合(#1408039：https://bugs.launchpad.net/bugs/1408039)
+*フェラ継続中の調教対象射精で刻印を取得できない不具合(#1409062：https://bugs.launchpad.net/bugs/1409062)
+*日常イベントで条件を満たしていても選択肢が表示されない(#1409241：https://bugs.launchpad.net/bugs/1409241)
+*助手変更エラー(#1387443：https://bugs.launchpad.net/bugs/1387443)
+*調教者変更エラー(#1387444：https://bugs.launchpad.net/bugs/1387444)
+*誤字(#1387484：https://bugs.launchpad.net/bugs/1387484)
+*MARK:反抗刻印 MARK:屈服刻印の参照の誤り(#1410894：https://bugs.launchpad.net/bugs/1410894)
+*@INFO_GAUGE_TRAINERの不具合(#1411657：https://bugs.launchpad.net/bugs/1411657)
+
+Other Changes
+*************
+*口上テンプレートの修正
+	1.日常イベント口上テンプレートを追加
+	2.ショップイベント口上テンプレートを追加
+	3.ディレクトリ構造を変更。本体の構造を反映したものに
+*会話系TRAIN_MESSAGE(地の文)の小修正
+*@AFFECTIONをキャラ番号指定が可能なように修正
+*@PRINT_KOJO_COLOR系の修正
+*@SATIS_BONUSを修正
+*一部関数のコメントの誤りを修正
+*大妖精口上に於いてEV111(調教者を雇った)、EV112(調教者として加入した)の箇所を修正
+*INFO_GAUGE.ERB内の細かな修正

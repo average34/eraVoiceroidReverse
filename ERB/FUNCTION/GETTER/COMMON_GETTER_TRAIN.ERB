@@ -1,0 +1,2440 @@
+﻿;==================================================
+;
+;	汎用関数置き場＠参照編
+;		参照に用い、特定の数値や名称などを返すもの
+;		あるいは、状況に応じた接頭語などを返すもの
+;
+;		口上向けのものもあったりなかったり。
+;
+;==================================================
+
+;==================================================
+;
+;	ACT・COM関連の参照
+;
+;==================================================
+
+;-------------------------------------------------
+;名称・番号対応系(旧名称での呼び出しも可能)
+;
+;○○LIST        対応関係リストを返す
+;GET_○○NAME    番号から名称を返す
+;GET_○○NUM     名称から番号を返す
+;NOW○○NAME     現在の名称を返す
+;IS_NOW○○NAME  現在の名称と合致すれば真を返す
+;PREV○○NAME    前回の名称を返す
+;IS_PREV○○NAME 前回の名称と合致すれば真を返す
+;-------------------------------------------------
+
+;-------------------------------------------------
+;MENU(調教類別)
+;-------------------------------------------------
+
+;対応関係リストを返す
+@MENULIST()
+#FUNCTIONS
+RETURNF "会話/愛撫/道具/性交/羞恥/奉仕/加虐/異常/使役/休憩/性奉"
+
+;番号から名称を返す
+@GET_MENUNAME(ARG)
+#FUNCTIONS
+RETURNF GET_NAME_LIST(ARG, MENULIST())
+
+@MENU(ARG)
+#FUNCTIONS
+RETURNF GET_MENUNAME(ARG)
+
+;名称から番号を返す
+@GET_MENUNUM(ARGS)
+#FUNCTION
+RETURNF GET_NUM_LIST(ARGS, MENULIST())
+
+@MENUNUM(ARGS)
+#FUNCTION
+RETURNF GET_MENUNUM(ARGS)
+
+;現在の名称を返す
+@NOWMENUNAME()
+#FUNCTIONS
+RETURNF GET_NAME_LIST(TFLAG:ACT分類, MENULIST())
+
+;現在の名称と合致すれば真を返す
+@IS_NOWMENUNAME(ARGS)
+#FUNCTION
+RETURNF IS_LIST(ARGS, MENULIST(), TFLAG:ACT分類)
+
+;前回の名称を返す
+@PREVMENUNAME()
+#FUNCTIONS
+RETURNF GET_NAME_LIST(TFLAG:前ACT分類, MENULIST())
+
+;前回の名称と合致すれば真を返す
+@IS_PREVMENUNAME(ARGS)
+#FUNCTION
+RETURNF IS_LIST(ARGS, MENULIST(), TFLAG:前ACT分類)
+
+;-------------------------------------------------
+;ACT(調教者行動)
+;-------------------------------------------------
+
+;対応関係リストを返す
+@ACTLIST()
+#FUNCTIONS
+IF LOCALS == ""
+	FOR LOCAL, 0, 800
+		LOCALS += STR:LOCAL
+		LOCALS += "/"
+	NEXT
+ENDIF
+RETURNF LOCALS
+
+;番号から名称を返す
+@GET_ACTNAME(ARG)
+#FUNCTIONS
+RETURNF GET_NAME_LIST(ARG, ACTLIST())
+
+;名称から番号を返す
+@GET_ACTNUM(ARGS)
+#FUNCTION
+RETURNF GET_NUM_LIST(ARGS, ACTLIST())
+
+;現在の名称を返す
+@NOWACTNAME()
+#FUNCTIONS
+RETURNF GET_NAME_LIST(TFLAG:ACT, ACTLIST())
+
+;現在の名称と合致すれば真を返す
+@IS_NOWACTNAME(ARGS)
+#FUNCTION
+RETURNF IS_LIST(ARGS, ACTLIST(), TFLAG:ACT)
+
+;前回の名称を返す
+@PREVACTNAME()
+#FUNCTIONS
+RETURNF GET_NAME_LIST(TFLAG:前ACT, ACTLIST())
+
+;前回の名称と合致すれば真を返す
+@IS_PREVACTNAME(ARGS)
+#FUNCTION
+RETURNF IS_LIST(ARGS, ACTLIST(), TFLAG:前ACT)
+
+;-------------------------------------------------
+;ACTABB(調教者行動略称)
+;※ACT略称は全角二文字(半角四文字)に統一した@これみ
+;-------------------------------------------------
+
+;対応関係リストを返す
+@ACTABBLIST()
+#FUNCTIONS
+IF LOCALS == ""
+	LOCALS += "気分/好意/知識/慰め/脅す/衣装/合意/仕置/怒鳴/嗤う/"
+	LOCALS += "手で/胸を/口で/Ａ手/Ａ口/キス/Ｃ擦/Ｂ擦/足で/Ｖ手/"
+	LOCALS += "ﾛｰﾀｰ/バイ/Aﾊﾞｲ/Aﾋﾞｰ/Ｃ愛/ﾆﾌﾟﾙ/Ｐ帯/押倒///"
+	LOCALS += "正常/後背/騎乗/対面/背面/ＡＳ/////"
+	LOCALS += "自慰/開帳/見せ/大鏡/野外/放尿/コス////"
+	LOCALS += "手で/口で/胸で/素股//足舐/イラ/胸を///"
+	LOCALS += "平手/むち/はり/なわ/目隠/口枷/罵倒/木馬/浣腸//"
+	LOCALS += "Fist/ＡFi/両Fi/放置/公衆/Ｐ装/////"
+	LOCALS += "触手//////////"
+	LOCALS += "休み/服薬/治療///Ｍ正/Ｍ後/Ｍ対/Ｍ背/ＭAS/"
+	LOCALS += "///Ｍ騎"
+ENDIF
+RETURNF LOCALS
+
+;番号から名称を返す
+@GET_ACTABBNAME(ARG)
+#FUNCTIONS
+RETURNF GET_NAME_LIST(ARG, ACTABBLIST())
+
+;名称から番号を返す
+@GET_ACTABBNUM(ARGS)
+#FUNCTION
+RETURNF GET_NUM_LIST(ARGS, ACTABBLIST())
+
+;現在の名称を返す
+@NOWACTABBNAME()
+#FUNCTIONS
+RETURNF GET_NAME_LIST(TFLAG:ACT, ACTABBLIST())
+
+;現在の名称と合致すれば真を返す
+@IS_NOWACTABBNAME(ARGS)
+#FUNCTION
+RETURNF IS_LIST(ARGS, ACTABBLIST(), TFLAG:ACT)
+
+;前回の名称を返す
+@PREVACTABBNAME()
+#FUNCTIONS
+RETURNF GET_NAME_LIST(TFLAG:前ACT, ACTABBLIST())
+
+;前回の名称と合致すれば真を返す
+@IS_PREVACTABBNAME(ARGS)
+#FUNCTION
+RETURNF IS_LIST(ARGS, ACTABBLIST(), TFLAG:前ACT)
+
+;-------------------------------------------------
+;ASSIMENU(助手方針)
+;-------------------------------------------------
+
+;対応関係リストを返す
+@ASSIMENULIST()
+#FUNCTIONS
+RETURNF "コンビネーション/Ｃ愛撫/Ａ愛撫/Ｂ愛撫/Ｖ愛撫/Ｍ愛撫/羞恥/加虐/その他"
+
+;番号から名称を返す
+@GET_ASSIMENUNAME(ARG)
+#FUNCTIONS
+RETURNF GET_NAME_LIST(ARG, ASSIMENULIST())
+
+;名称から番号を返す
+@GET_ASSIMENUNUM(ARGS)
+#FUNCTION
+RETURNF GET_NUM_LIST(ARGS, ASSIMENULIST())
+
+;ARGで助手番号を指定
+;引数を省略した場合はASSIを見る…
+;がまぁこっちは基本的に引数いれてつかってください
+
+;現在の名称を返す
+@NOWASSIMENUNAME(ARG = -99)
+#FUNCTIONS
+ARG = ASSI_ARG_SET(ARG, "NOWASSIMENUNAME")
+SIF ARG < 0
+	RETURNF ""
+RETURNF GET_NAME_LIST(TCVAR:ARG:助手ACT, ASSIMENULIST())
+
+;現在の名称と合致すれば真を返す
+@IS_NOWASSIMENUNAME(ARG = -99, ARGS)
+#FUNCTION
+ARG = ASSI_ARG_SET(ARG, "IS_NOWASSIMENUNAME")
+SIF ARG < 0
+	RETURNF 0
+RETURNF IS_LIST(ARGS, ASSIMENULIST(), TCVAR:ARG:助手ACT)
+
+;前回の名称を返す
+@PREVASSIMENUNAME(ARG = -99)
+#FUNCTIONS
+ARG = ASSI_ARG_SET(ARG, "PREVASSIMENUNAME")
+SIF ARG < 0
+	RETURNF ""
+RETURNF GET_NAME_LIST(TCVAR:ARG:助手前ACT, ASSIMENULIST())
+
+;前回の名称と合致すれば真を返す
+@IS_PREVASSIMENUNAME(ARG = -99, ARGS)
+#FUNCTION
+ARG = ASSI_ARG_SET(ARG, "IS_PREVASSIMENUNAME")
+SIF ARG < 0
+	RETURNF 0
+RETURNF IS_LIST(ARGS, ASSIMENULIST(), TCVAR:ARG:助手前ACT)
+
+;-------------------------------------------------
+;ASSIACT(助手行動)
+;-------------------------------------------------
+
+;対応関係リストを返す
+@ASSIACTLIST()
+#FUNCTIONS
+IF LOCALS == ""
+	FOR LOCAL, 800, 1000
+		LOCALS += STR:LOCAL
+		LOCALS += "/"
+	NEXT
+ENDIF
+RETURNF LOCALS
+
+;番号から名称を返す
+@GET_ASSIACTNAME(ARG)
+#FUNCTIONS
+RETURNF GET_NAME_LIST(ARG, ASSIACTLIST())
+
+;名称から番号を返す
+@GET_ASSIACTNUM(ARGS)
+#FUNCTION
+RETURNF GET_NUM_LIST(ARGS, ASSIACTLIST())
+
+;ARGで助手番号を指定
+;引数を省略した場合はASSIを見る…
+;がまぁこっちは基本的に引数いれてつかってください
+
+;現在の名称を返す
+@NOWASSIACTNAME(ARG = -99)
+#FUNCTIONS
+ARG = ASSI_ARG_SET(ARG, "NOWASSIACTNAME")
+SIF ARG < 0
+	RETURNF ""
+RETURNF GET_NAME_LIST(TCVAR:ARG:助手ACT, ASSIACTLIST())
+
+;現在の名称と合致すれば真を返す
+@IS_NOWASSIACTNAME(ARG = -99, ARGS)
+#FUNCTION
+ARG = ASSI_ARG_SET(ARG, "IS_NOWASSIACTNAME")
+SIF ARG < 0
+	RETURNF 0
+RETURNF IS_LIST(ARGS, ASSIACTLIST(), TCVAR:ARG:助手ACT)
+
+;前回の名称を返す
+@PREVASSIACTNAME(ARG = -99)
+#FUNCTIONS
+ARG = ASSI_ARG_SET(ARG, "PREVASSIACTNAME")
+SIF ARG < 0
+	RETURNF ""
+RETURNF GET_NAME_LIST(TCVAR:ARG:助手前ACT, ASSIACTLIST())
+
+;前回の名称と合致すれば真を返す
+@IS_PREVASSIACTNAME(ARG = -99, ARGS)
+#FUNCTION
+ARG = ASSI_ARG_SET(ARG, "IS_PREVASSIACTNAME")
+SIF ARG < 0
+	RETURNF 0
+RETURNF IS_LIST(ARGS, ASSIACTLIST(), TCVAR:ARG:助手前ACT)
+
+;-------------------------------------------------
+;COMGRO(調教対象行動分類)
+;-------------------------------------------------
+
+;対応関係リストを返す
+@COMGROLIST()
+#FUNCTIONS
+RETURNF "なし/消極的従う/平然と従う/積極的従う/受け入れる/許しを乞う/暴れる/拒否/逃げる"
+
+;番号から名称を返す
+@GET_COMGRONAME(ARG)
+#FUNCTIONS
+RETURNF GET_NAME_LIST(ARG, COMGROLIST())
+
+@COMGRONAME(ARG)
+#FUNCTIONS
+RETURNF GET_COMGRONAME(ARG)
+
+;名称から番号を返す
+@GET_COMGRONUM(ARGS)
+#FUNCTION
+RETURNF GET_NUM_LIST(ARGS, COMGROLIST())
+
+@COMGRONUM(ARGS)
+#FUNCTION
+RETURNF GET_COMGRONUM(ARGS)
+
+;現在の名称を返す
+@NOWCOMGRONAME()
+#FUNCTIONS
+RETURNF GET_NAME_LIST(TFLAG:REACT分類, COMGROLIST())
+
+;現在の名称と合致すれば真を返す
+@IS_NOWCOMGRONAME(ARGS)
+#FUNCTION
+RETURNF IS_LIST(ARGS, COMGROLIST(), TFLAG:REACT分類)
+
+@IS_COMGRONAME(ARGS)
+#FUNCTION
+RETURNF IS_NOWCOMGRONAME(ARGS)
+
+;前回の名称を返す
+@PREVCOMGRONAME()
+#FUNCTIONS
+RETURNF GET_NAME_LIST(TFLAG:前REACT分類, COMGROLIST())
+
+;前回の名称と合致すれば真を返す
+@IS_PREVCOMGRONAME(ARGS)
+#FUNCTION
+RETURNF IS_LIST(ARGS, COMGROLIST(), TFLAG:前REACT分類)
+
+;-------------------------------------------------
+;COMIMP(REACT印象)
+;-------------------------------------------------
+
+;対応関係リストを返す
+@COMIMPLIST()
+#FUNCTIONS
+RETURNF "影響なし/好印象大/好印象小/悪印象小/悪印象大/0から遠ざかる/0に近づく"
+
+;番号から名称を返す
+@GET_COMIMPNAME(ARG)
+#FUNCTIONS
+RETURNF GET_NAME_LIST(ARG, COMIMPLIST())
+
+@COMIMPNAME(ARG)
+#FUNCTIONS
+RETURNF GET_COMIMPNAME(ARG)
+
+;名称から番号を返す
+@GET_COMIMPNUM(ARGS)
+#FUNCTION
+RETURNF GET_NUM_LIST(ARGS, COMIMPLIST())
+
+@COMIMPNUM(ARGS)
+#FUNCTION
+RETURNF GET_COMIMPNUM(ARGS)
+
+;現在の名称を返す
+@NOWCOMIMPNAME()
+#FUNCTIONS
+RETURNF GET_NAME_LIST(TFLAG:REACT印象, COMIMPLIST())
+
+;現在の名称と合致すれば真を返す
+@IS_NOWCOMIMPNAME(ARGS)
+#FUNCTION
+RETURNF IS_LIST(ARGS, COMIMPLIST(), TFLAG:REACT印象)
+
+@IS_COMIMPNAME(ARGS)
+#FUNCTION
+RETURNF IS_NOWCOMIMPNAME(ARGS)
+
+;-------------------------------------------------
+;COM(調教対象行動)
+;-------------------------------------------------
+
+;対応関係リストを返す
+@COMLIST()
+#FUNCTIONS
+IF LOCALS == ""
+	FOR LOCAL, 0, 100
+		LOCALS += TRAINNAME:LOCAL
+		LOCALS += "/"
+	NEXT
+ENDIF
+RETURNF LOCALS
+
+;番号から名称を返す
+@GET_COMNAME(ARG)
+#FUNCTIONS
+RETURNF GET_NAME_LIST(ARG, COMLIST())
+
+;名称から番号を返す
+@GET_COMNUM(ARGS)
+#FUNCTION
+RETURNF GET_NUM_LIST(ARGS, COMLIST())
+
+;現在の名称を返す
+;TRAINNAME:SELECTCOMでも可能
+@NOWCOMNAME()
+#FUNCTIONS
+RETURNF GET_NAME_LIST(SELECTCOM, COMLIST())
+
+;現在の名称と合致すれば真を返す
+@IS_NOWCOMNAME(ARGS)
+#FUNCTION
+RETURNF IS_LIST(ARGS, COMLIST(), SELECTCOM)
+
+;前回の名称を返す
+;TRAINNAME:PREVCOMでも可能
+@PREVCOMNAME()
+#FUNCTIONS
+RETURNF GET_NAME_LIST(PREVCOM, COMLIST())
+
+;前回の名称と合致すれば真を返す
+@IS_PREVCOMNAME(ARGS)
+#FUNCTION
+RETURNF IS_LIST(ARGS, COMLIST(), PREVCOM)
+
+;-------------------------------------------------
+;COMCOR(COM補正値)
+;-------------------------------------------------
+
+;対応関係リストを返す
+@COMCORLIST()
+#FUNCTIONS
+RETURNF "積極/反抗/活気/根気/好意/愛想/堕落"
+
+;番号から名称を返す
+@GET_COMCORNAME(ARG)
+#FUNCTIONS
+RETURNF GET_NAME_LIST(ARG, COMCORLIST())
+
+;名称から番号を返す
+@GET_COMCORNUM(ARGS)
+#FUNCTION
+RETURNF GET_NUM_LIST(ARGS, COMCORLIST())
+
+;-------------------------------------------------
+;共通処理
+;-------------------------------------------------
+@ASSI_ARG_SET(ARG, ARGS)
+#FUNCTION
+ARG = (ARG == -99 ? ASSI # ARG)
+RETURNF ARG
+
+;-------------------------------------------------
+;関数名:GET_NAME_LIST
+;概　要:LISTを利用し番号から名称を取得する関数
+;引　数:ARG…番号, ARGS…LIST
+;戻り値:名称
+;-------------------------------------------------
+@GET_NAME_LIST(ARG, ARGS)
+#FUNCTIONS
+#LOCALSSIZE 1000
+;リストを分解
+SPLIT ARGS, "/", LOCALS, LOCAL
+;番号が範囲内であることを確認
+IF ARG < 0 || ARG >= LOCAL
+	;CALLF PRINT_ERRORMESSAGE(@"@GET_NAME_LIST に範囲外の番号({ARG})が渡されました")
+	RETURNF 
+ENDIF
+;名称を返す
+RETURNF LOCALS:ARG
+
+;-------------------------------------------------
+;関数名:GET_NUM_LIST
+;概　要:LISTを利用し名称から番号を取得する関数
+;引　数:ARGS…名称, ARGS:1…LIST
+;戻り値:番号
+;-------------------------------------------------
+@GET_NUM_LIST(ARGS, ARGS:1)
+#FUNCTION
+#LOCALSSIZE 1000
+;リストを分解
+SPLIT ARGS:1, "/", LOCALS, LOCAL
+;名称が存在することを確認
+LOCAL = FINDELEMENT(LOCALS, ARGS, 0, LOCAL, 1)
+SIF LOCAL == -1
+	CALLF PRINT_ERRORMESSAGE(@"@GET_NUM_LIST に不正な名称(%ARGS%)が渡されました")
+;番号を返す
+RETURNF LOCAL
+
+;-------------------------------------------------
+;関数名:IS_LIST
+;概　要:調査リストに名称と合致するものがあれば真を返す
+;       同時に名称リストに合致しなければエラーを吐く
+;引　数:ARGS…調査リスト(/区切りで複数代入が可能です)
+;       ARGS:1…名称リスト, ARGS:2…名称
+;戻り値:真偽値(1/0)
+;-------------------------------------------------
+@IS_LIST(ARGS, ARGS:1, ARG)
+#FUNCTION
+#LOCALSSIZE 1000
+#DIMS LTEMPS, 10
+;調査リストを分解
+SPLIT ARGS, "/", LTEMPS, LOCAL:1
+;名称リストを分解
+SPLIT ARGS:1, "/", LOCALS, LOCAL:2
+;調査リストを順に見ていく
+FOR LOCAL, 0, LOCAL:1
+	;名称リストから番号を取得
+	SELECTCASE FINDELEMENT(LOCALS, LTEMPS:LOCAL, 0, LOCAL:2, 1)
+		;名称が存在することを確認
+		CASE -1
+			CALLF PRINT_ERRORMESSAGE(@"@IS_LIST に不正な名称(%LTEMPS:LOCAL%)が渡されました")
+			RETURNF -1
+		;適合すれば真を返す
+		CASE ARG
+			RETURNF 1
+	ENDSELECT
+NEXT
+RETURNF 0
+
+;-------------------------------------------------
+;関数名:MENUMATCH
+;概　要:ARGで指定したACT番号がARGSで指定したACT分類に含まれているかを返す
+;引　数:ARG…ACT番号、ARGS…ACT分類
+;戻り値:含まれれば1、含まれなければ0
+;-------------------------------------------------
+@MENUMATCH(ARG, ARGS)
+#FUNCTION
+#LOCALSIZE 1
+#DIM LCOUNT, 1
+LOCAL = MENUNUM(ARGS)
+FOR LCOUNT, 0, ACTM_NUM(LOCAL)
+	SIF ACTM_NUM(LOCAL, LCOUNT) == GET_NORMALACTNUM(ARG)
+		RETURNF 1
+NEXT
+RETURNF 0
+
+;-------------------------------------------------
+;関数名:ACTM_NUM
+;概　要:系列番号から系列所属ACT番号を返す関数
+;引　数:ARG:0…対象となる系列番号
+;       ARG:1…-1であれば所属ACT数、0以降所属ACT番号を順番に返す
+;戻り値:所属ACT数、ACT番号
+;-------------------------------------------------
+@ACTM_NUM(ARG:0, ARG:1 = -1)
+#FUNCTION
+#LOCALSIZE 20
+;LOCALを-1に初期化
+VARSET LOCAL, -1
+SELECTCASE ARG:0
+	CASE 0
+		LOCAL = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 66
+	CASE 1
+		LOCAL = 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 27
+	CASE 2
+		LOCAL = 20, 21, 22, 23, 24, 25, 26, 68
+	CASE 3
+		LOCAL = 30, 31, 32, 33, 34, 35
+	CASE 4
+		LOCAL = 40, 41, 42, 43, 44, 45, 46, 73
+	CASE 5
+		LOCAL = 50, 51, 52, 53, 55, 56, 57
+	CASE 6
+		LOCAL = 60, 61, 62, 63, 64, 65, 66, 67, 68, 56
+	CASE 7
+		LOCAL = 70, 71, 72, 73, 74, 75, 9, 18, 55, 67
+	CASE 9
+		LOCAL = 90, 91, 92
+	CASE 10
+		LOCAL = 95, 96, 103, 97, 98, 99
+ENDSELECT
+;ARG:1が負なら所属ACT数
+SIF ARG:1 < 0
+	RETURNF FINDELEMENT(LOCAL, -1)
+;ARG:1が正ならACT番号
+SIF ARG:1 < VARSIZE("LOCAL")
+	RETURNF LOCAL:(ARG:1)
+;どちらにも合わなければ-1を返す
+RETURNF -1
+
+;-------------------------------------------------
+;関数名:ACTMNAME_NUM
+;概　要:系列名称から系列所属ACT番号を返す関数
+;引　数:ARGS:0…対象となる系列名称、あるいは系列番号を表す文字列
+;        ARG:0…-1であれば所属ACT数、0以降所属ACT番号を順番に返す
+;戻り値:所属ACT数、ACT番号
+;-------------------------------------------------
+@ACTMNAME_NUM(ARGS:0, ARG:0 = -1)
+#FUNCTION
+RETURNF ACTM_NUM(ISNUMERIC(ARGS:0) ? TOINT(ARGS:0) # MENUNUM(ARGS:0), ARG:0)
+
+;-------------------------------------------------
+;関数名:GET_ACTM
+;概　要:ACT番号からACT分類番号を取得する関数
+;引　数:ARG…ACT番号
+;戻り値:ACT分類番号
+;備　考:未登録の番号だと-1が返る
+;-------------------------------------------------
+@GET_ACTM, ARG
+#FUNCTION
+#DIM LCOUNT, 2
+ARG = GET_NORMALACTNUM(ARG)
+FOR LCOUNT, 0, 11
+	FOR LCOUNT:1, 0, ACTM_NUM(LCOUNT, -1)
+		SIF ARG == ACTM_NUM(LCOUNT, LCOUNT:1)
+			RETURNF LCOUNT
+	NEXT
+NEXT
+RETURNF -1
+
+;-------------------------------------------------
+;関数名:GET_COMBIACTNUM
+;概　要:ACT番号からコンビネーションACT番号あるいはその逆を取得する関数
+;引　数:ARG…ACT番号
+;戻り値:ACT番号
+;備　考:派生条件を満たしてない場合は-1を返す
+;	    また、この関数自体に派生をさせる処理はないのにも注意
+;-------------------------------------------------
+@GET_COMBIACTNUM, ARG
+#FUNCTION
+SELECTCASE ARG
+	;Ｗ手淫/手で愛撫
+	CASE 10
+		SIF PENIS(MASTER)
+			RETURNF 300
+	CASE 300
+		RETURNF 10
+	;Ｗフェラ/口で愛撫
+	CASE 12
+		SIF PENIS(MASTER)
+			RETURNF 301
+	CASE 301
+		RETURNF 12
+	;Ｗキス/キス
+	CASE 15
+		RETURNF 302
+	CASE 302
+		RETURNF 15
+	;Ｗ素股/性器を擦り合う
+	CASE 16
+		SIF PENIS(MASTER)
+			RETURNF 303
+	CASE 303
+		RETURNF 16
+	;Ｗパイズリ/パイズリする
+	CASE 17
+		SIF PENIS(MASTER) && !GET_TALENT(ASSI:1, "オトコ")
+			RETURNF 304
+	CASE 304
+		RETURNF 17
+	;Ｗ足コキ/足コキする
+	CASE 18
+		SIF PENIS(MASTER)
+			RETURNF 305
+	CASE 305
+		RETURNF 18
+	;騎乗二穴攻め/騎乗位
+	CASE 32
+		SIF PENIS(ASSI:1) && !TALENT:MASTER:オトコ && ABL:MASTER:Ａ感覚 > 1
+			RETURNF 306
+	CASE 306
+		RETURNF 32
+	;対面二穴攻め/対面座位
+	CASE 33
+		SIF PENIS(ASSI:1) && !TALENT:MASTER:オトコ && ABL:MASTER:Ａ感覚 > 1
+			RETURNF 307
+	CASE 307
+		RETURNF 33
+	;変則乱れ牡丹/背面座位
+	CASE 34
+		RETURNF 308
+	CASE 308
+		RETURNF 34
+	;アナル二穴攻め/アナルセックス
+	CASE 35
+		SIF PENIS(ASSI:1) && !TALENT:MASTER:オトコ && !TALENT:MASTER:処女
+			RETURNF 309
+	CASE 309
+		RETURNF 35
+	;Ｗ逆レイプ/逆レイプ
+	CASE 103
+		SIF PENIS(MASTER) && !GET_TALENT(ASSI:1, "オトコ")
+			RETURNF 310
+	CASE 310
+		RETURNF 103
+	;谷渡り/正常位
+	CASE 95
+		SIF PENIS(MASTER) && !GET_TALENT(ASSI:1, "オトコ")
+			RETURNF 311
+	CASE 311
+		RETURNF 95
+	;二本舐め強制/口で愛撫を強制
+	CASE 51
+		SIF PENIS(TARGET) && PENIS(ASSI:1)
+			RETURNF 312
+	CASE 312
+		RETURNF 51
+ENDSELECT
+RETURNF -1
+
+;-------------------------------------------------
+;関数名:GET_COMBIACTNAME
+;概　要:ACT名称からコンビネーションACT名称あるいはその逆を取得する関数
+;引　数:ARGS…ACT名称
+;戻り値:ACT名称
+;備　考:派生条件を満たしてない場合は "ＮＯＮＥ"を返す
+;	    また、この関数自体に派生をさせる処理はないのにも注意
+;-------------------------------------------------
+@GET_COMBIACTNAME, ARGS
+#FUNCTIONS
+RETURNF GET_ACTNAME(GET_COMBIACTNUM(GET_ACTNUM(ARGS)))
+
+;-------------------------------------------------
+;関数名:GET_SPACTNUM
+;概　要:ACT番号からSPアクション番号あるいはその逆を取得する関数
+;引　数:ARG…ACT番号
+;戻り値:ACT番号
+;備　考:派生条件を満たしてない場合は-1を返す
+;	    また、この関数自体に派生をさせる処理はないのにも注意
+;-------------------------------------------------
+@GET_SPACTNUM, ARG
+#FUNCTION
+SELECTCASE ARG
+	;針/パスウェイジョンニードル
+	CASE 62
+		SIF NO:TARGET == 1 && CFLAG:調教レベル > 0
+			RETURNF 200
+	CASE 200
+		RETURNF 62
+	;縄で緊縛/八方鬼縛陣
+	CASE 63
+		SIF NO:TARGET == 1 && ABL:技巧 > 2
+			RETURNF 201
+	CASE 201
+		RETURNF 63
+	;不気味に微笑む/狂気の瞳
+	CASE 9
+		SIF NO:TARGET == 28 && ABL:異常 > 1
+			RETURNF 202
+	CASE 202
+		RETURNF 9
+ENDSELECT
+RETURNF -1
+
+;-------------------------------------------------
+;関数名:GET_SPACTNAME
+;概　要:ACT名称からコンビネーションACT名称あるいはその逆を取得する関数
+;引　数:ARGS…ACT名称
+;戻り値:ACT名称
+;備　考:派生条件を満たしてない場合は "ＮＯＮＥ"を返す
+;	    また、この関数自体に派生をさせる処理はないのにも注意
+;-------------------------------------------------
+@GET_SPACTNAME, ARGS
+#FUNCTIONS
+RETURNF GET_ACTNAME(GET_SPACTNUM(GET_ACTNUM(ARGS)))
+
+;-------------------------------------------------
+;関数名:GET_NORMALACTNUM
+;概　要:コンビネーション、ＳＰアクション番号から派生前ACT番号を取得する関数
+;引　数:ARG…ACT番号
+;戻り値:ACT番号
+;備　考:変化したACT番号を元に戻すもの。もともと派生していない場合はそのまま返すので判定に使う
+;　　　派生元が不明なACT番号はそのまま返す
+;-------------------------------------------------
+@GET_NORMALACTNUM, ARG
+#FUNCTION
+;300番台, 助手とのコンビネーション
+IF ARG/100 == 3 && GET_COMBIACTNUM(ARG) >= 0
+	RETURNF GET_COMBIACTNUM(ARG)
+;200番台, ＳＰアクション
+ELSEIF ARG/100 == 2 && GET_SPACTNUM(ARG) >= 0
+	RETURNF GET_SPACTNUM(ARG)
+ENDIF
+RETURNF ARG
+
+;-------------------------------------------------
+;関数名:GET_COMCOR
+;概　要:補正種別のCOM補正値を取得（＆保存）
+;引　数:ARGS…COM補正種名
+;　　　 ARG …記入した場合、その補正種の数値を記録
+;戻り値:指定したCOM補正種の補正値
+;-------------------------------------------------
+@GET_COMCOR(ARGS, ARG = -65535)
+#FUNCTION
+IF GET_COMCORNUM(ARGS) < 0
+	CALLF PRINT_ERRORMESSAGE(@"@GET_COMCOR に無効なCOM補正値名(%ARGS%)が渡されました")
+	RETURNF -1
+ENDIF
+SIF ARG != -65535
+	LOCAL:GET_COMCORNUM(ARGS) = ARG
+RETURNF LOCAL:GET_COMCORNUM(ARGS)
+
+;-------------------------------------------------
+;関数名:GET_COMCORTYPE
+;概　要:COM好意計算タイプを取得
+;引　数:ARG …ACT番号。省略すると現在のACT
+;戻り値:指定したACTの好意計算タイプ（文字列）
+;-------------------------------------------------
+@GET_COMCORTYPE(ARG = -1)
+#FUNCTIONS
+ARG = ARG != -1 ? ARG # TFLAG:ACT
+IF GET_ACTNAME(GET_NORMALACTNUM(ARG)) == "騎乗位"
+	RETURNF "行為"
+ELSEIF GET_ACTNAME(GET_NORMALACTNUM(ARG)) == "逆レイプ"
+	RETURNF "我慢"
+ELSEIF MENUMATCH(ARG, "性交") 
+	RETURNF "我慢"
+ELSEIF MENUMATCH(ARG, "性奉") 
+	RETURNF "行為"
+ELSEIF GET_ACTNAME(ARG) == "自慰"
+	RETURNF "我慢"
+ELSEIF GET_ACTNAME(ARG) == "胸愛撫" && TFLAG:ACT派生 == 2
+	RETURNF "行為"
+ELSEIF MENUMATCH(ARG, "愛撫")
+	RETURNF "我慢"
+ELSEIF MENUMATCH(ARG, "道具")
+	RETURNF "我慢"
+ELSEIF MENUMATCH(ARG, "奉仕")
+	RETURNF "行為"
+ENDIF
+RETURNF "屈服"
+
+;-------------------------------------------------
+;関数名:COMCOR_POSI
+;概　要:主に消極的従う系COMの気力消費が大きい際に、COM補正値が好意的かどうかを判断
+;　　　 「嫌々やっている」のか「やりたいのを我慢している」のか参照するために用いる
+;引　数:ARGS…行為(愛撫強制→消極的やる等)、我慢(愛撫→快感を我慢する等)、屈服(合意を求める→気弱く答える等)
+;　　　 省略すると現在のACT分類から自動生成する
+;戻り値:行為なら積極+愛想＞反抗*2　我慢なら好意+堕落＞反抗+活気　屈服なら好意+愛想＞反抗+根気であれば1。違うなら0
+;-------------------------------------------------
+@COMCOR_POSI(ARGS)
+#FUNCTION
+ARGS = \@ ARGS == "" ? %GET_COMCORTYPE()% # %ARGS% \@
+SELECTCASE ARGS
+	CASE "行為"
+		RETURNF GET_COMCOR("積極") + GET_COMCOR("愛想") > GET_COMCOR("反抗") * 2
+	CASE "我慢"
+		RETURNF GET_COMCOR("好意") + GET_COMCOR("堕落") > GET_COMCOR("反抗") + GET_COMCOR("活気")
+	CASE "屈服"
+		RETURNF GET_COMCOR("好意") + GET_COMCOR("愛想") > GET_COMCOR("反抗") + GET_COMCOR("根気")
+ENDSELECT
+RETURNF 0
+
+;-------------------------------------------------
+;関数名:GET_COMEFFORT
+;引　数:ARGS …COM名称
+;戻り値:指定したCOMのREACT負荷
+;-------------------------------------------------
+@GET_COMEFFORT(ARGS)
+#FUNCTION
+RETURNF !COM_VITALITY("順位低", ARGS) ? 0 # (COM_VITALITY(, ARGS) >= 100)+1
+
+;-------------------------------------------------
+;関数名:GET_ASSIACTMATCH
+;概　要:助手ACT名称からその助手ACTを実行している助手番号を取得する関数
+;引　数:ARGS…助手ACT名称
+;戻り値:助手番号（0～3）　その行動をした助手が居なかった場合は0
+;備　考:ASSI:1の1が助手番号。本来ASSI:0は行動中の助手を指すが、
+;	　　ここでの戻り値0は指定した行動をとった助手がいないことを表す
+;	　　同じ行動をとった助手が複数いる場合は、番号の若い方を優先する
+;-------------------------------------------------
+@GET_ASSIACTMATCH, ARGS
+#FUNCTION
+#DIM LCOUNT, 1
+;ひとまず助手の数は３人までとする
+FOR LCOUNT, 1, 4
+	SIF ASSI:LCOUNT >= 0 && TCVAR:(ASSI:LCOUNT):助手ACT == GET_ASSIACTNUM(ARGS)
+		RETURNF LCOUNT
+NEXT
+;ヒットしなかったら0で戻る
+RETURNF 0
+
+;-------------------------------------------------
+;性交主導権取得関数@SEX_INITIATIVE
+;式中で使用する関数です。現在の性交で主に腰を振っているキャラの登録番号（性交が発生してないなら-1）を返します。
+;引数にキャラ登録番号を与えた場合、そのキャラに主導権があれば真になります。
+;-------------------------------------------------
+@SEX_INITIATIVE(ARG = -2)
+#FUNCTION
+#DIM LCOUNT, 1
+LOCAL = -1
+IF 0
+;ACTによる判定
+ELSEIF GET_ACTNAME(GET_NORMALACTNUM(TFLAG:ACT)) == "騎乗位"
+	LOCAL = MASTER
+ELSEIF GET_ACTNAME(GET_NORMALACTNUM(TFLAG:ACT)) == "逆レイプ"
+	LOCAL = TARGET
+ELSEIF MENUMATCH(TFLAG:ACT, "性交") 
+	LOCAL = TARGET
+ELSEIF MENUMATCH(TFLAG:ACT, "性奉") 
+	LOCAL = MASTER
+;TEQUIPによる判定
+ELSEIF TEQUIP:性交中 == 3
+	LOCAL = MASTER
+ELSEIF TEQUIP:性交奉仕中 == 3
+	LOCAL = TARGET
+ELSEIF TEQUIP:性交中
+	LOCAL = TARGET
+ELSEIF TEQUIP:性交奉仕中
+	LOCAL = MASTER
+ENDIF
+;現在助手とのセックスは、助手側が攻め（通常性交・逆レイプ）でしか発生しない。体位の概念もない
+IF LOCAL == -1
+	FOR LCOUNT, 1, 3
+		IF ASSI:LCOUNT >= 0
+			;助手ACTによる判定
+			IF GROUPMATCH(TCVAR:(ASSI:LCOUNT):助手ACT, GET_ASSIACTNUM("性交"), GET_ASSIACTNUM("逆レイプ"))
+				LOCAL = ASSI:LCOUNT
+			;TEQUIPによる判定
+			ELSEIF TEQUIP:助手性交中 == ASSI:LCOUNT || TEQUIP:助手性交奉仕中 == ASSI:LCOUNT
+				LOCAL = ASSI:LCOUNT
+			ENDIF
+		ENDIF
+	NEXT
+ENDIF
+RETURNF ARG == -2 ? LOCAL # ARG == LOCAL
+
+;-------------------------------------------------
+;体位判定関数@POSITION
+;式中で使用する関数です。引数をTFLAG:90(ACT)とした場合の体位をTEQUIP:性交中/TEQUIP:性交奉仕中準拠で返します
+;-------------------------------------------------
+@POSITION(ARG)
+#FUNCTION
+SELECTCASE ARG
+	;正常位/後背位/騎乗位/対面座位/背面座位/アナルセックス
+	CASE 30 TO 35
+		RETURNF ARG - 29
+	;逆レイプ
+	CASE 103
+		RETURNF 3
+	;正常位させる/後背位させる
+	CASE 95, 96
+		RETURNF ARG - 94
+	;対面座位させる/背面座位させる/アナルセックスさせる
+	CASE 97 TO 99
+		RETURNF ARG - 93
+ENDSELECT
+RETURNF 0
+
+;-------------------------------------------------
+;Ｖ挿入判定関数@V_SEX
+;式中で使用する関数です。引数のキャラがＶに挿入中なら真（返り値は体位値）になります。
+;現在性交中・性交奉仕中の参照だけなので、TARGETとMASTER以外は弾きます
+;省略するとTARGETの挿入、つまり性交中を参照します。
+;-------------------------------------------------
+@V_SEX(ARG = -2)
+#FUNCTION
+ARG = ARG == MASTER ? MASTER # TARGET
+SIF ARG == TARGET
+	RETURNF INRANGE(TEQUIP:性交中, 1, 5) ? TEQUIP:性交中 # 0
+SIF ARG == MASTER
+	RETURNF INRANGE(TEQUIP:性交奉仕中, 1, 5) ? TEQUIP:性交奉仕中 # 0
+RETURNF 0
+
+;-------------------------------------------------
+;Ａ挿入判定関数@A_SEX
+;式中で使用する関数です。引数のキャラがＡに挿入中なら真（返り値は体位値）になります。
+;現在性交中・性交奉仕中の参照だけなので、TARGETとMASTER以外は弾きます
+;省略するとTARGETの挿入、つまり性交中を参照します。
+;-------------------------------------------------
+@A_SEX(ARG = -2)
+#FUNCTION
+ARG = ARG == MASTER ? MASTER # TARGET
+SIF ARG == TARGET
+	RETURNF TEQUIP:性交中 == 6 ? TEQUIP:性交中 # 0
+SIF ARG == MASTER
+	RETURNF TEQUIP:性交奉仕中 == 6 ? TEQUIP:性交奉仕中 # 0
+RETURNF 0
+
+;-------------------------------------------------
+;前ターンＶ挿入判定関数@PREV_V_SEX
+;式中で使用する関数です。引数のキャラが前ターンでＶに挿入中なら真（返り値は体位値）になります。
+;前ターンの性交中・性交奉仕中の参照だけなので、TARGETとMASTER以外は弾きます
+;省略するとTARGETの挿入、つまり前ターン性交を参照します。
+;-------------------------------------------------
+@PREV_V_SEX(ARG = -2)
+#FUNCTION
+ARG = ARG == MASTER ? MASTER # TARGET
+SIF ARG == TARGET
+	RETURNF INRANGE(TFLAG:前ターン性交, 1, 5) ? TFLAG:前ターン性交 # 0
+SIF ARG == MASTER
+	RETURNF INRANGE(TFLAG:前ターン性交奉仕, 1, 5) ? TFLAG:前ターン性交奉仕 # 0
+RETURNF 0
+
+;-------------------------------------------------
+;前ターンＡ挿入判定関数@PREV_A_SEX
+;式中で使用する関数です。引数のキャラが前ターンでＡに挿入中なら真（返り値は体位値）になります。
+;前ターンの性交中・性交奉仕中の参照だけなので、TARGETとMASTER以外は弾きます
+;省略するとTARGETの挿入、つまり前ターン性交を参照します。
+;-------------------------------------------------
+@PREV_A_SEX(ARG = -2)
+#FUNCTION
+ARG = ARG == MASTER ? MASTER # TARGET
+SIF ARG == TARGET
+	RETURNF TFLAG:前ターン性交 == 6 ? TFLAG:前ターン性交 # 0
+SIF ARG == MASTER
+	RETURNF TFLAG:前ターン性交奉仕 == 6 ? TFLAG:前ターン性交奉仕 # 0
+RETURNF 0
+
+;-------------------------------------------------
+;関数名:PLEASURE_CHECK
+;概　要:快感チェック関数
+;引　数:ARG…真ならMASTERの技量
+;            偽ならTARGETの技量(省略時はTARGET)
+;戻り値:真なら愛撫で全然感じなかったことを表す
+;備  考:式中関数
+;愛撫の巧拙を判定する関数のつもり
+;COM12を参考にしているが、独自の改造を施したので
+;何かおかしいかもしれない。参考程度に…
+;-------------------------------------------------
+@PLEASURE_CHECK(ARG)
+#FUNCTION
+#LOCALSIZE 2
+;MASTERがTARGETに与える快感をチェック
+IF ARG
+	;TARGETの抵抗度合い
+	LOCAL:0 = 20 + TALENT:プライド高い * 5 + TALENT:気丈 * 5 - (CFLAG:好意 / 200)
+	;TARGETの受けた快感
+	LOCAL:1 = SOURCE:快Ｃ * (1 + TALENT:Ｃ敏感) + SOURCE:快Ｖ * (1 + TALENT:Ｖ敏感) + SOURCE:快Ａ * (1 + TALENT:Ａ敏感) + SOURCE:快Ｂ * (1 + TALENT:Ｂ敏感)
+	LOCAL:0 -= LOCAL:1 / (500 - TALENT:快感に素直 * 100 + TALENT:快感の否定 * 50)
+;TARGETがMASTERに与える快感をチェック
+ELSE
+	;MASTERの抵抗度合い
+	LOCAL:0 = 20 + TALENT:MASTER:プライド高い * 5 + TALENT:MASTER:気丈 * 5 + MARK:反抗刻印 + PALAM:MASTER:反抗 / 500 - GET_ABL(MASTER, "従順") * 3 / 10 - CFLAG:MASTER:調教レベル
+	;MASTERの受けた快感
+	LOCAL:1 = SOURCE:MASTER:快Ｃ * (1 + TALENT:MASTER:Ｃ敏感) + SOURCE:MASTER:快Ｖ * (1 + TALENT:MASTER:Ｖ敏感) + SOURCE:MASTER:快Ａ * (1 + TALENT:MASTER:Ａ敏感) + SOURCE:MASTER:快Ｂ * (1 + TALENT:MASTER:Ｂ敏感)
+	LOCAL:0 -= LOCAL:1 / (500 - TALENT:MASTER:快感に素直 * 100 + TALENT:MASTER:快感の否定 * 50)
+ENDIF
+RETURNF LOCAL:0 > 0
+
+;-------------------------------------------------
+;関数名:CARESS_SPOT
+;概　要:愛撫個所関数
+;引　数:ARG:0…キャラ登録番号。省略するとTARGET
+;戻り値:そのキャラがMASTERのどこを愛撫しているか
+;       (0.してない/1.Ｃ/2.Ｖ/3.Ａ/4.Ｂ/5.口)
+;備  考:式中関数
+;指定したキャラがどこを愛撫しているかを表示。自慰対応
+;-------------------------------------------------
+@CARESS_SPOT(ARG = -2)
+#FUNCTION
+ARG = ARG != -2 ? ARG # TARGET
+
+SELECTCASE ARG
+	;調教者の場合
+	CASE TARGET
+		SIF MC_PLAYER() == 2 || GROUPMATCH(TFLAG:90, 62, 67)
+			RETURNF 1
+		SIF MV_PLAYER() == 2
+			RETURNF 2
+		SIF MA_PLAYER() == 2 || GROUPMATCH(TFLAG:90, 60, 61, 68)
+			RETURNF 3
+		SIF MB_PLAYER() == 2 || GROUPMATCH(TFLAG:90, 63)
+			RETURNF 4
+		SIF GROUPMATCH(TFLAG:90, 15, 51, 55, 56, 64, 65) || TEQUIP:顔面騎乗 || TEQUIP:顔面騎乗アナル
+			RETURNF 5
+		RETURNF 0
+	;調教対象の場合
+	CASE MASTER
+		SIF MC_PLAYER() == 1
+			RETURNF 1
+		SIF MV_PLAYER() == 1
+			RETURNF 2
+		SIF MA_PLAYER() == 1
+			RETURNF 3
+		SIF MB_PLAYER() == 1
+			RETURNF 4
+		RETURNF 0
+	;助手1の場合
+	CASE ASSI:1
+		SELECTCASE TCVAR:(ASSI:1):助手ACT
+			CASE 1, 3, 4, 5, 6, 7
+				RETURNF 1
+			CASE 30, 31, 32
+				RETURNF 2
+			CASE 10, 11, 12, 13, 14
+				RETURNF 3
+			CASE 20, 21, 22
+				RETURNF 4
+			CASE 40, 41, 42, 60
+				RETURNF 5
+			CASEELSE
+				RETURNF 0
+		ENDSELECT
+	;助手2の場合
+	CASE ASSI:2
+		SELECTCASE TCVAR:(ASSI:2):助手ACT
+			CASE 1, 3, 4, 5, 6, 7
+				RETURNF 1
+			CASE 30, 31, 32
+				RETURNF 2
+			CASE 10, 11, 12, 13, 14
+				RETURNF 3
+			CASE 20, 21, 22
+				RETURNF 4
+			CASE 40, 41, 42, 60
+				RETURNF 5
+			CASEELSE
+				RETURNF 0
+		ENDSELECT
+ENDSELECT
+
+
+;-------------------------------------------------
+;関数名:MC_PLAYER
+;概　要:Ｃ愛撫者/愛撫物判定関数
+;引　数:ARG…真なら愛撫している物が何であるかを返す
+;            偽なら愛撫している人が誰なのかを返す。複数存在する場合は調教者優先
+;戻り値:物の場合→0.なし/1.口/2.手/3.ペニス/4.ヴァギナ/5.アナル/6.胸/7.足/8.膣口
+;                 /90.触手
+;                 /100.ローター/112.クリキャップ/114.オナホール
+;       人の場合→0.なし/1.調教対象自身/2.調教者/4.助手1/8.助手2/16.助手３
+;                 /64.道具/128.便所利用者
+;備  考:式中関数
+;仕様を整理して作り直した、新しい愛撫者/愛撫物判定関数
+;リアクション口上や絶頂口上での使用を想定している
+;-------------------------------------------------
+@MC_PLAYER(ARG)
+#FUNCTION
+#LOCALSIZE 1
+;TEQUIPによる判定1(優先度高)
+;アナルセックスさせる
+SIF TEQUIP:性交奉仕中 == 6
+	RETURNF ARG ? 5 # 2
+;性交奉仕中(アナルセックス以外)
+SIF TEQUIP:性交奉仕中
+	RETURNF ARG ? 4 # 2
+;クリキャップ
+SIF TEQUIP:クリキャップ && ARG
+	RETURNF 112
+;オナホール
+SIF TEQUIP:オナホール && ARG
+	RETURNF 114
+;ペニスバンド
+SIF TEQUIP:ペニスバンド && ARG
+	RETURNF 103
+
+;調教者アクションによる判定1(優先度高)
+SELECTCASE TFLAG:ACT
+	;手で愛撫/対面座位/背面座位/秘貝開帳
+	CASE 10, 33, 34, 41
+		RETURNF ARG ? 2 # 2
+	;口で愛撫
+	CASE 12
+		RETURNF ARG ? 1 # 2
+	;性器を擦り合う
+	CASE 16
+		RETURNF ARG ? 8 # 2
+	;パイズリする
+	CASE 17
+		RETURNF ARG ? 6 # 2
+	;足コキする
+	CASE 18
+		RETURNF ARG ? 7 # 2
+	;ローター
+	CASE 20
+		RETURNF ARG ? 100 # 2
+	;素股
+	CASE 53
+		;命令に従った場合のみ
+		SIF !IS_COMGRONAME("拒否")
+			RETURNF ARG ? 3 # 2
+ENDSELECT
+
+;継続手淫
+SIF TEQUIP:調教対象Ｃ使用 == 1
+	RETURNF ARG ? 2 # 2
+;継続フェラ
+SIF TEQUIP:調教対象Ｃ使用 == 2
+	RETURNF ARG ? 1 # 2
+;助手アクションによる判定
+FOR LOCAL, 1, 4
+	;助手がいない場合は判定しない
+	SIF ASSI:LOCAL < 0
+		CONTINUE
+	SELECTCASE TCVAR:(ASSI:LOCAL):助手ACT
+		;口で愛撫
+		CASE 1
+			RETURNF ARG ? 1 # (2 << LOCAL)
+		;性器を擦り合う
+		CASE 2
+			RETURNF ARG ? 8 # (2 << LOCAL)
+		;パイズリする
+		CASE 3
+			RETURNF ARG ? 6 # (2 << LOCAL)
+		;足コキする
+		CASE 4
+			RETURNF ARG ? 7 # (2 << LOCAL)
+		;道具で愛撫
+		CASE 5
+			;愛撫者判定
+			SIF !ARG
+				RETURNF (2 << LOCAL)
+			;愛撫物判定
+			RETURNF PENIS(MASTER) ? 114 # 100
+		;逆レイプ
+		CASE 6
+			RETURNF ARG ? 3 # (2 << LOCAL)
+		;手で愛撫
+		CASE 7
+			RETURNF ARG ? 2 # (2 << LOCAL)
+	ENDSELECT
+NEXT
+
+;調教者アクションによる判定2(優先度低)
+SELECTCASE TFLAG:ACT
+	;Ｃ愛撫道具
+	CASE 24
+		;愛撫者判定
+		SIF !ARG
+			RETURNF 2
+		;愛撫物判定
+		RETURNF PENIS(MASTER) ? 114 # 112
+	;公衆肉便器プレイ
+	CASE 74
+		;便器として使用された場合
+		SIF TFLAG:ACT派生 > 1
+			RETURNF ARG ? 4 # 128
+	;性交奉仕(アナルセックス以外)(抵抗された)
+	CASE 103, 95 TO 98
+		;快Ｃを得ている
+		SIF SOURCE:MASTER:快Ｃ > 0
+			RETURNF ARG ? 4 # 2
+	;アナルセックスさせる(抵抗された)
+	CASE 99
+		;快Ｃを得ている
+		SIF SOURCE:MASTER:快Ｃ > 0
+			RETURNF ARG ? 5 # 2
+ENDSELECT
+
+;COMによる判定
+;道具を外すで自分でＣ関係道具を解除している
+SIF SELECTCOM == GETNUM(TRAINNAME, "道具を外す") && TFLAG:REACT派生 == GETNUM(TEQUIP, "クリキャップ")
+	RETURNF ARG ? 112 # 1
+SIF SELECTCOM == GETNUM(TRAINNAME, "道具を外す") && TFLAG:REACT派生 == GETNUM(TEQUIP, "オナホール")
+	RETURNF ARG ? 114 # 1
+SIF SELECTCOM == GETNUM(TRAINNAME, "道具を外す") && TFLAG:REACT派生 == GETNUM(TEQUIP, "ペニスバンド")
+	RETURNF ARG ? 103 # 1
+
+;TEQUIPによる判定2(優先度低)
+;調教対象自慰中(快Ｃを得ている)
+SIF GETBIT(TEQUIP:自慰中, 0) && SOURCE:MASTER:快Ｃ > 0
+	RETURNF ARG ? 2 # 1
+
+;-------------------------------------------------
+;関数名:ME_PLAYER
+;概　要:調教対象射精対象人物/物体判定関数
+;引　数:ARG…真なら射精対象物体が何であるかを返す
+;            偽なら射精対象人物が誰なのかを返す。複数存在する場合は調教者優先
+;戻り値:物の場合→0.なし/1.口/2.手/3.ペニス/4.ヴァギナ/5.アナル/6.胸/7.足/8.膣口/9.顔
+;                /90.触手
+;                /100.ローター/112.クリキャップ/114.オナホール
+;       人の場合→0.なし/1.調教対象自身/2.調教者/4.助手1/8.助手2/16.助手３
+;                /64.道具/128.便所利用者
+;備  考:式中関数
+;
+;自慰顔射射精時など愛撫物と射精対象物体が異なる場合を想定して新設
+;MX_PLAYER全てに共通することとして対象が複数存在する場合手も足も出ないので
+;そのうち文字列で複数対象を全て返す関数を作ってもいいかもしれない
+;何にせよ急いですることでもないんじゃないかな@これみ
+;-------------------------------------------------
+@ME_PLAYER(ARG)
+#FUNCTION
+#LOCALSIZE 1
+#LOCALSSIZE 1
+;非射精時は0を返す
+SIF !NOWEX:MASTER:射精
+	RETURNF 0
+;自慰射精、積極的従う、イきそう、焦らし終了/無し時
+IF (IS_NOWACTNAME("自慰") || GETBIT(TEQUIP:自慰中, 0)) && IS_COMGRONAME("積極的従う") && TCVAR:MASTER:イきそう && TCVAR:MASTER:焦らし度 < 2
+	;1/2の確率で自慰顔射射精
+	IF LOCALS != SAME_TURN()
+		LOCALS = SAME_TURN()
+		LOCAL = RAND:2
+	ENDIF
+	;自慰顔射射精時以外は特別な処理を行わない
+	;自慰中でも、奉仕・愛撫・性交・性交奉仕・加虐・道具ACTの際は顔射に無理があるので行わない
+	SIF LOCAL && !GROUPMATCH(GET_ACTM(TFLAG:ACT), 1, 2, 3, 5, 6, 10)
+		RETURNF ARG ? 9 # 2
+ENDIF
+;その他の場合はＣ愛撫者/愛撫物判定関数と同じ物を返す
+RETURNF MC_PLAYER(ARG)
+
+
+;-------------------------------------------------
+;関数名:MV_PLAYER
+;概　要:Ｖ愛撫者/愛撫物判定関数
+;引　数:ARG…真なら愛撫している物が何であるかを返す
+;            偽なら愛撫している人が誰なのかを返す。複数存在する場合は調教者優先
+;戻り値:物の場合→0.なし/1.口/2.手/3.ペニス/4.ヴァギナ/5.アナル/6.胸/7.足
+;                 /10.腕/90.触手
+;                 /100.ローター/101.バイブ/103.ペニスバンド/133.三角木馬
+;       人の場合→0.なし/1.調教対象自身/2.調教者/4.助手1/8.助手2/16.助手３
+;                 /64.道具/128.便所利用者
+;備  考:式中関数
+;仕様を整理して作り直した、新しい愛撫者/愛撫物判定関数
+;リアクション口上や絶頂口上での使用を想定している
+;-------------------------------------------------
+@MV_PLAYER(ARG)
+#FUNCTION
+#LOCALSIZE 1
+;オトコは除く
+SIF TALENT:MASTER:オトコ
+	RETURNF 0
+
+;TEQUIPによる判定1(優先度高)
+;性交中(アナルセックス除く)
+IF TEQUIP:性交中 && TEQUIP:性交中 != 6
+	;愛撫者判定
+	SIF !ARG
+		RETURNF 2
+	;愛撫物判定
+	RETURNF PENIS(TARGET) ? 3 # 103
+ENDIF
+;バイブ
+SIF TEQUIP:バイブ && ARG
+	RETURNF 101
+;ペニスバンド
+SIF TEQUIP:ペニスバンド
+	RETURNF MC_PLAYER(ARG)
+;三角木馬
+SIF TEQUIP:三角木馬 && ARG
+	RETURNF 133
+
+;調教者アクションによる判定1(優先度高)
+;フィストファック/両穴フィスト
+SIF IS_NOWACTNAME("フィストファック/両穴フィスト")
+	RETURNF ARG ? 10 # 2
+
+;助手アクションによる判定
+FOR LOCAL, 1, 4
+	;助手がいない場合は判定しない
+	SIF ASSI:LOCAL < 0
+		CONTINUE
+	SELECTCASE TCVAR:(ASSI:LOCAL):助手ACT
+		;指挿入
+		CASE 30
+			RETURNF ARG ? 2 # (2 << LOCAL)
+		;バイブ
+		CASE 31
+			RETURNF ARG ? 101 # (2 << LOCAL)
+		;性交
+		CASE 30
+			;愛撫者判定
+			SIF !ARG
+				RETURNF (2 << LOCAL)
+			;愛撫物判定
+			RETURNF PENIS(ASSI:LOCAL) ? 3 # 103
+	ENDSELECT
+NEXT
+
+;調教者アクションによる判定2(優先度低)
+SELECTCASE TFLAG:ACT
+	;バイブ
+	CASE 21
+		RETURNF ARG ? 101 # 2
+	;指挿入れ
+	CASE 19
+		RETURNF ARG ? 2 # 2
+	;性交(アナルセックス以外)(抵抗された)
+	CASE 30 TO 34
+		;愛撫者判定
+		SIF !ARG
+			RETURNF 2
+		;愛撫物判定
+		RETURNF PENIS(TARGET) ? 3 # 103
+	;三角木馬
+	CASE 67
+		RETURNF ARG ? 133 # 2
+	;公衆肉便器プレイ
+	CASE 74
+		;便器として使用された場合
+		SIF TFLAG:ACT派生 > 1
+			RETURNF ARG ? 3 # 128
+ENDSELECT
+
+;COMによる判定
+;道具を外すで自分でＶ関係道具を解除している
+SIF SELECTCOM == GETNUM(TRAINNAME, "道具を外す") && TFLAG:REACT派生 == GETNUM(TEQUIP, "バイブ")
+	RETURNF ARG ? 101 # 1
+SIF SELECTCOM == GETNUM(TRAINNAME, "道具を外す") && TFLAG:REACT派生 == GETNUM(TEQUIP, "ペニスバンド")
+	RETURNF ARG ? 103 # 1
+
+;TEQUIPによる判定2(優先度低)
+;調教対象自慰中(快Ｖを得ている)
+SIF GETBIT(TEQUIP:自慰中, 0) && SOURCE:MASTER:快Ｖ > 0
+	RETURNF ARG ? 2 # 1
+;バイブ
+SIF TEQUIP:バイブ
+	RETURNF ARG ? 101 # 64
+
+
+;-------------------------------------------------
+;関数名:MA_PLAYER
+;概　要:Ａ愛撫者/愛撫物判定関数
+;引　数:ARG…真なら愛撫している物が何であるかを返す
+;            偽なら愛撫している人が誰なのかを返す。複数存在する場合は調教者優先
+;戻り値:物の場合→0.なし/1.口/2.手/3.ペニス/4.ヴァギナ/5.アナル/6.胸/7.足
+;                 /10.腕/90.触手
+;                 /100.ローター/102.アナルビーズ/103.ペニスバンド/111.アナルバイブ/132.浣腸器＋プラグ
+;       人の場合→0.なし/1.調教対象自身/2.調教者/4.助手1/8.助手2/16.助手３
+;                 /64.道具/128.便所利用者
+;備  考:式中関数
+;仕様を整理して作り直した、新しい愛撫者/愛撫物判定関数
+;リアクション口上や絶頂口上での使用を想定している
+;-------------------------------------------------
+@MA_PLAYER(ARG)
+#FUNCTION
+#LOCALSIZE 1
+;TEQUIPによる判定1(優先度高)
+;アナルセックス中
+IF TEQUIP:性交中 == 6
+	;愛撫者判定
+	SIF !ARG
+		RETURNF 2
+	;愛撫物判定
+	RETURNF PENIS(TARGET) ? 3 # 103
+ENDIF
+;アナルバイブ
+SIF TEQUIP:アナルバイブ && ARG
+	RETURNF 111
+;アナルビーズ
+SIF TEQUIP:アナルビーズ && ARG
+	RETURNF 102
+;浣腸器＋プラグ
+SIF TEQUIP:浣腸器＋プラグ && ARG
+	RETURNF 132
+
+;調教者アクションによる判定1(優先度高)
+SELECTCASE TFLAG:ACT
+	;アナル愛撫
+	CASE 13
+		RETURNF ARG ? 2 # 2
+	;アナル舐め
+	CASE 14
+		RETURNF ARG ? 1 # 2
+	;アナルビーズ
+	CASE 23
+		;ここでは解除時の処理のみ
+		SIF TFLAG:ACT派生 == 1
+			RETURNF ARG ? 102 # 2
+	;浣腸器＋プラグ
+	CASE 68
+		;ここでは解除時の処理のみ
+		SIF TFLAG:ACT派生 == 1
+			RETURNF ARG ? 132 # 2
+	;アナルフィスト/両穴フィスト
+	CASE 71, 72
+		RETURNF ARG ? 10 # 2
+ENDSELECT
+
+;助手アクションによる判定
+FOR LOCAL, 1, 4
+	;助手がいない場合は判定しない
+	SIF ASSI:LOCAL < 0
+		CONTINUE
+	SELECTCASE TCVAR:(ASSI:LOCAL):助手ACT
+		;アナル愛撫
+		CASE 10
+			RETURNF ARG ? 2 # (2 << LOCAL)
+		;アナル舐め
+		CASE 11
+			RETURNF ARG ? 1 # (2 << LOCAL)
+		;Ａローター
+		CASE 12
+			RETURNF ARG ? 100 # (2 << LOCAL)
+		;アナルバイブ
+		CASE 13
+			RETURNF ARG ? 111 # (2 << LOCAL)
+	ENDSELECT
+NEXT
+
+;調教者アクションによる判定2(優先度低)
+SELECTCASE TFLAG:ACT
+	;アナルバイブ
+	CASE 22
+		RETURNF ARG ? 111 # 2
+	;アナルビーズ
+	CASE 23
+		RETURNF ARG ? 102 # 2
+	;アナルセックス(抵抗された)
+	CASE 35
+		;愛撫者判定
+		SIF !ARG
+			RETURNF 2
+		;愛撫物判定
+		RETURNF PENIS(TARGET) ? 3 # 103
+	;浣腸器＋プラグ
+	CASE 68
+		RETURNF ARG ? 132 # 2
+	;公衆肉便器プレイ
+	CASE 74
+		;便器として使用された場合
+		SIF TFLAG:ACT派生 > 1
+			RETURNF ARG ? 3 # 128
+ENDSELECT
+
+;COMによる判定
+;道具を外すで自分でＡ関係道具を解除している
+SIF SELECTCOM == GETNUM(TRAINNAME, "道具を外す") && TFLAG:REACT派生 == GETNUM(TEQUIP, "アナルバイブ")
+	RETURNF ARG ? 111 # 1
+SIF SELECTCOM == GETNUM(TRAINNAME, "道具を外す") && TFLAG:REACT派生 == GETNUM(TEQUIP, "アナルビーズ")
+	RETURNF ARG ? 102 # 1
+SIF SELECTCOM == GETNUM(TRAINNAME, "道具を外す") && TFLAG:REACT派生 == GETNUM(TEQUIP, "浣腸器＋プラグ")
+	RETURNF ARG ? 132 # 1
+
+;TEQUIPによる判定2(優先度低)
+;調教対象自慰中(快Ａを得ている)
+SIF GETBIT(TEQUIP:自慰中, 0) && SOURCE:MASTER:快Ａ > 0
+	RETURNF ARG ? 111 # 1
+;アナルバイブ
+SIF TEQUIP:アナルバイブ
+	RETURNF ARG ? 111 # 64
+;アナルビーズ
+SIF TEQUIP:アナルビーズ
+	RETURNF ARG ? 102 # 64
+;浣腸器＋プラグ
+SIF TEQUIP:浣腸器＋プラグ
+	RETURNF ARG ? 132 # 64
+
+
+;-------------------------------------------------
+;関数名:MB_PLAYER
+;概　要:Ｂ愛撫者/愛撫物判定関数
+;引　数:ARG…真なら愛撫している物が何であるかを返す
+;            偽なら愛撫している人が誰なのかを返す。複数存在する場合は調教者優先
+;戻り値:物の場合→0.なし/1.口/2.手/3.ペニス/4.ヴァギナ/5.アナル/6.胸/7.足
+;                 /90.触手
+;                 /100.ローター/113.ニプルキャップ
+;       人の場合→0.なし/1.調教対象自身/2.調教者/4.助手1/8.助手2/16.助手３
+;                 /64.道具/128.便所利用者
+;備  考:式中関数
+;仕様を整理して作り直した、新しい愛撫者/愛撫物判定関数
+;リアクション口上や絶頂口上での使用を想定している
+;-------------------------------------------------
+@MB_PLAYER(ARG)
+#FUNCTION
+#LOCALSIZE 1
+;TEQUIPによる判定1(優先度高)
+;ニプルキャップ
+SIF TEQUIP:ニプルキャップ && ARG
+	RETURNF 113
+
+;調教者アクションによる判定1(優先度高)
+SELECTCASE TFLAG:ACT
+	;手で愛撫
+	CASE 10
+		;愛撫
+		SIF !TFLAG:ACT派生
+			RETURNF ARG ? 2 # 2
+		RETURNF 
+	;胸愛撫
+	CASE 11
+		;愛撫者判定
+		SIF !ARG
+			RETURNF 2
+		;愛撫物判定(乳首吸いの場合は口)
+		RETURNF TFLAG:ACT派生 == 1 ? 1 # 2
+	;背面座位
+	CASE 34
+		RETURNF ARG ? 2 # 2
+	;パイズリ
+	CASE 52
+		;命令に従った場合のみ
+		SIF !IS_COMGRONAME("拒否")
+			RETURNF ARG ? 3 # 2
+ENDSELECT
+
+;助手アクションによる判定
+FOR LOCAL, 1, 4
+	;助手がいない場合は判定しない
+	SIF ASSI:LOCAL < 0
+		CONTINUE
+	SELECTCASE TCVAR:(ASSI:LOCAL):助手ACT
+		;胸愛撫
+		CASE 20
+			RETURNF ARG ? 2 # (2 << LOCAL)
+		;乳首舐め
+		CASE 21
+			RETURNF ARG ? 1 # (2 << LOCAL)
+		;乳首ローター
+		CASE 22
+			RETURNF ARG ? 100 # (2 << LOCAL)
+	ENDSELECT
+NEXT
+
+;調教者アクションによる判定2(優先度低)
+SELECTCASE TFLAG:ACT
+	;ニプルキャップ
+	CASE 25
+		RETURNF ARG ? 113 # 2
+	;公衆肉便器プレイ
+	CASE 74
+		;便器として使用された(オトコは除く)
+		SIF TFLAG:ACT派生 > 1 &&  !TALENT:MASTER:オトコ
+			RETURNF ARG ? 3 # 128
+ENDSELECT
+
+;COMによる判定
+;道具を外すで自分でＢ関係道具を解除している
+SIF SELECTCOM == GETNUM(TRAINNAME, "道具を外す") && TFLAG:REACT派生 == GETNUM(TEQUIP, "ニプルキャップ")
+	RETURNF ARG ? 113 # 1
+
+;TEQUIPによる判定2(優先度低)
+;調教対象自慰中(オトコ以外、快Ｂを得ている)
+SIF GETBIT(TEQUIP:自慰中, 0) && !TALENT:MASTER:オトコ && SOURCE:MASTER:快Ｂ > 0
+	RETURNF ARG ? 2 # 1
+;ニプルキャップ
+SIF TEQUIP:ニプルキャップ
+	RETURNF ARG ? 113 # 64
+
+;-------------------------------------------------
+;関数名:MASTER_EX
+;概　要:調教対象絶頂判定関数
+;引　数:ARG:0…愛撫者→1.調教対象自身/2.調教者/4.助手１/8.助手２/16.助手３
+;                      /64.道具/128.便所利用者　省略すると愛撫者を問わない
+;              ビット和での指定が可能
+;       ARG:1…(省略可)絶頂の種別→1.Ｃ絶頂/2.Ｖ絶頂/3.Ａ絶頂/4.Ｂ絶頂
+;                                  /11.噴乳/12.射精/13.放尿
+;戻り値:今回のコマンドで、指定した愛撫者が調教者を指定の絶頂に導いたかどうか
+;       ARG:1を省略した場合は全ての絶頂についてビットで返す
+;       (1.Ｃ絶頂/2.Ｖ絶頂/4.Ａ絶頂/8.Ｂ絶頂/1024.噴乳/2048.射精/4096.放尿)
+;備  考:式中関数
+;仕様を整理して作り直した、新しい絶頂判定関数
+;リアクション口上や絶頂口上での使用を想定している
+;-------------------------------------------------
+@MASTER_EX(ARG:0 = -1, ARG:1)
+#FUNCTION
+#LOCALSIZE 5
+LOCAL:0 = 0
+LOCAL:1 = MC_PLAYER(0)
+LOCAL:2 = MV_PLAYER(0)
+LOCAL:3 = MA_PLAYER(0)
+LOCAL:4 = MB_PLAYER(0)
+
+LOCAL:0 |= NOWEX:MASTER:Ｃ絶頂 && (ARG == -1 || (LOCAL:1 & ARG:0)) ? 1 # 0
+LOCAL:0 |= NOWEX:MASTER:Ｖ絶頂 && (ARG == -1 || (LOCAL:2 & ARG:0)) ? 2 # 0
+LOCAL:0 |= NOWEX:MASTER:Ａ絶頂 && (ARG == -1 || (LOCAL:3 & ARG:0)) ? 4 # 0
+LOCAL:0 |= NOWEX:MASTER:Ｂ絶頂 && (ARG == -1 || (LOCAL:4 & ARG:0)) ? 8 # 0
+
+;噴乳するにはＢ絶頂→Ｂ愛撫者
+LOCAL:0 |= NOWEX:MASTER:噴乳 && (ARG == -1 || (LOCAL:4 & ARG:0)) ? 1024 # 0
+
+;射精するには
+;・射精/大量射精/空射精	：Ｃ絶頂→Ｃ愛撫者
+;・早漏					：快Ｃ　→Ｃ愛撫者
+;・Ａ責射精				：Ａ絶頂→Ａ愛撫者
+;※Ａ責射精でない射精はＣ愛撫者、Ａ責射精はＡ愛撫者　ふたなりはＶ
+LOCAL:0 |= (NOWEX:MASTER:射精 && NOWEX:MASTER:射精 != 5 && (ARG == -1 || (LOCAL:1 & ARG:0))) || (TALENT:MASTER:オトコ && NOWEX:MASTER:射精 == 5 && (ARG == -1 || (LOCAL:3 & ARG:0))) || (TALENT:MASTER:ふたなり && NOWEX:MASTER:射精 == 5 && (ARG == -1 || (LOCAL:1 & ARG:0))) ? 2048 # 0
+
+;放尿するにはＣ絶頂or射精(空以外)or快Ｃが必要
+;(注意：媚薬や栄養剤でもゲージ増加するが、快ＣＶＡＢのいずれかが無いと失禁判定自体されない)
+;・Ｃ絶頂		：Ｃ愛撫者
+;・射精(空以外)	：射精させた者
+;・快Ｃ			：Ｃ愛撫者
+;※Ａ責射精でＡ愛撫者の方が優先ならＡ愛撫者、それ以外はＣ愛撫者。優先順位は愛撫者の数字の低い順
+;※Ｃ愛撫者を見るべきときにＣ愛撫者がいない場合：媚薬や栄養剤のせいなので、ＶＡＢを優先順位順で見る
+IF NOWEX:MASTER:射精 == 5 && (!LOCAL:1 || LOCAL:1 > LOCAL:3)
+	LOCAL:0 |= NOWEX:MASTER:放尿 && (ARG == -1 || (LOCAL:3 & ARG:0)) ? 4096 # 0
+ELSEIF LOCAL:1
+	LOCAL:0 |= NOWEX:MASTER:放尿 && (ARG == -1 || (LOCAL:1 & ARG:0)) ? 4096 # 0
+ELSEIF LOCAL:2 && (!LOCAL:3 || LOCAL:2 < LOCAL:3) && (!LOCAL:4 || LOCAL:2 < LOCAL:4)
+	LOCAL:0 |= NOWEX:MASTER:放尿 && (ARG == -1 || (LOCAL:2 & ARG:0)) ? 4096 # 0
+ELSEIF LOCAL:3 && (!LOCAL:4 || LOCAL:3 < LOCAL:4)
+	LOCAL:0 |= NOWEX:MASTER:放尿 && (ARG == -1 || (LOCAL:3 & ARG:0)) ? 4096 # 0
+ELSE
+	LOCAL:0 |= NOWEX:MASTER:放尿 && (ARG == -1 || (LOCAL:4 & ARG:0)) ? 4096 # 0
+ENDIF
+
+RETURNF ARG:1 ? GETBIT(LOCAL:0, ARG:1 - 1) # LOCAL:0
+
+;-------------------------------------------------
+;関数名:TC_PLAYER
+;概　要:ｃ愛撫者/愛撫物判定関数
+;引　数:ARG…真なら愛撫している物が何であるかを返す
+;            偽なら愛撫している人が誰なのかを返す。複数存在する場合は調教対象優先
+;戻り値:物の場合→0.なし/1.口/2.手/3.ペニス/4.ヴァギナ/5.アナル/6.胸/7.足/8.膣口/103.ペニスバンド
+;       人の場合→0.なし/1.調教対象/2.調教者自身/4.助手1/8.助手2/16.助手３/64.道具
+;備  考:式中関数
+;仕様を整理して作り直した、新しい愛撫者/愛撫物判定関数
+;リアクション口上や絶頂口上での使用を想定している
+;-------------------------------------------------
+@TC_PLAYER(ARG)
+#FUNCTION
+;TEQUIPによる判定1(優先度高)
+;アナルセックス(調教者にペニスがある場合のみ)
+SIF PENIS(TARGET) && TEQUIP:性交中 == 6
+	RETURNF ARG ? 5 # 1
+;性交中(アナルセックス以外)(調教者にペニスがある場合のみ)
+SIF PENIS(TARGET) && TEQUIP:性交中
+	RETURNF ARG ? 4 # 1
+;顔面騎乗
+SIF TEQUIP:顔面騎乗 && !TEQUIP:顔面騎乗アナル
+	RETURNF ARG ? 1 # 1
+;調教者ペニスバンド
+SIF TEQUIP:調教者ペニスバンド && ARG
+	RETURNF 103
+
+;調教者アクションによる判定1(優先度高)
+SELECTCASE TFLAG:ACT
+	;性器を擦り合う
+	CASE 16
+		;愛撫者判定
+		SIF !ARG
+			RETURNF 1
+		;愛撫物判定
+		RETURNF PENIS(MASTER) ? 3 # 8
+	;手で愛撫を強制
+	CASE 50
+		;奉仕した場合のみ
+		SIF !IS_COMGRONAME("拒否")
+			RETURNF ARG ? 2 # 1
+	;口で愛撫を強制
+	CASE 51
+		;顔面騎乗/顔面騎乗アナル以外、かつ奉仕した場合のみ
+		SIF TFLAG:ACT派生 != 2 && TFLAG:ACT派生 != 3 && !IS_COMGRONAME("拒否")
+			RETURNF ARG ? 1 # 1
+	;パイズリ
+	CASE 52
+		;奉仕した場合のみ
+		SIF !IS_COMGRONAME("拒否")
+			RETURNF ARG ? 6 # 1
+	;素股
+	CASE 53
+		;奉仕した場合のみ
+		SIF !IS_COMGRONAME("拒否")
+			RETURNF ARG ? 8 # 1
+	;イラマチオ
+	CASE 56
+		RETURNF ARG ? 1 # 1
+	;対面座位させる/背面座位させる
+	CASE 97, 98
+		RETURNF ARG ? 2 # 1
+ENDSELECT
+
+;調教者追加アクションによる判定
+;助手アクションによる判定
+
+;調教者アクションによる判定2(優先度低)
+SELECTCASE TFLAG:ACT
+	;性交(アナルセックス以外)(抵抗された)
+	CASE 30 TO 34
+		RETURNF ARG ? 4 # 1
+	;アナルセックス(抵抗された)
+	CASE 35
+		RETURNF ARG ? 5 # 1
+	;口で愛撫を強制
+	CASE 51
+		;顔面騎乗(抵抗された)
+		SIF TFLAG:ACT派生 == 2
+			RETURNF ARG ? 1 # 1
+ENDSELECT
+
+;TEQUIPによる判定2(優先度低)
+;調教対象自慰中(快ｃを得ている)
+SIF GETBIT(TEQUIP:自慰中, 1) && SOURCE:快Ｃ > 0
+	RETURNF ARG ? 2 # 2
+
+
+;-------------------------------------------------
+;関数名:TE_PLAYER
+;概　要:調教者射精対象人物/物体判定関数
+;引　数:ARG…真なら射精対象物体が何であるかを返す
+;            偽なら射精対象人物が誰なのかを返す。複数存在する場合は調教対象優先
+;戻り値:物の場合→0.なし/1.口/2.手/3.ペニス/4.ヴァギナ/5.アナル/6.胸/7.足/9.顔
+;                /90.触手
+;                /100.ローター/112.クリキャップ/114.オナホール
+;       人の場合→0.なし/1.調教対象/2.調教者自身/4.助手1/8.助手2/16.助手３
+;                /64.道具/128.便所利用者
+;備  考:式中関数
+;
+;ME_PLAYERと同時に設置@これみ
+;-------------------------------------------------
+@TE_PLAYER(ARG)
+#FUNCTION
+#LOCALSIZE 1
+#LOCALSSIZE 1
+;非射精時は0を返す
+SIF !NOWEX:射精
+	RETURNF 0
+;自慰射精時
+IF GETBIT(TEQUIP:自慰中, 1)
+	;1/2の確率で自慰顔射射精
+	IF LOCALS != SAME_TURN()
+		LOCALS = SAME_TURN()
+		LOCAL = RAND:2
+	ENDIF
+	;自慰顔射射精時以外は特別な処理を行わない
+	;自慰中でも、奉仕・愛撫・性交・性交奉仕・道具ACTの際は顔射に無理があるので行わない
+	SIF LOCAL && !GROUPMATCH(GET_ACTM(TFLAG:ACT), 1, 2, 3, 5, 10)
+		RETURNF ARG ? 9 # 1
+ENDIF
+;その他の場合はＣ愛撫者/愛撫物判定関数と同じ物を返す
+RETURNF TC_PLAYER(ARG)
+
+
+;-------------------------------------------------
+;関数名:TV_PLAYER
+;概　要:ｖ愛撫者/愛撫物判定関数
+;引　数:ARG…真なら愛撫している物が何であるかを返す
+;            偽なら愛撫している人が誰なのかを返す。複数存在する場合は調教対象優先
+;戻り値:物の場合→0.なし/1.口/2.手/3.ペニス/4.ヴァギナ/5.アナル/6.胸/7.足
+;                 /101.バイブ/103.ペニスバンド
+;       人の場合→0.なし/1.調教対象/2.調教者自身/4.助手1/8.助手2/16.助手３/64.道具
+;備  考:式中関数
+;仕様を整理して作り直した、新しい愛撫者/愛撫物判定関数
+;リアクション口上や絶頂口上での使用を想定している
+;-------------------------------------------------
+@TV_PLAYER(ARG)
+#FUNCTION
+;オトコは除く
+SIF TALENT:TARGET:オトコ
+	RETURNF 0
+
+;TEQUIPによる判定1(優先度高)
+;性交奉仕中(アナルセックスさせる以外)
+IF TEQUIP:性交奉仕中 && TEQUIP:性交奉仕中 != 6
+	SIF TEQUIP:ペニスバンド
+		RETURNF ARG ? 103 # 1
+	RETURNF ARG ? 3 # 1
+ENDIF
+
+;調教者ペニスバンド
+SIF TEQUIP:調教者ペニスバンド
+	RETURNF TC_PLAYER(ARG)
+;調教者アクションによる判定1(優先度高)
+;調教者追加アクションによる判定
+;助手アクションによる判定
+
+;調教者アクションによる判定2(優先度低)
+SELECTCASE TFLAG:ACT
+	;性交奉仕(アナルセックスさせる以外)(抵抗された)
+	CASE 103, 95 TO 98
+		SIF TEQUIP:ペニスバンド
+			RETURNF ARG ? 103 # 1
+		RETURNF ARG ? 3 # 1
+ENDSELECT
+
+;TEQUIPによる判定2(優先度低)
+;調教者自慰中(快ｖを得ている)
+SIF GETBIT(TEQUIP:自慰中, 1) && SOURCE:快Ｖ > 0
+	RETURNF ARG ? 101 # 2
+
+;-------------------------------------------------
+;関数名:TA_PLAYER
+;概　要:ａ愛撫者/愛撫物判定関数
+;引　数:ARG…真なら愛撫している物が何であるかを返す
+;            偽なら愛撫している人が誰なのかを返す。複数存在する場合は調教対象優先
+;戻り値:物の場合→0.なし/1.口/2.手/3.ペニス/4.ヴァギナ/5.アナル/6.胸/7.足
+;       人の場合→0.なし/1.調教対象/2.調教者自身/4.助手1/8.助手2/16.助手３
+;備  考:式中関数
+;仕様を整理して作り直した、新しい愛撫者/愛撫物判定関数
+;リアクション口上や絶頂口上での使用を想定している
+;-------------------------------------------------
+@TA_PLAYER(ARG)
+#FUNCTION
+;TEQUIPによる判定1(優先度高)
+;顔面騎乗アナル
+SIF TEQUIP:顔面騎乗アナル
+	RETURNF ARG ? 1 # 1
+;アナルセックスさせる
+SIF TEQUIP:性交奉仕中 == 6
+	RETURNF ARG ? 3 # 1
+
+;調教者アクションによる判定1(優先度高)
+;調教者追加アクションによる判定
+;助手アクションによる判定
+
+;調教者アクションによる判定2(優先度低)
+SELECTCASE TFLAG:ACT
+	;口で愛撫を強制
+	CASE 51
+		;顔面騎乗アナル(抵抗された)
+		SIF TFLAG:ACT派生 == 3
+			RETURNF ARG ? 1 # 1
+	;アナルセックスさせる(抵抗された)
+	CASE 99
+		RETURNF ARG ? 3 # 1
+ENDSELECT
+
+;TEQUIPによる判定2(優先度低)
+
+;-------------------------------------------------
+;関数名:TB_PLAYER
+;概　要:ｂ愛撫者/愛撫物判定関数
+;引　数:ARG…真なら愛撫している物が何であるかを返す
+;            偽なら愛撫している人が誰なのかを返す。複数存在する場合は調教対象優先
+;戻り値:物の場合→0.なし/1.口/2.手/3.ペニス/4.ヴァギナ/5.アナル/6.胸/7.足
+;       人の場合→0.なし/1.調教対象/2.調教者自身/4.助手１/8.助手２/16.助手３
+;備  考:式中関数
+;仕様を整理して作り直した、新しい愛撫者/愛撫物判定関数
+;リアクション口上や絶頂口上での使用を想定している
+;-------------------------------------------------
+@TB_PLAYER(ARG)
+#FUNCTION
+;TEQUIPによる判定1(優先度高)
+
+;調教者アクションによる判定1(優先度高)
+SELECTCASE TFLAG:ACT
+	;胸愛撫
+	CASE 11
+		;揉み合いで、消極的従う/積極的従うの場合
+		SIF TFLAG:ACT派生 == 2 && (IS_COMGRONAME("消極的従う/積極的従う"))
+			RETURNF ARG ? 2 # 1
+	;パイズリする
+	CASE 17
+		RETURNF ARG ? 3 # 1
+	;胸愛撫強制
+	CASE 57
+		;奉仕した場合
+		IF !IS_COMGRONAME("拒否")
+			;愛撫者判定
+			SIF !ARG
+				RETURNF 1
+			;愛撫物判定(口愛撫は口)
+			RETURNF TFLAG:ACT派生 ? 1 # 2
+		ENDIF
+	;背面座位させる
+	CASE 98
+		RETURNF ARG ? 2 # 1
+ENDSELECT
+
+;調教者追加アクションによる判定
+;助手アクションによる判定
+;調教者アクションによる判定2(優先度低)
+
+;TEQUIPによる判定2(優先度低)
+;調教者自慰中(オトコ以外、快ｂを得ている)
+SIF GETBIT(TEQUIP:自慰中, 1) && !TALENT:TARGET:オトコ && SOURCE:快Ｖ > 0
+	RETURNF ARG ? 2 # 2
+
+;-------------------------------------------------
+;関数名:TARGET_EX
+;概　要:調教者絶頂判定関数
+;引　数:ARG:0…愛撫者→1.調教対象/2.調教者自身/4.助手１/8.助手２/16.助手３
+;              ビット和での指定が可能。省略すると愛撫者を問わない
+;       ARG:1…(省略可)絶頂の種別→1.ｃ絶頂/2.ｖ絶頂/3.ａ絶頂/4.ｂ絶頂
+;                                  /11.噴乳/12.射精
+;戻り値:今回のコマンドで、指定した愛撫者が調教者を指定の絶頂に導いたかどうか
+;       ARG:1を省略した場合は全ての絶頂についてビットで返す
+;       (1.ｃ絶頂/2.ｖ絶頂/4.ａ絶頂/8.ｂ絶頂/1024.噴乳/2048.射精)
+;備  考:式中関数
+;仕様を整理して作り直した、新しい絶頂判定関数
+;実は現状で有効に使える場面があまり無いかもしれない
+;リアクション口上や絶頂口上での使用を想定している
+;-------------------------------------------------
+@TARGET_EX(ARG:0 = -1, ARG:1)
+#FUNCTION
+#LOCALSIZE 5
+LOCAL:0 = 0
+LOCAL:1 = TC_PLAYER(0)
+LOCAL:2 = TV_PLAYER(0)
+LOCAL:3 = TA_PLAYER(0)
+LOCAL:4 = TB_PLAYER(0)
+
+LOCAL:0 |= NOWEX:Ｃ絶頂 && (ARG == -1 || (LOCAL:1 & ARG)) ? 1 # 0
+LOCAL:0 |= NOWEX:Ｖ絶頂 && (ARG == -1 || (LOCAL:2 & ARG)) ? 2 # 0
+LOCAL:0 |= NOWEX:Ａ絶頂 && (ARG == -1 || (LOCAL:3 & ARG)) ? 4 # 0
+LOCAL:0 |= NOWEX:Ｂ絶頂 && (ARG == -1 || (LOCAL:4 & ARG)) ? 8 # 0
+
+;噴乳するにはｂ絶頂→ｂ愛撫者
+LOCAL:0 |= NOWEX:噴乳 && (ARG == -1 || (LOCAL:4 & ARG)) ? 1024 # 0
+;射精するにはｃ絶頂→ｃ愛撫者
+LOCAL:0 |= NOWEX:射精 && (ARG == -1 || (LOCAL:1 & ARG)) ? 2048 # 0
+
+RETURNF ARG:1 ? GETBIT(LOCAL:0, ARG:1 - 1) # LOCAL:0
+
+;-------------------------------------------------
+;行動名表示関数@ACTSTR
+;式中で使用する関数です。引数番号の調教者アクション名を文字列で返します
+;引数1が0だとトラウマの種用に、「浣腸器＋プラグ」など無機なものは有機的な呼称に直します
+;
+;なんとなく追加したけどステキな表現が出来なかった…ごめんよ…
+;この手の関数は必要ならキャラ別に持つことも検討した方がいいよ！
+;汎用的にはしたつもりだけど、キャラや性格によって口調に合う単語・合わない単語ってあるよね
+;-------------------------------------------------
+@ACTSTR(ARG:0, ARG:1)
+#FUNCTIONS
+IF !ARG:1
+	SELECTCASE ARG:0
+		;今の気分を聞く/自分への気持ちを聞く/合意を求める
+		CASE 0, 1, 6
+			RETURNF "変な質問"
+		;性についての話をする
+		CASE 2
+			RETURNF \@ TALENT:TARGET:好色 || TALENT:TARGET:意地悪 ? いやらしい # エッチな \@ + "話"
+		;優しく慰める
+		CASE 3
+			RETURNF "気休め"
+		;厳しく脅す/怒鳴る/不気味に笑う
+		CASE 4, 8, 9
+			RETURNF "脅かされるの"
+		;衣装の変更を要求する
+		CASE 5
+			RETURNF "脱がされるの"
+		;お仕置きと宣言する
+		CASE 7
+			RETURNF "お仕置き"
+		;手で愛撫/胸愛撫/性器を擦り合う/パイズリする
+		CASE 10, 11, 16, 17
+			RETURNF "変な触り方されるの"
+		;足コキする
+		CASE 18
+			RETURNF "足で踏まれるの"
+		;指挿入れ
+		CASE 19
+			RETURNF "指で掻き回されるの"
+		;口で愛撫
+		CASE 12
+			RETURNF \@ PENIS(MASTER) ? フェラ # 口で \@ + "されるの"
+		;アナル愛撫/アナル舐め
+		CASE 13, 14
+			RETURNF "おしり" + \@ IS_NOWACTNAME("アナル愛撫") ? 弄 # 舐め \@ + "られるの"
+		;キス
+		CASE 15
+			RETURNF "キス"
+		;Ｃ愛撫道具
+		CASE 24
+			RETURNF \@ PENIS(MASTER) ? オナホ # クリキャップ \@
+		;押し倒す
+		CASE 27
+			RETURNF "押し倒されるの"
+		;正常位/対面座位/逆レイプ
+		CASE 30, 33, 103
+			RETURNF "犯されるの"
+		;後背位/背面座位
+		CASE 31, 34
+			RETURNF "後ろから犯されるの"
+		;アナルセックス
+		CASE 35
+			RETURNF "後ろを犯されるの"
+		;自慰
+		CASE 40
+			RETURNF "オナニーさせられるの"
+		;秘貝開帳
+		CASE 41
+			RETURNF "広げられるの"
+		;自慰みせつけ
+		CASE 42
+			RETURNF "オナニー見せられるの"
+		;羞恥プレイ
+		CASE 43
+			RETURNF "鏡に映されるの"
+		;野外プレイ
+		CASE 44
+			RETURNF "外に連れ出されるの"
+		;放尿
+		CASE 45
+			RETURNF "漏らすの"
+		;手で愛撫を強制
+		CASE 50
+			RETURNF "触るの"
+		;口で愛撫を強制
+		CASE 51
+			RETURNF "舐めさせられるの"
+		;足舐め強制
+		CASE 55
+			RETURNF "足を舐めさせられるの"
+		;胸愛撫強制
+		CASE 57
+			RETURNF "おっぱい"
+		;スパンキング
+		CASE 60
+			RETURNF "叩かれるの"
+		;縄
+		CASE 63
+			RETURNF "縛られるの"
+		;アイマスク
+		CASE 64
+			RETURNF "目隠しされるの"
+		;罵倒
+		CASE 66
+			RETURNF "言葉責めされるの"
+		;浣腸セット
+		CASE 68
+			RETURNF "浣腸されるの"
+		;フィストファック/アナルフィスト/両穴フィスト
+		CASE 70 TO 72
+			RETURNF "腕を入れるの"
+		;公衆肉便器プレイ
+		CASE 74
+			RETURNF "トイレになるの"
+		;触手召喚		未実装
+		;CASE 80
+		;	RETURNF "触手"
+		;休ませる
+		CASE 90
+			RETURNF "休憩"
+		;栄養剤を飲ませる
+		CASE 91
+			RETURNF "薬を飲まされるの"
+		;治療する
+		CASE 92
+			RETURNF "変な治し方されるの"
+		;正常位させる/後背位させる/対面座位させる/背面座位させる
+		CASE 95 TO 98
+			RETURNF "セックスさせられるの"
+		;アナルセックスさせる
+		CASE 99
+			RETURNF "後ろに入れさせられるの"
+		;その他
+		CASEELSE
+			RETURNF STR:(CFLAG:MASTER:トラウマ)
+	ENDSELECT
+ENDIF
+RETURNF STR:(ARG + 100)
+
+;-------------------------------------------------
+;関数名:EXP_INSUFF
+;概　要:経験不足チェック関数
+;引　数:ARG…行為者（TARGETかASSIの誰か）
+;戻り値:経験不足レベル。0なら経験十分
+;備　考:式中関数
+;経験不足の場合、戻り値が真（不足レベルに応じて1～4まで）になる
+;だいぶ面倒なつくりしてるけどいいやこのままで…
+;-------------------------------------------------
+@EXP_INSUFF(ARG = -1)
+#FUNCTION
+#LOCALSIZE 2
+;引数不正なら戻る
+SIF ARG < 0
+	RETURNF 0
+
+;経験判定パターン(ビット和)
+;(1p0:V経験, 1p1:A経験, 1p2:噴乳経験, 1p3:V性交, 1p4:A性交, 1p5:逆ﾚｲﾌﾟ, 1p6:Vﾌｨｽﾄ, 1p7:Aﾌｨｽﾄ)
+LOCAL:0 = 0
+
+;経験不足レベル(ビット和)
+;(0~3bit:V経験不足Lv, 4~7bit:A経験不足Lv, 8~11bit:逆ﾚｲﾌﾟ経験不足Lv)
+;指数メモ(p0:V経験不足Lv, p4:A経験不足Lv, p8:逆ﾚｲﾌﾟ経験不足Lv)
+LOCAL:1 = 0
+
+;調教者によるプレイを判定
+IF ARG == TARGET
+	;ACTの判定
+	SELECTCASE TFLAG:ACT
+		;Ａ経験チェック
+		;アナル愛撫, アナル舐め, アナルビーズ
+		CASE 13, 14, 23
+			LOCAL:0 |= 1p1
+		;Ｖ性交経験チェック
+		;正常位, 後背位, 騎乗位, 対面座位, 背面座位, 騎乗二穴責め, 対面二穴責め, 変則乱れ牡丹, 谷渡り
+		CASE 30 TO 34, 306 TO 308, 311
+			LOCAL:0 |= 1p3
+		;Ａ性交経験チェック
+		;アナルセックス, アナル二穴責め
+		CASE 35, 309
+			LOCAL:0 |= 1p4
+		;性交経験チェック
+		;正常位させる～逆レイプ、アナルセックスさせる、Ｗ逆レイプ
+		CASE 95 TO 103, 310
+			LOCAL:0 |= 1p5
+		;Ｖ拡張経験チェック
+		;フィストファック
+		CASE 70
+			LOCAL:0 |= 1p6
+		;Ａ拡張経験チェック
+		;アナルフィスト
+		CASE 71
+			LOCAL:0 |= 1p7
+		;Ｖ拡張経験チェック＋Ａ拡張経験チェック
+		;両穴フィスト
+		CASE 72
+			LOCAL:0 |= 1p6 | 1p7
+		;道具装着時のみＶ経験チェック
+		;バイブ
+		CASE 21
+			;派生(装着)
+			SIF TFLAG:ACT派生 == 0
+				LOCAL:0 |= 1p0
+		;道具装着時のみＡ経験チェック
+		;アナルバイブ, 浣腸器＋プラグ
+		CASE 22, 68
+			;派生(装着)
+			SIF TFLAG:ACT派生 == 0
+				LOCAL:0 |= 1p1
+	ENDSELECT
+	;追加行動の判定
+	SELECTCASE TFLAG:追加行動
+		;Ｖ経験チェック
+		CASE 2
+			LOCAL:0 |= 1p0
+		;Ａ経験チェック
+		CASE 3
+			LOCAL:0 |= 1p1
+	ENDSELECT
+;助手によるプレイを判定
+ELSE
+	;助手ACTの判定
+	SELECTCASE NOWASSIACTNAME(ARG)
+		CASE "逆レイプ"
+			;性交奉仕経験チェック
+			LOCAL:0 |= 1p5
+		CASE "アナル愛撫", "アナル舐め", "アナルローター", "アナルバイブ"
+			;Ａ経験チェック
+			LOCAL:0 |= 1p1
+		CASE "性交"
+			;Ｖ性交経験チェック
+			LOCAL:0 |= 1p3
+		CASE "指挿入", "バイブ"
+			;Ｖ経験チェック
+			LOCAL:0 |= 1p0
+	ENDSELECT
+	;コンビネーションの判定
+	SELECTCASE TFLAG:ACT
+		;Ａ性交経験チェック
+		;騎乗二穴責め, 対面二穴責め
+		CASE 306, 307
+			LOCAL:0 |= 1p4
+		;Ｖ性交経験チェック
+		;アナル二穴責め
+		CASE 309
+			LOCAL:0 |= 1p3
+		;性交経験チェック
+		;Ｗ逆レイプ
+		CASE 310
+			LOCAL:0 |= 1p5
+	ENDSELECT
+ENDIF
+
+;1p0:Ｖ経験チェック
+;奴隷のＶ経験を判定→Ｖ経験不足として扱う(p0)
+IF LOCAL:0 & 1p0
+	IF EXP:MASTER:Ｖ経験 < 1
+		LOCAL:1 |= 3p0
+	ELSEIF EXP:MASTER:Ｖ経験 < 4
+		LOCAL:1 |= 2p0
+	ELSEIF EXP:MASTER:Ｖ経験 < 6
+		LOCAL:1 |= 1p0
+	ENDIF
+ENDIF
+
+;1p1:Ａ経験チェック
+;奴隷のＡ経験を判定→Ａ経験不足として扱う(p4)
+IF LOCAL:0 & 1p1
+	IF EXP:MASTER:Ａ経験 < 1
+		LOCAL:1 |= 4p4
+	ELSEIF EXP:MASTER:Ａ経験 < 6
+		LOCAL:1 |= 3p4
+	ELSEIF EXP:MASTER:Ａ経験 < 11
+		LOCAL:1 |= 2p4
+	ELSEIF EXP:MASTER:Ａ経験 < 21
+		LOCAL:1 |= 1p4
+	ENDIF
+ENDIF
+
+;1p3:Ｖ性交経験チェック
+;奴隷のＶ経験と性交経験を判定→Ｖ経験不足として扱う(p0)
+IF LOCAL:0 & 1p3
+	IF EXP:MASTER:Ｖ経験 < 1
+		LOCAL:1 |= 3p0
+	ELSEIF EXP:MASTER:Ｖ経験 < 6 && EXP:MASTER:性交経験 < 5
+		LOCAL:1 |= 2p0
+	ELSEIF EXP:MASTER:Ｖ経験 < 11 && EXP:MASTER:性交経験 < 9
+		LOCAL:1 |= 1p0
+	ENDIF
+ENDIF
+
+;1p4:Ａ性交経験チェック
+;奴隷のＡ経験と性交経験を判定→Ａ経験不足として扱う(p4)
+IF LOCAL:0 & 1p4
+	IF EXP:MASTER:Ａ経験 < 1
+		LOCAL:1 |= 4p4
+	ELSEIF EXP:MASTER:Ａ経験 < 6 && EXP:MASTER:性交経験 < 11
+		LOCAL:1 |= 3p4
+	ELSEIF EXP:MASTER:Ａ経験 < 13 && EXP:MASTER:性交経験 < 21
+		LOCAL:1 |= 2p4
+	ELSEIF EXP:MASTER:Ａ経験 < 26 && EXP:MASTER:性交経験 < 31
+		LOCAL:1 |= 1p4
+	ENDIF
+ENDIF
+
+;1p5:逆レイプ経験チェック
+;奴隷の性交経験と調教レベルを判定→逆レイプ経験不足として扱う(p8)
+IF LOCAL:0 & 1p5
+	IF EXP:MASTER:性交経験 < 1 && CFLAG:MASTER:調教レベル < 3
+		LOCAL:1 |= 4p8
+	ELSEIF EXP:MASTER:性交経験 < 6 && CFLAG:MASTER:調教レベル < 5
+		LOCAL:1 |= 3p8
+	ELSEIF EXP:MASTER:性交経験 < 13 && CFLAG:MASTER:調教レベル < 8
+		LOCAL:1 |= 2p8
+	ELSEIF EXP:MASTER:性交経験 < 26 && CFLAG:MASTER:調教レベル < 11
+		LOCAL:1 |= 1p8
+	ENDIF
+ENDIF
+
+;1p6:Ｖ拡張経験チェック(フィストファック)
+;奴隷のＶ経験とＶ拡張経験を判定→Ｖ経験不足として扱う(p0)
+IF LOCAL:0 & 1p6
+	IF EXP:MASTER:Ｖ経験 < 20 || EXP:MASTER:Ｖ拡張経験 < 1
+		LOCAL:1 |= 4p0
+	ELSEIF EXP:MASTER:Ｖ経験 < 25 || EXP:MASTER:Ｖ拡張経験 < 2
+		LOCAL:1 |= 3p0
+	ELSEIF EXP:MASTER:Ｖ経験 < 30 || EXP:MASTER:Ｖ拡張経験 < 4
+		LOCAL:1 |= 2p0
+	ELSEIF EXP:MASTER:Ｖ拡張経験 < 6
+		LOCAL:1 |= 1p0
+	ENDIF
+ENDIF
+
+;1p7:Ａ拡張経験チェック(アナルフィスト)
+;奴隷のＡ経験とＡ拡張経験を判定→Ａ経験不足として扱う(p4)
+IF LOCAL:0 & 1p7
+	IF EXP:MASTER:Ａ経験 < 20 || EXP:MASTER:Ａ拡張経験 < 1
+		LOCAL:1 |= 4p4
+	ELSEIF EXP:MASTER:Ａ経験 < 25 || EXP:MASTER:Ａ拡張経験 < 2
+		LOCAL:1 |= 3p4
+	ELSEIF EXP:MASTER:Ａ経験 < 30 || EXP:MASTER:Ａ拡張経験 < 4
+		LOCAL:1 |= 2p4
+	ELSEIF EXP:MASTER:Ａ拡張経験 < 6
+		LOCAL:1 |= 1p4
+	ENDIF
+ENDIF
+
+;経験不足レベルを返す
+RETURNF MAX(COUNTBIT(LOCAL:1, 0, 3), COUNTBIT(LOCAL:1, 4, 7), COUNTBIT(LOCAL:1, 8, 11))
+
+
+;-------------------------------------------------
+;関数名:LUBE_INSUFF
+;概　要:潤滑不足チェック関数
+;引　数:ARG…真の場合、助手のプレイを判定する
+;戻り値:潤滑不足レベル。0なら潤滑十分(最大3)
+;備　考:式中関数
+;経験不足の場合、戻り値が真（不足レベルに応じて1～3まで）になる
+;だいぶ面倒なつくりしてるけどいいやこのままで…
+;-------------------------------------------------
+@LUBE_INSUFF(ARG)
+#FUNCTION
+#LOCALSIZE 1
+
+;引数不正なら戻る
+SIF ARG < 0
+	RETURNF 0
+;潤滑判定パターン(0:判定なし, 1:通常の判定, 2:拡張プレイ)
+LOCAL = 0
+
+;調教者によるプレイを判定
+IF !ARG
+	;ACTの判定
+	SELECTCASE TFLAG:ACT
+		;常に潤滑判定のあるプレイ
+		;アナル愛撫, 貝合わせ/素股する, パイズリする, 指挿入れ
+		;アナルビーズ
+		;正常位, 後背位, 騎乗位, 対面座位, 背面座位, アナルセックス, 逆レイプ
+		CASE 13, 16, 17, 19, 23, 30 TO 36, 95 TO 103, 303 TO 311
+			LOCAL = 1
+		;道具装着時のみ潤滑判定のあるプレイ
+		;バイブ, アナルバイブ, ペニスバンド
+		CASE 21, 22, 26
+			;派生(装着)
+			SIF TFLAG:ACT派生 == 0
+				LOCAL = 1
+		;拡張プレイ(より多くの潤滑が必要)
+		;フィストファック, アナルフィスト, 両穴フィスト
+		CASE 70 TO 72
+			LOCAL = 2
+	ENDSELECT
+	;追加行動の判定
+	SELECTCASE TFLAG:追加行動
+		CASE 2, 3
+			LOCAL = 1
+	ENDSELECT
+;助手によるプレイを判定
+;実際のチェックはアナルビーズくらいしかしてないが、
+;ここでは調教者のプレイと同様のチェックをする
+;つまり雰囲気重視。異論は認める
+ELSE
+	;助手ACTの判定
+	SELECTCASE NOWASSIACTNAME(ARG)
+		CASE "逆レイプ", "アナル愛撫", "アナルローター", "アナルバイブ", "性交", "指挿入", "バイブ"
+			LOCAL = 1
+	ENDSELECT
+	;コンビネーションの判定
+	SELECTCASE TFLAG:ACT
+		CASE 303 TO 310
+			LOCAL = 1
+	ENDSELECT
+ENDIF
+
+;潤滑のパラメータとローションの残り効力をチェック
+SELECTCASE LOCAL
+	;通常の判定
+	CASE 1
+		IF PALAM:MASTER:潤滑 < 100 && TEQUIP:ローション < 3
+			RETURNF 3
+		ELSEIF PALAM:MASTER:潤滑 < 250 && TEQUIP:ローション < 2
+			RETURNF 2
+		ELSEIF PALAM:MASTER:潤滑 < 500 && TEQUIP:ローション < 1
+			RETURNF 1
+		ENDIF
+	;拡張プレイ
+	CASE 2
+		IF PALAM:MASTER:潤滑 < 500 && TEQUIP:ローション < 3
+			RETURNF 3
+		ELSEIF PALAM:MASTER:潤滑 < 1200 && TEQUIP:ローション < 2
+			RETURNF 2
+		ELSEIF PALAM:MASTER:潤滑 < 2000 && TEQUIP:ローション < 1
+			RETURNF 1
+		ENDIF
+ENDSELECT
+
+;上で引っかからなかった場合
+;潤滑十分(または判定の必要なし)
+RETURNF 0
+
+
+;-------------------------------------------------
+;関数名:IS_UNEXTRACTION
+;概　要:中出し時の抜かず状態遅延判定用関数
+;引　数:ARG:0…[省略可]抜かず対象のペニスの持ち主を表す登録番号(現在MASTERのみ)
+;戻り値:中出しタイミングでの抜かず状態を表す数値(0~n)。1以上なら抜かず状態での中出し
+;備　考:式中関数
+;中出し時に抜かず状態がどのような値であったかを返す
+;もし口上で使えるタイミングがあるならお引越しかも
+;新規作成@revkoishi(14/06/07)
+;-------------------------------------------------
+@IS_UNEXTRACTION(ARG:0)
+#FUNCTION
+RETURNF _UNEXTRACTION(ARG:0)
+
+
+;-------------------------------------------------
+;関数名:_UNEXTRACTION
+;概　要:中出し時の抜かず状態遅延判定用変数保持関数
+;引　数:ARG:0…[省略可]抜かず対象のペニスの持ち主を表す登録番号(現在MASTERのみ)
+;　　　 ARG:1…[省略可]モード。真(1)ならSET、偽(0)ならGET
+;　　　 ARG:2…[省略可]SETモードの場合必須。代入する抜かず状態を表す数値(0~n)。1以上なら抜かず状態での中出し
+;戻り値:中出しタイミングでの抜かず状態を表す数値(0~n)。1以上なら抜かず状態での中出し
+;備　考:式中関数、内部関数
+;新規作成@revkoishi(14/06/07)
+;-------------------------------------------------
+@_UNEXTRACTION(ARG:0 = -2, ARG:1, ARG:2)
+#FUNCTION
+ARG:0 = 0
+LOCAL:(ARG:0) = ARG:1 ? ARG:2 # LOCAL:(ARG:0)
+RETURNF LOCAL:(ARG:0)

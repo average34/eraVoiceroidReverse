@@ -1,0 +1,447 @@
+﻿;===============================================================================
+;
+;	HTML_PRINT関連関数群
+;
+;===============================================================================
+;	例：LOCALS = %HTML_ADDBOLDTAG()%
+;		LOCALS = %HTML_ADDFONTTAG(LOCALS,0xFFC0C0)%
+;		LOCALS = %HTML_ADDBUTTONTAG(LOCALS,"UNKO")%
+;		LOCALS = %HTML_SETTAGTEXT("うんこうんこ",LOCALS)%
+;		→ <button value = 'UNKO'><font color = '#ffc0c0' ><b>うんこうんこ</b></font></button>
+;-------------------------------------------------------------------------------
+;
+;	■変数使いたい！とかいちいち手打ちがめんどくさい俺みたいな人向け
+;
+;	■本文置換用【HTML】はHTML_FUNC.ERHにて、HTML_SUBSTITUTEで
+;	　CONST指定してあんので、気に食わないなら各自で置き換えましょう
+;
+;	■複数回やっちゃったらその分ネストされちゃうよ → <button><button></button></button>
+;	　どういう不具合が起きるかは知らないし、回避処理はSTRFINDが重いのでやらないよ
+;
+;	■当然ライセンスフリー
+;
+;===============================================================================
+
+
+;-------------------------------------------------------------------------------
+;	HTML_TOTAGTEXT(式中関数)
+;-------------------------------------------------------------------------------
+;	例：LOCALS:0 = <button value = 'hoge'><font color = '#8080c0'>本文だよー</font></button>
+;		LOCALS:1 = %HTML_TOTAGTEXT(LOCALS:0)%
+;		→  <button value = 'hoge'><font color = '#8080c0'>【HTML】</font></button>
+;-------------------------------------------------------------------------------
+;	基本命令の HTML_TOPLAINTEXT の逆、タグ部分だけを取得し、無いなら何も返さない
+;	本文だけ差し替えたりする用。あとレイヤとか。
+;===============================================================================
+@HTML_TOTAGTEXT( ARGS )
+#FUNCTIONS
+#LOCALSSIZE 1
+LOCALS '= REPLACE( ARGS, ESCAPE(HTML_TOPLAINTEXT(ARGS)), HTML_SUBSTITUTE)
+IF LOCALS != HTML_SUBSTITUTE
+	RETURNF LOCALS
+ELSE
+	RETURNF
+ENDIF
+
+
+;-------------------------------------------------------------------------------
+;	HTML_SETTAGTEXT(式中関数)
+;-------------------------------------------------------------------------------
+;	例：LOCALS:0 = <button value = 'hoge'><font color = '#8080c0'>【HTML】</font></button>
+;		LOCALS:1 = %HTML_SETTAGTEXT("本文だよー",LOCALS:0)%
+;		→  <button value = 'hoge'><font color = '#8080c0'>本文だよー</font></button>
+;-------------------------------------------------------------------------------
+;	HTML_TOTAGTEXTで避けたタグ部分を差し戻す
+;===============================================================================
+@HTML_SETTAGTEXT( ARGS , ARGS:1 )
+#FUNCTIONS
+RETURNF REPLACE( ARGS:1, HTML_SUBSTITUTE, ARGS )
+
+
+;-------------------------------------------------------------------------------
+;	HTML_SETTAG(式中関数)
+;-------------------------------------------------------------------------------
+;	例：LOCALS:0 = <button value = 'hoge'><font color = '#8080c0'>【HTML】</font></button>
+;		LOCALS:1 = %HTML_SETTAGTEXT(LOCALS:0,"本文だよー")%
+;		→  <button value = 'hoge'><font color = '#8080c0'>本文だよー</font></button>
+;-------------------------------------------------------------------------------
+;	HTML_TOTAGTEXTで避けたタグ部分を差し戻す
+;===============================================================================
+@HTML_SETTAG( ARGS , ARGS:1 )
+#FUNCTIONS
+RETURNF REPLACE( ARGS, HTML_SUBSTITUTE, ARGS:1 )
+
+;-------------------------------------------------------------------------------
+;	HTML_GETTAG(式中関数)
+;-------------------------------------------------------------------------------
+;	例：LOCALS:0 = <button value = 'hoge'><font color = '#8080c0'>【HTML】</font></button>
+;		LOCALS:1 = %HTML_GETTAG(LOCALS:0,"color")%
+;		→  0x8080c0
+;
+;	例：LOCALS:0 = <button value = 'hoge'><font color = '#8080c0'>【HTML】</font></button>
+;		LOCALS:1 = %HTML_GETTAG(LOCALS:0,"BUTTON")%
+;		→  hoge
+;-------------------------------------------------------------------------------
+;	・HTML_PRINTの仕様によって格納されている文字列から
+;	　align, color, bcolor, face, buttonの各VALUE値を取得する
+;	　commentで<!--  -->の中身も取得できる
+;
+;	・コメントタグの取得の仕様(comment)
+;	　構文上の(ホワイトスペース(意味のない空白)なのか、
+;	　文字列変数内部の意味のある半角スペースなのかをERB上から判断することができないため
+;	　取得した文字列から半角スペースは取り除かれます
+;	　( <!--HOGE--> <!-- HOGE --> <!-- H O G E  -->はすべてHOGEと帰る )
+;
+;	・→変更　(旧仕様：COLORとBCOLORの二つは、#ZZZZZZ → 0xZZZZZZに変換するため、直でTOINTに投げ込める)
+;	　【第三引数ARGが1の場合に限り】 #ZZZZZZ → 0xZZZZZZに変換を試みる
+;	　COLORBYNAME指定の可能性があることをすっかりうっかり無視してた
+;
+;	・かなり力技な実装してるため、速度が大事なものにはちょい厳しい
+;	　STRFIND使うしか無いのにSTRFIND重いねん・・・
+;	　一応上で書いた多重ネスト回避処理はこれを使えば可能
+;===============================================================================
+@HTML_GETTAG( ARGS = "＠", ARGS:1 = "＠" , ARG )
+#FUNCTIONS
+#LOCALSIZE 5
+#LOCALSSIZE 20
+#DIMS TAG,1
+#DIMS VALUE,1
+#DIM SPLITNUM,1
+VARSET LOCAL
+; 引数は大文字でも小文字でもよいが、内部は小文字で回ってるため小文字推奨
+TAG '= TOLOWER(ARGS:1)
+VALUE =
+; 引数をそれぞれの仕様とあわせる
+SELECTCASE TAG
+	; ネストでもなければVALUE型でもない独特すぎるコメントタグは専用処理
+	CASE "comment","flag"
+		LOCAL:0 = STRFINDU( ARGS, ESCAPE("<!--") )
+		IF LOCAL:0 != -1
+			LOCAL:1 = STRFINDU( ARGS, ESCAPE("-->") )
+			IF LOCAL:1 != -1
+				LOCAL:0 += 4
+				RETURNF REPLACE( SUBSTRINGU( ARGS , LOCAL:0 , (LOCAL:1 - LOCAL:0) ) , " ", "" )
+			ENDIF
+		ENDIF
+		RETURNF
+	CASE "align"
+		TAG   = <p
+		VALUE = align
+	CASE "color"
+		TAG   = <font
+		VALUE = color
+		LOCAL:4 = 1
+	CASE "bcolor"
+		TAG   = <font
+		VALUE = bcolor
+		LOCAL:4 = 1
+	CASE "face"
+		TAG   = <font
+		VALUE = face
+	CASE "button"
+		TAG   = <button
+		VALUE = value
+	CASE "tooltip","title"
+		TAG   = <button
+		VALUE = title
+	CASE "＠"
+		SPLIT ARGS, ">", LOCALS, SPLITNUM
+		RETURNF HTML_TOPLAINTEXT(ARGS)
+	CASEELSE
+		THROW %ARGS:1%が異常です
+ENDSELECT
+; タグをばらばらにSPLIT SPLIT再利用可能
+SIF ARGS != "＠"
+	SPLIT ARGS, ">", LOCALS, SPLITNUM
+; SPLITしたところから上で指定されたTAGを探す
+LOCAL = FINDELEMENT( LOCALS ,ESCAPE(TAG) , 0 , SPLITNUM + 1 )
+; 見つかった
+IF LOCAL != -1
+	; 上で指定されたVALUEを探す
+	LOCAL:1 = STRFINDU( LOCALS:LOCAL , ESCAPE(VALUE) , 0)
+	; 見つかった
+	IF LOCAL:1 != -1
+		; VALUEの1つ次の ' の文字位置と、VALUEの2つ次の ' (つまりネスト)までの文字位置を探す
+		LOCAL:2 = STRFINDU( LOCALS:LOCAL , "'" , LOCAL:1 ) + 1
+		LOCAL:3 = STRFINDU( LOCALS:LOCAL , "'" , LOCAL:2 + 1 ) - LOCAL:2
+			; 見つからないわきゃ無いと思うが
+			SIF LOCAL:2 == -1 || LOCAL:3 == -1
+				THROW %ARGS%のネストが異常です
+		; 前後カットで必要な部分を抽出
+		VALUE '= SUBSTRINGU( LOCALS:LOCAL , LOCAL:2 , LOCAL:3 )
+		; 16進数だよフラグがあるなら#を0xに変換する
+		IF LOCAL:4 == 1 && ARG == 1
+			RETURNF REPLACE( VALUE , "#" , "0x" )
+		ELSE
+			RETURNF VALUE
+		ENDIF
+	ENDIF
+ENDIF
+RETURNF
+
+;-------------------------------------------------------------------------------
+;	HTML_DELTAG(式中関数)
+;-------------------------------------------------------------------------------
+;	例：LOCALS:0 = <button value = 'hoge'><font color = '#8080c0'>【HTML】</font></button>
+;		LOCALS:1 = %HTML_DELTAG(LOCALS:0,"color")%
+;		→  0x8080c0
+;
+;	例：LOCALS:0 = <button value = 'hoge'><font color = '#8080c0'>【HTML】</font></button>
+;		LOCALS:1 = %HTML_GETTAG(LOCALS:0,"BUTTON")%
+;		→  hoge
+;-------------------------------------------------------------------------------
+@HTML_DELTAG( ARGS = HTML_SUBSTITUTE, ARGS:1 )
+#FUNCTIONS
+#LOCALSIZE 5
+#LOCALSSIZE 3
+VARSET LOCAL
+VARSET LOCALS
+; 引数は大文字でも小文字でもよいが、内部は小文字で回ってるため小文字推奨
+LOCALS '= ARGS
+ARGS:1 '= TOLOWER(ARGS:1)
+; 引数をそれぞれの仕様とあわせる
+; は<p align='～'><nobr><br><button value='～'><font face='～' color='#～' bcolor='#～'><b><i><u><s>です
+SELECTCASE ARGS:1
+	CASE "p"
+		LOCALS:1 = <p
+		LOCALS:2 = </p>
+	CASE "nobr"
+		LOCALS:1 = <nobr
+		LOCALS:2 = </nobr>
+	CASE "br"
+		LOCALS:1 = <br
+		LOCALS:2 =
+	CASE "button"
+		LOCALS:1 = <button
+		LOCALS:2 = </button>
+	CASE "font"
+		LOCALS:1 = <font
+		LOCALS:2 = </font>
+	CASE "comment","flag"
+		LOCALS:1 '= "<!-- "
+		LOCALS:2 '= " -->"
+	CASE "b","bold"
+		LOCALS:1 = <b
+		LOCALS:2 = </b>
+	CASE "i","italic"
+		LOCALS:1 = <i
+		LOCALS:2 = </i>
+	CASE "u","under","underline"
+		LOCALS:1 = <u
+		LOCALS:2 = </u>
+	CASE "s","strike"
+		LOCALS:1 = <s
+		LOCALS:2 = </s>
+	CASEELSE
+		THROW %ARGS:1%が異常です
+ENDSELECT
+; "<x"を探す
+LOCAL:1 = STRFINDU( LOCALS, LOCALS:1 , 0 )
+; 見つかった
+IF LOCAL:1 != -1
+	; <x直後の">"を探す
+	LOCAL:2 = STRFINDU( LOCALS , ">" , LOCAL:1 )
+	; 見つかった
+	IF LOCAL:2 != -1
+		LOCALS '= SUBSTRINGU( LOCALS,  0, LOCAL:1 ) + SUBSTRINGU( LOCALS, LOCAL:2 + 1 )
+		; </xxx>を削除
+		LOCALS '= REPLACE( ESCAPE(LOCALS), ESCAPE(LOCALS:2), "" )
+	ENDIF
+ENDIF
+RETURNF LOCALS
+
+
+;-------------------------------------------------------------------------------
+;	HTML_ADDFONTTAG(式中関数)
+;-------------------------------------------------------------------------------
+;	例：LOCALS:0 = %HTML_ADDFONTTAG("わはー",0xFF8080)%
+;		→  <font color = '#FF8080'>わはー</font>
+;-------------------------------------------------------------------------------
+;	ARGSにfontタグをネストさせる
+;	引数は本文, 色(int), マウスオーバー色(int), フォント指定(str)
+;===============================================================================
+@HTML_ADDFONTTAG( ARGS = HTML_SUBSTITUTE , COLOR , BCOLOR , FACE )
+#FUNCTIONS
+#DIMS COLOR,1
+#DIMS BCOLOR,1
+#DIMS FACE,1
+#LOCALSIZE 1
+#LOCALSSIZE 1
+LOCALS =
+; color = '#c08080'とかの色設定
+IF COLOR != ""
+	IF ISNUMERIC(COLOR) && INRANGE( TOINT(COLOR),0,0xFFFFFF )
+		LOCALS += "color = '#" + CONVERT(TOINT(COLOR),16) + "' "
+	ELSE
+		LOCALS += "color = '" + COLOR + "' "
+	ENDIF
+ENDIF
+; bcolor = '#ffff00'とかの色設定
+IF BCOLOR != ""
+	IF ISNUMERIC(BCOLOR) && INRANGE( TOINT(BCOLOR),0,0xFFFFFF )
+		LOCALS += "bcolor = '#" + CONVERT(TOINT(BCOLOR),16) + "' "
+	ELSE
+		LOCALS += "bcolor = '" + BCOLOR + "' "
+	ENDIF
+ENDIF
+; face = 'ＭＳ 明朝'とかのフォント設定
+IF FACE != ""
+	SIF CHKFONT(FACE) == 1
+		LOCALS += "face = '" + FACE + "' "
+ENDIF
+; ここまで来てfontタグに何か追加するものがあった
+IF LOCALS != ""
+	RETURNF "<font " + LOCALS + ">" + ARGS + "</font>"
+ELSE
+	RETURNF ARGS
+ENDIF
+
+;-------------------------------------------------------------------------------
+;	HTML_ADDBUTTONTAG(式中関数)
+;-------------------------------------------------------------------------------
+;	例：LOCALS:0 = %HTML_ADDBUTTONTAG("わはー","HOGE")%
+;		→  <button value = 'HOGE'>わはー</button>
+;-------------------------------------------------------------------------------
+;	ARGSにbuttonタグをネストさせる
+;	引数は本文, ボタンラベル(str)
+;===============================================================================
+@HTML_ADDBUTTONTAG(ARGS = HTML_SUBSTITUTE , ARGS:1 , ARGS:2)
+#FUNCTIONS
+#DIMS VALUE,1
+#DIMS TITLE,1
+VARSET LOCALS
+SIF ARGS:1 != ""
+	LOCALS += "value = '" + ARGS:1 + "' "
+SIF ARGS:2 != ""
+	LOCALS += "title = '" + ARGS:2 + "' "
+IF LOCALS != ""
+	RETURNF "<button " + LOCALS + ">" + ARGS + "</button>"
+ELSE
+	RETURNF ARGS
+ENDIF
+
+
+;-------------------------------------------------------------------------------
+;	HTML_ADDCOMMENTTAG(式中関数)
+;-------------------------------------------------------------------------------
+;	例：LOCALS:0 = %HTML_ADDCOMMENTTAG("わはー","HOGE")%
+;		→  わはー<!-- HOGE -->
+;
+;	例：LOCALS:0 = わはー<!-- HOGE -->
+;		LOCALS:0 = %HTML_ADDCOMMENTTAG(LOCALS:0,"HAGE")%
+;		→  わはー<!-- HOGE/HAGE -->
+
+;-------------------------------------------------------------------------------
+;	ARGSに<!--ARGS:1-->を付加する
+;	すでにコメントタグが存在している場合ARGS:2を区切り記号として(初期値"/")
+;	既存のものに追加する形で動作する
+;	(中身の分割なんかをSPLITでやることを想定しての仕様)
+;===============================================================================
+@HTML_ADDCOMMENTTAG(ARGS = HTML_SUBSTITUTE , ARGS:1 , ARGS:2 = "/")
+#FUNCTIONS
+#LOCALSSIZE 2
+VARSET LOCALS
+LOCALS:1 '= HTML_GETTAG(ARGS,"COMMENT")
+IF LOCALS:1 != ""
+	LOCALS:1 += ARGS:2 + ARGS:1
+	LOCALS:0 '= HTML_DELTAG(ARGS,"COMMENT")
+ELSE
+	LOCALS:1 '= ARGS:1
+	LOCALS:0 '= ARGS
+ENDIF
+RETURNF LOCALS:0 + "<!-- " + LOCALS:1 + " -->"
+
+;-------------------------------------------------------------------------------
+;	HTML_ADDOTHERTAG(式中関数)
+;-------------------------------------------------------------------------------
+;	例：LOCALS:0 = %HTML_ADDOTHERTAG("わはー","b")%
+;		→  <b>わはー</b>
+;-------------------------------------------------------------------------------
+;	見たまんまシリーズを一つでやる
+;===============================================================================
+@HTML_ADDOTHERTAG( ARGS = HTML_SUBSTITUTE, ARGS:1 )
+#FUNCTIONS
+#LOCALSSIZE 2
+VARSET LOCALS
+ARGS:1 '= TOLOWER(ARGS:1)
+SELECTCASE ARGS:1
+	CASE "nobr"
+		LOCALS:0 = <nobr>
+		LOCALS:1 = </nobr>
+	CASE "br"
+		LOCALS:0 = <br>
+		LOCALS:1 =
+	CASE "b","bold"
+		LOCALS:0  = <b>
+		LOCALS:1 = </b>
+	CASE "i","italic"
+		LOCALS:0  = <i>
+		LOCALS:1 = </i>
+	CASE "u","under","underline"
+		LOCALS:0  = <u>
+		LOCALS:1 = </u>
+	CASE "s","strike"
+		LOCALS:0  = <s>
+		LOCALS:1 = </s>
+	CASEELSE
+		THROW %ARGS:1%が異常です (<nobr> <br> <b> <i> <u> <s>のみ対応しています)
+ENDSELECT
+RETURNF LOCALS:0 + ARGS + LOCALS:1
+
+;-------------------------------------------------------------------------------
+;	HTML_ADDNOBRTAG(式中関数)
+;-------------------------------------------------------------------------------
+;	まぁ見たまんま
+;===============================================================================
+@HTML_ADDNOBRTAG( ARGS = HTML_SUBSTITUTE )
+#FUNCTIONS
+RETURNF "<nobr>" + ARGS + "</nobr>"
+
+;-------------------------------------------------------------------------------
+;	HTML_ADDBOLDTAG(式中関数)
+;-------------------------------------------------------------------------------
+;	ｒｙ
+;===============================================================================
+@HTML_ADDBOLDTAG( ARGS = HTML_SUBSTITUTE )
+#FUNCTIONS
+RETURNF "<b>" + ARGS + "</b>"
+
+;-------------------------------------------------------------------------------
+;	HTML_ADDITALICTAG(式中関数)
+;-------------------------------------------------------------------------------
+;	ｒｙ
+;===============================================================================
+@HTML_ADDITALICTAG( ARGS = HTML_SUBSTITUTE )
+#FUNCTIONS
+RETURNF "<i>" + ARGS + "</i>"
+
+;-------------------------------------------------------------------------------
+;	HTML_ADDUNDERTAG(式中関数)
+;-------------------------------------------------------------------------------
+;	ｒｙ
+;===============================================================================
+@HTML_ADDUNDERTAG( ARGS = HTML_SUBSTITUTE )
+#FUNCTIONS
+RETURNF "<u>" + ARGS + "</u>"
+
+;-------------------------------------------------------------------------------
+;	HTML_ADDSTRIKETAG(式中関数)
+;-------------------------------------------------------------------------------
+;	ｒｙ
+;===============================================================================
+@HTML_ADDSTRIKETAG( ARGS = HTML_SUBSTITUTE )
+#FUNCTIONS
+RETURNF "<s>" + ARGS + "</s>"
+
+;-------------------------------------------------------------------------------
+;	HTML_ADDALIGNTAG(式中関数)
+;-------------------------------------------------------------------------------
+;	Pタグは最前/最後尾でないとダメらしいので、最後に使おう
+;===============================================================================
+@HTML_ADDALIGNTAG( ARGS = HTML_SUBSTITUTE , VALUE )
+#FUNCTIONS
+#DIMS VALUE,1
+RETURNF "<p align = '" + VALUE + "'>" + ARGS + "</p>"
+
+; <br>
+; さすがに手動で入れてちょ

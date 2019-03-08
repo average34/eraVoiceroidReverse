@@ -1,0 +1,843 @@
+﻿;≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡
+;口上呼び出し用ターミナルファイル
+;≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡
+
+;-------------------------------------------------
+;口上表示前後処理@KOJO_BAA
+;口上表示前後に呼ぶことで口上呼び出し前の表示設定に戻ります@これみ
+;引数0が-1だと前処理、-2だと全ての後処理です
+;また、引数0に正の数値を入れることでリセットを行う設定を選択・除外できます
+;※0を入れた場合は何もしないことになります
+;-------------------------------------------------
+@KOJO_BAA(ARG)
+;前処理
+IF ARG == -1
+	;背景色保存
+	LOCAL:0 = GETBGCOLOR()
+	;文字属性保存
+	LOCAL:1 = GETSTYLE()
+	
+	;抹消予定フラグのセット
+	
+;後処理
+ELSE
+	;ARGが負なら全ての後処理を行う
+	SIF ARG < 0
+		ARG = 7
+	;背景色リセット
+	SIF (ARG & 1) && LOCAL:0 != GETBGCOLOR()
+		SETBGCOLOR LOCAL:0
+	;文字属性リセット
+	SIF (ARG & 2) && LOCAL:1 != GETSTYLE()
+		FONTSTYLE LOCAL:1
+	;文字色リセット
+	SIF (ARG & 4)
+		RESETCOLOR
+	
+	;抹消予定フラグのリセット
+	
+ENDIF
+;RESULT保持
+RETURN RESULT
+
+;-------------------------------------------------
+;口上あらすじ@KOJO_DIGEST
+;ご主人様選択時に表示されます。一次的にTARGETとして手元に呼ばれ、口上表示後にまた消えます。
+;対象限定つきで記述した場合、その対象になるMASTERの場合はそちらが表示されます。
+;引数はキャラ番号。省略不可です。登録番号でないことに要注意！
+;RESULT値が0だと口上を表示しなかったことを表します
+;-------------------------------------------------
+@KOJO_DIGEST(ARG:0 = -1)
+;引数省略時、RESULT0で戻る
+SIF ARG < 0
+	RETURN 0
+;TARGETを捏造
+ADDCHARA ARG
+TARGET = CHARANUM-1
+;前処理
+CALL KOJO_BAA(-1)
+;口上色設定
+CALL KOJO_COLOR(TARGET)
+CALL KOJO_CALL(@"DIGEST_K{ARG}", TARGET)
+;後処理
+CALL KOJO_BAA(-2)
+DELCHARA TARGET
+TARGET = -1
+RETURN RESULT
+
+;-------------------------------------------------
+;口上注意事項@KOJO_ATTENTION
+;ご主人様選択時に表示されます。一次的にTARGETとして手元に呼ばれ、口上表示後にまた消えます。
+;対象限定つきで記述した場合、その対象になるMASTERの場合はそちらが表示されます。
+;引数はキャラ番号。省略不可です。登録番号でないことに要注意！
+;RESULT値が0だと口上を表示しなかったことを表します
+;-------------------------------------------------
+@KOJO_ATTENTION(ARG:0 = -1)
+;引数省略時、RESULT0で戻る
+SIF ARG < 0
+	RETURN 0
+;TARGETを捏造
+ADDCHARA ARG
+TARGET = CHARANUM-1
+;前処理
+CALL KOJO_BAA(-1)
+;口上色設定
+CALL KOJO_COLOR(TARGET)
+CALL KOJO_CALL(@"ATTENTION_K{ARG}", TARGET)
+;後処理
+CALL KOJO_BAA(-2)
+DELCHARA TARGET
+TARGET = -1
+RETURN RESULT
+
+;-------------------------------------------------
+;イベント口上@KOJO_EVENT
+;イベント時の口上、イベント開始時に出力します
+;引数0はイベント番号、引数1はイベントの派生番号（派生がないものは省略してよい）
+;引数2はキャラの登録番号（省略するとTARGET）
+;RESULT値が0だと口上を表示しなかったことを表します
+;-------------------------------------------------
+@KOJO_EVENT(ARG:0, ARG:1, ARG:2 = -2)
+;引数2省略時、TARGETに変換
+ARG:2 = ARG:2 != -2 ? ARG:2 # TARGET
+;口上で参照するためにイベント番号をフラグへ落とす
+TFLAG:イベント番号 = ARG
+;引数2が-1であれば呼び出さない
+SIF ARG:2 < 0
+	RETURN 0
+;前処理
+CALL KOJO_BAA(-1)
+;口上色設定
+CALL KOJO_COLOR(ARG:2)
+;口上表示オンまたは口上強制呼び出し時、口上呼び出し
+SIF FLAG:口上 || RESULT
+	CALL KOJO_CALL(@"EVENT_K{NO:(ARG:2)}_{ARG}", ARG:2, 1, ARG:1)
+;後処理
+CALL KOJO_BAA(-2)
+;口上表示オンなら口上が表示されたかを返す
+RETURN FLAG:口上 ? RESULT # 0
+
+;-------------------------------------------------
+;助手イベント口上@KOJO_EVENT_ASSI
+;助手関連イベント時の口上、イベント開始時に出力します。常に右揃えになる
+;引数0はイベント番号、引数1はイベントの派生番号（派生がないものは省略してよい）
+;RESULT値が0だと口上を表示しなかったことを表します
+;また、RESULT値が1だとDRAWLINE、2だと一行改行、3だと両方します
+;-------------------------------------------------
+@KOJO_EVENT_ASSI(ARG:0, ARG:1)
+;助手が居なければ呼び出さない
+SIF ASSI < 0
+	RETURN 0
+TFLAG:助手イベント番号 = ARG
+;前処理
+CALL KOJO_BAA(-1)
+;口上色設定
+CALL KOJO_COLOR(ASSI)
+;口上表示オンまたは口上強制呼び出し時、口上呼び出し
+IF FLAG:口上 || RESULT
+	;右揃え
+	ALIGNMENT RIGHT
+	CALL KOJO_CALL(@"EVENT_ASSI_K{NO:ASSI}_{ARG}", ASSI, 1, ARG:1)
+	;左揃えに戻す
+	ALIGNMENT LEFT
+ENDIF
+;後処理
+CALL KOJO_BAA(-2)
+;口上表示オンなら口上が表示されたかを返す
+RETURN FLAG:口上 ? RESULT # 0
+
+;-------------------------------------------------
+;刻印取得口上@KOJO_MARK
+;刻印取得時に出力します
+;引数はそれぞれが刻印番号に対応、そのコマンドで取得した刻印の数値が入ります
+;RESULT値が0だと口上を表示しなかったことを表します
+;-------------------------------------------------
+@KOJO_MARK(ARG:0, ARG:1, ARG:2, ARG:3, ARG:4)
+;TARGET不在時には呼び出さない
+SIF TARGET < 0
+	RETURN 0
+;前処理
+CALL KOJO_BAA(-1)
+;口上色設定
+CALL KOJO_COLOR(TARGET)
+;口上表示オンまたは口上強制呼び出し時、口上呼び出し
+SIF FLAG:口上 || RESULT
+	CALL KOJO_CALL(@"MARK_K{NO:TARGET}", TARGET, 5, ARG, ARG:1, ARG:2, ARG:3, ARG:4)
+;後処理
+CALL KOJO_BAA(-2)
+;口上表示オンなら口上が表示された時一行あける
+SIF FLAG:口上 && RESULT
+	PRINTL 
+;口上表示オンなら口上が表示されたかを返す
+RETURN FLAG:口上 ? RESULT # 0
+
+;-------------------------------------------------
+;脱衣アクション口上@KOJO_DATUI
+;調教者アクションの前、強制脱衣か自主脱衣が発生したときに出力します
+;RESULT値が0だと口上を表示しなかったことを表します
+;※同じ物を二回呼ぶことになるので、
+;　調教者が脱がせた場合は調教者が脱いだを処理しません
+;-------------------------------------------------
+@KOJO_DATUI
+;前処理
+CALL KOJO_BAA(-1)
+;調教者が脱がせた
+IF TFLAG:強制脱衣 && TFLAG:助手ACT != 70
+	;例外：ご主人様が助手（TARGETのサポート脱衣口上を呼ぶ）
+	IF ASSI >= 0 && TALENT:ASSI:ご主人様
+		;助手を一時的に調教者と交代する
+		CALL ASSISWAP
+		;口上色設定
+		CALL KOJO_COLOR(ASSI)
+		;口上表示オンまたは口上強制呼び出し時、口上呼び出し
+		SIF FLAG:口上 || RESULT
+			CALL KOJO_CALL(@"DATUI_ASSI_K{NO:ASSI}")
+		;後処理
+		CALL KOJO_BAA(-2)
+		;助手を助手に戻す
+		CALL ASSISWAP
+	;通常
+	ELSE
+		;口上色設定
+		CALL KOJO_COLOR(TARGET)
+		;口上表示オンまたは口上強制呼び出し時、口上呼び出し
+		SIF FLAG:口上 || RESULT
+			CALL KOJO_CALL(@"DATUI_K{NO:TARGET}")
+		;後処理
+		CALL KOJO_BAA(-2)
+	ENDIF
+	;口上表示オンなら口上が表示されたかを返す
+	;※上記注釈参照
+	RETURN FLAG:口上 ? RESULT # 0
+;助手が脱がせた
+ELSEIF TFLAG:強制脱衣 && TFLAG:助手ACT == 70
+	;右揃え
+	ALIGNMENT RIGHT
+	;例外：ご主人様が助手（ASSIの脱衣口上を呼ぶ）
+	IF ASSI >= 0 && TALENT:ASSI:ご主人様
+		;助手を一時的に調教者と交代する
+		CALL ASSISWAP
+		;口上色設定
+		CALL KOJO_COLOR(TARGET)
+		;口上表示オンまたは口上強制呼び出し時、口上呼び出し
+		SIF FLAG:口上 || RESULT
+			CALL KOJO_CALL(@"DATUI_K{NO:TARGET}")
+		;後処理
+		CALL KOJO_BAA(-2)
+		;助手を助手に戻す
+		CALL ASSISWAP
+	;通常
+	ELSE
+		;口上色設定
+		CALL KOJO_COLOR(ASSI)
+		;口上表示オンまたは口上強制呼び出し時、口上呼び出し
+		SIF FLAG:口上 || RESULT
+			CALL KOJO_CALL(@"DATUI_ASSI_K{NO:ASSI}")
+		;後処理
+		CALL KOJO_BAA(-2)
+	ENDIF
+	;左揃えに戻す
+	ALIGNMENT LEFT
+ENDIF
+
+;調教者が脱いだ
+IF TFLAG:自主脱衣
+	;口上色設定
+	CALL KOJO_COLOR(TARGET)
+	;口上表示オンまたは口上強制呼び出し時、口上呼び出し
+	SIF FLAG:口上 || RESULT
+		CALL KOJO_CALL(@"DATUI_K{NO:TARGET}")
+	;後処理
+	CALL KOJO_BAA(-2)
+ENDIF
+
+;口上表示オンなら口上が表示されたかを返す
+RETURN FLAG:口上 ? RESULT # 0
+
+;-------------------------------------------------
+;姿勢変化口上@KOJO_POSE
+;姿勢の変更指示があったときに呼ばれる口上です
+;ACTは既に決まっているので中で参照することもできます。
+;ARGは調教対象の姿勢、ARG:1は位置前後、ARG:2は位置上下の変化です。変わらなかったときは-1が入ります
+;すべて-1のときは地の文が表示されずこの口上も呼ばれません。
+;-------------------------------------------------
+@KOJO_POSE(ARG = -1, ARG:1 = -1, ARG:2 = -1)
+;前処理
+CALL KOJO_BAA(-1)
+;返り値初期化
+RESULT = 0
+;口上色設定
+CALL KOJO_COLOR(TARGET)
+;口上表示オンまたは口上強制呼び出し時、口上呼び出し
+SIF FLAG:口上 || RESULT
+	CALL KOJO_CALL(@"POSE_K{NO:TARGET}", TARGET, 3, ARG, ARG:1, ARG:2)
+;後処理
+CALL KOJO_BAA(-2)
+;口上表示オンなら口上が表示されたかを返す
+RETURN FLAG:口上 ? RESULT # 0
+
+;-------------------------------------------------
+;地の文口上@KOJO_MESSAGE
+;地の文を置換する口上です
+;この口上が呼ばれ、真の値をRETURNした場合、通常の地の文が呼び出されません
+;また、RETURNにいれた値はFLAG:地の文制御に格納されます
+;ACT口上と連携する際に利用してください
+;なお、SP口上はSP_TRAIN_MESSAGE_KX_SPACT番号　となります
+;-------------------------------------------------
+@KOJO_TRAIN_MESSAGE
+;前処理
+CALL KOJO_BAA(-1)
+;返り値初期化
+RESULT = 0
+;口上呼び出し(SP行動時は呼び出し位置を変更)
+IF TFLAG:ＳＰ行動 >= 200
+	CALL KOJO_CALL(@"SP_TRAIN_MESSAGE_K{NO:TARGET}_{TFLAG:ACT}")
+ELSE
+	CALL KOJO_CALL(@"TRAIN_MESSAGE_K{NO:TARGET}_{TFLAG:ACT}")
+ENDIF
+;後処理
+CALL KOJO_BAA(-2)
+;地の文制御にRESULTが負なら0、正ならそのままを返す
+FLAG:地の文制御 = MAX(RESULT, 0)
+;返り値に地の文制御を返す
+RETURN FLAG:地の文制御
+
+;-------------------------------------------------
+;地の文口上@KOJO_MESSAGE2
+;上記とほぼ同じですが、こちらはリアクションの地の文を置き換えます
+;リアクション口上と連携する場合は口上内でFLAG:地の文制御に数値を代入してください
+;-------------------------------------------------
+@KOJO_TRAIN_MESSAGE2
+;前処理
+CALL KOJO_BAA(-1)
+;返り値初期化
+RESULT = 0
+;口上呼び出し(SP行動時は呼び出し位置を変更)
+IF TFLAG:ＳＰ行動 >= 200
+	CALL KOJO_CALL(@"SP_TRAIN_MESSAGE2_K{NO:TARGET}_{TFLAG:ACT}")
+ELSE
+	CALL KOJO_CALL(@"TRAIN_MESSAGE2_K{NO:TARGET}_{TFLAG:ACT}")
+ENDIF
+;後処理
+CALL KOJO_BAA(-2)
+;地の文制御にRESULTが負なら0、正ならそのままを返す
+FLAG:地の文制御 = MAX(RESULT, 0)
+;返り値に地の文制御を返す
+RETURN FLAG:地の文制御
+
+;-------------------------------------------------
+;アクション口上@KOJO_ACT
+;調教者アクションが発生したときに出力します
+;RESULT値が0だと口上を表示しなかったことを表します
+;RESULT値が2だと次の「媚薬等使用口上@KOJO_USE」を呼びません
+;アクション口上内で媚薬等使用口上を兼ねて書いた場合に指定してください
+;-------------------------------------------------
+@KOJO_ACT
+;前処理
+CALL KOJO_BAA(-1)
+;助手が媚薬等使用している場合、使用フラグを逃がす
+;こうしないと主人が媚薬を使った口上を表示してしまうため
+LOCAL = TFLAG:媚薬等使用
+;薬品を使用した助手が居れば、
+;媚薬使用は調教者ではないため媚薬等使用フラグを0に
+SIF GET_ASSIACTMATCH("薬品")
+	TFLAG:媚薬等使用 = 0
+;口上色設定
+CALL KOJO_COLOR(TARGET)
+;口上表示オンまたは口上強制呼び出し時、口上呼び出し
+IF FLAG:口上 || RESULT
+	;まずアクションごとの口上
+	CALL KOJO_CALL(@"ACT_K{NO:TARGET}_{TFLAG:ACT}")
+	;表示しなかった場合、コンビネーションが発生していれば派生前を呼んでみる
+	IF !RESULT && ASSI:1 >= 0 && TCVAR:(ASSI:1):助手方針 == GET_ASSIMENUNUM("コンビネーション")
+		;助手の方針（旧仕様）を立てて偽装
+		TFLAG:助手の方針 = 1
+		CALL KOJO_CALL(@"ACT_K{NO:TARGET}_{GET_COMBIACTNUM(TFLAG:ACT)}")
+	ENDIF
+	;表示しなかった場合汎用アクション口上（EASYテンプレート用の機能だけど他でも使えるかも）
+	SIF !RESULT
+		CALL KOJO_CALL(@"ACT_K{NO:TARGET}")
+ENDIF
+;後処理
+CALL KOJO_BAA(-2)
+;逃がしたフラグを復帰
+TFLAG:媚薬等使用 = LOCAL
+;口上表示オンなら口上が表示されたかを返す
+RETURN FLAG:口上 ? RESULT # 0
+
+;-------------------------------------------------
+;追加アクション口上@KOJO_ACT_EXTRA
+;追加アクションが発生したときに出力します
+;RESULT値が0だと口上を表示しなかったことを表します
+;引数0は追加アクションの分類（0,手で愛撫、以下未実装）
+;関連変数 TFLAG:229
+;-------------------------------------------------
+@KOJO_ACT_EXTRA(ARG)
+;番号は追加アクション分類と変数から生成する
+TFLAG:追加ACT = ARG * 10 + TFLAG:(229 + ARG)
+;追加行動口上フラグが立っている時だけ処理する
+SIF !GETBIT(TFLAG:追加行動口上, ARG)
+	RETURN 0
+;前処理
+CALL KOJO_BAA(-1)
+;口上色設定
+CALL KOJO_COLOR(TARGET)
+;口上表示オンまたは口上強制呼び出し時、口上呼び出し
+SIF FLAG:口上 || RESULT
+	CALL KOJO_CALL(@"ACT_EXTRA_K{NO:TARGET}_{TFLAG:追加ACT}")
+;後処理
+CALL KOJO_BAA(-2)
+;追加アクション発生フラグを落とす
+CLEARBIT TFLAG:追加行動口上, ARG
+;口上表示オンなら口上が表示されたかを返す
+RETURN FLAG:口上 ? RESULT # 0
+
+;-------------------------------------------------
+;助手アクション口上@KOJO_ACT_ASSI
+;助手アクションが発生したときに出力します
+;RESULT値が0だと口上を表示しなかったことを表します
+;-------------------------------------------------
+@KOJO_ACT_ASSI
+;前処理
+CALL KOJO_BAA(-1)
+;口上色設定
+CALL KOJO_COLOR(ASSI)
+;口上表示オンまたは口上強制呼び出し時、口上呼び出し
+SIF FLAG:口上 || RESULT
+	CALL KOJO_CALL(@"ACT_ASSI_K{NO:ASSI}_{TFLAG:助手ACT}")
+;後処理
+CALL KOJO_BAA(-2)
+;口上表示オンなら口上が表示されたかを返す
+RETURN FLAG:口上 ? RESULT # 0
+
+;-------------------------------------------------
+;媚薬等使用口上@KOJO_USE
+;媚薬かローションが使われたときに出力します
+;RESULT値が0だと口上を表示しなかったことを表します
+;助手が行った場合や「アクション口上@KOJO_ACT」のRESULT値が2だと呼ばれません
+;アクション口上内で媚薬使用口上を兼ねて書いた場合に指定してください
+;-------------------------------------------------
+@KOJO_USE
+;前処理
+CALL KOJO_BAA(-1)
+;口上色設定
+CALL KOJO_COLOR(TARGET)
+;口上表示オンまたは口上強制呼び出し時、口上呼び出し
+SIF FLAG:口上 || RESULT
+	CALL KOJO_CALL(@"USE_K{NO:TARGET}")
+;後処理
+CALL KOJO_BAA(-2)
+;RESULTが0以外なら媚薬等使用口上フラグ継続
+TFLAG:媚薬等使用口上 = RESULT ? 0 # TFLAG:媚薬等使用口上
+;口上表示オンなら口上が表示されたかを返す
+RETURN FLAG:口上 ? RESULT # 0
+
+;-------------------------------------------------
+;リアクション口上@KOJO_REACT
+;調教対象がコマンドを実行した後に出力します
+;最初に調教指示ごとに個別の口上を参照し、そのRESULT値が0だと口上を表示しなかったことを表し、
+;表示しなかった（RESULT=0）の場合のみコマンドごとに汎用の口上を参照します
+;RESULT値が0だといずれの口上も表示しなかったことを表します
+;-------------------------------------------------
+@KOJO_REACT
+;前処理
+CALL KOJO_BAA(-1)
+;口上色設定
+CALL KOJO_COLOR(TARGET)
+;口上表示オンまたは口上強制呼び出し時、口上呼び出し
+IF FLAG:口上 || RESULT
+	;まずリアクション毎の口上
+	CALL KOJO_CALL(@"REACT_K{NO:TARGET}_{TFLAG:ACT}")
+	;表示されなかった場合コンビネーションを見に行く。それでも表示されなければ派生元を呼ぶ
+	SIF !RESULT && ASSI:1 >= 0 && TCVAR:(ASSI:1):助手方針 == GET_ASSIMENUNUM("コンビネーション")
+		CALL KOJO_CALL(@"REACT_K{NO:TARGET}_{GET_COMBIACTNUM(TFLAG:ACT)}")
+	;ここまで表示されなかった場合、順に汎用口上へ落とす
+	SIF !RESULT
+		CALL KOJO_CALL(@"COM_K{NO:TARGET}_{SELECTCOM}")
+	SIF !RESULT
+		CALL KOJO_CALL(@"REACT_K{NO:TARGET}")
+ENDIF
+;後処理
+CALL KOJO_BAA(-2)
+;口上表示オンなら口上が表示されたかを返す
+RETURN FLAG:口上 ? RESULT # 0
+
+;-------------------------------------------------
+;口上色設定@KOJO_COLOR
+;口上の色設定を行います。色設定関数が無い場合はやや灰色になります
+;ついでに、フラグ管理のため口上表示の設定を無視する口上をここで判断します
+;-------------------------------------------------
+@KOJO_COLOR(ARG)
+;引数が負なら処理しない
+SIF ARG < 0
+	RETURN 0
+;返り値初期化
+RESULT = 0
+;TARGET待避
+LOCAL = TARGET
+;TARGETに引数を代入
+TARGET = ARG
+;口上から色指定を引き出し、設定する
+;指定がなければデフォルトカラー
+TRYCCALLFORM KOJO_COLOR_K{NO:ARG}
+CATCH
+	SETCOLOR 160, 160, 160
+ENDCATCH
+;TARGET指定を戻す
+TARGET = LOCAL
+;口上強制呼び出しの指定を返す
+TRYCCALLFORM KOJO_ON_K{NO:(ARG)}
+	RETURN RESULT
+CATCH
+	RETURN 0
+ENDCATCH
+
+;-------------------------------------------------
+;立場限定口上呼び出し@KOJO_CALL
+;調教者の立場（ご主人様か追加調教者か）限定の口上を設定できます
+;この下に対象限定口上の呼び出しが存在し、関数名で共存できます。また、限定口上にカラーの設定はできません（汎用部分と食い違うため）
+;引数0は関数名の後半部分、引数1には口上主の登録番号、引数2には元の引数の数を入れる（現状0、1、3、5）、引数3以降はもとの引数を入れる
+;こちらも排他の設定ができますが、対象限定より上層で処理されます。
+;-------------------------------------------------
+@KOJO_CALL(ARGS, ARG = -2, ARG:1, ARG:2, ARG:3, ARG:4, ARG:5, ARG:6)
+#DIM LCOUNT, 1
+#DIM 優先による排他, 1
+ARG = ARG != -2 ? ARG # TARGET
+
+;優先口上３、２、１、通常の順で回す
+FOR LCOUNT, 0, 4
+	RESULT = 0
+	優先による排他 = 0
+	IF LCOUNT < 3
+		;優先口上の処理
+		TRYCALLFORM KOJO_PRIORITY{3-LCOUNT}_K{NO:(ARG)}
+		IF !RESULT
+			CONTINUE
+		ELSEIF RESULT > 1
+			優先による排他 = 1
+		ENDIF
+		LOCALS = PRI{3-LCOUNT}_%ARGS%
+	ELSE
+		LOCALS = %ARGS%
+	ENDIF
+	;ご主人様限定口上をみる
+	IF TALENT:ご主人様
+		CALL KOJO_CALL2(@"MS_%LOCALS%", ARG, ARG:1, ARG:2, ARG:3, ARG:4, ARG:5, ARG:6)
+	;非ご主人様限定口上をみる
+	ELSE
+		CALL KOJO_CALL2(@"AS_%LOCALS%", ARG, ARG:1, ARG:2, ARG:3, ARG:4, ARG:5, ARG:6)
+	ENDIF
+	;表示した場合戻る
+	SIF RESULT
+		RETURN RESULT
+
+	;排他のチェック（条件を満たす立場の場合、未記入でも一般口上を表示しない設定）
+	;ご主人様限定口上にヒットするかをみる
+	IF TALENT:ご主人様
+		TRYCALLFORM KOJO_MS_EXCLUSION_K{NO:(ARG)}
+	;非ご主人様限定口上にヒットするかをみる
+	ELSE
+		TRYCALLFORM KOJO_AS_EXCLUSION_K{NO:(ARG)}
+	ENDIF
+	;排他
+	SIF RESULT
+		CONTINUE
+
+	;対象限定口上へパスする
+	CALL KOJO_CALL2(LOCALS, ARG, ARG:1, ARG:2, ARG:3, ARG:4, ARG:5, ARG:6)
+	;表示した場合、あるいは優先による排他が働く場合戻る
+	SIF RESULT || 優先による排他
+		RETURN RESULT
+NEXT
+RETURN 0
+
+;-------------------------------------------------
+;対象限定口上呼び出し@KOJO_CALL2
+;特定の調教対象でプレイしたとき限定の口上を設定できます
+;条件が厳しいものほど優先されます。また、限定口上にカラーの設定はできません（汎用部分と食い違うため）
+;記述がかなりアレになってますがまあ今のところしょうがない
+;引数0は関数名の後半部分、引数1には口上主の登録番号、引数2には元の引数の数を入れる（現状0、1、3、5）、引数3以降はもとの引数を入れる
+;-------------------------------------------------
+@KOJO_CALL2(ARGS, ARG = -2, ARG:1, ARG:2, ARG:3, ARG:4, ARG:5, ARG:6)
+ARG = ARG != -2 ? ARG # TARGET
+RESULT = 0
+;MASTER指定口上をみる
+;引数0
+IF !ARG:1
+	;主人公があなたなら性別を見る
+	IF !NO:MASTER
+		;ちんこはえてる
+		IF TALENT:MASTER:オトコ || TALENT:MASTER:ふたなり
+			;オトコあなた口上にヒットするかを見る
+			IF TALENT:MASTER:オトコ
+				TRYCALLFORM KOJO_MALEYOU_%ARGS%
+			;ふたなりあなた口上にヒットするかを見る
+			ELSEIF TALENT:MASTER:ふたなり
+				TRYCALLFORM KOJO_TWINYOU_%ARGS%
+			ENDIF
+			;ヒットしてないなら、ちんこつきあなた口上にヒットするかを見る
+			SIF !RESULT
+				TRYCALLFORM KOJO_PENISYOU_%ARGS%
+		ENDIF
+		;女口上にヒットするかを見る
+		SIF !TALENT:MASTER:オトコ
+			TRYCALLFORM KOJO_FEMALEYOU_%ARGS%
+	ENDIF
+
+	;ヒットしてないなら、対象指定（0～99）の口上にヒットするかを見る
+	SIF !RESULT
+		TRYCALLFORM KOJO_NO{NO:MASTER}_%ARGS%
+;引数1
+ELSEIF ARG:1 == 1
+	;主人公があなたなら性別を見る
+	IF !NO:MASTER
+		;ちんこはえてる
+		IF TALENT:MASTER:オトコ || TALENT:MASTER:ふたなり
+			;オトコあなた口上にヒットするかを見る
+			IF TALENT:MASTER:オトコ
+				TRYCALLFORM KOJO_MALEYOU_%ARGS%(ARG:2)
+			;ふたなりあなた口上にヒットするかを見る
+			ELSEIF TALENT:MASTER:ふたなり
+				TRYCALLFORM KOJO_TWINYOU_%ARGS%(ARG:2)
+			ENDIF
+			;ヒットしてないなら、ちんこつきあなた口上にヒットするかを見る
+			SIF !RESULT
+				TRYCALLFORM KOJO_PENISYOU_%ARGS%(ARG:2)
+		ENDIF
+		;女口上にヒットするかを見る
+		SIF !TALENT:MASTER:オトコ
+			TRYCALLFORM KOJO_FEMALEYOU_%ARGS%(ARG:2)
+	ENDIF
+
+	;ヒットしてないなら、対象指定（0～99）の口上にヒットするかを見る
+	SIF !RESULT
+		TRYCALLFORM KOJO_NO{NO:MASTER}_%ARGS%(ARG:2)
+;引数3
+ELSEIF ARG:1 == 3
+	;主人公があなたなら性別を見る
+	IF !NO:MASTER
+		;ちんこはえてる
+		IF TALENT:MASTER:オトコ || TALENT:MASTER:ふたなり
+			;オトコあなた口上にヒットするかを見る
+			IF TALENT:MASTER:オトコ
+				TRYCALLFORM KOJO_MALEYOU_%ARGS%(ARG:2, ARG:3, ARG:4)
+			;ふたなりあなた口上にヒットするかを見る
+			ELSEIF TALENT:MASTER:ふたなり
+				TRYCALLFORM KOJO_TWINYOU_%ARGS%(ARG:2, ARG:3, ARG:4)
+			ENDIF
+		;ヒットしてないなら、ちんこつきあなた口上にヒットするかを見る
+		SIF !RESULT
+			TRYCALLFORM KOJO_PENISYOU_%ARGS%(ARG:2, ARG:3, ARG:4)
+		ENDIF
+		;女口上にヒットするかを見る
+		SIF !TALENT:MASTER:オトコ
+			TRYCALLFORM KOJO_FEMALEYOU_%ARGS%(ARG:2, ARG:3, ARG:4)
+	ENDIF
+
+	;ヒットしてないなら、対象指定（0～99）の口上にヒットするかを見る
+	SIF !RESULT
+		TRYCALLFORM KOJO_NO{NO:MASTER}_%ARGS%(ARG:2, ARG:3, ARG:4)
+;引数5
+ELSEIF ARG:1 == 5
+	;主人公があなたなら性別を見る
+	IF !NO:MASTER
+		;ちんこはえてる
+		IF TALENT:MASTER:オトコ || TALENT:MASTER:ふたなり
+			;オトコあなた口上にヒットするかを見る
+			IF TALENT:MASTER:オトコ
+				TRYCALLFORM KOJO_MALEYOU_%ARGS%(ARG:2, ARG:3, ARG:4, ARG:5, ARG:6)
+			;ふたなりあなた口上にヒットするかを見る
+			ELSEIF TALENT:MASTER:ふたなり
+				TRYCALLFORM KOJO_TWINYOU_%ARGS%(ARG:2, ARG:3, ARG:4, ARG:5, ARG:6)
+			ENDIF
+		;ヒットしてないなら、ちんこつきあなた口上にヒットするかを見る
+		SIF !RESULT
+			TRYCALLFORM KOJO_PENISYOU_%ARGS%(ARG:2, ARG:3, ARG:4, ARG:5, ARG:6)
+		ENDIF
+		;女口上にヒットするかを見る
+		SIF !TALENT:MASTER:オトコ
+			TRYCALLFORM KOJO_FEMALEYOU_%ARGS%(ARG:2, ARG:3, ARG:4, ARG:5, ARG:6)
+	ENDIF
+
+	;ヒットしてないなら、対象指定（0～99）の口上にヒットするかを見る
+	SIF !RESULT
+		TRYCALLFORM KOJO_NO{NO:MASTER}_%ARGS%(ARG:2, ARG:3, ARG:4, ARG:5, ARG:6)
+ENDIF
+
+;表示した場合戻る
+IF RESULT
+	RETURN RESULT
+ENDIF
+
+;排他のチェック（条件を満たす調教対象の場合、未記入でも一般口上を表示しない設定）
+;指定口上同士の排他設定はできない
+;主人公があなたなら性別を見る
+IF !NO:MASTER
+	;ちんこはえてる
+	IF TALENT:MASTER:オトコ || TALENT:MASTER:ふたなり
+		;オトコあなた口上にヒットするかを見る
+		IF TALENT:MASTER:オトコ
+			TRYCALLFORM KOJO_MALEYOU_EXCLUSION_K{NO:(ARG)}
+		;ふたなりあなた口上にヒットするかを見る
+		ELSEIF TALENT:MASTER:ふたなり
+			TRYCALLFORM KOJO_TWINYOU_EXCLUSION_K{NO:(ARG)}
+		ENDIF
+		;ヒットしてないなら、ちんこつきあなた口上にヒットするかを見る
+		SIF !RESULT
+			TRYCALLFORM KOJO_PENISYOU_EXCLUSION_K{NO:(ARG)}
+	ENDIF
+	;女口上にヒットするかを見る
+	SIF !TALENT:MASTER:オトコ
+		TRYCALLFORM KOJO_FEMALEYOU_EXCLUSION_K{NO:(ARG)}
+ENDIF
+
+;ヒットしてないなら、対象指定（0～99）の口上にヒットするかを見る
+SIF !RESULT
+	TRYCALLFORM KOJO_NO{NO:MASTER}_EXCLUSION_K{NO:(ARG)}
+
+;排他の場合RESULTに0を返し、戻る
+IF RESULT
+	RETURN 0
+ENDIF
+
+;性別指定口上をみる
+;引数0
+IF !ARG:1
+	;ちんこはえてる
+	IF TALENT:MASTER:オトコ || TALENT:MASTER:ふたなり
+		;オトコ口上にヒットするかを見る
+		IF TALENT:MASTER:オトコ
+			TRYCALLFORM KOJO_MALE_%ARGS%
+		;ふたなり口上にヒットするかを見る
+		ELSEIF TALENT:MASTER:ふたなり
+			TRYCALLFORM KOJO_TWIN_%ARGS%
+		ENDIF
+		;ヒットしてないなら、ちんこつき口上にヒットするかを見る
+		SIF !RESULT
+			TRYCALLFORM KOJO_PENIS_%ARGS%
+	ENDIF
+	;女口上にヒットするかを見る
+	SIF !TALENT:MASTER:オトコ
+		TRYCALLFORM KOJO_FEMALE_%ARGS%
+;引数1
+ELSEIF ARG:1 == 1
+	;ちんこはえてる
+	IF TALENT:MASTER:オトコ || TALENT:MASTER:ふたなり
+		;オトコ口上にヒットするかを見る
+		IF TALENT:MASTER:オトコ
+			TRYCALLFORM KOJO_MALE_%ARGS%(ARG:2)
+		;ふたなり口上にヒットするかを見る
+		ELSEIF TALENT:MASTER:ふたなり
+			TRYCALLFORM KOJO_TWIN_%ARGS%(ARG:2)
+		ENDIF
+		;ヒットしてないなら、ちんこつき口上にヒットするかを見る
+		SIF !RESULT
+			TRYCALLFORM KOJO_PENIS_%ARGS%(ARG:2)
+	ENDIF
+	;女口上にヒットするかを見る
+	SIF !TALENT:MASTER:オトコ
+		TRYCALLFORM KOJO_FEMALE_%ARGS%(ARG:2)
+;引数5
+ELSEIF ARG:1 == 5
+	;ちんこはえてる
+	IF TALENT:MASTER:オトコ || TALENT:MASTER:ふたなり
+		;オトコ口上にヒットするかを見る
+		IF TALENT:MASTER:オトコ
+			TRYCALLFORM KOJO_MALE_%ARGS%(ARG:2, ARG:3, ARG:4, ARG:5, ARG:6)
+		;ふたなり口上にヒットするかを見る
+		ELSEIF TALENT:MASTER:ふたなり
+			TRYCALLFORM KOJO_TWIN_%ARGS%(ARG:2, ARG:3, ARG:4, ARG:5, ARG:6)
+		ENDIF
+		;ヒットしてないなら、ちんこつき口上にヒットするかを見る
+		SIF !RESULT
+			TRYCALLFORM KOJO_PENIS_%ARGS%(ARG:2, ARG:3, ARG:4, ARG:5, ARG:6)
+	ENDIF
+	;女口上にヒットするかを見る
+	SIF !TALENT:MASTER:オトコ
+		TRYCALLFORM KOJO_FEMALE_%ARGS%(ARG:2, ARG:3, ARG:4, ARG:5, ARG:6)
+ENDIF
+
+;表示した場合戻る
+IF RESULT
+	RETURN RESULT
+ENDIF
+
+;排他のチェック
+;MASTAR指定口上が上位にあたり、排他ではじくことはできない
+;ちんこはえてる
+IF TALENT:MASTER:オトコ || TALENT:MASTER:ふたなり
+	;オトコ口上にヒットするかを見る
+	IF TALENT:MASTER:オトコ
+		TRYCALLFORM KOJO_MALE_EXCLUSION_K{NO:(ARG)}
+	;ふたなり口上にヒットするかを見る
+	ELSEIF TALENT:MASTER:ふたなり
+		TRYCALLFORM KOJO_TWIN_EXCLUSION_K{NO:(ARG)}
+	ENDIF
+	;ヒットしてないなら、ちんこつき口上にヒットするかを見る
+	SIF !RESULT
+		TRYCALLFORM KOJO_PENIS_EXCLUSION_K{NO:(ARG)}
+	ENDIF
+;女口上にヒットするかを見る
+SIF !TALENT:MASTER:オトコ
+	TRYCALLFORM KOJO_FEMALE_EXCLUSION_K{NO:(ARG)}
+
+
+;排他の場合RESULTに0を返し、戻る
+IF RESULT
+	RETURN 0
+ENDIF
+
+;通常の口上
+;引数0
+IF !ARG:1
+	TRYCALLFORM KOJO_%ARGS%
+;引数1
+ELSEIF ARG:1 == 1
+	TRYCALLFORM KOJO_%ARGS%(ARG:2)
+;引数5
+ELSEIF ARG:1 == 5
+	TRYCALLFORM KOJO_%ARGS%(ARG:2, ARG:3, ARG:4, ARG:5, ARG:6)
+ENDIF
+
+
+RETURN RESULT
+
+;-------------------------------------------------
+;口上存在判定@KOJO_CHECK
+;引数0のキャラに対して、NO=引数1のキャラは表示できる口上を持っているか返す
+;口上なしは0、一般口上有は1、専用口上の対象なら2を返す
+;-------------------------------------------------
+@KOJO_CHECK(ARG, ARG:1)
+VARSET RESULT
+VARSET RESULTS
+TRYCALLFORM KOJO_K{ARG:1}
+;男あなた判定
+SIF NO:ARG == 0 && TALENT:ARG:オトコ && STRFIND(RESULTS, @"/MALEYOU/") >= 0
+	RETURN 2
+;女あなた判定
+SIF NO:ARG == 0 && !TALENT:ARG:オトコ && STRFIND(RESULTS, @"/FEMALEYOU/") >= 0
+	RETURN 2
+;ふたなりあなた判定
+SIF NO:ARG == 0 && TALENT:ARG:ふたなり && STRFIND(RESULTS, @"/TWINYOU/") >= 0
+	RETURN 2
+;ちんこ付きあなた判定
+SIF NO:ARG == 0 && PENIS(ARG) && STRFIND(RESULTS, @"/PENISYOU/") >= 0
+	RETURN 2
+;キャラ一致判定
+SIF STRFIND(RESULTS, @"/K{NO:ARG}/") >= 0
+	RETURN 2
+;男判定
+SIF TALENT:ARG:オトコ && STRFIND(RESULTS, @"/MALE/") >= 0
+	RETURN 2
+;女判定
+SIF !TALENT:ARG:オトコ && STRFIND(RESULTS, @"/FEMALE/") >= 0
+	RETURN 2
+;ふたなり判定
+SIF TALENT:ARG:ふたなり && STRFIND(RESULTS, @"/TWIN/") >= 0
+	RETURN 2
+;ちんこ付き判定
+SIF PENIS(ARG) && STRFIND(RESULTS, @"/PENIS/") >= 0
+	RETURN 2
+;汎用の判定をして戻る
+RETURN RESULT
+

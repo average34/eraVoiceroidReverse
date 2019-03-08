@@ -1,0 +1,85 @@
+﻿;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+;		異常系メッセージ
+
+;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+;────────────────────────────────────
+;070,フィストファック
+;────────────────────────────────────
+@TRAIN_MESSAGE_70
+PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の膣に拳で侵入し始めた…
+
+;────────────────────────────────────
+;071,アナルフィスト
+;────────────────────────────────────
+@TRAIN_MESSAGE_71
+PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%のアヌスに拳で侵入し始めた…
+
+;────────────────────────────────────
+;072,両穴フィスト
+;────────────────────────────────────
+@TRAIN_MESSAGE_72
+PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の膣とアヌスに拳で侵入し始めた…
+
+;────────────────────────────────────
+;073,放置プレイ
+;────────────────────────────────────
+;★リアクション前★
+@TRAIN_MESSAGE_73
+PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%をその場に放置した…
+
+;☆リアクション後☆
+@TRAIN_MESSAGE2_73
+PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%を放置したまま、なにもしようとはしない…
+;REACTION_MESSAGEを処理すると整合性に問題が出る為、RESULT 1を返して完結させる@/L
+SIF IS_NOWCOMNAME("なすがまま")
+	RETURN 1
+
+;────────────────────────────────────
+;074,公衆肉便器プレイ
+;────────────────────────────────────
+;★リアクション前★
+@TRAIN_MESSAGE_74
+PRINTFORML %CALLNAME:TARGET%は外で縛られた%CALLNAME:MASTER%のお腹にマジックで「↓公衆便所」と書いて、
+PRINTFORML その場に置いて一人で帰ろうとした…
+
+;☆リアクション後☆
+@TRAIN_MESSAGE2_74
+PRINTL
+IF TFLAG:ACT派生 == 1                   ;ACT派生が拘束を解いて一緒に調教部屋へ帰った(哀願)
+	PRINTFORML %CALLNAME:MASTER%の哀願を聞き入れ、%CALLNAME:TARGET%は%CALLNAME:MASTER%の拘束を解いて一緒に調教部屋へ帰った…
+ELSE               ;放置が行われた
+	PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%を野外に放置して一人で帰った…
+	IF TFLAG:ACT派生 == 0                ;ACT派生が最後まで人は来なかった(無事)
+		PRINTFORML 混乱していた%CALLNAME:MASTER%だったが、最後まで人は来なかった
+		PRINTFORML やっと%CALLNAME:TARGET%に回収され、%CALLNAME:MASTER%はほっとした…
+	ELSE            ;発見された
+		PRINTFORML しばらくすると、通りすがりの人に発見されてしまった。
+		IF TFLAG:ACT派生 == 2           ;ACT派生が心も体もボロボロ(陵辱)
+			PRINTFORML それからの%CALLNAME:MASTER%の運命を想像するのは難しくないだろう…
+			PRINTFORML %CALLNAME:TARGET%に回収された%CALLNAME:MASTER%は心も体もボロボロだった…
+		ELSE                            ;ACT派生がまだ物足りない様子(興奮)
+			PRINTFORML 人が集まって、%CALLNAME:MASTER%はだんだん興奮してその状況をどこか楽しんでいた
+			PRINTFORML %CALLNAME:TARGET%に回収された%CALLNAME:MASTER%はまだ物足りない様子だった…
+		ENDIF
+	ENDIF
+ENDIF
+PRINTL
+
+;────────────────────────────────────
+;075,ペニスバンド装着
+;────────────────────────────────────
+;★リアクション前★
+@TRAIN_MESSAGE_75
+IF TFLAG:ACT派生 == 0         ;装着
+	IF TALENT:処女
+		PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("つつ")%黒光りする双頭ペニスバンドを取り出すと、
+		PRINTFORML 破瓜の苦痛に顔をしかめつつ、%CALLNAME:MASTER%の目の前でそれを身に付けた…
+	ELSE
+		PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("たまま")%黒光りする双頭ペニスバンドを身に着け、
+		PRINTFORML その先端を%CALLNAME:MASTER%に見せつけた…
+	ENDIF
+ELSE                          ;解除
+	PRINTFORML %CALLNAME:TARGET%は身に着けていたペニスバンドを取り外した…
+ENDIF

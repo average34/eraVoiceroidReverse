@@ -1,0 +1,429 @@
+﻿;-------------------------------------------------
+;HTML_PRINT関連関数
+;-------------------------------------------------
+;Emuera1810以降向け
+;とりあえずこんな感じに。割と口上向けのつもり
+;大体いい感じになったかな？
+;-------------------------------------------------
+;主な使い方(ざっくり。眠い時に書いたので少し意味不明)
+;まず@HTMLPRINT(|D)(L|W)の使い方を覚えます
+;例1)CALL HTMLPRINTW(@"「ドーモ、%NAME:MASTER%＝サン。古明地こいしです」")
+;次に、<b><i><s><u>タグの使い方を覚えます
+;例2)CALL HTMLPRINTW(@"「ドーモ、%NAME:MASTER%＝サン。<b>古明地こいし</b>です」")
+;<font>タグは面倒なので代わりに@HTMLFONTの使い方を覚えます
+;例3)CALL HTMLPRINTW(@"「ドーモ、%NAME:MASTER%＝サン。%HTMLFONT("<b>古明地こいし</b>", "ＭＳ 明朝", 0xFFFFFF)%です」")
+;余裕があれば文字参照の使い方を覚えるとなお良し(この例だと"&#x2661;"の代わりにUNICODE(0x2661)でも同じ)
+;例4)CALL HTMLPRINTW(@"「ドーモ、%NAME:MASTER%＝サン。<b>古明地こいし</b>です%HTMLFONT("&#x2661;", "Verdana", 0xC07070)%」")
+;よく使う記号とかは<font>タグごと関数に纏めておくと便利かも
+;最後に、<や>や&などの記号は文字参照使って書かないとおかしな事になるから気を付けて
+;これで大体のことが後腐れなく一行で記述出来ます。やったね！
+;-------------------------------------------------
+;・大前提として、HTMLを新規に習得してまで無理に使う必要は全く無い
+;・HTML_PRINT命令は基本的にHTML仕様に準拠。これらの関数も比較的HTMLを齧ったことのある人向けかもしれない
+;・HTML未経験でも、ここで扱う範囲を齧るだけなら簡単なので性欲を持て余す方はどうぞ
+;-------------------------------------------------
+;関数の概要
+;～～PRINT関数～～
+;・HTMLPRINT(|D)(L|W)…PRINT(|FORM)(|D)(L|W)命令に近い挙動の関数。HTML_PRINT命令同様のタグがほぼ使用可能
+;・HTMLPRINTSINGLE(|D)…PRINTSINGLE(|D)命令に近い挙動の関数。HTML_PRINT命令同様のタグがほぼ使用可能
+;・HTMLBIGPRINT(L|W)…BIGPRINT関数同様の性質を持つHTMLPRINT関数。HTML_PRINT命令同様のタグがほぼ使用可能
+;・HTMLSMALLPRINT(L|W)…SMALLPRINT関数同様の要素を持つHTMLPRINT関数。HTML_PRINT命令同様のタグがほぼ使用可能
+;～～タグ処理関数～～
+;・HTMLAUTOBUTTON…<button>、<nonbutton>、タグ無しを自動で切り替えられる式中関数。ボタンの有効/無効状態を管理する場合に
+;・HTMLBUTTON…<button>タグを付加する式中関数。ボタンを作る際に必要。ボタンの値、ツールチップ文字列に関するタグ
+;・HTMLFONT…<font>タグを付加する式中関数。SETFONT、SETCOLOR命令相当に加え、ボタン選択色も定義できる
+;・HTMLNOBR…<nobr>タグを付加する式中関数。画面端で折り返さなくなる、PRINTSINGLE命令相当
+;・HTMLNONBUTTON…<nonbutton>タグを付加する式中関数。非ボタンにツールチップ文字列を設定できる
+;・HTMLP…<p>タグを付加する式中関数。文字の表示位置を指定するALIGNMENT命令相当
+;・HTMLSTYLE…<b><i><s><u>タグを付加する式中関数。FONTSTYLE命令相当
+;～～ユーティリティ関数～～
+;・CHKFACE…'/'区切りのフォント名の中から使えるものを返す式中関数。<font>タグのface属性で複数指定出来ない仕様をカバー
+;・HTMLCOLOR…色値を#RRGGBB形式の文字列に変更して返す式中関数。<font>タグのcolor属性に対応
+;-------------------------------------------------
+
+;*************************************************
+;PRINT関数
+;*************************************************
+;・FORM文字列を渡す際は""の前に@を付けてください
+;　　　文字列 → "あなたは射精した"
+;　FORM文字列 → @"%CALLNAME:MASTER%は射精した"
+;-------------------------------------------------
+
+;-------------------------------------------------
+;関数名:HTMLPRINT(|D)(L|W)
+;概　要:HTML_PRINT命令をPRINT命令風にするラッパー関数
+;引　数:ARGS:0…HTML文字列。FORM文字列を渡す場合は""の前に@を付けてください
+;　　　 ARG:0 …[省略可]文字の表示色。省略した場合はSETCOLORの指定そのまま
+;　　　         ※キーワード"D"を使用した場合はARG:0を指定することは出来ません
+;　　　 ARGS:1…[省略可]文字列の表示位置。(left/左/center/中央/right/右)のいずれかを指定可
+;　　　         省略した場合は、ALIGNMENTの指定そのまま。大文字小文字の区別はしません
+;戻り値:なし(多分RESULT保護)
+;備　考:この関数では<p>タグが使用できません。<nobr>タグは文頭文末でのみ使用可能
+;・HTML_PRINTによる描画はALIGNMENT、SETFONT、SETCOLOR、FONTSTYLEとその類似命令の影響を受けない
+;・HTML_PRINTにはWAITさせる機能が無い
+;上記は口上で使う際に少し面倒な部分なので、影響を受けたかのようにタグを付加するように細工
+;この処理により、一部タグが使用できなくなりますがご了承ください
+;また、HTML_PRINTは自動的に改行するのでPRINTやPRINTDは作れません。あしからず
+;(そのうちBuffer機能付きのHTMLPRINTB系とかHTMLPRINTBC系作るかもしれないけど…)
+;表示位置と色を制御できれば口上的にさらに使いやすい気がしたのでちょっと細工しておいた
+;きっと口上で使う分にはこのくらいでいい気がする。何も考えなくていい
+;-------------------------------------------------
+@HTMLPRINTL(ARGS:0, ARG:0 = -1, ARGS:1)
+HTML_PRINT HTMLP(HTMLFONT(HTMLSTYLE(ARGS:0), GETFONT(), ARG:0 < 0 ? GETCOLOR() # ARG:0), ARGS:1)
+RETURN RESULT
+
+@HTMLPRINTW(ARGS:0, ARG:0 = -1, ARGS:1)
+CALL HTMLPRINTL(ARGS:0, ARG:0, ARGS:1)
+WAIT
+RETURN RESULT
+
+@HTMLPRINTDL(ARGS:0, ARGS:1)
+HTML_PRINT HTMLP(HTMLFONT(HTMLSTYLE(ARGS:0), GETFONT()), ARGS:1)
+RETURN RESULT
+
+@HTMLPRINTDW(ARGS:0, ARGS:1)
+CALL HTMLPRINTDL(ARGS:0, ARGS:1)
+WAIT
+RETURN RESULT
+
+
+;-------------------------------------------------
+;関数名:HTMLPRINTSINGLE(|D)
+;概　要:HTML_PRINT命令をPRINTSINGLE命令風にするラッパー関数
+;引　数:ARGS:0…HTML文字列。FORM文字列を渡す場合は""の前に@を付けてください
+;　　　 ARG:0 …[省略可]文字の表示色。省略した場合はSETCOLORの指定そのまま
+;　　　         ※キーワード"D"を使用した場合はARG:0を指定することは出来ません
+;　　　 ARGS:1…[省略可]文字列の表示位置。(left/左/center/中央/right/右)のいずれかを指定可
+;　　　         省略した場合は、ALIGNMENTの指定そのまま。大文字小文字の区別はしません
+;戻り値:なし(多分RESULT保護)
+;備　考:この関数では<p><nobr>タグが使用できません。(<nobr>タグは自動で付加されます)
+;本家PRINTSINGLE命令と同様、自動的に改行が付加されるため、(|L|W)キーワードはありません
+;多分全く使わない。なんで作っちゃったかなぁ
+;-------------------------------------------------
+@HTMLPRINTSINGLE(ARGS:0, ARG:0 = -1, ARGS:1)
+HTML_PRINT HTMLP(HTMLNOBR(HTMLFONT(HTMLSTYLE(ARGS:0), GETFONT(), ARG:0 < 0 ? GETCOLOR() # ARG:0)), ARGS:1)
+RETURN RESULT
+
+@HTMLPRINTSINGLED(ARGS:0, ARGS:1)
+HTML_PRINT HTMLP(HTMLNOBR(HTMLFONT(HTMLSTYLE(ARGS:0), GETFONT())), ARGS:1)
+RETURN RESULT
+
+
+;-------------------------------------------------
+;関数名:HTMLBIGPRINT(L|W)
+;概　要:オオキイHTMLPRINT関数
+;引　数:ARGS:0…HTML文字列。FORM文字列を渡す場合は""の前に@を付けてください
+;　　　 ARG:0 …[省略可]文字の表示色。省略した場合はSETCOLORの指定そのまま
+;　　　 ARGS:1…[省略可]文字列の表示位置。(left/左/center/中央/right/右)のいずれかを指定可
+;　　　         省略した場合は、ALIGNMENTの指定そのまま。大文字小文字の区別はしません
+;戻り値:なし(多分RESULT保護)
+;備　考:この関数では<p><br>タグが使用できません。<nobr>タグは文頭文末でのみ使用可能
+;とりあえず用意したHTML_PRINT版BIGPRINT関数
+;タグを使用出来るとはいえ、より慎重な運用が求められるかも
+;例えば途中で色を変えても問題は無いだろうけど、フォントを変えると台無しに
+;BIGPRINTは特に2行分使うので、\nとか<br>入れるときっとおかしくなる
+;-------------------------------------------------
+@HTMLBIGPRINTL(ARGS:0, ARG:0 = -1, ARGS:1)
+#LOCALSIZE 1
+#LOCALSSIZE 1
+IF CHKFONT("Raavi")
+	LOCAL:0 = CURRENTREDRAW()
+	LOCALS:0 = %GETFONT()%
+	REDRAW 0
+	SETFONT "Raavi"
+	CALL HTMLPRINTL(" " + ARGS:0 + " ", ARG:0, ARGS:1)
+	SETFONT LOCALS:0
+	PRINTL 
+	REDRAW LOCAL:0
+ELSE
+	CALL HTMLPRINTL(ARGS:0, ARG:0, ARGS:1)
+ENDIF
+RETURN RESULT
+
+@HTMLBIGPRINTW(ARGS:0, ARG:0 = -1, ARGS:1)
+CALL HTMLBIGPRINTL(ARGS:0, ARG:0, ARGS:1)
+WAIT
+RETURN RESULT
+
+
+;-------------------------------------------------
+;関数名:HTMLSMALLPRINT(L|W)
+;概　要:チイサイHTMLPRINT関数
+;引　数:ARGS:0…HTML文字列。FORM文字列を渡す場合は""の代わりに@""で括ってください
+;　　　 ARG:0 …[省略可]文字の表示色。省略した場合はSETCOLORの指定そのまま
+;　　　 ARGS:1…[省略可]文字列の表示位置。(left/左/center/中央/right/右)のいずれかを指定可
+;　　　         省略した場合は、ALIGNMENTの指定そのまま。大文字小文字の区別はしません
+;戻り値:なし(多分RESULT保護)
+;備　考:この関数では<p>タグが使用できません。<nobr>タグは文頭文末でのみ使用可能
+;とりあえず用意したHTML_PRINT版SMALLPRINT関数
+;タグを使用出来るとはいえ、より慎重な運用が求められるかも
+;例えば途中で色を変えても問題は無いだろうけど、フォントを変えると台無しに
+;-------------------------------------------------
+@HTMLSMALLPRINTL(ARGS:0, ARG:0 = -1, ARGS:1)
+#LOCALSSIZE 1
+IF CHKFONT("Estrangelo Edessa")
+	LOCALS:0 = %GETFONT()%
+	SETFONT "Estrangelo Edessa"
+	CALL HTMLPRINTL(" " + ARGS:0 + " ", ARG:0, ARGS:1)
+	SETFONT LOCALS:0
+ELSE
+	CALL HTMLPRINTL(ARGS:0, ARG:0, ARGS:1)
+ENDIF
+RETURN RESULT
+
+@HTMLSMALLPRINTW(ARGS:0, ARG:0 = -1, ARGS:1)
+CALL HTMLSMALLPRINTL(ARGS:0, ARG:0, ARGS:1)
+WAIT
+RETURN RESULT
+
+
+;*************************************************
+;タグ処理関数
+;*************************************************
+;・<b><i><s><u><br>タグは属性値無いし自分で書いて、どうぞ
+;・自分で書いた方が、関数入れ子にするよりは短く書けて処理も早いはず
+;・これらの関数はHTML_PRINT命令を直に呼ぶ場合も使えるし、PRINT関数内でも使える
+;・大体のことは、これらの関数を入れ子にすればなんとかなる…かも
+;-------------------------------------------------
+
+;-------------------------------------------------
+;関数名:HTMLAUTOBUTTON
+;概　要:HTML_PRINT命令および関連関数で使用する<button><nonbutton><font>タグを自動で付加する関数
+;引　数:ARGS:0…ボタンにする文字列
+;　　　 ARGS:1…ボタンの値(数値変数などは組み込み関数TOSTR(int)で文字列化してください)
+;　　　 ARGS:2…[省略可][Emuera1812beta001以降のみ指定可]ツールチップに表示する文字列
+;　　　 ARG:0 …[省略可]表示色。省略した場合は現在の文字色
+;　　　 ARG:1 …[省略可]ボタンの選択中表示色。省略した場合はデフォルトの選択色
+;　　　 ARG:2 …[省略可]ボタンが有効かどうかを指定する真偽値。省略した場合は有効(1)
+;　　　 ARGS:3…[省略可]ボタンが無効の場合の文字列。省略した場合はARGS:0
+;　　　 ARGS:4…[省略可][Emuera1812beta001以降のみ指定可]ボタンが無効の場合のツールチップ文字列。省略した場合はARGS:2
+;　　　 ARG:3 …[省略可]ボタンが無効の場合の表示色。省略した場合はARG:0
+;戻り値:ARGS:0を<button><nonbutton><font><b><i><s><u>タグで囲ったり囲わなかったりするHTML文字列
+;備　考:式中関数
+;★★★ツールチップ機能はEmuera1812alpha001以降で使用できます★★★
+;★★★Button無効Tooltip有りで使えるのはEmuera1812beta001以降★★★
+;ボタンガーvalueガーという電波を受信したので作ったのだけど…
+;Emuera1812beta001でvalue属性の仕様変わったので割といらなくなった。ついでに<nonbutton>も殆ど要らない子に
+;alpha版はさくっと切り捨てて、beta版の仕様にそって手直し
+;基本は<button>に丸投げして、各属性やタグそのものの必要性を判別
+;ついでに有効/無効時で表示文字列/ツールチップ文字列/表示色も変えられるように
+;引数分けなくても三項演算子使えば済む話かもしれないが、使い手が書きやすい方を選んで使えばいいと思う
+;SETFONT/FONTSTYLEは勝手に自動継承する有難迷惑な設計。理由は面倒だったから
+;気にいらなければ改造するか別に似たような関数組むかすればいいと思うよ
+;正直この関数単体は、予め作っておいた関数を組み合わせただけなので大したことは無いのだけど…
+;とりあえず私は使わない…と思う。引数の種類が多いとIDEでも無い限り意味不明になりがち
+;-------------------------------------------------
+@HTMLAUTOBUTTON(ARGS:0, ARGS:1, ARGS:2, ARG:0 = -1, ARG:1 = -1, ARG:2 = 1, ARGS:3, ARGS:4, ARG:3 = -1)
+#FUNCTIONS
+IF !ARG:2	;ボタンが無効な場合、使用する引数を変える
+	ARG:0 = ARG:3 >= 0 ? ARG:3 # ARG:0
+	ARGS:0 = \@ ARGS:3 != "" ? %ARGS:3% # %ARGS:0% \@
+	ARGS:2 = \@ ARGS:4 != "" ? %ARGS:4% # %ARGS:2% \@
+ENDIF
+RETURNF HTMLBUTTON(HTMLFONT(HTMLSTYLE(ARGS:0), GETFONT(), ARG:0 < 0 ? GETCOLOR() # ARG:0, ARG:1), ARGS:1, ARGS:2, ARG:2)
+
+
+;-------------------------------------------------
+;関数名:HTMLBUTTON
+;概　要:HTML_PRINT命令および関連関数で使用する<button>タグを付加する関数
+;引　数:ARGS:0…ボタンにする文字列
+;　　　 ARGS:1…ボタンの値(数値変数などは組み込み関数TOSTR(int)で文字列化してください)
+;　　　 ARGS:2…[省略可][Emuera1812alpha001以降のみ指定可]ツールチップに表示する文字列
+;　　　 ARG:0 …[省略可]ボタンが有効かどうかを指定する真偽値。省略した場合は有効(1)
+;戻り値:ARGS:0を<button>タグで囲ったHTML文字列
+;備　考:式中関数
+;★★★ツールチップ機能はEmuera1812alpha001以降で使用できます★★★
+;★★★Button無効Tooltip有りで使えるのはEmuera1812beta001以降★★★
+;一応空文字列返すボタンはアリなので、作れる
+;空文字列のツールチップ出しても仕方ないので、そういうときはtitle属性省く
+;ボタンが無効な場合はvalue属性省く。ツールチップも空文字ならタグそのものをつけない
+;-------------------------------------------------
+@HTMLBUTTON(ARGS:0, ARGS:1, ARGS:2, ARG:0 = 1)
+#FUNCTIONS
+#LOCALSSIZE 1
+SIF !ARG:0 && ARGS:2 == ""
+	RETURNF ARGS:0
+LOCALS:0 = <button
+SIF ARG:0
+	LOCALS:0 += @" value='%ARGS:1%'"
+SIF ARGS:2 != ""
+	LOCALS:0 += @" title='%ARGS:2%'"
+RETURNF LOCALS:0 + @">%ARGS:0%</button>"
+
+
+;-------------------------------------------------
+;関数名:HTMLFONT
+;概　要:HTML_PRINT命令および関連関数で使用する<font>タグを付加する関数
+;引　数:ARGS:0…付加する対象の文字列
+;　　　 ARGS:1…[省略可]フォント名。省略した場合および、指定したフォントが存在しない場合はタグに含まれない
+;　　　 ARG:0 …[省略可]表示色。省略した場合はタグに含まれない
+;　　　 ARG:1 …[省略可]ボタンの選択中表示色。省略した場合はタグに含まれない
+;　　　 ※ARGS:1/ARG:0/ARG:1の全てを省略した場合、GETFONT()とGETCOLOR()の情報を元にタグが生成されます
+;戻り値:ARGS:0を<font>タグで囲ったHTML文字列
+;備　考:式中関数
+;<font>タグはSETFONT命令とSETCOLOR命令に相当します
+;何気にボタンの選択中表示色を変えられるのは新機能。HTML_PRINTだけ！
+;-------------------------------------------------
+@HTMLFONT(ARGS:0, ARGS:1, ARG:0 = -1, ARG:1 = -1)
+#FUNCTIONS
+#LOCALSSIZE 1
+LOCALS:0 = <font
+SIF !CHKFONT(ARGS:1) && ARG:0 < 0 && ARG:1 < 0
+	RETURNF @"<font face='%GETFONT()%' color='%HTMLCOLOR()%'>%ARGS%</font>"
+SIF CHKFONT(ARGS:1)
+	LOCALS:0 += @" face='%ARGS:1%'"
+SIF ARG:0 >= 0
+	LOCALS:0 += @" color='%HTMLCOLOR(ARG:0)%'"
+SIF ARG:1 >= 0
+	LOCALS:0 += @" bcolor='%HTMLCOLOR(ARG:1)%'"
+RETURNF @"%LOCALS:0%>%ARGS:0%</font>"
+
+
+;-------------------------------------------------
+;関数名:HTMLNOBR
+;概　要:HTML_PRINT命令および関連関数で使用する<nobr>タグを付加する関数
+;引　数:ARGS:0…付加する対象の文字列
+;戻り値:ARGS:0を<nobr>タグで囲ったHTML文字列
+;備　考:式中関数
+;<nobr>タグを使用すると描画領域を越えたことによる暗黙の改行が行われなくなります(PRINTSINGLE命令に相当)
+;その場合でも、<br>タグによる明示的な改行は可能です
+;<nobr>タグは最初のテキストよりも外側に置く必要があります
+;この関数もそのように使用してください
+;要らないと思うんだけど…気分の問題ってヤツ
+;-------------------------------------------------
+@HTMLNOBR(ARGS:0)
+#FUNCTIONS
+RETURNF @"<nobr>%ARGS:0%</nobr>"
+
+
+;-------------------------------------------------
+;関数名:HTMLNONBUTTON
+;概　要:HTML_PRINT命令および関連関数で使用する<nonbutton>タグを付加する関数
+;引　数:ARGS:0…ツールチップ付きにする文字列
+;　　　 ARGS:1…[Emuera1812alpha001以降のみ指定可]ツールチップに表示する文字列
+;戻り値:ARGS:0を<nonbutton>タグで囲ったHTML文字列
+;備　考:式中関数 Emuera1812alpha001以降でのみ使用可
+;★★★ツールチップ機能はEmuera1812alpha001以降で使用できます★★★
+;空文字列のツールチップ出しても仕方ないので、そういうときはタグ付けないよ
+;Emuera1812beta001で要らなくなった感が強い。消えるのかな？
+;-------------------------------------------------
+@HTMLNONBUTTON(ARGS:0, ARGS:1)
+#FUNCTIONS
+SIF ARGS:1 == ""
+	RETURNF ARGS:0
+RETURNF @"<nonbutton title='%ARGS:1%'>%ARGS:0%</nonbutton>"
+
+
+;-------------------------------------------------
+;関数名:HTMLP
+;概　要:HTML_PRINT命令および関連関数で使用する<p>タグを付加する関数
+;引　数:ARGS:0…付加する対象の文字列
+;　　　 ARGS:1…[省略可]文字列の表示位置。(left/左/center/中央/right/右)のいずれかを指定可
+;　　　         省略した場合は、CURRENTALIGN()の情報を元にタグが生成されます。大文字小文字の区別はしません
+;戻り値:ARGS:0を<p>タグで囲ったHTML文字列
+;備　考:式中関数
+;<p>タグを使用すると文字列の表示位置を制御できます(ALIGNMENT命令に相当)
+;<p>タグは一番外側に置く必要があります
+;この関数も一番外側で使用してください
+;-------------------------------------------------
+@HTMLP(ARGS:0, ARGS:1)
+#FUNCTIONS
+#DIMS CONST ALIGN = "", "left", "center", "right", "左", "中央", "右"
+SIF !MATCH(ALIGN, TOLOWER(ARGS:1))	;念のため引数チェック
+	THROW @HTMLPに不明なalign属性値が渡されました（%ARGS:1%）
+ARGS:1 '= MATCH(ALIGN, ARGS:1, 4) ? ALIGN:(FINDELEMENT(ALIGN, ARGS:1, , , 1) - 3) # ARGS:1
+RETURNF "<p align='" + TOLOWER(\@ ARGS:1 == "" ? %CURRENTALIGN()% # %ARGS:1% \@) + @"'>%ARGS:0%</p>"
+
+
+;-------------------------------------------------
+;関数名:HTMLSTYLE
+;概　要:HTML_PRINT命令および関連関数で使用する<b><i><s><u>タグを付加する関数
+;引　数:ARGS:0…付加する対象の文字列
+;　　　 ARG:0 …[省略可]文字のスタイル。太字(1)/斜体(2)/打ち消し線(4)/下線(8)の組み合わせを指定可能
+;　　　         指定方法はFONTSTYLE命令と同様で、各数字の和で複数指定できます
+;　　　         省略した場合はGETSTYLE()の情報を元にタグが生成されます
+;戻り値:ARGS:0を必要な<b><i><s><u>タグで囲ったHTML文字列
+;備　考:式中関数
+;FONTSTYLE命令相当にでっち上げた関数。纏まっていた方が便利な時もある…かも
+;この関数で付加されるタグの効果は以下の通り
+;<b>タグ…太字。FONTBOLD、またはFONTSTYLE 1に相当
+;<i>タグ…斜体。FONTITALIC、またはFONTSTYLE 2に相当
+;<s>タグ…打消。FONTSTYLE 4に相当
+;<u>タグ…下線。FONTSTYLE 8に相当
+;-------------------------------------------------
+;FONTSTYLE命令と異なり、タグ内で既に適用中の効果を消すことは出来ません
+;例1)HTML_PRINT @"TEST0<b>TEST1%HTMLSTYLE("TEST2", 2)%TEST3</b>TEST4"
+;　　この場合、TEST2には太字と斜体の両方が適用されます。斜体のみにするには、
+;例2)HTML_PRINT @"TEST0<b>TEST1</b>%HTMLSTYLE("TEST", 2)%<b>TEST3</b>TEST4"
+;　　のように、一旦<b>タグを閉じる必要があります
+;-------------------------------------------------
+@HTMLSTYLE(ARGS:0, ARG:0 = -1)
+#FUNCTIONS
+#LOCALSSIZE 2
+VARSET LOCALS
+ARG:0 = ARG:0 < 0 ? GETSTYLE() # ARG:0
+IF GETBIT(ARG:0, 0)
+	LOCALS:0 = <b>%LOCALS:0%
+	LOCALS:1 += "</b>"
+ENDIF
+IF GETBIT(ARG:0, 1)
+	LOCALS:0 = <i>%LOCALS:0%
+	LOCALS:1 += "</i>"
+ENDIF
+IF GETBIT(ARG:0, 2)
+	LOCALS:0 = <s>%LOCALS:0%
+	LOCALS:1 += "</s>"
+ENDIF
+IF GETBIT(ARG:0, 3)
+	LOCALS:0 = <u>%LOCALS:0%
+	LOCALS:1 += "</u>"
+ENDIF
+RETURNF LOCALS:0 + ARGS:0 + LOCALS:1
+
+
+;*************************************************
+;ユーティリティ関数
+;*************************************************
+;・直で<font>タグ書きたい人とか
+;-------------------------------------------------
+
+;-------------------------------------------------
+;関数名:CHKFACE
+;概　要:複数フォント使用可否判定関数
+;引　数:ARGS:0…フォント名(/区切りで複数指定可。とりあえず10種まで)
+;戻り値:前から順にCHKFONTして最初に使用可能と判断されたフォント名
+;　　　 使用できるフォントが無い場合は現在のフォント名
+;備　考:式中関数
+;<font>タグにおけるface属性の,区切り(優先フォント指定)機能の代替
+;のはずだったんだけど…使いどころは他にもあるのかも…？
+;標準以外のフォントだけど、あれば使う場合とか…
+;あとは…その…WinXP/VISTA/7/8以外の…
+;べ、べつにMac対応のために作ったわけじゃないんだから…かかか勘違いしないでよね！
+;-------------------------------------------------
+@CHKFACE(ARGS:0)
+#FUNCTIONS
+#LOCALSIZE 2
+#LOCALSSIZE 10
+SPLIT ARGS:0, "/", LOCALS, LOCAL:0
+FOR LOCAL:1, 0, LOCAL:0
+	SIF CHKFONT(LOCALS:(LOCAL:1))
+		RETURNF LOCALS:(LOCAL:1)
+NEXT
+RETURNF GETFONT()
+
+
+;-------------------------------------------------
+;関数名:HTMLCOLOR
+;概　要:HTML_PRINT命令のfontタグに渡す色値に変換する関数
+;引　数:ARG:0…[省略可]色値
+;　　　        省略した場合はGETCOLOR()の情報を元に自動生成
+;戻り値:#RRGGBB形式の16進色値を表現する文字列
+;備　考:式中関数
+;普通に10進渡せたらこんなの要らないのに…HTML仕様ゆえ致し方なし
+;ありえない数値が来ても下24bitしか見ないので問題なし
+;TOSTR使ってるのは性格の問題。桁合わせと大文字化をしたかった
+;実際はCONVERTでもいいんだろうけど
+;-------------------------------------------------
+@HTMLCOLOR(ARG:0 = -1)
+#FUNCTIONS
+RETURNF "#" + TOSTR((ARG:0 < 0 ? GETCOLOR() # ARG:0) & 0xFFFFFF, "X6")

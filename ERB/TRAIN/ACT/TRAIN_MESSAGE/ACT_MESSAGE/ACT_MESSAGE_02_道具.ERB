@@ -1,0 +1,341 @@
+﻿;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+;		道具系メッセージ
+
+;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+;────────────────────────────────────
+;020,ローター
+;────────────────────────────────────
+;★リアクション前★
+@TRAIN_MESSAGE_20
+IF TCVAR:MASTER:位置前後 == 1                     ;前から愛撫
+	IF TCVAR:MASTER:イきそう  ;調教対象がイきそう
+		SELECTCASE TCVAR:MASTER:焦らし度
+			CASE IS > 1                 ;焦らし中
+				IF TEQUIP:顔面騎乗 || TEQUIP:顔面騎乗アナル           ;顔面騎乗中
+					PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の顔面に\@ TEQUIP:顔面騎乗 ? 性器をこすりつけ # アヌスを押し付け \@ながら
+				ELSE                                                  ;その他
+					PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("たまま")%絶頂の予感に腰をひくつかせる%CALLNAME:MASTER%の腰を押さえつけ、
+				ENDIF
+				PRINTFORML コードを持ってぶらさげたローターを今にも弾けそうな\@ PENIS(MASTER) ? 亀頭 # 陰核 \@に当てたり離したりした…
+			CASEELSE                    ;焦らしなし・焦らし終了
+				IF TEQUIP:顔面騎乗 || TEQUIP:顔面騎乗アナル           ;顔面騎乗中
+					PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の顔面に\@ TEQUIP:顔面騎乗 ? 性器をこすりつけ # アヌスを押し付け \@ながら
+				ELSE                                                  ;その他
+					PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の顔を見つめながら、
+				ENDIF
+				PRINTFORML ローターの振動を強くし、充血した\@ PENIS(MASTER) ? 亀頭 # 陰核 \@の裏に強く押し当てた…
+		ENDSELECT
+	ELSE                      ;通常
+		IF PANTSCHECK(1, 1)             ;下半身服装が要押し退け
+			PRINTFORM %CALLNAME:TARGET%は%TARGET_DESCRIPTION("たまま")%%CALLNAME:MASTER%の
+			IF PANTSCHECK(1)                      ;下半身服装が邪魔
+				PRINTFORM 服越しに、
+			ELSE                                  ;その他
+				SIF LOWERJACKET(1) == 1                     ;下半身上着が要押し退け
+					PRINTFORM %OUTER_B(MASTER, 0, 1)%の裾から手を入れ、
+				SIF LOWERUNDER(1) == 1                      ;下半身下着が要押し退け
+					PRINTFORM 下着をずらして、
+			ENDIF
+			PRINTFORML 
+			PRINTFORML \@ PENIS(MASTER) ? 亀頭 # 陰核 \@に震えるローターを押し当てた…
+			TEQUIP:着衣露出 |= 4                  ;調教対象性器露出
+		ELSE                            ;その他
+			PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("たまま")%%CALLNAME:MASTER%の腰を押さえつけ、
+			PRINTFORML 敏感そうな\@ PENIS(MASTER) ? 亀頭 # 陰核 \@に震えるローターを押し当てた…
+		ENDIF
+	ENDIF
+ELSE                                              ;後ろから愛撫
+	IF TCVAR:MASTER:イきそう  ;調教対象がイきそう
+		SELECTCASE TCVAR:MASTER:焦らし度
+			CASE IS > 1                 ;焦らし中
+				PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("たまま")%絶頂の予感に腰をひくつかせる%CALLNAME:MASTER%の腰を抱きすくめ、
+				PRINTFORML コードを持ってぶらさげたローターを今にも弾けそうな\@ PENIS(MASTER) ? 亀頭 # 陰核 \@に当てたり離したりした…
+			CASEELSE                    ;焦らしなし・焦らし終了
+				PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("ながら")%%CALLNAME:MASTER%の腰を背中から抱いて、
+				PRINTFORML ローターの振動を強くし、充血した\@ PENIS(MASTER) ? 亀頭 # 陰核 \@の裏に強く押し当てた…
+		ENDSELECT
+	ELSE                      ;通常
+		IF PANTSCHECK(1, 1)             ;下半身服装が要押し退け
+			PRINTFORM %CALLNAME:TARGET%は%TARGET_DESCRIPTION("たまま")%%CALLNAME:MASTER%の
+			IF PANTSCHECK(1)                      ;下半身服装が邪魔
+				PRINTFORM 服越しに、
+			ELSE                                  ;その他
+				SIF LOWERJACKET(1) == 1                     ;下半身上着が要押し退け
+					PRINTFORM %OUTER_B(MASTER, 0, 1)%の裾から手を入れ、
+				SIF LOWERUNDER(1) == 1                      ;下半身下着が要押し退け
+					PRINTFORM 下着をずらして、
+			ENDIF
+			PRINTFORML 
+			PRINTFORML 後ろから腰を抱いて\@ PENIS(MASTER) ? 亀頭 # 陰核 \@に震えるローターを押し当てた…
+			TEQUIP:着衣露出 |= 4                  ;調教対象性器露出
+		ELSE                            ;その他
+			PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("たまま")%背後から%CALLNAME:MASTER%を抱きすくめ
+			PRINTFORML 敏感そうな\@ PENIS(MASTER) ? 亀頭 # 陰核 \@に震えるローターを押し当てた…
+		ENDIF
+	ENDIF
+ENDIF
+
+;☆リアクション後☆
+@TRAIN_MESSAGE2_20
+SELECTCASE COMGRONAME(TFLAG:REACT分類)
+	CASE "受け入れる"
+		IF TCVAR:MASTER:イきそう        ;イきそう状態
+			IF TCVAR:MASTER:焦らし度 > 1          ;焦らし中
+				PRINTFORML %CALLNAME:MASTER%は思わず腰をくねらせて快感の痺れを追いかけるが、
+				PRINTFORML %CALLNAME%は面白がるようにローターを揺らしている…
+			ELSE                                  ;焦らし終了・焦らし無し
+				PRINTFORML %CALLNAME:MASTER%は強い快楽に\@ TALENT:MASTER:オトコ ? 押し殺した呻き声 # 甘く蕩けたような叫び声 \@を上げたが、
+				PRINTFORML %CALLNAME%は構わずにローターをぐりぐりと押し付け続けた…
+			ENDIF
+		ELSE                            ;その他の場合
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行動"
+					PRINTFORML %CALLNAME:MASTER%は玩具で敏感な突起を嬲られる得体の知れない快感の虜になり
+					PRINTFORML だらしない善がり声を上げた…
+				CASE "無理のない行動"
+					PRINTFORML %CALLNAME:MASTER%は腰を浮かせて無機質な快感に溺れている…
+				CASE "無理をした行動"
+					PRINTFORML %CALLNAME:MASTER%は奇妙な玩具に嬲られる屈辱に唇を噛むが、
+					PRINTFORML 強烈な快感であっという間に表情が蕩けていく…
+			ENDSELECT
+		ENDIF
+		RETURN 2
+	CASE "積極的従う", "平然と従う"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME%の邪魔にならないように、暴れる腰を自ら抑え付けた…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:MASTER%は奇妙な玩具で執拗に愛撫されながら
+				PRINTFORML %CALLNAME%の言う通りに振る舞い、大人しく脚を広げた…
+			CASE "無理をした行動"
+				IF COMCOR_POSI()                  ;実は気持ちいい
+					PRINTFORML %CALLNAME:MASTER%は%CALLNAME%に玩具で責められながら、
+					PRINTFORML 腰が崩れて快感に沈みそうになるのを我慢した…
+				ELSE                              ;実は嫌
+					PRINTFORML %CALLNAME:MASTER%は股間から湧き上がる快感を必死に意識から追い出しつつ
+					PRINTFORML %CALLNAME%の言う通りに振る舞った…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+	CASE "許しを乞う"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:MASTER%は得体の知れない玩具とそれのもたらす感覚に怯え、
+				PRINTFORML 助けてと言って身をよじった…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:MASTER%は玩具が強制的に与える快感に怯えている…
+			CASE "無理をした行動"
+				IF COMCOR_POSI()                  ;実は気持ちいい
+					PRINTFORML %CALLNAME:MASTER%はこんな粗末な玩具などで気持ち良くされてしまうことに怯え、
+					PRINTFORML 哀願の視線を%CALLNAME%に向けた…
+				ELSE                              ;実は嫌
+					PRINTFORML %CALLNAME:MASTER%は%CALLNAME%の手にしたローターから送り込まれる快楽に怯え、
+					PRINTFORML 小さくやめてと言った…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+	CASE "消極的従う"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:MASTER%はローターの振動が強制的に与えるくすぐったいような快楽を、
+				PRINTFORML 喉と鼻で小さく鳴きながらも、必死に我慢した…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:MASTER%は顔を染め、強制的に与えられる快感を我慢している…
+			CASE "無理をした行動"
+				IF COMCOR_POSI()                  ;実は気持ちいい
+					PRINTFORML %CALLNAME:MASTER%はこんな玩具でも簡単に感じてしまうことに悔しがり、
+					PRINTFORML 歯を食い縛って%CALLNAME%の方を見た…
+				ELSE                              ;実は嫌
+					PRINTFORML %CALLNAME:MASTER%は%CALLNAME%の手にしたローターから送り込まれる快楽に驚き、
+					PRINTFORML 思わず声を上げたが、必死に我慢しようとした…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+ENDSELECT
+
+;────────────────────────────────────
+;021,バイブ
+;────────────────────────────────────
+;★リアクション前★
+@TRAIN_MESSAGE_21
+IF TFLAG:ACT派生 == 0         ;装着時
+	PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("たまま、")%%CALLNAME:MASTER%の秘裂に
+	PRINTFORML バイブの先端をあてがい馴染ませていく…
+ELSE                          ;解除時
+	PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("たまま、")%%CALLNAME:MASTER%の秘裂から
+	PRINTFORML 蠢くバイブをゆっくりと引き抜いた…
+ENDIF
+
+;☆リアクション後☆
+@TRAIN_MESSAGE2_21
+IF !TFLAG:ACT派生 && TALENT:MASTER:ふたなり       ;装着時、ふたなりのみ地の文変化
+	PRINTFORML バイブの先端が膣壁越しに%CALLNAME:MASTER%の前立腺を捉えると、
+	PRINTFORML 意思と無関係に男性器が勃起し、射精への渇望がむらむらと湧き上がってきた…
+	RETURN 2
+ENDIF
+
+;────────────────────────────────────
+;022,アナルバイブ
+;────────────────────────────────────
+;★リアクション前★
+@TRAIN_MESSAGE_22
+IF TFLAG:ACT派生 == 0         ;装着時
+	PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("たまま、")%%CALLNAME:MASTER%の菊穴に
+	PRINTFORML アナルバイブをあてがった…
+ELSE                          ;解除時
+	PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("たまま、")%%CALLNAME:MASTER%のアヌスから
+	PRINTFORML アナルバイブを抜いた…
+ENDIF
+
+;☆リアクション後☆
+@TRAIN_MESSAGE2_22
+IF !TFLAG:ACT派生 && TALENT:MASTER:オトコ         ;装着時、オトコのみ地の文変化
+	PRINTFORML アナルバイブの先端が腸壁越しに%CALLNAME:MASTER%の前立腺を捉えると、
+	PRINTFORML 意思と無関係に男性器が勃起し、射精への渇望がむらむらと湧き上がってきた…
+	RETURN 2
+ENDIF
+
+;────────────────────────────────────
+;023,アナルビーズ
+;────────────────────────────────────
+;★リアクション前★
+@TRAIN_MESSAGE_23
+SELECTCASE TFLAG:ACT派生
+	CASE 0                    ;装着
+		PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("たまま、")%%CALLNAME:MASTER%の菊穴に
+		PRINTFORML アナルビーズをひとつ飲み込ませようとした…
+	CASE 1                    ;解除
+		PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("つつ、")%%CALLNAME:MASTER%のアヌスから
+		PRINTFORML アナルビーズを引き抜こうとした…
+	CASEELSE                  ;追加
+		PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("つつ、")%%CALLNAME:MASTER%のアナルに入れた
+		PRINTFORML アナルビーズを押してさらにひとつの玉を飲み込ませた…
+ENDSELECT
+
+;☆リアクション後☆
+@TRAIN_MESSAGE2_23
+IF TFLAG:ACT派生 == 1                             ;解除時のみ地の文変化
+	;オトコで、前立腺でイきそう（解除時は前立腺刺激2がつく）
+	IF TALENT:MASTER:オトコ && (TCVAR:MASTER:イきそう || PALAM:MASTER:快Ｃ >= 8000)
+		IF BASE:MASTER:射精 == 0        ;射精ゲージがない
+			PRINTFORML 引き抜かれるビーズが%CALLNAME:MASTER%のぱんぱんに膨れた前立腺をごりごり刺激する…
+			PRINTFORML %CALLNAME:MASTER%は枯れた精液をさらに搾ろうとする責めに叫び声を上げた…
+		ELSE                            ;射精ゲージあり
+			PRINTFORML 引き抜かれるビーズが%CALLNAME:MASTER%のぱんぱんに膨れた前立腺をごりごり刺激する…
+			PRINTFORML %CALLNAME:MASTER%はだらしなく精液をお漏らしさせられる感覚に叫び声を上げた…
+		ENDIF
+		RETURN 2
+	ELSEIF IS_COMGRONAME("受け入れる")
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:MASTER%は次々にビーズが肛門を広げて抜けていく感覚に頭の中まで犯され、
+				PRINTFORML 気持ち良さそうに喉が鳴き、ゾクゾク全身が震えるのを止められない…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:MASTER%はアナルビーズを引き抜かれるたびに快感に悶えた…
+			CASE "無理をした行動"
+				PRINTFORML %CALLNAME:MASTER%は異物を引き抜いていく原始的な快楽を懸命に堪えようとするが、
+				PRINTFORML ぷり、と球が肛門を通り抜けるたびに、瞳から理性の光が消えていく…
+		ENDSELECT
+		RETURN 2
+	ELSEIF IS_COMGRONAME("積極的従う/平然と従う")
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:MASTER%が肛門の力を抜くと、%CALLNAME%はビーズを一気に引き抜いた…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:MASTER%はできるだけ楽に抜けるように、自分で肛門の力をゆるめ、
+				PRINTFORML 排便するようにいきんでビーズが抜けるのを助けた…
+			CASE "無理をした行動"
+				IF COMCOR_POSI()                  ;実は気持ちいい
+					PRINTFORML %CALLNAME%がもったいぶるようにアナルビーズを引き抜いていくと、
+					PRINTFORML %CALLNAME:MASTER%は必死に声を堪えて背筋を震わせた…
+				ELSE                              ;実は嫌
+					PRINTFORML %CALLNAME:MASTER%はいずれにせよ抜かなくてはならないのだからと諦め、
+					PRINTFORML どうせなら一思いに引き抜いて欲しいと言った…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+	ELSEIF IS_COMGRONAME("許しを乞う")
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:MASTER%は腸内いっぱいに咥えこんだ球が肛門をこじ開けて出て行く感覚に、
+				PRINTFORML 震えて歯を鳴らした…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:MASTER%はビーズを無理やり引き抜こうとする%CALLNAME%の手を、
+				PRINTFORML すがるように引き留めようとした…
+			CASE "無理をした行動"
+				IF COMCOR_POSI()                  ;実は気持ちいい
+					PRINTFORML %CALLNAME:MASTER%はアヌスからの奇妙な快感に膝を震わせ、
+					PRINTFORML 怖いからゆっくり抜いてくださいと%CALLNAME%に哀願した…
+				ELSE                              ;実は嫌
+					PRINTFORML %CALLNAME:MASTER%は排泄に似た不安定な感覚に怯えてしまい、
+					PRINTFORML このままでもいいから抜かないで欲しいと言った…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+	ELSEIF IS_COMGRONAME("消極的従う")
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:MASTER%はアヌスから湧き上がる妖しい感覚に心を乱され、
+				PRINTFORML 顔を隠して必死に耐えている…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:MASTER%はせめてビーズが抜けやすいようにと尻を突き出しながら、
+				PRINTFORML 首を振って異様な感覚を堪えている…
+			CASE "無理をした行動"
+				;実は気持ちいい
+				IF COMCOR_POSI()                  ;実は気持ちいい
+					PRINTFORML %CALLNAME:MASTER%は強い快楽と耐えがたい屈服感に襲われながら、
+					PRINTFORML ゆっくり抜いてと繰り返し呟いた…
+				;実は嫌
+				ELSE                              ;実は嫌
+					PRINTFORML %CALLNAME:MASTER%は自分の身体を腕で抱くようにして、
+					PRINTFORML ビーズが引き抜かれていく感覚に耐えられず震えている…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+	ENDIF
+ENDIF
+
+;────────────────────────────────────
+;024,クリキャップ/オナホール
+;────────────────────────────────────
+@TRAIN_MESSAGE_24
+SELECTCASE TFLAG:ACT派生
+	CASE 0                    ;クリキャップ装着
+		PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("つつ、")%%CALLNAME:MASTER%に
+		PRINTFORML クリキャップを取り付けようとした…
+	CASE 1                    ;クリキャップ解除
+		PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("ながら、")%%CALLNAME:MASTER%から
+		PRINTFORML \@ PALAM:MASTER:潤滑 >= 1000 ? 愛液にまみれた # \@クリキャップを外そうとした…
+	CASE 2                    ;オナホール装着
+		PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("つつ、")%%CALLNAME:MASTER%に
+		PRINTFORML オナホールを取り付けようとした…
+	CASEELSE                  ;オナホール解除
+		PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("たまま、")%%CALLNAME:MASTER%から
+		PRINTFORML \@ GET_STAIN("ペニス", "精液", MASTER) ? 精液を含んだ # \@オナホールを外そうとした…
+ENDSELECT
+
+;────────────────────────────────────
+;025,ニプルキャップ
+;────────────────────────────────────
+@TRAIN_MESSAGE_25
+IF TFLAG:ACT派生 == 0         ;装着時
+	PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("つつ、")%%CALLNAME:MASTER%の乳首に
+	PRINTFORML \@ TALENT:MASTER:オトコ ? 男性用 # \@クリップローターを取り付けようとした…
+ELSE                          ;解除時
+	PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("ながら、")%%CALLNAME:MASTER%から
+	PRINTFORML クリップローターを取り外そうとした…
+ENDIF
+
+;────────────────────────────────────
+;026,ペニスバンド
+;────────────────────────────────────
+@TRAIN_MESSAGE_26
+IF TFLAG:ACT派生 == 0         ;装着時
+	PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%に双頭のペニスバンドを装着させようとした…
+	PRINTFORML ペニスバンド内側の突起が%CALLNAME:MASTER%の膣口を押し広げようとする…
+ELSE                          ;解除時
+	PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%のペニスバンドを外し、
+	PRINTFORML 膣内に呑み込まれた突起をゆっくりと引き抜いた…
+ENDIF

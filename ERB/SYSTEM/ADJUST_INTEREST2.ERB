@@ -1,0 +1,301 @@
+﻿
+;eratohoR#私家改変 0004.6.1 用　興味補正パッチ より改変後導入
+
+;興味のある部位や調教によって補正値を加えます
+@KYOMI_HOSEI(ARG)
+
+LOCAL = CFLAG:(400 + ARG) * 2
+
+SELECTCASE ARG
+	CASE 0
+		;気分を聞く
+		LOCAL = LOCAL - CFLAG:(400 + 66) - CFLAG:(400 + 69)
+	CASE 1
+		;自分のことをどう思っているか聞く
+		LOCAL = LOCAL
+	CASE 2
+		;性についての知識を語る
+		LOCAL = LOCAL + CFLAG:(400 + 41) + CFLAG:(400 + 42) + CFLAG:(400 + 43)
+	CASE 3
+		;優しい言葉で慰める
+		LOCAL = LOCAL
+	CASE 4
+		;脅す
+		LOCAL = LOCAL + CFLAG:(400 + 60) + CFLAG:(400 + 69)
+	CASE 5
+		;衣装の変更を要求する
+		LOCAL = LOCAL
+	CASE 6
+		;合意を得る
+		LOCAL = LOCAL
+	CASE 7
+		;お仕置きすると宣言
+		LOCAL = LOCAL
+	CASE 8
+		;怒鳴る
+		LOCAL = LOCAL
+	CASE 9
+		;嗤う
+		LOCAL = LOCAL + CFLAG:(400 + 44) + CFLAG:(400 + 61) + CFLAG:(400 + 62)
+	CASE 10
+		;手で愛撫
+		LOCAL = LOCAL + CFLAG:(400 + 13) + CFLAG:(400 + 16) + CFLAG:(400 + 17) - CFLAG:(400 + 18) + CFLAG:(400 + 20) + CFLAG:(400 + 24) + CFLAG:(400 + 41) + CFLAG:(400 + 50)
+	CASE 11
+		;胸を愛撫
+		LOCAL = LOCAL + CFLAG:(400 + 25) + CFLAG:(400 + 26) + CFLAG:(400 + 52)
+	CASE 12
+		;口で愛撫
+		LOCAL = LOCAL + CFLAG:(400 + 14) + CFLAG:(400 + 15) - CFLAG:(400 + 45) * 2 + CFLAG:(400 + 51)
+	CASE 13
+		;アナルを手で愛撫
+		LOCAL = LOCAL + CFLAG:(400 + 10) + CFLAG:(400 + 14) + CFLAG:(400 + 22) + CFLAG:(400 + 23)
+	CASE 14
+		;アナルを口で愛撫
+		LOCAL = LOCAL + CFLAG:(400 + 12) + CFLAG:(400 + 13) + CFLAG:(400 + 22) + CFLAG:(400 + 23)
+	CASE 15
+		;キスする
+		LOCAL = LOCAL + CFLAG:(400 + 12) + CFLAG:(400 + 75)
+	CASE 16
+		;Cを擦りあう
+		LOCAL = LOCAL + CFLAG:(400 + 10) + CFLAG:(400 + 53)
+	CASE 17
+		;パイズリする
+		LOCAL = LOCAL + CFLAG:(400 + 10) + CFLAG:(400 + 57)
+	CASE 18
+		;足コキする
+		LOCAL = LOCAL - CFLAG:(400 + 10) + CFLAG:(400 + 63) + CFLAG:(400 + 64) + CFLAG:(400 + 65) + CFLAG:(400 + 66)
+	CASE 20
+		;ローター
+		LOCAL = LOCAL + CFLAG:(400 + 10) + CFLAG:(400 + 24) + CFLAG:(400 + 63)
+	CASE 21
+		;バイブ
+		LOCAL = LOCAL + CFLAG:(400 + 22) + CFLAG:(400 + 40) + CFLAG:(400 + 41) + CFLAG:(400 + 63) + CFLAG:(400 + 70)
+	CASE 22
+		;アナルバイブ
+		LOCAL = LOCAL + CFLAG:(400 + 13) + CFLAG:(400 + 14) + CFLAG:(400 + 21) + CFLAG:(400 + 40) + CFLAG:(400 + 63) + CFLAG:(400 + 68) + CFLAG:(400 + 71)
+	CASE 23
+		;アナルビーズ
+		LOCAL = LOCAL + CFLAG:(400 + 13) + CFLAG:(400 + 14) + CFLAG:(400 + 40) + CFLAG:(400 + 63) + CFLAG:(400 + 68)
+	CASE 24
+		;オナホール/クリキャップ
+		LOCAL = LOCAL - CFLAG:(400 + 10) + CFLAG:(400 + 20) + CFLAG:(400 + 40) + CFLAG:(400 + 63) + CFLAG:(400 + 103) * 2
+	CASE 25
+		;ニプルキャップ
+		LOCAL = LOCAL + CFLAG:(400 + 11) + CFLAG:(400 + 26) + CFLAG:(400 + 40) + CFLAG:(400 + 63)
+	CASE 26
+		;搾乳機
+		LOCAL = LOCAL + CFLAG:(400 + 11) + CFLAG:(400 + 25) + CFLAG:(400 + 40) + CFLAG:(400 + 63)
+	CASE 27
+		;押し倒す
+		LOCAL = LOCAL
+	CASE 30
+		;正常位
+		LOCAL = LOCAL + CFLAG:(400 + 31) + CFLAG:(400 + 32) + CFLAG:(400 + 33) + CFLAG:(400 + 34)
+	CASE 31
+		;後背位
+		LOCAL = LOCAL + CFLAG:(400 + 30) + CFLAG:(400 + 32) + CFLAG:(400 + 33) + CFLAG:(400 + 34)
+	CASE 32
+		;騎乗位
+		LOCAL = LOCAL + CFLAG:(400 + 30) + CFLAG:(400 + 31) + CFLAG:(400 + 33) + CFLAG:(400 + 34)
+	CASE 33
+		;対面座位
+		LOCAL = LOCAL + CFLAG:(400 + 30) + CFLAG:(400 + 31) + CFLAG:(400 + 32) + CFLAG:(400 + 34)
+	CASE 34
+		;背面座位
+		LOCAL = LOCAL + CFLAG:(400 + 30) + CFLAG:(400 + 31) + CFLAG:(400 + 32) + CFLAG:(400 + 33)
+	CASE 35
+		;正常位アナル
+		LOCAL = LOCAL + CFLAG:(400 + 36) + CFLAG:(400 + 37) + CFLAG:(400 + 38) + CFLAG:(400 + 39)
+	CASE 36
+		;後背位アナル
+		LOCAL = LOCAL + CFLAG:(400 + 35) + CFLAG:(400 + 37) + CFLAG:(400 + 38) + CFLAG:(400 + 39)
+	CASE 37
+		;騎乗位アナル
+		LOCAL = LOCAL + CFLAG:(400 + 35) + CFLAG:(400 + 36) + CFLAG:(400 + 38) + CFLAG:(400 + 39)
+	CASE 38
+		;対面座位アナル
+		LOCAL = LOCAL + CFLAG:(400 + 35) + CFLAG:(400 + 36) + CFLAG:(400 + 37) + CFLAG:(400 + 39)
+	CASE 39
+		;背面座位アナル
+		LOCAL = LOCAL + CFLAG:(400 + 35) + CFLAG:(400 + 36) + CFLAG:(400 + 37) + CFLAG:(400 + 38)
+	CASE 40
+		;自慰させる
+		LOCAL = LOCAL + CFLAG:(400 + 21) + CFLAG:(400 + 22) + CFLAG:(400 + 23) + CFLAG:(400 + 24) + CFLAG:(400 + 25) + CFLAG:(400 + 26) + CFLAG:(400 + 43) + CFLAG:(400 + 66)
+	CASE 41
+		;開帳
+		LOCAL = LOCAL + CFLAG:(400 + 2) + CFLAG:(400 + 10) + CFLAG:(400 + 21) - CFLAG:(400 + 64) + CFLAG:(400 + 66)
+	CASE 42
+		;自慰みせつけ
+		LOCAL = LOCAL + CFLAG:(400 + 2) + CFLAG:(400 + 50) + CFLAG:(400 + 51) + CFLAG:(400 + 52) - CFLAG:(400 + 64) - CFLAG:(400 + 66)
+	CASE 43
+		;大鏡
+		LOCAL = LOCAL + CFLAG:(400 + 2) + CFLAG:(400 + 40) + CFLAG:(400 + 44) - CFLAG:(400 + 64) + CFLAG:(400 + 66)
+	CASE 44
+		;野外プレイ
+		LOCAL = LOCAL + CFLAG:(400 + 9) + CFLAG:(400 + 43) + CFLAG:(400 + 66) + CFLAG:(400 + 73) * 2 + CFLAG:(400 + 74) * 2
+	CASE 45
+		;放尿
+		LOCAL = LOCAL - CFLAG:(400 + 12) * 2 + CFLAG:(400 + 66)
+	CASE 46
+		;コスプレ
+		LOCAL = LOCAL
+	CASE 50
+		;手でさせる
+		LOCAL = LOCAL + CFLAG:(400 + 10) + CFLAG:(400 + 42)
+	CASE 51
+		;口でさせる
+		LOCAL = LOCAL + CFLAG:(400 + 12) + CFLAG:(400 + 42) - CFLAG:(400 + 65)
+	CASE 52
+		;胸でさせる
+		LOCAL = LOCAL + CFLAG:(400 + 11) + CFLAG:(400 + 42)
+	CASE 53
+		;素股させる
+		LOCAL = LOCAL + CFLAG:(400 + 16)
+	CASE 55
+		;足を舐めさせる
+		LOCAL = LOCAL + CFLAG:(400 + 74)
+	CASE 56
+		;イラマチオ
+		LOCAL = LOCAL - CFLAG:(400 + 65) + CFLAG:(400 + 66) + CFLAG:(400 + 74)
+	CASE 57
+		;胸を愛撫させる
+		LOCAL = LOCAL + CFLAG:(400 + 17)
+	CASE 60
+		;スパンキング
+		LOCAL = LOCAL + CFLAG:(400 + 4) + CFLAG:(400 + 66)
+	CASE 61
+		;鞭
+		LOCAL = LOCAL + CFLAG:(400 + 9) + CFLAG:(400 + 62) + CFLAG:(400 + 67)
+	CASE 62
+		;針
+		LOCAL = LOCAL + CFLAG:(400 + 9) + CFLAG:(400 + 61) + CFLAG:(400 + 67)
+	CASE 63
+		;縄
+		LOCAL = LOCAL + CFLAG:(400 + 18) + CFLAG:(400 + 20) + CFLAG:(400 + 21) + CFLAG:(400 + 22) + CFLAG:(400 + 23) + CFLAG:(400 + 24) + CFLAG:(400 + 25) + CFLAG:(400 + 26) + CFLAG:(400 + 73) + CFLAG:(400 + 103) + CFLAG:(400 + 104)
+	CASE 64
+		;アイマスク
+		LOCAL = LOCAL + CFLAG:(400 + 18) - CFLAG:(400 + 41) - CFLAG:(400 + 42) - CFLAG:(400 + 43)
+	CASE 65
+		;ボールギャグ
+		LOCAL = LOCAL + CFLAG:(400 + 18) - CFLAG:(400 + 51) - CFLAG:(400 + 56) + CFLAG:(400 + 68)
+	CASE 66
+		;罵倒する
+		LOCAL = LOCAL - CFLAG:(400 + 0) + CFLAG:(400 + 18) + CFLAG:(400 + 40) + CFLAG:(400 + 41) - CFLAG:(400 + 42) + CFLAG:(400 + 43) + CFLAG:(400 + 44) + CFLAG:(400 + 45) + CFLAG:(400 + 56) + CFLAG:(400 + 60) + CFLAG:(400 + 67)
+	CASE 67
+		;三角木馬
+		LOCAL = LOCAL + CFLAG:(400 + 61) + CFLAG:(400 + 62) + CFLAG:(400 + 66) + CFLAG:(400 + 70) + CFLAG:(400 + 71) + CFLAG:(400 + 72)
+	CASE 68
+		;浣腸
+		LOCAL = LOCAL + CFLAG:(400 + 22) + CFLAG:(400 + 23) + CFLAG:(400 + 65) + CFLAG:(400 + 71)
+	CASE 69
+		;首を絞める
+		LOCAL = LOCAL - CFLAG:(400 + 0) + CFLAG:(400 + 4) + CFLAG:(400 + 70) + CFLAG:(400 + 71) + CFLAG:(400 + 72) + CFLAG:(400 + 74) + CFLAG:(400 + 75)
+	CASE 70
+		;フィスト
+		LOCAL = LOCAL + CFLAG:(400 + 21) + CFLAG:(400 + 67) + CFLAG:(400 + 69) + CFLAG:(400 + 71) + CFLAG:(400 + 72)
+	CASE 71
+		;アナルフィスト
+		LOCAL = LOCAL + CFLAG:(400 + 22) + CFLAG:(400 + 67) + CFLAG:(400 + 68) + CFLAG:(400 + 69) + CFLAG:(400 + 70) + CFLAG:(400 + 72)
+	CASE 72
+		;両穴フィスト
+		LOCAL = LOCAL + CFLAG:(400 + 67) + CFLAG:(400 + 69) + CFLAG:(400 + 70) + CFLAG:(400 + 71)
+	CASE 73
+		;放置プレイ
+		LOCAL = LOCAL + CFLAG:(400 + 44) * 2 + CFLAG:(400 + 63)
+	CASE 74
+		;公衆便所
+		LOCAL = LOCAL + CFLAG:(400 + 44) * 2 + CFLAG:(400 + 55) + CFLAG:(400 + 56) + CFLAG:(400 + 69)
+	CASE 75
+		;噛み付き
+		LOCAL = LOCAL + CFLAG:(400 + 15) + CFLAG:(400 + 69)
+	CASE 76
+		;踏みつけ
+		LOCAL = LOCAL
+	CASE 95
+		;正常位させる
+		LOCAL = LOCAL + CFLAG:(400 + 96) + CFLAG:(400 + 97) + CFLAG:(400 + 98) + CFLAG:(400 + 103)
+	CASE 96
+		;後背位させる
+		LOCAL = LOCAL + CFLAG:(400 + 95) + CFLAG:(400 + 97) + CFLAG:(400 + 98) + CFLAG:(400 + 103)
+	CASE 97
+		;対面座位させる
+		LOCAL = LOCAL + CFLAG:(400 + 95) + CFLAG:(400 + 96) + CFLAG:(400 + 98) + CFLAG:(400 + 103)
+	CASE 98
+		;背面座位させる
+		LOCAL = LOCAL + CFLAG:(400 + 95) + CFLAG:(400 + 96) + CFLAG:(400 + 97) + CFLAG:(400 + 103)
+	CASE 99
+		;正常位アナルさせる
+		LOCAL = LOCAL + CFLAG:(400 + 100) + CFLAG:(400 + 101) + CFLAG:(400 + 102) + CFLAG:(400 + 104)
+	CASE 100
+		;後背位アナルさせる
+		LOCAL = LOCAL + CFLAG:(400 + 99) + CFLAG:(400 + 101) + CFLAG:(400 + 102) + CFLAG:(400 + 104)
+	CASE 101
+		;対面座位アナルさせる
+		LOCAL = LOCAL + CFLAG:(400 + 99) + CFLAG:(400 + 100) + CFLAG:(400 + 102) + CFLAG:(400 + 104)
+	CASE 102
+		;背面座位アナルさせる
+		LOCAL = LOCAL + CFLAG:(400 + 99) + CFLAG:(400 + 100) + CFLAG:(400 + 101) + CFLAG:(400 + 104)
+	CASE 103
+		;逆レイプ
+		LOCAL = LOCAL + CFLAG:(400 + 24) * 2 + CFLAG:(400 + 63) + CFLAG:(400 + 95) + CFLAG:(400 + 96) + CFLAG:(400 + 97) + CFLAG:(400 + 98)
+	CASE 104
+		;逆レイプアナル
+		LOCAL = LOCAL + CFLAG:(400 + 63) + CFLAG:(400 + 99) + CFLAG:(400 + 100) + CFLAG:(400 + 101) + CFLAG:(400 + 102)
+	CASE 110
+		;愛を告げる
+		LOCAL = LOCAL
+	CASE 93
+		;優しくする
+		LOCAL = LOCAL + CFLAG:(400 + 93) * 2
+	CASEELSE
+		
+ENDSELECT
+
+;補正値を返す
+IF LOCAL < -96
+	LOCAL:1 = 0 - RAND:20 - RAND:10
+ELSEIF LOCAL < -84
+	LOCAL:1 = 0 - RAND:18 - RAND:9
+ELSEIF LOCAL < -72
+	LOCAL:1 = 0 - RAND:16 - RAND:8
+ELSEIF LOCAL < -60
+	LOCAL:1 = 0 - RAND:14 - RAND:7
+ELSEIF LOCAL < -48
+	LOCAL:1 = 0 - RAND:12 - RAND:6
+ELSEIF LOCAL < -36
+	LOCAL:1 = 0 - RAND:10 - RAND:5
+ELSEIF LOCAL < -24
+	LOCAL:1 = 0 - RAND:8 - RAND:4
+ELSEIF LOCAL < -12
+	LOCAL:1 = 0 - RAND:6 - RAND:3
+ELSEIF LOCAL < -5
+	LOCAL:1 = 0 - RAND:4 - RAND:2
+ELSEIF LOCAL < 5
+	LOCAL:1 = 0
+ELSEIF LOCAL < 10
+	LOCAL:1 = 0 + RAND:4 + RAND:2
+ELSEIF LOCAL < 20
+	LOCAL:1 = 0 + RAND:6 + RAND:3
+ELSEIF LOCAL < 30
+	LOCAL:1 = 0 + RAND:8 + RAND:4
+ELSEIF LOCAL < 40
+	LOCAL:1 = 0 + RAND:10 + RAND:5
+ELSEIF LOCAL < 50
+	LOCAL:1 = 0 + RAND:12 + RAND:6
+ELSEIF LOCAL < 60
+	LOCAL:1 = 0 + RAND:14 + RAND:7
+ELSEIF LOCAL < 70
+	LOCAL:1 = 0 + RAND:16 + RAND:8
+ELSEIF LOCAL < 80
+	LOCAL:1 = 0 + RAND:18 + RAND:9
+ELSE
+	LOCAL:1 = 0 + RAND:20 + RAND:10
+ENDIF
+
+;デバッグ用
+IF 0
+	PRINTFORM COM{ARG}:興味値[{LOCAL}]補正値{LOCAL:1,3}　
+ENDIF
+
+RETURN LOCAL:1
+

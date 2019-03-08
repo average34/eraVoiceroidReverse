@@ -1,0 +1,101 @@
+﻿;≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡
+;口上プロファイル表示
+;≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡
+@KOJO_PROFILE(ARG)
+#DIMS DEFONT, 1
+#DIM LCOUNT, 1
+;フォント保存
+DEFONT = %GETFONT()%
+DRAWLINE
+PRINTL 
+;てぬき
+LOCAL =STRLENS(@"　%" "*(STRLENS(CSVCSTR(ARG, 10, 0))/2)%%" "*(STRLENS(CSVCSTR(ARG, 11, 0))/2)%%CSVCSTR(ARG, 12, 0)%")/2
+PRINTFORML 　%"―"*(LOCAL/2-1)%調教者名%"―"*(LOCAL/2-1)%
+PRINTL 
+;肩書きはHG教科書体
+SIF CHKFONT("HG教科書体")
+SETFONT "HG教科書体"
+PRINTFORML %" "*MAX(4, (((STRLENS(@"　%"―"*(LOCAL+2)%　")/2+2)-STRLENS(CSVCSTR(ARG, 10, 0)))/2))%%CSVCSTR(ARG, 10, 0)%
+;名前は元フォント
+SETFONT DEFONT
+PRINTFORML %" "*((STRLENS(@"　%"―"*(LOCAL+2)%　")-STRLENS(CSVCSTR(ARG, 11, 0)))/2)%%CSVCSTR(ARG, 11, 0)%
+;ローマ字読みはＭＳ 明朝（TimesNewRomanは等幅じゃなかった…）
+SIF CHKFONT("ＭＳ 明朝")
+	SETFONT "ＭＳ 明朝"
+PRINTFORML 　　%" "*(STRLENS(CSVCSTR(ARG, 10, 0))/2)%%" "*(STRLENS(CSVCSTR(ARG, 11, 0))/2)%%CSVCSTR(ARG, 12, 0)%
+SETFONT DEFONT
+PRINTL 
+PRINTFORML 　%"―"*(LOCAL+2)%
+PRINTL 
+PRINTL 　―――――調教者口上データ―――――
+PRINTL 
+VARSET RESULT
+VARSET RESULTS
+TRYCALLFORM KOJO_K{ARG}
+PRINTFORML 　　一般口上　　：\@ RESULT ? あり # なし \@
+PRINTFORM 　　立場指定口上：
+;ご主人様判定
+SIF STRFIND(RESULTS, @"/MS/") >= 0
+	PRINT [ご主人様] 
+;非ご主人様判定
+SIF STRFIND(RESULTS, @"/AS/") >= 0
+	PRINT [非ご主人様]
+;なんもなし
+SIF STRFIND(RESULTS, @"/MS/") < 0 && STRFIND(RESULTS, @"/AS/") < 0
+	PRINT なし
+PRINTL 
+
+PRINTFORM 　　対象指定口上：
+;男あなた判定
+SIF STRFIND(RESULTS, @"/MALEYOU/") >= 0
+	PRINT [あなた(オトコ)] 
+;女あなた判定
+SIF STRFIND(RESULTS, @"/FEMALEYOU/") >= 0
+	PRINT [あなた(女性)] 
+;ふたなりあなた判定
+SIF STRFIND(RESULTS, @"/TWINYOU/") >= 0
+	PRINT [あなた(ふたなり)] 
+;ちんこ付きあなた判定
+SIF STRFIND(RESULTS, @"/PENISYOU/") >= 0
+	PRINT [あなた(ペニスあり)] 
+;キャラ一致判定
+IF STRFIND(RESULTS, @"/K") >= 0
+	FOR LCOUNT, 0, FLAG:Cha総数
+		SIF STRFIND(RESULTS, @"/K{LCOUNT}/") >= 0
+			PRINTFORM [%CSVCALLNAME(LCOUNT, 0)%]
+	NEXT
+ENDIF
+;男判定
+SIF STRFIND(RESULTS, @"/MALE/") >= 0
+	PRINT [オトコ] 
+;女判定
+SIF  STRFIND(RESULTS, @"/FEMALE/") >= 0
+	PRINT [女性] 
+;ふたなり判定
+SIF STRFIND(RESULTS, @"/TWIN/") >= 0
+	PRINT [ふたなり] 
+;ちんこ付き判定
+SIF STRFIND(RESULTS, @"/PENIS/") >= 0
+	PRINT [ペニスあり] 
+;なんもなし
+SIF REPLACE(REPLACE(REPLACE(RESULTS, "MS", ""), "AS", ""), "/", "") == ""
+	PRINT なし
+PRINTL 
+PRINTFORML 　　口上作者名　：\@ RESULTS:1 == "" ? なし # %RESULTS:1% \@
+PRINTL 
+PRINTL 　――――――――――――――――――
+PRINTL 
+PRINTW 　あらすじ――
+PRINTL 
+CALL KOJO_DIGEST(ARG)
+SIF !RESULT
+	PRINTW 　　　　　　　　　　　――未定義です。本編をご覧ください。
+PRINTL 
+PRINTL 　――――――――――――――――――
+PRINTL 
+PRINTW 　注意事項――
+PRINTL 
+CALL KOJO_ATTENTION(ARG)
+SIF !RESULT
+	PRINTW 　　　　　　　　　　　――特にありません。
+PRINTL 

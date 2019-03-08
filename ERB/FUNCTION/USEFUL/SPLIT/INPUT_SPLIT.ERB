@@ -1,0 +1,65 @@
+﻿;-------------------------------------------------
+;スプリットインプット関数@INPUT_SPLIT
+;数値の入力待ちをします。引数に含まれない数字を選んだら自動的に入力待ちをし直します
+;有効な数字が入力されたらそれをRESULTへ返して戻ります
+;
+;ARGS		通すボタンの定義
+;ARGS:1		区切り記号
+;ARGS;2		STR型かINT型かの指定。省略した場合はINT型が可能ならINT型、そうでないならSTR型が作成される。
+;-------------------------------------------------
+@INPUT_SPLIT, ARGS, ARGS:1 = "/", ARGS:2
+#LOCALSIZE 1
+#LOCALSSIZE 200
+#DIM 要素数
+#DIM LINE
+#DIM IS_ONEINPUT
+#DIM IS_INT
+#DIM 元RESULT
+#DIMS 元RESULTS
+元RESULTS = %RESULTS%
+元RESULT = RESULT
+LINE = LINECOUNT
+SPLIT ARGS, ARGS:1, LOCALS
+要素数 = RESULT
+IS_ONEINPUT = 1
+FOR LOCAL, 0, 要素数
+	SIF STRLENS(LOCALS:LOCAL) < 2
+		CONTINUE
+	IS_ONEINPUT = 0
+	BREAK
+NEXT
+IF ARGS:2 == ""
+	ARGS:2 = INT
+	FOR LOCAL, 0, 要素数
+		SIF ISNUMERIC(LOCALS:LOCAL)
+			CONTINUE
+		ARGS:2 = STR
+		BREAK
+	NEXT
+ENDIF
+$START
+IF ARGS:2 == "STR"
+	IF IS_ONEINPUT
+		ONEINPUTS
+	ELSE
+		INPUTS
+	ENDIF
+ELSE
+	IF IS_ONEINPUT
+		ONEINPUT
+	ELSE
+		INPUT
+	ENDIF
+ENDIF
+
+IF ARGS:2 == "STR"
+	SIF FINDELEMENT(LOCALS , ESCAPE(RESULTS), 0, 要素数, 1) >= 0
+		RETURN 元RESULT
+ELSE
+	IF FINDELEMENT(LOCALS , TOSTR(RESULT), 0, 要素数, 1) >= 0
+		RESULTS = %元RESULTS%
+		RETURN RESULT
+	ENDIF
+ENDIF
+CLEARLINE LINECOUNT - LINE
+GOTO START

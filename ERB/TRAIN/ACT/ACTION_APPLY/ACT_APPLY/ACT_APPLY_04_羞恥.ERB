@@ -1,0 +1,226 @@
+﻿;────────────────────────────────────
+;040,自慰
+;────────────────────────────────────
+;リアクション前（Ｓ/Ｎ/Ｈ）[罰]（逸脱、中毒充足）
+@ACTION_APPLY_40
+;拒否される可能性があるのでここは命令を出すところまで処理します
+;逸脱SOURCE増加、調教対象露出癖、自慰中毒、調教レベルによって減少
+SOURCE:MASTER:逸脱 = 1200 - GET_ABL(MASTER, "露出癖") * 8 - GET_ABL(MASTER, "自慰中毒") * 20 - CFLAG:MASTER:調教レベル * 20
+;逸脱SOURCEが負の値をとらないよう調整
+SOURCE:MASTER:逸脱 = SOURCE:MASTER:逸脱 < 0 ? 0 # SOURCE:MASTER:逸脱
+;調教対象自慰中毒、技巧に応じて中毒充足SOURCE増加
+SOURCE:MASTER:中毒充足 = GET_ABL(MASTER, "自慰中毒") * (GET_ABL(MASTER, "自慰中毒") + 10) * (GET_ABL(MASTER, "技巧") + 10) / 1000
+;調教対象自慰中毒に応じて勃起度上昇
+TCVAR:MASTER:勃起度 += 100 + GET_ABL(MASTER, "自慰中毒") * 5
+TFLAG:経過時間 += 3
+
+;リアクション後（快Ｃ、快Ｖ、快Ａ、快Ｂ、性行動、露出、逸脱、中毒充足）
+@ACTION_APPLY2_40
+IF IS_COMGRONAME("消極的従う/平然と従う/積極的従う/受け入れる")
+	;自慰の実行関数呼び出し
+	CALL ONANIE_APPLY
+	;調教対象の手を一本占有する
+	TFLAG:手使用中++
+;その他の場合(拒絶)
+ELSE
+	;REACT分類に要求に応じないをセット
+	CALL SET_COMGRO("拒否")
+ENDIF
+
+;────────────────────────────────────
+;041,秘貝開帳
+;────────────────────────────────────
+;リアクション前（Ｓ/Ｎ/Ｈ）（快Ｃ、露出、逸脱）
+@ACTION_APPLY_41
+;下半身全部強制脱衣
+TFLAG:強制脱衣 = 5
+;器用な指先素質、調教対象技巧に応じて快ＣSOURCE増加
+SOURCE:MASTER:快Ｃ = 30 + (TALENT:器用な指先 + 1) * GET_ABL(TARGET, "技巧")
+;快ＣSOURCE、大鏡使用に応じて露出SOURCE増加
+SOURCE:MASTER:露出 = SOURCE:MASTER:快Ｃ / 3 + (TEQUIP:大鏡 + 1) * 250
+;露出SOURCEに応じて逸脱SOURCE増加、露出癖、調教対象調教レベルによって減少
+SOURCE:MASTER:逸脱 = SOURCE:MASTER:露出 - GET_ABL(MASTER, "露出癖") * 2 - CFLAG:MASTER:調教レベル * 5
+;汚れが相互に移る
+STAIN:MASTER:ヴァギナ |= STAIN:手
+STAIN:手 |= STAIN:MASTER:ヴァギナ
+;逸脱SOURCEが負の値をとらないよう調整
+SOURCE:MASTER:逸脱 = SOURCE:MASTER:逸脱 < 0 ? 0 # SOURCE:MASTER:逸脱
+;顔面騎乗系解除
+CALL FACESITTING_SET(0)
+;調教者、調教対象自慰を中断
+TEQUIP:自慰中 = 0
+TFLAG:経過時間 += 1
+
+;リアクション後（Ｓ/Ｎ/Ｈ）（快Ｃ、露出、逸脱）
+@ACTION_APPLY2_41
+;現在処理なし
+
+;────────────────────────────────────
+;042,自慰みせつけ
+;────────────────────────────────────
+;リアクション前（Ｓ/Ｎ/Ｈ/Ａ）（逸脱、欲情追加、快ｃ、快ｖ、快ｂ）
+@ACTION_APPLY_42
+;同じ確率で上＋下上着、上半身全部、下半身全部のどれかを自主脱衣
+TFLAG:自主脱衣 = 3 + RAND:3
+;調教者解放素質が存在すればアクセサリ－まで、全裸まで自主脱衣のどちらかに発展
+SIF TALENT:解放
+	TFLAG:自主脱衣 = 7 + RAND:2
+;調教者抑圧/恥じらい素質が存在すれば上半身上着、下半身上着自主脱衣または脱衣なしまで軽減
+SIF TALENT:抑圧 || TALENT:恥じらい
+	TFLAG:自主脱衣 = RAND:3
+;調教者着衣プレイ好き素質が存在すれば下着だけ自主脱衣に固定
+SIF TALENT:着衣プレイ好き
+	TFLAG:自主脱衣 = 9
+;調教者欲望、技巧、調教レベル、調教者技巧、器用な指先素質に応じて快ｃSOURCE増加
+SOURCE:快Ｃ = 50 + GET_ABL(TARGET, "欲望") * GET_ABL(TARGET, "技巧") * GET_TRAINLV(TARGET) * 2 / 100 + GET_ABL(TARGET, "技巧") * 2 * (TALENT:TARGET:器用な指先 + 1)
+;調教者が非オトコなら、調教者欲望、技巧、調教レベル、調教者技巧、器用な指先素質に応じて快ｂSOURCE増加
+SIF !TALENT:オトコ
+	SOURCE:快Ｂ = 50 + GET_ABL(TARGET, "欲望") * GET_ABL(TARGET, "技巧") * GET_TRAINLV(TARGET) * 2 / 100 + GET_ABL(TARGET, "技巧") * 2 * (TALENT:TARGET:器用な指先 + 1)
+
+
+;調教者がバイブを所持していて、処女でも男でもなければバイブ使用
+;一時オミット。復活させるときは実行判定を見直してACT派生の方で処置
+[SKIPSTART]
+IF ITEM:バイブ && !TALENT:処女 && !TALENT:オトコ
+	;調教者欲望、調教レベル、道具使い素質、技巧、道具強化に応じて快ｖSOURCE増加
+	SOURCE:快Ｖ = 50 + GET_ABL(TARGET, "欲望") * (GET_TRAINLV(TARGET) + 1) * 5 / 10 + (TALENT:道具使い + 1) * GET_ABL(TARGET, "技巧") * (ITEM:9 + 1) * 3
+	;代わりに快ｃSOURCE減少
+	TIMES SOURCE:快Ｃ , 0.80
+ENDIF
+[SKIPEND]
+
+;快x総計を取得しLOCALへ
+LOCAL = SOURCE:快Ｃ + SOURCE:快Ｖ + SOURCE:快Ｂ
+;調教対象調教レベルと欲望を見て、どちらかが低ければLOCAL軽減
+IF CFLAG:MASTER:調教レベル < 1 || ABL:MASTER:欲望 < 1
+	TIMES LOCAL, 0.10
+ELSEIF CFLAG:MASTER:調教レベル < 3 || ABL:MASTER:欲望 < 2
+	TIMES LOCAL, 0.25
+ELSEIF CFLAG:MASTER:調教レベル < 5 || ABL:MASTER:欲望 < 3
+	TIMES LOCAL, 0.40
+ELSEIF CFLAG:MASTER:調教レベル < 8 || ABL:MASTER:欲望 < 4
+	TIMES LOCAL, 0.60
+ELSEIF CFLAG:MASTER:調教レベル < 11 || ABL:MASTER:欲望 < 5
+	TIMES LOCAL, 0.85
+ENDIF
+;LOCALの1/5だけ調教者欲情が増加
+CUP:MASTER:欲情 += LOCAL / 5
+;LOCALに応じて逸脱SOURCE増加、調教対象露出癖、調教レベルによって減少
+SOURCE:MASTER:逸脱 = LOCAL - GET_ABL(MASTER, "露出癖") * 2 - CFLAG:MASTER:調教レベル * 5
+;逸脱SOURCEが負の値をとらないよう調整
+SOURCE:MASTER:逸脱 = SOURCE:MASTER:逸脱 < 0 ? 0 # SOURCE:MASTER:逸脱
+;顔面騎乗系解除
+CALL FACESITTING_SET(0)
+;調教者欲望に応じて勃起度上昇
+TCVAR:MASTER:今回の勃起 += 100 + GET_ABL(TARGET, "欲望")
+TFLAG:経過時間 += 3
+
+;リアクション後（Ｓ/Ｎ/Ｈ/Ａ）（逸脱、欲情追加、快ｃ、快ｖ、快ｂ）
+@ACTION_APPLY2_42
+;調教者自慰を開始
+TEQUIP:自慰中 |= 2
+
+;────────────────────────────────────
+;043,羞恥プレイ（Ｓ/Ｎ/Ｈ）（露出）
+;────────────────────────────────────
+@ACTION_APPLY_43
+;開始時
+IF TFLAG:ACT派生 == 0
+	;露出SOURCE増加
+	SOURCE:MASTER:露出 = 200
+	;大鏡を据え付ける
+	TEQUIP:大鏡 = 1
+;終了時
+ELSE
+	;大鏡を片付ける
+	TEQUIP:大鏡 = 0
+ENDIF
+;顔面騎乗系解除
+CALL FACESITTING_SET(0)
+TFLAG:経過時間 += 2
+
+;────────────────────────────────────
+;044,野外プレイ（Ｈ/Ａ）[罰]（拘束<=首輪のこと、露出、逸脱、トラウマ）
+;────────────────────────────────────
+@ACTION_APPLY_44
+;終了時
+IF TFLAG:ACT派生 == 1
+	;野外プレイ終了
+	TEQUIP:野外プレイ = 0
+;開始時
+ELSE
+	;反抗刻印に応じて拘束SOURCE増加
+	SOURCE:MASTER:拘束 = 50 + MARK:反抗刻印 * 15
+	;露出SOURCE増加
+	SOURCE:MASTER:露出 = 300
+	;拘束SOURCEに応じて逸脱SOURCE増加、調教対象露出癖、調教レベルによって減少
+	SOURCE:MASTER:逸脱 = 150 + SOURCE:MASTER:拘束 - GET_ABL(MASTER, "露出癖") * 3 - CFLAG:MASTER:調教レベル * 10
+	;逸脱SOURCEが負の値をとらないよう調整
+	SOURCE:MASTER:逸脱 = SOURCE:MASTER:逸脱 < 0 ? 0 # SOURCE:MASTER:逸脱
+	;調教対象臆病、無関心、抑圧、解放、恥じらい、恥薄い素質、逸脱SOURCEに応じてトラウマSOURCE増減
+	SOURCE:MASTER:トラウマ = TALENT:MASTER:臆病 * 150 - TALENT:MASTER:無関心 * 50 + TALENT:MASTER:抑圧 * 150 - TALENT:MASTER:解放 * 50 + TALENT:MASTER:恥じらい * 250 - TALENT:MASTER:恥薄い * 150 + SOURCE:MASTER:逸脱
+	;逸脱SOURCEが0ならトラウマSOURCEも0になる
+	SOURCE:MASTER:トラウマ = SOURCE:MASTER:逸脱 == 0 ? 0 # SOURCE:MASTER:トラウマ
+	;トラウマSOURCEが負の値をとらないよう調整
+	SOURCE:MASTER:トラウマ = SOURCE:MASTER:トラウマ < 0 ? 0 # SOURCE:MASTER:トラウマ
+	;トラウマ(刻印)の元がこの調教だった場合、トラウマSOURCEを1.5倍にする
+	SIF CFLAG:MASTER:トラウマ == 44
+		TIMES SOURCE:MASTER:トラウマ , 1.50
+	;野外プレイ開始
+	TEQUIP:野外プレイ = 1
+ENDIF
+;顔面騎乗系解除
+CALL FACESITTING_SET(0)
+;調教者、調教対象自慰を中断
+TEQUIP:自慰中 = 0
+TFLAG:経過時間 += 5
+
+;────────────────────────────────────
+;045,放尿
+;────────────────────────────────────
+;リアクション前（Ｎ/Ｈ/Ａ）[罰]（露出、逸脱、トラウマ）
+@ACTION_APPLY_45
+;露出SOURCE増加
+SOURCE:MASTER:露出 = 350
+;逸脱SOURCE増加、調教対象露出癖、調教レベルによって減少
+SOURCE:MASTER:逸脱 = 750 - GET_ABL(MASTER, "露出癖") * 15 - CFLAG:MASTER:調教レベル * 30
+;逸脱SOURCEが負の値をとらないよう調整
+SOURCE:MASTER:逸脱 = SOURCE:MASTER:逸脱 < 0 ? 0 # SOURCE:MASTER:逸脱
+;調教対象臆病、無関心、抑圧、解放、恥じらい、恥薄い素質、逸脱SOURCEに応じてトラウマSOURCE増減
+SOURCE:MASTER:トラウマ = TALENT:MASTER:臆病 * 150 - TALENT:MASTER:無関心 * 50 + TALENT:MASTER:抑圧 * 150 - TALENT:MASTER:解放 * 50 + TALENT:MASTER:恥じらい * 250 - TALENT:MASTER:恥薄い * 150 + SOURCE:MASTER:逸脱
+;逸脱SOURCEが0ならトラウマSOURCEも0になる
+SOURCE:MASTER:トラウマ = SOURCE:MASTER:逸脱 == 0 ? 0 # SOURCE:MASTER:トラウマ
+;トラウマSOURCEが負の値をとらないよう調整
+SOURCE:MASTER:トラウマ = SOURCE:MASTER:トラウマ < 0 ? 0 # SOURCE:MASTER:トラウマ
+	;トラウマ(刻印)の元がこの調教だった場合、トラウマSOURCEを1.5倍にする
+	SIF CFLAG:MASTER:トラウマ == 45
+		TIMES SOURCE:MASTER:トラウマ , 1.50
+;調教対象自慰を中断
+TEQUIP:自慰中 &= ~1
+TFLAG:経過時間 += 2
+
+;リアクション後（Ｎ/Ｈ/Ａ）[罰]（露出、逸脱、トラウマ）
+@ACTION_APPLY2_45
+IF IS_COMGRONAME("消極的従う/平然と従う/積極的従う/受け入れる")
+	;尿意を失う
+	BASE:MASTER:尿意 = 0
+	;屈従SOURCE増加
+	SOURCE:MASTER:屈従 += 200
+	SOURCE:MASTER:達成 += 50 + LOCAL
+	;調教対象Ｖを占有する
+	TFLAG:Ｖ使用中 = 2
+;その他の場合(拒絶)
+ELSE
+	;REACT分類に要求に応じないをセット
+	CALL SET_COMGRO("拒否")
+	;露出、逸脱、トラウマ、屈従SOURCE減少
+	TIMES SOURCE:MASTER:露出 , 0.40
+	TIMES SOURCE:MASTER:逸脱 , 0.50
+	TIMES SOURCE:MASTER:トラウマ , 0.10
+	TIMES SOURCE:MASTER:屈従 , 0.20
+ENDIF
+
+;────────────────────────────────────
+;046,コスプレ（Ｓ/Ｎ/Ｈ/Ａ）（未実装）
+;────────────────────────────────────
+;@ACTION_APPLY_46

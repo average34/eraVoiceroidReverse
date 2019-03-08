@@ -1,0 +1,112 @@
+﻿;-------------------------------------------------
+;BIGPRINT系関数
+;-------------------------------------------------
+;・本当にフォントサイズを変えているわけではない。実際変えられないし
+;・ちょっとしたトリック。BIGPRINT系の基本処理でもある
+;・もしかすると表示結果は環境に依存するかもしれない
+;　古いXPしか無くて詳細なテストはできないの。ごめんね
+;・一部記号がいい感じに出せなかったりするので確認必須
+;・キーワード"D"を作る予定は無い。どうしてもという方はGETDEFCOLOR()を使用してください
+;・え？ マック？ 私はオニポテが食べたいです
+;-------------------------------------------------
+;貴方が使うかもしれない、オススメ出来ない文字
+;・"…" → 小さく"..."と出力される。"･･･" か "・・・"でそれっぽく
+;・"///" → BIGでは小さく出力される。UNICODE(0x2571) * 3でそれっぽくなる
+;　SMALLでもUNICODE(0x2571) * 3とするか、問題ないならそのままでも…？
+;・"!?" → 小さく出力される。BIGでは"！？"とする他ない
+;　SMALLでも"！？"とするか、問題ないならそのままでも…？
+;・その他半角(英数、特に記号) → とりあえず出力してみて不自然にならないか確認した方がよい
+;　';'や':'は小さく出力され、'*'は形が変化する。'\'はバックスラッシュになる
+;-------------------------------------------------
+
+;-------------------------------------------------
+;関数名:BIGPRINT(L|W)
+;概　要:オオキイPRINT関数
+;引　数:ARGS:0…表示文字列。FORM文字列を渡す場合は""の前に@を付けてください
+;　　　 ARG:0 …[省略可]文字の表示色。省略した場合はSETCOLORの指定そのまま
+;　　　 ARGS:1…[省略可]文字列の表示位置。(LEFT/左/CENTER/中央/RIGHT/右)のいずれかを指定可
+;　　　         省略した場合は、ALIGNMENTの指定そのまま。大文字小文字の区別はしません
+;戻り値:なし(多分RESULT保護)
+;備　考:\nによる改行はたぶんできません
+;スゴイ・オオキイです…///
+;といいつつ基本的な実態はフォントをRaaviに変えているだけ
+;RaaviはXP/Vista/7/8には標準で入っていると思われるフォント。ごあんしんください
+;下の行と潰し合いをすることがあったので、安全のために2行分使う＆REDRAWで制御
+;なので\nとか入れるときっとおかしくなる
+;行間も気になったので狭めたかったが、これはSMALLPRINTLを使っても変化無し
+;行間に関しては諦めてください
+;スゴイ・オオキイ声で罵られてみたい貴方に
+;-------------------------------------------------
+@BIGPRINTL(ARGS:0, ARG:0 = -1, ARGS:1)
+#LOCALSSIZE 2
+#LOCALSIZE 2
+LOCAL:0 = GETCOLOR()
+LOCALS:0 = %CURRENTALIGN()%
+SETCOLOR ARG:0 < 0 ? LOCAL:0 # (ARG:0 & 0xFFFFFF)
+CALL ALIGNMENTS(ARGS:1)
+IF CHKFONT("Raavi")
+	LOCAL:1 = CURRENTREDRAW()
+	LOCALS:1 = %GETFONT()%
+	REDRAW 0
+	SETFONT "Raavi"
+	PRINTSL " " + ARGS:0 + " "
+	SETFONT LOCALS:1
+	PRINTL 
+	REDRAW LOCAL:1
+ELSE
+	PRINTSL ARGS:0
+ENDIF
+CALL ALIGNMENTS(LOCALS:0)
+SETCOLOR LOCAL:0
+RETURN RESULT
+
+@BIGPRINTW(ARGS:0, ARG:0 = -1, ARGS:1)
+CALL BIGPRINTL(ARGS:0, ARG:0, ARGS:1)
+WAIT
+RETURN RESULT
+
+
+;-------------------------------------------------
+;関数名:SMALLPRINT(|L|W)
+;概　要:チイサイPRINT関数
+;引　数:ARGS:0…表示文字列。FORM文字列を渡す場合は""の前に@を付けてください
+;　　　 ARG:0 …[省略可]文字の表示色。省略した場合はSETCOLORの指定そのまま
+;　　　 ARGS:1…[省略可]文字列の表示位置。(LEFT/左/CENTER/中央/RIGHT/右)のいずれかを指定可
+;　　　         省略した場合は、ALIGNMENTの指定そのまま。大文字小文字の区別はしません
+;　　　         ※キーワード"L""W"を使用しない場合はARGS:1を指定することは出来ません
+;戻り値:なし(多分RESULT保護)
+;ファハハハハハ！ アカチャン……スゴイ・チイサイ！
+;といいつつ実態はフォントをEstrangelo Edessaに変えているだけ
+;Estrangelo EdessaはXP/Vista/7/8には標準で入っていると思われるフォント。ごあんしんください
+;実は特別変わった事はしていないのだけど、とりあえずBIGPRINT(L|W)とセットで
+;スゴイ・チイサイ声で囁かれたい貴方に
+;-------------------------------------------------
+@SMALLPRINT(ARGS:0, ARG:0 = -1)
+#LOCALSIZE 1
+#LOCALSSIZE 1
+LOCAL:0 = GETCOLOR()
+SETCOLOR ARG:0 < 0 ? LOCAL:0 # (ARG:0 & 0xFFFFFF)
+IF CHKFONT("Estrangelo Edessa")
+	LOCALS:0 = %GETFONT()%
+	SETFONT "Estrangelo Edessa"
+	PRINTS " " + ARGS:0 + " "
+	SETFONT LOCALS:0
+ELSE
+	PRINTS ARGS:0
+ENDIF
+SETCOLOR LOCAL:0
+RETURN RESULT
+
+@SMALLPRINTL(ARGS:0, ARG:0 = -1, ARGS:1)
+#LOCALSSIZE 1
+LOCALS:0 = %CURRENTALIGN()%
+CALL ALIGNMENTS(ARGS:1)
+CALL SMALLPRINT(ARGS:0, ARG:0)
+PRINTL 
+CALL ALIGNMENTS(LOCALS:0)
+RETURN RESULT
+
+@SMALLPRINTW(ARGS:0, ARG:0 = -1, ARGS:1)
+CALL SMALLPRINTL(ARGS:0, ARG:0, ARGS:1)
+WAIT
+RETURN RESULT

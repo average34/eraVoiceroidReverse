@@ -1,0 +1,83 @@
+﻿;────────────────────────────────────
+;屈従のソース（屈服、抑鬱、興味）
+;────────────────────────────────────
+@CALC_SOURCE30
+
+;ABL:従順、反抗刻印、調教度合い、素質をみる
+CUP:MASTER:屈服 += SOURCE:MASTER:屈従 * (3 + GET_ABL(MASTER, "従順")) * (11 - MARK:反抗刻印) / 800
+CUP:MASTER:抑鬱 += SOURCE:MASTER:屈従 * (140 - GET_ABL(MASTER, "従順")) * (2 + TALENT:MASTER:悲観的 - TALENT:MASTER:楽観的 - TALENT:MASTER:隷属) / ((10 + CFLAG:MASTER:調教レベル) * 20)
+
+;調教がまだ進んでない段階で簡単に折ると、サド持ちの調教者は興ざめ
+SIF SOURCE:MASTER:屈従 > (CFLAG:MASTER:調教レベル + 1) * (10 + GET_ABL(MASTER, "従順")) * 10 && TALENT:サド
+	BASE:興味 -= SOURCE:MASTER:屈従 / (CFLAG:MASTER:調教レベル + 1)
+
+;────────────────────────────────────
+;達成感のソース（苛立ち、満足）
+;────────────────────────────────────
+@CALC_SOURCE31
+
+;お仕置きモードの特典
+SIF TFLAG:お仕置きフラグ
+	SOURCE:MASTER:達成 += SOURCE:MASTER:恐怖 * (2 + TALENT:MASTER:臆病 - TALENT:MASTER:気丈) / 20
+
+;苛立ちが減少、満足が増大
+BASE:苛立ち -= SOURCE:MASTER:達成 / 10
+DOWNBASE:満足 -= SOURCE:MASTER:達成 / 2
+
+;────────────────────────────────────
+;悦楽のソース（恭順、苛立ち）
+;────────────────────────────────────
+@CALC_SOURCE32
+
+;恭順増大、苛立ち減少
+CUP:MASTER:恭順 += SOURCE:MASTER:悦楽 * (20 - MARK:反抗刻印) / 60
+BASE:苛立ち -= SOURCE:MASTER:悦楽 / 100
+
+;────────────────────────────────────
+;反抗のソース（反抗、苛立ち）
+;────────────────────────────────────
+@CALC_SOURCE33
+
+;REACT分類に応じてSOURCE減少
+SIF IS_COMGRONAME("なし")
+	TIMES SOURCE:MASTER:反抗 , 0.75
+SIF IS_COMGRONAME("消極的従う")
+	TIMES SOURCE:MASTER:反抗 , 0.50
+SIF IS_COMGRONAME("積極的従う")
+	TIMES SOURCE:MASTER:反抗 , 0.05
+SIF IS_COMGRONAME("許しを乞う")
+	TIMES SOURCE:MASTER:反抗 , 0.30
+SIF IS_COMGRONAME("拒否")
+	TIMES SOURCE:MASTER:反抗 , 0.90
+
+;反抗PALAM増大
+CUP:MASTER:反抗 += SOURCE:MASTER:反抗 * (31 - MARK:MASTER:トラウマ - MARK:屈服刻印 * 2) * (5 + MARK:反抗刻印) / 200
+
+;反抗SOURCEから補正値を作る
+LOCAL = LINE_CALC(SOURCE:MASTER:反抗, "0→0,5000→65,LIMIT/0～65")
+
+;調教者が怒りなら苛立ち補正
+SIF TCVAR:状態変化 == 6
+	TIMES LOCAL, 1.50
+
+;苛立ち増大
+BASE:苛立ち += LOCAL * (2 + TALENT:短気 - TALENT:慎重) * (2 + TALENT:情緒豊か - TALENT:感情乏しい)
+
+;────────────────────────────────────
+;恐怖のソース（恐怖、理性、興味）
+;────────────────────────────────────
+@CALC_SOURCE34
+
+;臆病/気丈
+SIF TALENT:MASTER:臆病
+	TIMES SOURCE:MASTER:恐怖 , 1.50
+SIF TALENT:MASTER:気丈
+	TIMES SOURCE:MASTER:恐怖 , 0.80
+
+;恐怖増大
+CUP:MASTER:恐怖 += SOURCE:MASTER:恐怖
+
+;興味BASEの現在量に応じて調教対象理性減少、興味増大
+LOCAL = MIN(BASE:興味 / 100, 100)
+DOWNBASE:MASTER:理性 += LOCAL
+BASE:興味 += LOCAL

@@ -1,0 +1,135 @@
+﻿
+;────────────────────────────────────
+;調教者行動基本処理(リアクション前)
+;
+;調教者行動に応じてパラメータを変動させる
+;ここで設定された値を基にさらに補正が行われる点に注意
+;────────────────────────────────────
+@ACTION_APPLY
+
+;調教項目毎の基本処理を呼び出し
+TRYCALLFORM ACTION_APPLY_{TFLAG:ACT}
+
+;────────────────────────────────────
+;調教者行動基本処理(リアクション後)
+;
+;遅延された調教者行動の実行。調教対象の反抗や願いでキャンセルされる行動もここで処理
+;ここで設定された値を基にさらに補正が行われる点に注意
+;ここの処理で地の文が発生しなかったら0を返す（後に汎用地の文が呼び出される）
+;────────────────────────────────────
+@ACTION_APPLY2
+
+[SKIPSTART]
+;リアクションがなすがままであれば処理中断
+SIF IS_NOWCOMNAME("なすがまま")
+	RETURN 0
+[SKIPEND]
+
+;LOCALS初期化
+VARSET LOCALS
+
+;拒絶処理呼び出し
+
+;ACT分類が性交系か性交中に、REACT分類が暴れる系だった場合
+IF (TFLAG:ACT分類 == 3 || TEQUIP:性交中) && IS_COMGRONAME("暴れる")
+	;性交のキャンセル処理を呼び出し
+	LOCALS = CANCEL_INSERT_TO_M
+;ACT分類が性交奉仕系か性交奉仕中に、REACT分類が暴れる系だった場合		逆レの場合は抵抗できないように@/L
+ELSEIF (TFLAG:ACT分類 == 10 || TEQUIP:性交奉仕中) && IS_COMGRONAME("暴れる") && !IS_NOWACTNAME("逆レイプ")
+	;性交奉仕のキャンセル処理を呼び出し
+	LOCALS = CANCEL_INSERT_TO_T
+;縄/アイマスク/ボールギャグ装着中に、REACT分類が許しを乞う系だった場合
+ELSEIF (TEQUIP:縄 || TEQUIP:アイマスク || TEQUIP:ボールギャグ) && IS_COMGRONAME("許しを乞う")
+	;拘束キャンセル処理を呼び出し
+	LOCALS = CANCEL_TEQUIP_RESTRAINT
+;三角木馬使用中に、REACT分類が許しを乞う系だった場合
+ELSEIF TEQUIP:三角木馬 && IS_COMGRONAME("許しを乞う")
+	;三角木馬キャンセル処理を呼び出し
+	LOCALS = CANCEL_TEQUIP_W_HORSE
+;--------------------------------------------------------------
+;不自然な動作をするため、キャンセル処理を一部抹消
+;そのうちCOM「帰りたい」を作ろうかと思います。作ったら公衆便所も含めていいですね
+
+[SKIPSTART]
+
+;野外プレイ中に、REACT分類が許しを乞う系だった場合
+ELSEIF TEQUIP:野外プレイ && IS_COMGRONAME("許しを乞う")
+	;野外プレイキャンセル処理を呼び出し
+	LOCALS = CANCEL_TEQUIP_OUTDOOR
+;大鏡使用中に、REACT分類が許しを乞う系だった場合
+ELSEIF TEQUIP:大鏡 && IS_COMGRONAME("許しを乞う")
+	;大鏡キャンセル処理を呼び出し
+	LOCALS = CANCEL_TEQUIP_MIRROR
+;コスプレ中に、REACT分類が許しを乞う系だった場合
+ELSEIF TEQUIP:MASTER:コスプレ && IS_COMGRONAME("許しを乞う")
+	;コスプレキャンセル処理を呼び出し
+	LOCALS = CANCEL_TEQUIP_COSPLAY
+
+[SKIPEND]
+
+;抹消ここまで
+;--------------------------------------------------------------
+;特殊ACT処理呼び出し
+;(特殊状態変化処理を行わない)
+
+;ACTが公衆肉便器プレイの場合
+ELSEIF IS_NOWACTNAME("公衆肉便器プレイ")
+;ACTが服を脱いで/服を着ての場合
+ELSEIF IS_NOWACTNAME("衣装の変更を要求する")
+;ACTが休ませるの場合
+ELSEIF IS_NOWACTNAME("休ませる")
+;ACTが栄養剤を飲ませるの場合
+ELSEIF IS_NOWACTNAME("栄養剤を飲ませる")
+;ACTが治療するの場合
+ELSEIF IS_NOWACTNAME("治療する")
+
+;特殊状態変化処理の呼び出し
+
+;調教対象自慰中、イきそう状態で焦らし終了/無し
+ELSEIF GETBIT(TEQUIP:自慰中, 0) && TCVAR:MASTER:イきそう && TCVAR:MASTER:焦らし度 < 2
+	;自慰絶頂処理を呼び出し
+	LOCALS = ONANIE_EX
+ENDIF
+
+;特殊処理が存在すれば
+IF LOCALS != ""
+	;特殊処理の呼び出し処理
+	CALLFORM %LOCALS%
+	;特殊処理の地の文呼び出し
+	CALLFORM %LOCALS%_MESSAGE
+ENDIF
+
+;特殊処理が拒絶処理で無ければ
+IF !STRCOUNT(LOCALS, "CANCEL")
+	;拒絶処理補正値減衰
+	CALLF CANCEL_TEQUIP_COUNT()
+	;調教項目個別処理の呼び出し処理
+	TRYCALLFORM ACTION_APPLY2_{TFLAG:ACT}
+	;調教項目毎の地の文を呼び出し
+	CALL TRAIN_MESSAGE2
+ENDIF
+
+;リアクションが暴れる系だった場合、姿勢を起立、位置をリセット
+IF IS_COMGRONAME("暴れる")
+	TCVAR:MASTER:REACT姿勢変化 = 1
+	TCVAR:MASTER:前回の姿勢 = TCVAR:MASTER:姿勢
+	TCVAR:MASTER:前回の位置前後 = TCVAR:MASTER:位置前後
+	TCVAR:MASTER:前回の位置上下 = TCVAR:MASTER:位置上下
+	TCVAR:MASTER:姿勢 = 4
+	TCVAR:MASTER:位置前後 = 0
+	TCVAR:MASTER:位置上下 = 0
+ENDIF
+RETURN RESULT
+
+;────────────────────────────────────
+;調教者行動基本処理(行動毎)
+;
+;リアクション前、リアクション後の補正を一箇所にまとめた
+;
+;メモ
+;	強制脱衣：調教者が調教対象を脱がす　自主脱衣：調教者が自分の衣服を脱ぐ
+;	要強制勃起：調教対象の精根が尽き果てた状態。
+;	　　　　　　今回の勃起フラグを無視する（通常の条件では勃起しない）
+;	　　　　　　強制勃起効果がある場合、勃起度に直接加算する
+;────────────────────────────────────
+;ACT分類毎にファイルを切り分け。個別のファイルはACT_APPLYフォルダへ移設@/L

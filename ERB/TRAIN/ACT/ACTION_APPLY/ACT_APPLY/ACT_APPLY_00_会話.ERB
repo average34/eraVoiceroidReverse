@@ -1,0 +1,385 @@
+﻿;────────────────────────────────────
+;000,今の気分を聞く
+;────────────────────────────────────
+;リアクション前（Ｓ/Ｎ/Ｈ）[罰]（ソースなし、調教対象の反応だけを見る）
+@ACTION_APPLY_0
+TFLAG:経過時間 += 1
+
+;リアクション後
+@ACTION_APPLY2_0
+;デフォルト(以下のどれにも該当しない反応)
+TFLAG:ACT派生 = -1
+;リアクションが強気に応答するの場合
+IF IS_NOWCOMNAME("強気に応答する")
+	;ACT派生に勇気を出して強く当たったをセット
+	TFLAG:ACT派生 = 1
+	;REACT分類に要求に応じないをセット
+	CALL SET_COMGRO("拒否")
+;リアクションが皮肉を言うの場合
+ELSEIF IS_NOWCOMNAME("皮肉を言う")
+	;ACT派生に皮肉「今の気分は、と聞かれても」をセット
+	TFLAG:ACT派生 = 2
+	;REACT分類に要求に応じないをセット
+	CALL SET_COMGRO("拒否")
+;REACT分類が消極的従うの場合
+ELSEIF IS_COMGRONAME("消極的従う")
+	;ACT派生に歯切れ悪く質問に答えたをセット
+	TFLAG:ACT派生 = 0
+;REACT分類が平然と従うの場合
+ELSEIF IS_COMGRONAME("平然と従う")
+	;ACT派生にまあまあ悪くはないと言ったをセット
+	TFLAG:ACT派生 = 4
+;REACT分類が積極的従うの場合
+ELSEIF IS_COMGRONAME("積極的従う")
+	;ACT派生にはっきりと今の気持ちを告げたをセット
+	TFLAG:ACT派生 = 3
+	;屈服刻印に応じて恐怖SOURCE増加
+	SOURCE:MASTER:恐怖 += 150 + MARK:屈服刻印 * 20
+;REACT分類が受け入れるの場合
+ELSEIF IS_COMGRONAME("受け入れる")
+	;ACT派生に気持ち良いことしたいと言ったをセット
+	TFLAG:ACT派生 = 5
+	;快楽刻印に応じて悦楽SOURCE増加
+	SOURCE:MASTER:悦楽 += 50 + MARK:快楽刻印 * 20
+ENDIF
+
+;────────────────────────────────────
+;001,自分の事をどう思うかを聞く
+;────────────────────────────────────
+;リアクション前（Ｓ/Ｎ/Ｈ）（情愛）
+@ACTION_APPLY_1
+;調教対象従順*2、調教者会話技能に応じて情愛SOURCE増加
+SOURCE:MASTER:情愛 = 50 + ABL:MASTER:従順 * 2 + ABL:会話
+TFLAG:経過時間 += 1
+;話題『好意』を既出とする
+TFLAG:既出の話題 |= 1
+
+;リアクション後
+@ACTION_APPLY2_1
+;デフォルト(以下のどれにも該当しない反応)
+TFLAG:ACT派生 = -1
+;リアクションが強気に応答するの場合
+IF IS_NOWCOMNAME("強気に応答する")
+	;ACT派生にそんなことあるわけない！をセット
+	TFLAG:ACT派生 = 1
+	;REACT分類に要求に応じないをセット
+	CALL SET_COMGRO("拒否")
+;リアクションが皮肉を言うの場合
+ELSEIF IS_NOWCOMNAME("皮肉を言う")
+	;ACT派生に皮肉「困るねぇ…好きじゃないといったら怒る？」をセット
+	TFLAG:ACT派生 = 2
+	;反抗刻印に応じて恐怖SOURCE減少
+	SOURCE:MASTER:恐怖 -= 150 + MARK:反抗刻印 * 20
+	;REACT分類に要求に応じないをセット
+	CALL SET_COMGRO("拒否")
+;REACT分類が消極的従うの場合
+ELSEIF IS_COMGRONAME("消極的従う")
+	;ACT派生に嫌いじゃない…かも知れない…をセット
+	TFLAG:ACT派生 = 0
+	;調教者会話に応じて情愛SOURCE増加
+	SOURCE:MASTER:情愛 += 100 + GET_ABL(TARGET, "会話") * 2
+;REACT分類が積極的従うで、調教対象好意が少ないか、REACT分類が平然と従う
+ELSEIF (IS_COMGRONAME("積極的従う") && CFLAG:M好意 < 1000) || IS_COMGRONAME("平然と従う")
+	;ACT派生にもう酷いことしなければ、もっと好きになれるかもしれないをセット
+	TFLAG:ACT派生 = 3
+	;調教者会話に応じて情愛SOURCE増加
+	SOURCE:MASTER:情愛 += 150 + GET_ABL(TARGET, "会話") * 25 / 10
+;REACT分類が積極的従うで、調教対象好意が多い
+ELSEIF IS_COMGRONAME("積極的従う") && CFLAG:M好意 >= 1000
+	;ACT派生にはっきりと好きと告げたをセット
+	TFLAG:ACT派生 = 4
+	;調教者会話に応じて情愛SOURCE増加
+	SOURCE:MASTER:情愛 += 200 + GET_ABL(TARGET, "会話") * 5
+	;調教対象好意に応じて恐怖SOURCE増加
+	SOURCE:MASTER:恐怖 += 150 + CFLAG:M好意 / 10
+;REACT分類が受け入れる
+ELSEIF IS_COMGRONAME("受け入れる")
+	;ACT派生にもっとすごいことしてくれば、もっと好きになれるかもをセット
+	TFLAG:ACT派生 = 5
+	;調教者会話に応じて情愛SOURCE増加
+	SOURCE:MASTER:情愛 += 100 + GET_ABL(TARGET, "会話")
+	;調教対象マゾっ気に応じて情愛SOURCE増加
+	SOURCE:MASTER:中毒充足 += 150 + GET_ABL(MASTER, "マゾっ気") * 2
+ENDIF
+
+;────────────────────────────────────
+;002,性についての話をする（Ｓ/Ｎ/Ｈ）（調教対象の性知識）
+;────────────────────────────────────
+@ACTION_APPLY_2
+;勃起度上昇
+TCVAR:MASTER:今回の勃起 += 50
+TFLAG:経過時間 += 1
+;話題『知識』を既出とする
+TFLAG:既出の話題 |= 2
+
+;────────────────────────────────────
+;003,優しく慰める（Ｓ/Ｎ）（トラウマ逆）
+;────────────────────────────────────
+@ACTION_APPLY_3
+;調教者会話技能に応じてトラウマSOURCE減少
+SOURCE:MASTER:トラウマ = -50 - ABL:会話 * 5
+;調教者自慰を中断
+TEQUIP:自慰中 &= ~2
+TFLAG:経過時間 += 1
+;話題『慰め』を既出とする
+TFLAG:既出の話題 |= 4
+
+;────────────────────────────────────
+;004,厳しく脅す（Ｎ/Ｈ）(トラウマ）
+;────────────────────────────────────
+@ACTION_APPLY_4
+;調教者加虐技能に応じてトラウマSOURCE増加
+SOURCE:MASTER:トラウマ = 80 + ABL:加虐 * 5
+;トラウマ(刻印)の元がこの調教だった場合トラウマSOURCE1.5倍
+SIF CFLAG:MASTER:トラウマ == 4
+	TIMES SOURCE:MASTER:トラウマ , 1.50
+;調教者自慰を中断
+TEQUIP:自慰中 &= ~2
+TFLAG:経過時間 += 1
+;話題『脅す』を既出とする
+TFLAG:既出の話題 |= 8
+
+;────────────────────────────────────
+;005,服を脱いで/服を着てと命じる
+;────────────────────────────────────
+;リアクション前（Ｓ/Ｎ/Ｈ/Ａ）[罰]（露出）
+@ACTION_APPLY_5
+;自主脱衣の処理
+;抑圧/恥じらい/着衣プレイ好き素質がない場合
+IF !TALENT:抑圧 && !TALENT:恥じらい && !TALENT:着衣プレイ好き
+	;解放素質、調教者欲望、調教レベルに応じて成功率上昇
+	IF TALENT:解放 * 4 + GET_ABL(TARGET, "欲望") / 10 + GET_TRAINLV(TARGET) / 5 > 3 + RAND:3
+		;アクセサリ－まで自主脱衣
+		TFLAG:自主脱衣 = 7
+	;1/3の確率で
+	ELSEIF !RAND:3
+		;上＋下上着自主脱衣
+		TFLAG:自主脱衣 = 3
+	ENDIF
+ENDIF
+;顔面騎乗系解除
+CALL FACESITTING_SET(0)
+;脱衣時露出SOURCE増加
+SIF TFLAG:ACT派生 == 0
+	SOURCE:MASTER:露出 = 50
+;着衣時露出SOURCE減少
+SIF TFLAG:ACT派生 == 1
+	SOURCE:MASTER:露出 = -50
+;調教対象自慰を中断
+TEQUIP:自慰中 &= ~1
+TFLAG:経過時間 += 1
+
+;リアクション後（露出）
+@ACTION_APPLY2_5
+;脱衣前に服装を保存する
+CALLF CLOTHE_SAVE(TARGET)
+CALLF CLOTHE_SAVE(MASTER)
+;服を脱いでの場合
+IF TFLAG:ACT派生 == 0
+	;性交中、ワンピースや着物は脱げるがスカートは無理の原理
+	;消極的やるなら一枚脱ぐ
+	IF IS_COMGRONAME("消極的従う/受け入れる")
+		IF TEQUIP:MASTER:上半身上着 || TEQUIP:MASTER:全身上着
+			TEQUIP:MASTER:上半身上着 = 0
+			TEQUIP:MASTER:全身上着 = 0
+			SOURCE:MASTER:露出 += 300
+		ELSEIF TEQUIP:MASTER:下半身上着 && !GETINSERT()
+			TEQUIP:MASTER:下半身上着 = 0
+			SOURCE:MASTER:露出 += 200
+		ELSEIF TEQUIP:MASTER:上半身下着
+			TEQUIP:MASTER:上半身下着 = 0
+			SOURCE:MASTER:露出 += 400
+		ELSEIF TEQUIP:MASTER:下半身下着 && !GETINSERT()
+			TEQUIP:MASTER:下半身下着 = 0
+			SOURCE:MASTER:露出 += 500
+		ELSEIF TEQUIP:MASTER:靴下 || TEQUIP:MASTER:アクセサリ
+			TEQUIP:MASTER:アクセサリ = 0
+			TEQUIP:MASTER:靴下 = 0
+			SOURCE:MASTER:露出 += 100
+		ENDIF
+	;積極的やるなら二枚脱ぐ
+	ELSEIF IS_COMGRONAME("積極的従う/平然と従う")
+		IF TEQUIP:MASTER:上半身上着 || TEQUIP:MASTER:全身上着
+			IF GETINSERT()
+				TEQUIP:MASTER:上半身下着 = 0
+			ELSE
+				TEQUIP:MASTER:下半身上着 = 0
+			ENDIF
+			TEQUIP:MASTER:上半身上着 = 0
+			TEQUIP:MASTER:全身上着 = 0
+			SOURCE:MASTER:露出 += 400
+		ELSEIF TEQUIP:MASTER:下半身上着 && !GETINSERT()
+			TEQUIP:MASTER:上半身下着 = 0
+			TEQUIP:MASTER:下半身上着 = 0
+			SOURCE:MASTER:露出 += 300
+		ELSEIF TEQUIP:MASTER:上半身下着
+			SIF !GETINSERT()
+				TEQUIP:MASTER:下半身下着 = 0
+			TEQUIP:MASTER:上半身下着 = 0
+			SOURCE:MASTER:露出 += 500
+		ELSEIF TEQUIP:MASTER:下半身下着 && !GETINSERT()
+			TEQUIP:MASTER:アクセサリ = 0
+			TEQUIP:MASTER:靴下 = 0
+			TEQUIP:MASTER:下半身下着 = 0
+			SOURCE:MASTER:露出 += 600
+		ELSEIF TEQUIP:MASTER:靴下 || TEQUIP:MASTER:アクセサリ
+			TEQUIP:MASTER:アクセサリ = 0
+			TEQUIP:MASTER:靴下 = 0
+			SOURCE:MASTER:露出 += 100
+		ENDIF
+	;その他リアクションなら脱がない
+	ELSE
+		;REACT分類に要求に応じないをセット
+		CALL SET_COMGRO("拒否")
+	ENDIF
+;服を着ての場合
+ELSE
+	;消極的やるなら一枚着る
+	IF IS_COMGRONAME("消極的従う/受け入れる")
+		;性交中はアクセサリよりブラ優先
+		IF TEQUIP:MASTER:上半身下着 != EQUIP:MASTER:上半身下着 && GETINSERT()
+			TEQUIP:MASTER:上半身下着 = EQUIP:MASTER:上半身下着
+		ELSEIF TEQUIP:MASTER:アクセサリ != EQUIP:MASTER:アクセサリ || TEQUIP:MASTER:靴下 != EQUIP:MASTER:靴下
+			TEQUIP:MASTER:アクセサリ = EQUIP:MASTER:アクセサリ
+			TEQUIP:MASTER:靴下 = EQUIP:MASTER:靴下
+		ELSEIF TEQUIP:MASTER:下半身下着 != EQUIP:MASTER:下半身下着 && !GETINSERT()
+			TEQUIP:MASTER:下半身下着 = EQUIP:MASTER:下半身下着
+		ELSEIF TEQUIP:MASTER:上半身下着 != EQUIP:MASTER:上半身下着 && !GETINSERT()
+			TEQUIP:MASTER:上半身下着 = EQUIP:MASTER:上半身下着
+		ELSEIF TEQUIP:MASTER:下半身上着 != EQUIP:MASTER:下半身上着 && !GETINSERT()
+			TEQUIP:MASTER:下半身上着 = EQUIP:MASTER:下半身上着
+		ELSEIF TEQUIP:MASTER:上半身上着 != EQUIP:MASTER:上半身上着 || TEQUIP:MASTER:全身上着 != EQUIP:MASTER:全身上着
+			TEQUIP:MASTER:上半身上着 = EQUIP:MASTER:上半身上着
+			TEQUIP:MASTER:全身上着 = EQUIP:MASTER:全身上着
+		ENDIF
+	;積極的やるなら二枚着る
+	ELSEIF IS_COMGRONAME("積極的従う/平然と従う")
+		;性交中はアクセサリよりブラ優先
+		IF TEQUIP:MASTER:上半身下着 != EQUIP:MASTER:上半身下着 && GETINSERT()
+			TEQUIP:MASTER:上半身下着 = EQUIP:MASTER:上半身下着
+		ELSEIF TEQUIP:MASTER:アクセサリ != EQUIP:MASTER:アクセサリ || TEQUIP:MASTER:靴下 != EQUIP:MASTER:靴下
+			TEQUIP:MASTER:アクセサリ = EQUIP:MASTER:アクセサリ
+			TEQUIP:MASTER:靴下 = EQUIP:MASTER:靴下
+			SIF !GETINSERT()
+				TEQUIP:MASTER:下半身下着 = EQUIP:MASTER:下半身下着
+		ELSEIF TEQUIP:MASTER:下半身下着 != EQUIP:MASTER:下半身下着 && !GETINSERT()
+			TEQUIP:MASTER:下半身下着 = EQUIP:MASTER:下半身下着
+			TEQUIP:MASTER:上半身下着 = EQUIP:MASTER:上半身下着
+		ELSEIF TEQUIP:MASTER:上半身下着 != EQUIP:MASTER:上半身下着
+			TEQUIP:MASTER:上半身下着 = EQUIP:MASTER:上半身下着
+			IF GETINSERT()
+				TEQUIP:MASTER:上半身上着 = EQUIP:MASTER:上半身上着
+				TEQUIP:MASTER:全身上着 = EQUIP:MASTER:全身上着
+			ELSE
+				TEQUIP:MASTER:下半身上着 = EQUIP:MASTER:下半身上着
+			ENDIF
+		ELSEIF TEQUIP:MASTER:下半身上着 != EQUIP:MASTER:下半身上着 && !GETINSERT()
+			TEQUIP:MASTER:下半身上着 = EQUIP:MASTER:下半身上着
+			TEQUIP:MASTER:上半身上着 = EQUIP:MASTER:上半身上着
+			TEQUIP:MASTER:全身上着 = EQUIP:MASTER:全身上着
+		ELSEIF TEQUIP:MASTER:上半身上着 != EQUIP:MASTER:上半身上着 || TEQUIP:MASTER:全身上着 != EQUIP:MASTER:全身上着
+			TEQUIP:MASTER:上半身上着 = EQUIP:MASTER:上半身上着
+			TEQUIP:MASTER:全身上着 = EQUIP:MASTER:全身上着
+		ENDIF
+	;その他リアクションなら着ない
+	ELSE
+		;REACT分類に要求に応じないをセット
+		CALL SET_COMGRO("拒否")
+	ENDIF
+ENDIF
+;何枚脱ぎ着したかを確認
+LOCAL:1 = 0
+FOR LOCAL, 0, 10
+	SIF CLOTHE_SAVE(MASTER, LOCAL)
+		LOCAL:1++
+NEXT
+;保持関数にて保持
+CALLF ACTION_APPLY2_5V(LOCAL:1)
+
+;変数保持関数
+@ACTION_APPLY2_5V(ARG)
+#FUNCTION
+;ARGを保持し、ARGが-1であればその値を返す
+SIF ARG != -1
+	LOCAL = ARG
+RETURNF LOCAL
+
+;────────────────────────────────────
+;006,合意を求める
+;────────────────────────────────────
+;リアクション前（Ｓ/Ｎ/Ｈ）（情愛）
+@ACTION_APPLY_6
+;情愛SOURCE増加
+SOURCE:MASTER:情愛 = 200
+TFLAG:経過時間 += 1
+;話題『合意』を既出とする
+TFLAG:既出の話題 |= 16
+
+;リアクション後
+@ACTION_APPLY2_6
+;REACT分類が消極的従う・平然と従うの場合
+IF IS_COMGRONAME("消極的従う/平然と従う")
+	;調教者会話に応じて恐怖SOURCE増加
+	SOURCE:MASTER:恐怖 += 100 + GET_ABL(TARGET, "会話") * 2
+	;合意形成
+	CFLAG:合意 = 1
+;REACT分類が積極的従う・受け入れるの場合
+ELSEIF IS_COMGRONAME("積極的従う/受け入れる")
+	;調教者会話に応じて情愛SOURCE増加
+	SOURCE:MASTER:情愛 += 400 + GET_ABL(TARGET, "会話") * 5
+	;調教対象好意に応じて恐怖SOURCE増加
+	SOURCE:MASTER:恐怖 += 200 + CFLAG:M好意 / 10
+	;合意形成
+	CFLAG:合意 = 1
+;REACT分類がその他の場合
+ELSE
+	;REACT分類に要求に応じないをセット
+	CALL SET_COMGRO("拒否")
+ENDIF
+
+;────────────────────────────────────
+;007,お仕置きと宣言する（Ｎ/Ｈ）[罰]（トラウマ）
+;────────────────────────────────────
+@ACTION_APPLY_7
+;トラウマ(刻印)に応じてトラウマSOURCE増加
+SOURCE:MASTER:トラウマ = 100 + MARK:MASTER:トラウマ * 50
+;トラウマ(刻印)の元がこの調教だった場合トラウマSOURCE1.5倍
+SIF CFLAG:MASTER:トラウマ == 7
+	TIMES SOURCE:MASTER:トラウマ , 1.50
+;調教者自慰を中断
+TEQUIP:自慰中 &= ~2
+TFLAG:経過時間 += 1
+
+;────────────────────────────────────
+;008,怒鳴る（Ｈ/Ａ）（情愛逆、トラウマ）
+;────────────────────────────────────
+@ACTION_APPLY_8
+;情愛SOURCE減少、トラウマSOURCE増加
+SOURCE:MASTER:情愛 = -150
+SOURCE:MASTER:トラウマ = 150
+;トラウマ(刻印)の元がこの調教だった場合トラウマSOURCE1.5倍
+SIF CFLAG:MASTER:トラウマ == 8
+	TIMES SOURCE:MASTER:トラウマ , 1.50
+;調教者自慰を中断
+TEQUIP:自慰中 &= ~2
+TFLAG:経過時間 += 1
+
+;────────────────────────────────────
+;009,不気味に笑う（Ａ）[罰]（逸脱、トラウマ）
+;────────────────────────────────────
+@ACTION_APPLY_9
+;1/2の確率でアクセサリー強制脱衣
+SIF RAND:2
+	TFLAG:強制脱衣 = 6
+;1/2の確率でアクセサリー自主脱衣
+SIF RAND:2
+	TFLAG:自主脱衣 = 6
+;逸脱、トラウマSOURCE乱数増加
+SOURCE:MASTER:逸脱 = RAND:7 * 100
+SOURCE:MASTER:トラウマ = 250 + RAND:5 * 100
+;トラウマ(刻印)の元がこの調教だった場合トラウマSOURCE1.5倍
+SIF CFLAG:MASTER:トラウマ == 9
+	TIMES SOURCE:MASTER:トラウマ , 1.50
+TFLAG:経過時間 += 1
+;話題『嗤う』を既出とする
+TFLAG:既出の話題 |= 32

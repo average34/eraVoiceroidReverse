@@ -1,0 +1,85 @@
+﻿;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+;		休憩系メッセージ
+
+;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+;────────────────────────────────────
+;090,休ませる
+;────────────────────────────────────
+;★リアクション前★
+@TRAIN_MESSAGE_90
+PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%を休ませ自分も休もうとした…
+
+;☆リアクション後☆
+@TRAIN_MESSAGE2_90
+PRINTL 
+SELECTCASE TFLAG:ACT派生
+	CASE 0                    ;ACT派生が普通に休んだ
+		IF 0
+		ELSEIF IS_NOWCOMNAME("なすがまま")
+			PRINTFORML 気力の尽きた%CALLNAME:MASTER%は、%CALLNAME%に言われるがまま大人しく休んだ…
+		ELSEIF IS_COMGRONAME("受け入れる")
+			PRINTFORML %CALLNAME:MASTER%が休むより気持ちよくして欲しいと言うと、
+			PRINTFORML %CALLNAME%は苦笑して、後でしてあげると言った…
+		ELSE
+			PRINTFORML %CALLNAME:MASTER%と%CALLNAME:TARGET%は少し休んだ…
+		ENDIF
+		;+にならない場合もあった気がしたので修正@revkoishi(14/05/26)
+		PRINTFORML 体力\@ ACTION_APPLY2_90V(1) >= 0 ? + # \@{ACTION_APPLY2_90V(1)} 気力\@ ACTION_APPLY2_90V(2) >= 0 ? + # \@{ACTION_APPLY2_90V(2)}
+	CASE 1                    ;ACT派生が道具のせいであまり休めなかった
+		IF IS_COMGRONAME("受け入れる")
+			PRINTFORML %CALLNAME:MASTER%は身につけた道具で感じてしまい、休憩どころではなかった…
+			PRINTFORML %CALLNAME%は苦笑しながらその様子を眺めた…
+		ELSE
+			PRINTFORML %CALLNAME:TARGET%は休んでいいと言ったが、
+			PRINTFORML 身につけられてる道具が責め続けたせいで%CALLNAME:MASTER%はあまり休めなかった…
+		ENDIF
+		PRINTFORML 体力\@ ACTION_APPLY2_90V(1) >= 0 ? + # \@{ACTION_APPLY2_90V(1)} 気力\@ ACTION_APPLY2_90V(2) >= 0 ? + # \@{ACTION_APPLY2_90V(2)}
+	CASEELSE                  ;ACT派生が勝手に自慰をし始めた
+		PRINTFORML 休みを与えられた%CALLNAME:MASTER%が勝手に自慰をし始め、
+		PRINTFORML %CALLNAME:TARGET%は少し怒ってるようだ…
+ENDSELECT
+PRINTFORML （調教者）体力\@ ACTION_APPLY2_90V(3) >= 0 ? + # \@{ACTION_APPLY2_90V(3)} 気力\@ ACTION_APPLY2_90V(4) >= 0 ? + # \@{ACTION_APPLY2_90V(4)}
+IF IS_NOWCOMNAME("なすがまま")                    ;COM:なすがままならここで完結
+	RETURN 1
+ELSE
+	RETURN 2
+ENDIF
+
+;────────────────────────────────────
+;091,栄養剤を飲ませる
+;────────────────────────────────────
+;★リアクション前★
+@TRAIN_MESSAGE_91
+PRINTFORML %CALLNAME:TARGET%は特製の栄養剤を取り出して%CALLNAME:MASTER%に飲ませようとした…
+
+;☆リアクション後☆
+@TRAIN_MESSAGE2_91
+PRINTL 
+IF TFLAG:ACT派生 == 0         ;ACT派生が栄養剤を飲んだ		REACT分類で分岐を設けても良いのかも知れない
+	PRINTFORML %CALLNAME:MASTER%が%CALLNAME:TARGET%から渡された怪しげな薬剤を飲むと、
+	PRINTFORML 急に体の中から元気があふれてきた…
+	PRINTFORML 体力\@ ACTION_APPLY2_91V(1) >= 0 ? + # \@{ACTION_APPLY2_91V(1)} 気力\@ ACTION_APPLY2_91V(2) >= 0 ? + # \@{ACTION_APPLY2_91V(2)}
+ELSE                          ;ACT派生が栄養剤を捨てた
+	PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%から渡された怪しげな薬剤を捨てた…
+ENDIF
+SIF IS_NOWCOMNAME("なすがまま")         ;COM:なすがままならここで完結
+	RETURN 1
+
+;────────────────────────────────────
+;092,治療する
+;────────────────────────────────────
+;★リアクション前★
+@TRAIN_MESSAGE_92
+PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%を治療しようとした…
+
+;☆リアクション後☆
+@TRAIN_MESSAGE2_92
+PRINTFORML 
+IF TFLAG:ACT派生 == 0         ;ACT派生が体の隅々まで撫で回して治療した
+	PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の体の隅々まで撫で回して治療した…
+	PRINTFORML 体力\@ ACTION_APPLY2_92V(1) >= 0 ? + # \@{ACTION_APPLY2_92V(1)} 気力\@ ACTION_APPLY2_92V(2) >= 0 ? + # \@{ACTION_APPLY2_92V(2)}
+ELSE                          ;ACT派生が暴れたため治療できなかった
+	PRINTFORML %CALLNAME:MASTER%が暴れたため治療できなかった…
+ENDIF

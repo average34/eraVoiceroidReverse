@@ -1,0 +1,653 @@
+﻿;────────────────────────────────────
+;奉仕 (手で50/口で51/胸で52/素股53/足舐55/イラ56/騎乗32/胸を57)
+;────────────────────────────────────
+@ACT_M5(ARG = 0)
+;1以上なら判定を行わない
+#DIM LCOUNT, 1
+
+;関数初期化
+CALL ACT_M_INIT(5)
+
+;処理開始
+
+LOCALS = ACT_ACTM5
+
+CALL CHA_CRI_VAR, "基準値"
+CALLFORM %LOCALS%_REFERENCE
+
+CALL CHA_CRI_VAR, @"今回の方針(%POLICY("今")%)"
+CALLFORM %LOCALS%_COURCE
+
+CALL CHA_CRI_VAR, "調教者の素質"
+CALLFORM %LOCALS%_TALENT_T
+
+CALL CHA_CRI_VAR, "調教対象の素質"
+CALLFORM %LOCALS%_TALENT_M
+
+CALL CHA_CRI_VAR, "調教者の性別意識"
+CALLFORM %LOCALS%_GENDER_T
+
+CALL CHA_CRI_VAR, "調教者の能力"
+CALLFORM %LOCALS%_ABL_T
+
+CALL CHA_CRI_VAR, "調教対象の能力"
+CALLFORM %LOCALS%_ABL_M
+
+CALL CHA_CRI_VAR, "調教者の罪悪感"
+CALLFORM %LOCALS%_SIN_T
+
+CALL CHA_CRI_VAR, "調教者のALI"
+CALLFORM %LOCALS%_ALI_T
+
+CALL CHA_CRI_VAR, "調教者の射精値"
+CALLFORM %LOCALS%_EJACULATION_T
+
+CALL CHA_CRI_VAR, "調教者の快B"
+CALLFORM %LOCALS%_PREASURE_B_T
+
+CALL CHA_CRI_VAR, "調教対象の体力"
+CALLFORM %LOCALS%_PHYSICAL_M
+
+CALL CHA_CRI_VAR, "調教対象の気力"
+CALLFORM %LOCALS%_MENTAL_M
+
+CALL CHA_CRI_VAR, @"調教者の状態(%CONDITION(TCVAR:状態変化)%)"
+CALLFORM %LOCALS%_CONDITION_T
+
+CALL CHA_CRI_VAR, "シックスナイン誘発"
+CALLFORM %LOCALS%_69
+
+CALL CHA_CRI_VAR, "調教対象の汚れ"
+CALLFORM %LOCALS%_STAIN_M
+
+CALL CHA_CRI_VAR, "縄"
+CALLFORM %LOCALS%_ROPE
+
+CALL CHA_CRI_VAR, "アイマスク"
+CALLFORM %LOCALS%_EYEMASK
+
+CALL CHA_CRI_VAR, "調教対象自慰中"
+CALLFORM %LOCALS%_MASTURBATION_M
+
+CALL CHA_CRI_VAR, "挿入補正"
+CALLFORM %LOCALS%_INSERT
+
+CALL CHA_CRI_VAR, "調教対象の衣服"
+CALLFORM %LOCALS%_CLOTH_M
+
+CALL CHA_CRI_VAR, "許しを乞う"
+CALLFORM %LOCALS%_PLEASE_HELP
+
+CALL CHA_CRI_VAR, "体位"
+CALLFORM %LOCALS%_S_POSITION
+
+CALL CHA_CRI_VAR, "連続行動補正"
+CALLFORM %LOCALS%_PREV
+
+CALL CHA_CRI_VAR, "口上補正値"
+CALL ACT_ACTM_KOJO_CORRECTION_T, 5
+
+CALL CHA_CRI_VAR, "ACT補正値"
+CALLFORM %LOCALS%_CORRECTION(ARG)
+
+;ARGが1以上なら処理中断
+SIF ARG
+	RETURN RESULT
+
+CALL CHA_CRI_VAR, "実行判定"
+CALLFORM %LOCALS%_ABLE
+
+;────────────────────────────────────
+;最終判定
+;────────────────────────────────────
+CALL DEF_CRI_VAR("最大前者")
+LOCAL = GET_CRI_VAR("決定")
+IF LOCAL == -1
+	SIF FLAG:デバッグ
+		PRINTL (奉仕ACT分類に実行可能なACTが存在しません)
+	TFLAG:ACT = -1
+	CALL ACT_MENU_RESULT(2, "奉仕")
+ELSE
+	TFLAG:ACT = GET_ACTNUM(RESULTS)
+ENDIF
+CALL ANA_CRI_VAR()
+
+;-------------------------------------------------------------------------
+;基準値
+;-------------------------------------------------------------------------
+@ACT_ACTM5_REFERENCE
+
+;要らないかもと思ったので試しに無効化@これみ
+[SKIPSTART]
+CALL ADD_CRI_VAR("手で愛撫を強制", 10)
+CALL ADD_CRI_VAR("口で愛撫を強制", 10)
+CALL ADD_CRI_VAR("パイズリ", 10)
+CALL ADD_CRI_VAR("素股", 10)
+CALL ADD_CRI_VAR("足舐め強制", 2)
+CALL ADD_CRI_VAR("イラマチオ", 0)
+CALL ADD_CRI_VAR("騎乗位", 5)
+CALL ADD_CRI_VAR("胸愛撫強制", 10)
+[SKIPEND]
+
+;------------------------------------------
+;今回の調教方針
+;------------------------------------------
+@ACT_ACTM5_COURCE
+;ターン方針(1=休憩/2=ソフト/3=ノーマル/4=ハード/5=異常)
+SELECTCASE POLICY("今")
+	CASE "ソフト"
+		CALL ADD_CRI_VAR("胸愛撫強制", IS_POLICY("今日", "イチャイチャ")? 15 # 3)
+	CASE "ノーマル"
+		CALL ADD_CRI_VAR("手で愛撫を強制", IS_POLICY("今日", "ご奉仕")?  5 # 2)
+		CALL ADD_CRI_VAR("口で愛撫を強制", IS_POLICY("今日", "ご奉仕")? 15 # 3)
+		CALL ADD_CRI_VAR("胸愛撫強制"    , IS_POLICY("今日", "ご奉仕")?  4 # 2)
+	CASE "ハード"
+		CALL ADD_CRI_VAR("手で愛撫を強制", -5)
+		CALL ADD_CRI_VAR("口で愛撫を強制", -3)
+		CALL ADD_CRI_VAR("パイズリ"      ,  3)
+		CALL ADD_CRI_VAR("素股"          ,  2)
+		CALL ADD_CRI_VAR("足舐め強制"    ,  5)
+		CALL ADD_CRI_VAR("イラマチオ"    , 10)
+	CASE "異常"
+		CALL ADD_CRI_VAR("足舐め強制", 15)
+		CALL ADD_CRI_VAR("イラマチオ",  5)
+ENDSELECT
+
+;-------------------------------------------------------------------------
+;調教者の素質を参照
+;-------------------------------------------------------------------------
+@ACT_ACTM5_TALENT_T
+;調教者が臆病/気丈
+IF TALENT:臆病
+	CALL ADD_CRI_VAR("イラマチオ", -3)
+ELSEIF TALENT:気丈
+	CALL ADD_CRI_VAR("イラマチオ", , 4)
+ENDIF
+
+;調教者が大人しい/生意気
+IF TALENT:大人しい
+	CALL ADD_CRI_VAR("足舐め強制", -2, -2)
+ELSEIF TALENT:生意気
+	CALL ADD_CRI_VAR("足舐め強制", 2, 2)
+ENDIF
+
+;調教者がプライド高い/低い
+IF TALENT:プライド高い
+	CALL ADD_CRI_VAR("足舐め強制", 1, 6)
+	CALL ADD_CRI_VAR("騎乗位"    , , -2)
+ELSEIF TALENT:プライド低い
+	CALL ADD_CRI_VAR("足舐め強制", -5)
+	CALL ADD_CRI_VAR("騎乗位", , 2)
+ENDIF
+
+;調教者が一線越えない
+SIF TALENT:一線越えない
+	CALL ADD_CRI_VAR("足舐め強制", -3)
+
+;調教者が目立ちたがり
+SIF TALENT:目立ちたがり
+	CALL ADD_CRI_VAR("足舐め強制", 3)
+
+;調教者が抑圧/解放
+IF TALENT:抑圧
+	CALL ADD_CRI_VAR("手で愛撫を強制", , 4)
+	CALL ADD_CRI_VAR("足舐め強制", -3)
+	CALL ADD_CRI_VAR("イラマチオ", -3)
+ELSEIF TALENT:解放
+	CALL ADD_CRI_VAR("パイズリ"  , , 4)
+	CALL ADD_CRI_VAR("素股"      , , 4)
+	CALL ADD_CRI_VAR("足舐め強制", , 4)
+	CALL ADD_CRI_VAR("騎乗位"    , , 4)
+ENDIF
+
+;調教者が受け身
+IF TALENT:受け身
+	CALL ADD_CRI_VAR("騎乗位"        , , 5)
+	CALL ADD_CRI_VAR("手で愛撫を強制", , 4)
+	CALL ADD_CRI_VAR("口で愛撫を強制", , 3)
+	CALL ADD_CRI_VAR("胸愛撫強制"    , , 4)
+ENDIF
+
+;調教者が快感の否定
+SIF TALENT:快感の否定
+	CALL ADD_CRI_VAR("足舐め強制", , 5)
+
+;調教者がサド
+IF TALENT:サド
+	CALL ADD_CRI_VAR("足舐め強制", ,  4)
+	CALL ADD_CRI_VAR("イラマチオ", ,  4)
+	CALL ADD_CRI_VAR("胸愛撫強制", , -4)
+ENDIF
+
+;調教者が意地悪/心根優しい
+IF TALENT:意地悪
+	CALL ADD_CRI_VAR("足舐め強制", ,  4)
+	CALL ADD_CRI_VAR("胸愛撫強制", , -2)
+	CALL ADD_CRI_VAR("騎乗位"    , , 4)
+ELSEIF TALENT:心根優しい
+	CALL ADD_CRI_VAR("足舐め強制", -3)
+	CALL ADD_CRI_VAR("胸愛撫強制",  3)
+	CALL ADD_CRI_VAR("騎乗位"    , -3)
+ENDIF
+
+;調教者が幼稚
+IF TALENT:幼稚
+	CALL ADD_CRI_VAR("パイズリ"  ,  5)
+	CALL ADD_CRI_VAR("胸愛撫強制", -5)
+ENDIF
+
+;調教者が狂気
+SIF TALENT:幼稚
+	CALL ADD_CRI_VAR("足舐め強制", 5)
+
+;調教者がＣ敏感
+SIF TALENT:Ｃ敏感
+	CALL ADD_CRI_VAR("足舐め強制", , -8)
+
+;調教者が小柄体型
+SIF TALENT:小柄
+	CALL ADD_CRI_VAR("騎乗位", -2, -4)
+
+;調教者が貧乳
+SIF TALENT:貧乳
+	CALL ADD_CRI_VAR("胸愛撫強制", -5)
+
+;調教者が巨乳
+SIF TALENT:巨乳
+	CALL ADD_CRI_VAR("胸愛撫強制", 5)
+
+;調教者が母乳体質
+SIF TALENT:母乳体質
+	CALL ADD_CRI_VAR("胸愛撫強制", 8)
+
+;調教者が美脚
+SIF TALENT:美脚
+	CALL ADD_CRI_VAR("足舐め強制", , 4)
+
+;-------------------------------------------------------------------------
+;調教対象の素質を参照
+;-------------------------------------------------------------------------
+@ACT_ACTM5_TALENT_M
+;調教対象が猫舌
+SIF TALENT:MASTER:猫舌
+	CALL ADD_CRI_VAR("口で愛撫を強制", -10 + TALENT:倒錯的 * 2 - TALENT:ドＭ * 5)
+
+;調教対象が舌使い
+SIF TALENT:MASTER:舌使い
+	CALL ADD_CRI_VAR("口で愛撫を強制", 3, 4)
+
+;調教対象が器用な指先
+SIF TALENT:MASTER:器用な指先
+	CALL ADD_CRI_VAR("手で愛撫を強制", 3, 4)
+
+;調教対象が腰使い
+SIF TALENT:MASTER:腰使い
+	CALL ADD_CRI_VAR("騎乗位", 5)
+
+;調教対象が淫壷
+SIF TALENT:MASTER:淫壷
+	CALL ADD_CRI_VAR("騎乗位", 3, 4)
+
+;調教対象が淫乳
+SIF TALENT:MASTER:淫乳
+	CALL ADD_CRI_VAR("パイズリ", 3, 4)
+
+;調教対象が貧乳
+SIF TALENT:MASTER:貧乳
+	CALL ADD_CRI_VAR("パイズリ", -5)
+
+;調教対象が巨乳
+SIF TALENT:MASTER:巨乳
+	CALL ADD_CRI_VAR("パイズリ", 5)
+
+;-------------------------------------------------------------------------
+;調教者の性別の好みを参照
+;-------------------------------------------------------------------------
+@ACT_ACTM5_GENDER_T
+;調教者に両刀が無く、女の子同士
+IF !TALENT:オトコ && !TALENT:MASTER:オトコ && !TALENT:両刀
+	;調教者のレズっ気が[0→-2, 2→2]を加算(-2～2)
+	CALL ADD_CRI_VAR("手で愛撫を強制", LINE_CALC(ABL:レズっ気, "0→-2,2→2,LIMIT/-2～2"))
+	CALL ADD_CRI_VAR("足舐め強制", LINE_CALC(ABL:レズっ気, "0→-2,2→0,LIMIT/-2～0"))
+	;調教者のレズっ気が[0→-4, 4→0]を加算(-4～0)
+	CALL ADD_CRI_VAR("素股", LINE_CALC(ABL:レズっ気, "0→-4,4→0,LIMIT/-4～0"))
+	;調教者のレズっ気が[0→-5, 5→3]を加算(-5～3)
+	CALL ADD_CRI_VAR("口で愛撫を強制", LINE_CALC(ABL:レズっ気, "0→-5,5→3,LIMIT/-5～3"))
+	CALL ADD_CRI_VAR("パイズリ", LINE_CALC(ABL:レズっ気, "0→-5,5→0,LIMIT/-5～0"))
+	CALL ADD_CRI_VAR("イラマチオ", LINE_CALC(ABL:レズっ気, "0→-5,5→0,LIMIT/-5～0"))
+	CALL ADD_CRI_VAR("騎乗位", LINE_CALC(ABL:レズっ気, "0→-5,5→0,LIMIT/-5～0"))
+	
+	;調教者のレズ中毒が[0→0, 5→8]を加算(0～8)
+	CALL ADD_CRI_VAR("口で愛撫を強制", , LINE_CALC(ABL:レズ中毒, "0→0,5→8,LIMIT/0～8"))
+	CALL ADD_CRI_VAR("パイズリ", , LINE_CALC(ABL:レズ中毒, "0→0,5→8,LIMIT/0～8"))
+	CALL ADD_CRI_VAR("素股", , LINE_CALC(ABL:レズ中毒, "0→0,5→8,LIMIT/0～8"))
+ENDIF
+
+;調教者に両刀が無く、オトコ同士
+IF TALENT:オトコ && TALENT:MASTER:オトコ && !TALENT:両刀
+	;調教者のＢＬっ気が[0→-3, 3→0]を加算(-3～0)
+	CALL ADD_CRI_VAR("手で愛撫を強制", LINE_CALC(ABL:ＢＬっ気, "0→-3,3→0,LIMIT/-3～0"))
+	CALL ADD_CRI_VAR("足舐め強制", LINE_CALC(ABL:ＢＬっ気, "0→-3,3→0,LIMIT/-3～0"))
+	;調教者のＢＬっ気が[0→-4, 4→0]を加算(-4～0)
+	CALL ADD_CRI_VAR("イラマチオ", LINE_CALC(ABL:ＢＬっ気, "0→-4,4→0,LIMIT/-4～0"))
+	;調教者のＢＬっ気が[0→-5, 5→0]を加算(-5～0)
+	CALL ADD_CRI_VAR("口で愛撫を強制", LINE_CALC(ABL:ＢＬっ気, "0→-5,5→0,LIMIT/-5～0"))
+ENDIF
+
+;調教者が男嫌いで調教対象がオトコ。進展度に応じて緩和するように
+IF TALENT:男嫌い && TALENT:MASTER:オトコ
+	CALL ADD_CRI_VAR("手で愛撫を強制", CFLAG:M好意 + CFLAG:好意 >= 10000 ? -1 # -3)
+	CALL ADD_CRI_VAR("口で愛撫を強制", CFLAG:M好意 + CFLAG:好意 >= 10000 ? -3 # -5)
+	CALL ADD_CRI_VAR("足舐め強制", , CFLAG:M好意 + CFLAG:好意 >= 10000 ? 1 # 4)
+ENDIF
+
+;────────────────────────────────────
+;能力、パラメーターによる変動
+;────────────────────────────────────
+;-------------------------------------------------------------------------
+;調教者の能力を参照
+;-------------------------------------------------------------------------
+@ACT_ACTM5_ABL_T
+
+;調教者のＣ感覚が[0→0, 3→4, 6→7]を加算(0～4)
+CALL ADD_CRI_VAR("口で愛撫を強制", LINE_CALC(ABL:Ｃ感覚, "0→0,3→4,6→7,LIMIT/0～7"))
+;調教者のＣ感覚が[1→0, 5→4]を加算(0～4)
+CALL ADD_CRI_VAR("パイズリ", LINE_CALC(ABL:Ｃ感覚, "1→0,5→4,LIMIT/0～4"))
+CALL ADD_CRI_VAR("素股", LINE_CALC(ABL:Ｃ感覚, "1→0,5→4,LIMIT/0～4"))
+;調教者のＣ感覚が[2→0, 5→3～5]を加算(0～5)
+CALL ADD_CRI_VAR("イラマチオ", LINE_CALC(ABL:Ｃ感覚, "2→0,5→3,LIMIT/0～3"), LINE_CALC(ABL:Ｃ感覚, "2→0,5→2,LIMIT/0～2"))
+CALL ADD_CRI_VAR("騎乗位", LINE_CALC(ABL:Ｃ感覚, "2→0,5→3,LIMIT/0～3"), LINE_CALC(ABL:Ｃ感覚, "2→0,5→2,LIMIT/0～2"))
+;調教者のＣ感覚が[0→0, 2→3, 5→5]を加算(0～5)
+CALL ADD_CRI_VAR("手で愛撫を強制", LINE_CALC(ABL:Ｃ感覚, "0→0,2→3,5→5,LIMIT/0～5"))
+
+;調教者の性交が[0→0, 5→3～5]を加算(0～5)
+CALL ADD_CRI_VAR("騎乗位", LINE_CALC(ABL:性交, "0→0,5→3,LIMIT/0～3"), LINE_CALC(ABL:性交, "0→0,5→2,LIMIT/0～2"))
+
+;-------------------------------------------------------------------------
+;調教対象の能力を参照
+;-------------------------------------------------------------------------
+@ACT_ACTM5_ABL_M
+
+;調教対象のＶ感覚が[0→0, 5→2～8]を加算(0～8)
+CALL ADD_CRI_VAR("騎乗位", LINE_CALC(ABL:MASTER:Ｖ感覚, "0→0,5→2,LIMIT/0～2"), LINE_CALC(ABL:MASTER:Ｖ感覚, "0→0,5→6,LIMIT/0～6"))
+
+;-------------------------------------
+;調教者の罪悪感
+;-------------------------------------
+@ACT_ACTM5_SIN_T
+
+;罪悪感が[60→0, 100→-2]を加算(-2～0)
+CALL ADD_CRI_VAR("足コキ", LINE_CALC(CFLAG:罪悪感, "60→0,100→-2,LIMIT/-2～0"))
+;罪悪感が[40→0, 100→-3]を加算(-3～0)
+CALL ADD_CRI_VAR("足舐め強制", LINE_CALC(CFLAG:罪悪感, "40→0,100→-3,LIMIT/-3～0"))
+;罪悪感が[0→0, 100→-5]を加算(-5～0)
+CALL ADD_CRI_VAR("イラマチオ", LINE_CALC(CFLAG:罪悪感, "0→0,100→-5,LIMIT/-5～0"))
+
+;-------------------------------------
+;調教者のALI
+;-------------------------------------
+@ACT_ACTM5_ALI_T
+
+;アライメントが[-50→-3, 50→3]を加算(-3～3)
+CALL ADD_CRI_VAR("手で愛撫を強制", LINE_CALC(CFLAG:アライメント, "-50→-3,50→3,LIMIT/-3～3"))
+;アライメントが[-50→3, 50→-3]を加算(-3～3)
+CALL ADD_CRI_VAR("イラマチオ", LINE_CALC(CFLAG:アライメント, "-50→3,50→-3,LIMIT/-3～3"))
+;アライメントが[-50→-6, 0→0]を加算(-6～0)
+CALL ADD_CRI_VAR("胸愛撫強制", LINE_CALC(CFLAG:アライメント, "-50→-6,0→0,LIMIT/-6～0"))
+
+;────────────────────────────────────
+;ゲージや状態による変動
+;────────────────────────────────────
+;-------------------------------------
+;調教者の射精値
+;-------------------------------------
+@ACT_ACTM5_EJACULATION_T
+
+;調教者の射精値が[4000→0, 8000→3]を加算(0～3)
+CALL ADD_CRI_VAR("手で愛撫を強制", LINE_CALC(BASE:射精, "4000→0,8000→3,LIMIT/0～3"))
+CALL ADD_CRI_VAR("パイズリ", LINE_CALC(BASE:射精, "4000→0,8000→3,LIMIT/0～3"))
+CALL ADD_CRI_VAR("素股", LINE_CALC(BASE:射精, "4000→0,8000→3,LIMIT/0～3"))
+CALL ADD_CRI_VAR("騎乗位", LINE_CALC(BASE:射精, "4000→0,8000→3,LIMIT/0～3"))
+;調教者の射精値が[4000→0, 8000→5]を加算(0～5)
+CALL ADD_CRI_VAR("口で愛撫を強制", LINE_CALC(BASE:射精, "4000→0,8000→5,LIMIT/0～5"))
+CALL ADD_CRI_VAR("イラマチオ", LINE_CALC(BASE:射精, "4000→0,8000→5,LIMIT/0～5"))
+
+;----------------------------------
+;調教者の快B
+;---------------------------------
+@ACT_ACTM5_PREASURE_B_T
+
+;調教者の快Bが[0→0, 5000→3]を加算(0～3)
+CALL ADD_CRI_VAR("胸愛撫強制", LINE_CALC(PALAM:快Ｂ, "0→0,5000→3,LIMIT/0～3"))
+
+;-------------------------------------
+;調教対象の体力
+;-------------------------------------
+@ACT_ACTM5_PHYSICAL_M
+
+;調教対象の体力が[0→-3, 1000→0]を加算(-3～0)
+CALL ADD_CRI_VAR("パイズリ", LINE_CALC(BASE:MASTER:体力, "0→-3,1000→0,LIMIT/-3～0"))
+;調教対象の体力が[0→-5, 1500→0]を加算(-5～0)
+CALL ADD_CRI_VAR("イラマチオ", LINE_CALC(BASE:MASTER:体力, "0→-5,1500→0,LIMIT/-5～0"))
+CALL ADD_CRI_VAR("騎乗位", LINE_CALC(BASE:MASTER:体力, "0→-5,1500→0,LIMIT/-5～0"))
+
+;-------------------------------------
+;調教対象の気力
+;-------------------------------------
+@ACT_ACTM5_MENTAL_M
+
+;調教対象の気力が[0→-3, 500→0]を加算(-3～0)
+CALL ADD_CRI_VAR("口で愛撫を強制", LINE_CALC(BASE:MASTER:気力, "0→-3,500→0,LIMIT/-3～0"))
+;調教対象の気力が[0→-5, 750→0]を加算(-5～0)
+CALL ADD_CRI_VAR("足舐め強制", LINE_CALC(BASE:MASTER:気力, "0→-5,750→0,LIMIT/-5～0"))
+
+;-------------------------------------
+;調教者の状態
+;-------------------------------------
+@ACT_ACTM5_CONDITION_T
+
+;調教者の状態(0=通常/1=疲弊/2=衰弱/3=無気力/4=朦朧/5=情欲/6=怒り/7=退屈/8=鬱屈)
+SELECTCASE GET_CONDITION(TARGET)
+	CASE "疲弊", "衰弱"
+		CALL ADD_CRI_VAR("手で愛撫を強制", -1 - TFLAG:調教者消耗度 / 2)
+		CALL ADD_CRI_VAR("口で愛撫を強制", -2 - TFLAG:調教者消耗度 / 2)
+		CALL ADD_CRI_VAR("パイズリ", -2 - TFLAG:調教者消耗度)
+		CALL ADD_CRI_VAR("素股", -3 - TFLAG:調教者消耗度)
+		CALL ADD_CRI_VAR("イラマチオ", -3 - TFLAG:調教者消耗度 * 2)
+		CALL ADD_CRI_VAR("騎乗位", -1 - TFLAG:調教者消耗度 * 2)
+	CASE "情欲"
+		CALL ADD_CRI_VAR("口で愛撫を強制", 3, 6)
+		CALL ADD_CRI_VAR("胸愛撫強制", 2, 4)
+	CASE "怒り"
+		CALL ADD_CRI_VAR("イラマチオ", 3, 6)
+	CASE "退屈"
+		CALL ADD_CRI_VAR("素股", , 2)
+		CALL ADD_CRI_VAR("足舐め強制", , 4)
+	CASE "鬱屈"
+		CALL ADD_CRI_VAR("足舐め強制", 1, 4)
+		CALL ADD_CRI_VAR("イラマチオ", 1, 4)
+ENDSELECT
+
+;────────────────────────────────────
+;前回の行動や状況による変動
+;────────────────────────────────────
+;シックスナインへの傾向
+@ACT_ACTM5_69
+
+IF TEQUIP:顔面騎乗 || TEQUIP:顔面騎乗アナル
+	CALL ADD_CRI_VAR("素股", -5)
+	CALL ADD_CRI_VAR("足舐め強制", -5)
+	CALL ADD_CRI_VAR("騎乗位", -5)
+ENDIF
+IF TEQUIP:調教対象Ｃ使用 == 2
+	CALL ADD_CRI_VAR("口で愛撫を強制", 5)
+ENDIF
+
+;汚れなどの処理(調教者に汚れ無視が無い場合)
+@ACT_ACTM5_STAIN_M
+
+IF !TALENT:汚れ無視
+	;調教対象の口
+	;<精><Ａ>のいずれかの汚れがある
+	IF STAIN:MASTER:口 & 0b00001100
+		CALL ADD_CRI_VAR("口で愛撫を強制", -2)
+		CALL ADD_CRI_VAR("足舐め強制", -1)
+		CALL ADD_CRI_VAR("イラマチオ", -2)
+	ENDIF
+	;<血><粘液>のいずれかの汚れがある
+	IF STAIN:MASTER:口 & 0b01100000
+		CALL ADD_CRI_VAR("口で愛撫を強制", -5)
+		CALL ADD_CRI_VAR("足舐め強制", -3)
+		CALL ADD_CRI_VAR("イラマチオ", -5)
+	ENDIF
+	;調教対象の手
+	;<精><Ａ>のいずれかの汚れがある
+	SIF STAIN:MASTER:手 & 0b00001100
+		CALL ADD_CRI_VAR("手で愛撫を強制", -2)
+	;<血><粘液>のいずれかの汚れがある
+	SIF STAIN:MASTER:手 & 0b01100000
+		CALL ADD_CRI_VAR("手で愛撫を強制", -5)
+	;調教対象のＶ
+	;<血><粘液>のいずれかの汚れがある
+	IF STAIN:MASTER:ヴァギナ & 0b01100000
+		CALL ADD_CRI_VAR("パイズリ", -5)
+		CALL ADD_CRI_VAR("騎乗位", -3)
+	ENDIF
+	;調教対象のＢ
+	;<精><Ａ>のいずれかの汚れがある
+	SIF STAIN:MASTER:胸 & 0b00001100
+		CALL ADD_CRI_VAR("素股", -2)
+	;<血><粘液>のいずれかの汚れがある
+	SIF STAIN:MASTER:胸 & 0b01100000
+		CALL ADD_CRI_VAR("素股", -5)
+	;浣腸
+	SIF TEQUIP:浣腸器＋プラグ
+		CALL ADD_CRI_VAR("素股", -3, -4)
+ENDIF
+
+;-------------------------------------
+;縄
+;-------------------------------------
+@ACT_ACTM5_ROPE
+
+IF TEQUIP:縄
+	CALL ADD_CRI_VAR("口で愛撫を強制", -5)
+	CALL ADD_CRI_VAR("素股", -5)
+	CALL ADD_CRI_VAR("イラマチオ", 10)
+	CALL ADD_CRI_VAR("胸愛撫強制", -5)
+ENDIF
+
+;-------------------------------------
+;アイマスク
+;-------------------------------------
+@ACT_ACTM5_EYEMASK
+
+IF TEQUIP:アイマスク
+	CALL ADD_CRI_VAR("手で愛撫を強制", -3)
+	CALL ADD_CRI_VAR("口で愛撫を強制", -2)
+	CALL ADD_CRI_VAR("パイズリ", -5)
+	CALL ADD_CRI_VAR("素股", -5)
+	CALL ADD_CRI_VAR("騎乗位", -7)
+	CALL ADD_CRI_VAR("胸愛撫強制", -3)
+ENDIF
+
+;-------------------------------------
+;調教対象自慰中
+;-------------------------------------
+@ACT_ACTM5_MASTURBATION_M
+
+SIF GETBIT(TEQUIP:自慰中, 0)
+	CALL ADD_CRI_VAR("口で愛撫を強制", 5)
+
+;-------------------------------------
+;挿入
+;-------------------------------------
+@ACT_ACTM5_INSERT
+
+IF TEQUIP:性交中
+	CALL ADD_CRI_VAR("騎乗位", 10)
+	CALL ADD_CRI_VAR("胸愛撫強制", 10)
+ELSEIF TEQUIP:性交奉仕中
+	CALL ADD_CRI_VAR("胸愛撫強制", 10)
+ENDIF
+
+;-------------------------------------
+;調教対象の衣服
+;-------------------------------------
+@ACT_ACTM5_CLOTH_M
+
+;調教対象がアクセサリに手袋を身につけているとき
+SIF TEQUIP:MASTER:アクセサリ == 1
+	CALL ADD_CRI_VAR("手で愛撫を強制", 1, 2)
+
+;調教対象が下半身下着を着ているとき
+IF CLOTHESTYPE(1, 0)
+	CALL ADD_CRI_VAR("素股", -5)
+	CALL ADD_CRI_VAR("騎乗位", -5)
+ENDIF
+
+;調教対象が上半身下着を着ているとき
+SIF CLOTHESTYPE(1, 2)
+	CALL ADD_CRI_VAR("パイズリ", -5)
+
+;調教対象の下半身上着に妨害されるとき
+SIF CLOTHESTYPE(1, 1) == 2
+	CALL ADD_CRI_VAR("素股", -3)
+
+;-------------------------------------
+;許しを乞う
+;-------------------------------------
+@ACT_ACTM5_PLEASE_HELP
+
+;許しを乞ったかつ、調教者の状態が鬱屈以外
+SIF IS_NOWCOMNAME("許しを乞う") && TCVAR:状態変化 < 8
+	CALL ADD_CRI_VAR("イラマチオ", -5)
+
+;────────────────────────────────────
+;体位関連
+;────────────────────────────────────
+@ACT_ACTM5_S_POSITION
+
+;体位変更のハードル
+SIF IS_PREVACTNAME("騎乗位")
+	CALL ADD_CRI_VAR(GET_ACTNAME(TFLAG:前ACT), 5, 4)
+
+;────────────────────────────────────
+;同じ行動連続実行の確率をダウンします
+;────────────────────────────────────
+@ACT_ACTM5_PREV
+
+SIF INRANGE(TFLAG:ACT, 50, 57)
+	CALL ADD_CRI_VAR(GET_ACTNAME(TFLAG:前ACT), -3 * TFLAG:同一行動ボーナス, -4 * TFLAG:同一行動ボーナス)
+
+;────────────────────────────────────
+;補正値計算
+;────────────────────────────────────
+@ACT_ACTM5_CORRECTION(ARG)
+#DIM LCOUNT
+
+;ARGが0以外なら補正値を計算し、以後の処理を行わない
+IF ARG
+	;32に関してはここで計算しない
+	FOR LCOUNT, 50, 58
+		CALL ACT_M_RES_CALC(LCOUNT, GET_CRI_VAR(GET_ACTNAME(LCOUNT) + "累計"))
+	NEXT
+ELSE
+	;補正値を判定値に加算する
+	CALL ACT_ACTM_CORRECTION(5)
+ENDIF
+
+;────────────────────────────────────
+;その他変動や実行不可能の判定
+;────────────────────────────────────
+@ACT_ACTM5_ABLE
+#DIM LCOUNT
+
+;不可能判定
+CALL ACT_ACTM_ABLE(5)
+
+;奉仕系騎乗位を一旦実行不可に。
+;性交系補正を考慮することが至難だったため
+;ACTM_NUMもついでに殺してる
+CALL DIM_CRI_VAR("騎乗位", -999)
+

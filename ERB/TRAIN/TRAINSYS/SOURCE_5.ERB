@@ -1,0 +1,448 @@
+﻿;────────────────────────────────────
+;調教者快感（ｃｖａｂ）のソースと絶頂の処理（快ｃ、快ｖ、快ａ、快ｂ、体力、気力、射精、母乳、理性、興味）
+;────────────────────────────────────
+@CALC_SOURCE40
+
+LOCALS = CALC_SOURCE40
+
+;最初の変動
+CALLFORM %LOCALS%_TALENT
+
+;快感（ＣＶＡＢ）の上昇
+CALLFORM %LOCALS%_PLEASURE
+
+;絶頂、体力、気力、射精、母乳、尿意などの処理
+CALLFORM %LOCALS%_EX
+
+;────────────────────────────────────
+;最初の変動
+;────────────────────────────────────
+@CALC_SOURCE40_TALENT
+#DIM LCOUNT
+;ペニスバンド装備中は快ｃが快ｖに変換
+;変換率…快ｃを20％にし、残りの値にｖ感覚+1/ｃ感覚+1を掛けて２で割って快Ｖに加算する
+IF TEQUIP:調教者ペニスバンド
+	SOURCE:快Ｖ += (SOURCE:快Ｃ*8*(((ABL:Ｖ感覚+1)*100)/(ABL:Ｃ感覚+1)))/2000
+	TIMES SOURCE:快Ｃ, 0.20
+ENDIF
+
+;ＣＶＡＢ部位について
+FOR LCOUNT, 0, 4
+	;敏感と鈍感は最初で処理
+	;Ｘ敏感
+	SIF TALENT:(100 + LCOUNT * 2)
+		TIMES SOURCE:LCOUNT, 1.50
+	;Ｘ鈍感
+	SIF TALENT:(101 + LCOUNT * 2)
+		TIMES SOURCE:LCOUNT, 0.70
+	;調教者の状態
+	IF 0
+	ELSEIF T_COND("疲弊")
+		TIMES SOURCE:LCOUNT, 0.80
+	ELSEIF T_COND("衰弱")
+		TIMES SOURCE:LCOUNT, 0.65
+	ELSEIF T_COND("無気力")
+		TIMES SOURCE:LCOUNT, 0.70
+	ELSEIF T_COND("情欲")
+		TIMES SOURCE:LCOUNT, 1.20
+	ENDIF
+NEXT
+
+;────────────────────────────────────
+;快感（ＣＶＡＢ）の上昇
+;────────────────────────────────────
+@CALC_SOURCE40_PLEASURE
+#DIM LCOUNT
+
+;欲情PALAMが[0→4, 1000→7, 2000→9, 3000→10, 4000→11, 5000→12]をLOCALへ(4～12)
+LOCAL = LIMIT(GET_REVISION_SQRT(PALAM:MASTER:欲情, 5000, 8) + 4, 4, 12)
+FOR LCOUNT, 0, 4
+	;連続ボーナス(連続回数倍に増加するボーナス)
+	CUP:LCOUNT += SOURCE:LCOUNT * LOCAL * TFLAG:同一行動ボーナス / 10
+	;調教中に集中的に責られると弱くなる気がする(快Ｘ補正処理)
+	CUP:LCOUNT = CUP:LCOUNT * CFLAG:(30 + LCOUNT) / 50
+NEXT
+
+;────────────────────────────────────
+;絶頂、体力、気力、射精、母乳、尿意などの処理
+;────────────────────────────────────
+@CALC_SOURCE40_EX
+#DIM LCOUNT
+#DIM DYNAMIC 絶頂強度, 4
+#DIM DYNAMIC 快感負担
+#DIM DYNAMIC 射精負担
+#DIM DYNAMIC 噴乳負担
+#DIM DYNAMIC 絶頂負担
+
+;絶頂Ｃ
+SIF (!PENIS(TARGET) || TCVAR:勃起 > 1)
+	絶頂強度:0 = CALC_SOURCE40_EX_P(0, CUP:快Ｃ + PALAM:快Ｃ)
+
+;絶頂Ｖ
+絶頂強度:1 = CALC_SOURCE40_EX_P(1, CUP:快Ｖ + PALAM:快Ｖ)
+
+;絶頂Ａ
+絶頂強度:2 = CALC_SOURCE40_EX_P(2, CUP:快Ａ + PALAM:快Ａ)
+
+;絶頂Ｂ
+絶頂強度:3 = CALC_SOURCE40_EX_P(3, CUP:快Ｂ + PALAM:快Ｂ)
+
+;絶頂強度合計から絶頂負担を計算
+絶頂負担 = 1000 * SUMARRAY(絶頂強度)
+
+;快感による体力気力理性消耗
+;快ＸSOURCE合計が[0→0, 2000→44, 4000→63, 6000→77, 8000→89, 10000→100]を快感負担へ
+快感負担 = GET_REVISION_SQRT(SUMARRAY(SOURCE, 40, 44), 10000, 100)
+
+;調教の度合いによる軽減
+;調教者調教レベル+欲望ABLが[0→100%, 2→91%, 4→83%, 6→75%, 8→67%, 10→59%, 12→51%]を快感負担に乗算(50～100%)
+LOCAL = GET_REVISION_SQRT_PROP(CFLAG:調教レベル + ABL:欲望, 1, 5, 12, 50)
+快感負担 -= 快感負担 * LIMIT(LOCAL, 50, 100) / 100
+
+;ペニス存在時
+IF PENIS(TARGET)
+	;絶頂決定時
+	IF 絶頂強度:0 > 0
+		;射精ゲージがない
+		IF BASE:射精 == 0
+			STR:1044 = 空射精（調教者）
+			DOWNBASE:体力  += 100
+			DOWNBASE:気力  += 80
+			NOWEX:射精      = 1
+			TCVAR:射精      = 1
+			TCVAR:空射精    = 1
+			TCVAR:空射精数 += 1
+		;強絶頂
+		ELSEIF 絶頂強度:0 == 2
+			STR:1044 = 大量射精（調教者）
+			射精負担 = 500
+			NOWEX:射精 = 3
+			TCVAR:射精 = 3
+		;通常の絶頂
+		ELSE
+			STR:1044 = 射精（調教者）
+			射精負担 = 300
+			NOWEX:射精 = 2
+			TCVAR:射精 = 2
+		ENDIF
+	ENDIF
+	;空でない射精時
+	IF NOWEX:射精 > 1
+		;精液汚れの追加
+		;────────────────────────────────────
+		;ACTが派生すると愛撫物が変わる場合があるので@IS_NOWACTNAMEではなく@TC_PLAYERで
+		;一々ACT派生も参照するのは面倒だし！
+		;────────────────────────────────────
+		;調教者のペニス
+		CALL SET_STAIN("ペニス", "精液", TARGET)
+		;調教対象の
+		;ヴァギナ(性交奉仕時)
+		SIF TC_PLAYER(1) == 4
+			CALL SET_STAIN("ヴァギナ", "精液", MASTER)
+		;アナル
+		SIF TC_PLAYER(1) == 5
+			CALL SET_STAIN("アナル", "精液", MASTER)
+		;手
+		SIF TC_PLAYER(1) == 2
+			CALL SET_STAIN("手", "精液", MASTER)
+		;口
+		SIF TC_PLAYER(1) == 1
+			CALL SET_STAIN("口", "精液", MASTER)
+		;胸
+		SIF TC_PLAYER(1) == 6
+			CALL SET_STAIN("胸", "精液", MASTER)
+		[SKIPSTART]
+		Ｖ/Ａは中出し判定以降に処理を移設
+		;ヴァギナ
+		SIF TC_PLAYER(1) == 4
+			CALL SET_STAIN("ヴァギナ", "精液", MASTER)
+		;アナル
+		SIF TC_PLAYER(1) == 5
+			CALL SET_STAIN("アナル", "精液", MASTER)
+		[SKIPEND]
+	ENDIF
+ENDIF
+
+;中/外に射精
+IF TEQUIP:性交中 && NOWEX:射精
+	;中出し判定
+	LOCAL = 0
+	;中に出さないで！かつ許しを乞う失敗
+	IF IS_NOWCOMNAME("中に出さないで！") && !IS_COMGRONAME("許しを乞う")
+		;トラウマ加算
+		SOURCE:MASTER:トラウマ += (BASE:射精 == 1 ? 200 # 500) - CFLAG:MASTER:調教レベル * 10
+		;中出し確認
+		LOCAL = 1
+	;中に出して！または好意(M→T)が十分に存在
+	ELSEIF IS_NOWCOMNAME("中に出して！") || CFLAG:M好意 > RAND:8000
+		;中出し確認
+		LOCAL = 1
+	ENDIF
+	;中出し時
+	IF LOCAL
+		;Ｖ性交
+		IF TEQUIP:性交中 < 6
+			;汚れ追加(空射精時除く)
+			STAIN:MASTER:ヴァギナ |= (BASE:射精 == 1 ? 0 # 4)
+			;中出し記録(空射精情報も記入)
+			TFLAG:前回中出し = (BASE:射精 == 1 ? 3 # 1)
+			;調教対象(ご主人様)の膣内射精量を増やす
+			CFLAG:M膣精 += DOWNBASE:射精
+			;調教対象のヴァギナに精液汚れを追加
+			CALL SET_STAIN("ヴァギナ", "精液", MASTER)
+		;Ａ性交
+		ELSE
+			;汚れ追加(空射精時除く)
+			STAIN:MASTER:アナル |= (BASE:射精 == 1 ? 0 # 4)
+			;中出し記録(空射精情報も記入)
+			TFLAG:前回中出し = (BASE:射精 == 1 ? 7 # 5)
+			;調教対象のアナルに精液汚れを追加
+			CALL SET_STAIN("アナル", "精液", MASTER)
+		ENDIF
+	ENDIF
+ENDIF
+
+;Ｂ絶頂時、母乳体質であれば
+IF 絶頂強度:3 && TALENT:母乳体質
+	;母乳不足
+	IF BASE:母乳 < 50 + RAND:5 * 10
+		STR:1045 = 空噴乳（調教者）
+		噴乳負担 = 50 + 絶頂強度:3 * 10
+		DOWNBASE:体力 += 100
+		DOWNBASE:気力 += 80
+		NOWEX:噴乳 = 1
+		TCVAR:噴乳 = 1
+		;NOWEX:噴乳では『空噴乳』と通常の噴乳に1を割り当ててしまっているので、TCVAR:噴乳と番号がずれる
+		;現状NOWEXの番号をずらしたくないので、TCVAR:噴乳だけ手当しておくことにする@(2014/11/08)/L
+	;強絶頂
+	ELSEIF 絶頂強度:3 == 2
+		STR:1045 = 大量噴乳（調教者）
+		噴乳負担 = 500
+		NOWEX:噴乳 = 2
+		TCVAR:噴乳 = 3
+	;通常の絶頂
+	ELSE
+		STR:1045 = 噴乳（調教者）
+		噴乳負担 = 300
+		NOWEX:噴乳 = 1
+		TCVAR:噴乳 = 2
+	ENDIF
+	;調教者胸に母乳汚れ
+	CALL SET_STAIN("胸", "母乳", TARGET)
+	;調教対象の
+	;手
+	SIF TB_PLAYER(1) == 2
+		CALL SET_STAIN("手", "母乳", MASTER)
+	;口
+	SIF TB_PLAYER(1) == 1
+		CALL SET_STAIN("口", "母乳", MASTER)
+	;ペニス
+	SIF TB_PLAYER(1) == 3
+		CALL SET_STAIN("ペニス", "母乳", MASTER)
+ENDIF
+
+;STR:1046(絶頂表示用文字列)初期化
+STR:1046 = 
+;絶頂種を順に記入
+SPLIT "＆Ｃ/＆Ｖ/＆Ａ/＆Ｂ", "/", LOCALS
+FOR LCOUNT, 0, 4
+	SIF 絶頂強度:LCOUNT
+		STR:1046 += LOCALS:LCOUNT
+NEXT
+;多重絶頂時
+IF STRLENSU(STR:1046) > 2
+	;書式を整える
+	STR:1046 = %SUBSTRINGU(STR:1046, 1)%絶頂（調教者）
+	;文字数で絶頂種を判定
+	;四重絶頂
+	IF STRLENSU(STR:1046) > 13
+		;四重絶頂時には特別な文字列を記入
+		STR:1046 = 四 重 絶 頂（調教者）
+		TIMES 絶頂負担, 2.00
+		TIMES 射精負担, 1.40
+		TIMES 噴乳負担, 1.40
+		TIMES 快感負担, 1.50
+	;三重絶頂
+	ELSEIF STRLENSU(STR:1046) > 11
+		TIMES 絶頂負担, 1.65
+		TIMES 射精負担, 1.20
+		TIMES 噴乳負担, 1.20
+		TIMES 快感負担, 1.30
+	;二重絶頂
+	ELSE
+		TIMES 絶頂負担, 1.30
+		TIMES 射精負担, 1.10
+		TIMES 噴乳負担, 1.10
+		TIMES 快感負担, 1.30
+	ENDIF
+;単絶頂、無絶頂時
+ELSE
+	;文字列初期化
+	STR:1046 = 
+ENDIF
+
+;絶頂は達成の主なソースの一つ
+SOURCE:MASTER:達成 += 射精負担 + 噴乳負担 + 絶頂負担
+
+;体力と気力と精力の消耗
+DOWNBASE:体力 += 20 * 絶頂強度:0 + 40 * 絶頂強度:1 + 60 * 絶頂強度:2 + 20 * 絶頂強度:3 + 射精負担 / 10 + 噴乳負担 / 10 + 快感負担 * (TFLAG:同一行動ボーナス + 1) / 2
+DOWNBASE:気力 += 10 * 絶頂強度:0 + 20 * 絶頂強度:1 + 30 * 絶頂強度:2 + 10 * 絶頂強度:3 + 射精負担 / 15 + 噴乳負担 / 15 + 快感負担 * (TFLAG:同一行動ボーナス + 1) * 4 / 10
+DOWNBASE:射精 = 射精負担
+;限界を超えて絞られた場合体力が削られる
+SIF DOWNBASE:射精 > BASE:射精
+	DOWNBASE:体力 += 200 * (2 - TALENT:精力絶倫 + TALENT:精力薄弱) / 2
+;母乳の消耗
+DOWNBASE:母乳 += 噴乳負担
+;限界を超えて絞られた場合体力が削られる
+SIF DOWNBASE:母乳 > BASE:母乳
+	DOWNBASE:体力 += 200 * (2 - TALENT:精力絶倫 + TALENT:精力薄弱) / 2
+
+;理性
+DOWNBASE:理性 += 快感負担 + (SUMARRAY(絶頂強度) + DOWNBASE:射精 / 300 + NOWEX:噴乳 + 5) * 20
+
+;調教部位の累積値(補正値計算)
+FOR LCOUNT, 0, 4
+	SIF 絶頂強度:LCOUNT
+		CFLAG:(30 + LCOUNT) = 50 + (CFLAG:(30 + LCOUNT) - 50) / 2
+NEXT
+
+;NOWEXにデータを入れる（絶頂時口上に使う）
+FOR LCOUNT, 0, 4
+	NOWEX:LCOUNT = 絶頂強度:LCOUNT
+NEXT
+
+;NOWEXをTCVAR絶頂系に保存
+TCVAR:Ｃ絶頂 = NOWEX:Ｃ絶頂
+TCVAR:Ｖ絶頂 = NOWEX:Ｖ絶頂
+TCVAR:Ａ絶頂 = NOWEX:Ａ絶頂
+TCVAR:Ｂ絶頂 = NOWEX:Ｂ絶頂
+
+;射精時、関連フラグを設定
+IF NOWEX:射精
+	;調教者射精後経過ターン参照系フラグをリセット
+	VARSET TCVAR:0, 0, 90, 100
+	;Ｖ性交時
+	SIF V_SEX()
+		TCVAR:膣内射精後経過ターン参照 = 1
+	;Ａ性交時
+	SIF A_SEX()
+		TCVAR:腸内射精後経過ターン参照 = 1
+	TCVAR:射精後経過ターン参照 = 1
+	CFLAG:射精回数            += 1
+ENDIF
+
+;調教者の勃起
+
+;快感系ソースを受けるか、キスか、足舐め強制時。
+SIF (SOURCE:快Ｃ || SOURCE:快Ｖ || SOURCE:快Ａ || SOURCE:快Ｂ || IS_NOWACTNAME("キス/足舐め強制/Ｗキス")) && PENIS(TARGET)
+	TCVAR:勃起++
+;ぱんつ・性器見せ脱衣時。
+SIF P_DATUICHECK(1) > 1 && PENIS(TARGET)
+	TCVAR:勃起++
+;ブラ・胸見せ脱衣時。
+SIF B_DATUICHECK(1) > 1 && PENIS(TARGET)
+	TCVAR:勃起++
+;調教対象絶頂時。
+SIF (NOWEX:MASTER:Ｃ絶頂 || NOWEX:MASTER:Ｖ絶頂 || NOWEX:MASTER:Ａ絶頂 || NOWEX:MASTER:Ｂ絶頂 || NOWEX:MASTER:射精 || NOWEX:MASTER:噴乳 || NOWEX:MASTER:潮吹き || NOWEX:MASTER:放尿) && PENIS(TARGET)
+	TCVAR:勃起++
+;サドの場合、加虐系ACT時。
+SIF MENU(TFLAG:ACT分類) == "加虐" && TALENT:サド && PENIS(TARGET)
+	TCVAR:勃起++
+;献身的の場合、愛撫系ACT時。
+SIF MENU(TFLAG:ACT分類) == "愛撫" && TALENT:献身的 && PENIS(TARGET)
+	TCVAR:勃起++
+;受け身の場合、奉仕系ACT時。
+SIF MENU(TFLAG:ACT分類) == "奉仕" && TALENT:受け身 && PENIS(TARGET)
+	TCVAR:勃起++
+;意地悪の場合、羞恥系ACT時。
+SIF MENU(TFLAG:ACT分類) == "羞恥" && TALENT:意地悪 && PENIS(TARGET)
+	TCVAR:勃起++
+;狂気の場合、異常系ACT時。
+SIF MENU(TFLAG:ACT分類) == "異常" && TALENT:狂気 && PENIS(TARGET)
+	TCVAR:勃起++
+
+;射精すると1に戻る
+SIF NOWEX:射精
+	TCVAR:勃起 = 1
+
+;射精時、関連フラグを設定
+IF NOWEX:射精
+	CFLAG:(250 + NOWEX:射精) += 1
+	CFLAG:射精回数 += 1
+ENDIF
+;絶頂回数フラグを設定
+FOR LCOUNT, 0, 4
+	SIF 絶頂強度:LCOUNT
+		CFLAG:(256 + LCOUNT)++
+NEXT
+
+;絶頂回数を増やす
+FOR LCOUNT, 0, 4
+	EX:LCOUNT += NOWEX:LCOUNT
+NEXT
+SIF PENIS(TARGET)
+	EX:射精 += NOWEX:射精
+EX:噴乳 += NOWEX:噴乳
+
+;いきそう（暫定）
+;イきそうでなく、ペニスがあれば勃起しているか、ペニスがないとき、快ｃが存在すれば
+IF TCVAR:TARGET:イきそう == 0 && (!PENIS(TARGET) || TCVAR:勃起 > 1) && CUP:快Ｃ > 0
+	;C感覚が低いとより低い値でいきそうに、また理性低下でC値にかかわらずいきそうになる。
+	VARSET LOCAL
+	;C刺激 > C感覚 判定
+	LOCAL += (CUP:快Ｃ + PALAM:快Ｃ) >= MAX(GET_ABL(TARGET, "Ｃ感覚") * 100, 1000)
+	;技能 > 理性 判定
+	LOCAL += GET_ABL(MASTER, "技巧") - GET_ABL(TARGET, "技巧") > RAND:(MAX(BASE:TARGET:理性 / 10, 1))
+	;理性が全くなければ無条件でイきそうに
+	LOCAL += BASE:TARGET:理性 == 0
+	;どれかの判定に引っかかれば
+	IF LOCAL
+		TCVAR:TARGET:イきそう += 5
+		PRINTFORMW %CALLNAME:TARGET%はイきそうになった…
+	ENDIF
+ENDIF
+
+;絶頂強度処理
+;ARG:0 = 快Ｘ種(ＣＶＡＢ)
+;ARG:1 = 今回の到達強度
+;RESULT = 絶頂強度
+@CALC_SOURCE40_EX_P(ARG, ARG:1)
+#FUNCTION
+#DIM LCOUNT
+#DIM 絶頂境界, 3
+;絶頂境界セット
+絶頂境界 = 90
+絶頂境界:1 = 10000
+絶頂境界:2 = 20000
+;LOCAL初期化
+VARSET LOCAL
+;絶頂境界分だけループする
+FOR LCOUNT, 1, 3
+	;絶頂境界を越えると、絶頂強度が1ずつ上がる
+	SIF ARG:1 < 絶頂境界:LCOUNT
+		BREAK
+	LOCAL++
+NEXT
+;イきそう時、快ｃがあればＣ絶頂が必ず起こる
+SIF (ARG == 0) && TCVAR:TARGET:イきそう && CUP:快Ｃ > 0
+	LOCAL = MAX(LOCAL, 1)
+;絶頂時
+IF LOCAL >= 1
+	;絶頂境界:N、絶頂境界:0の数値に応じてPALAM減少
+	;(下限を突破しないよう調整)
+	CDOWN:ARG = MIN(絶頂境界:LOCAL * 絶頂境界 / 100, ARG:1)
+	;絶頂表示用文字列初期化
+	STR:(1040 + ARG) = 
+	;強度が2なら"強"を追加
+	SIF LOCAL == 2
+		STR:(1040 + ARG) += "強"
+	;絶頂種を記入
+	STR:(1040 + ARG) += EXNAME:ARG + "（調教者）"
+	;CDOWN:快Ｘで下げても絶頂以上なら
+	;その値-1になるように調整（10000で絶頂なら9999）
+	SIF ARG:1 - CDOWN:ARG >= 絶頂境界:1
+		CDOWN:ARG = ARG:1 - 絶頂境界:1 + 1
+ENDIF
+;絶頂強度を返す
+RETURNF LOCAL
+

@@ -1,0 +1,26 @@
+﻿
+;==================================================
+;
+;状態表示アニメーションバー処理
+;
+;==================================================
+#DIM UPC_V, 10
+#DIMS UPC_S, 10
+#DIM UPC_バー数
+#DIM UPC_対象, 20
+#DIM UPC_要素, 20
+#DIM UPC_初期値, 20
+#DIM UPC_加算値, 20
+#DIM UPC_表示値, 20
+#DIM UPC_バー速度,20
+#DIM UPC_バー最長, 1
+#DIM UPC_バー最大値, 1
+#DIM UPC_バー幅, 1
+#DIM UPC_MAX, 7
+#DEFINE UPC_MAXBAR	UPC_MAX:0
+#DEFINE UPC_MAXNAMELENS	UPC_MAX:1
+#DEFINE UPC_MAXPLENS	UPC_MAX:2
+#DEFINE UPC_MAXUPLENS	UPC_MAX:3
+#DEFINE UPC_MAXDOWNLENS	UPC_MAX:4
+#DEFINE UPC_MAXSTARTPLENS	UPC_MAX:5
+#DEFINE UPC_MAXPUPLENS	UPC_MAX:6

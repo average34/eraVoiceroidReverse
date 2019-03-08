@@ -1,0 +1,73 @@
+﻿;────────────────────────────────────
+;調教者行動 地の文(リアクション前)
+;
+;調教者行動が決まったらここから地の文を呼び出します。
+;口上で指定することによって置換した文章を表示し呼ばれないようにすることができます。
+;────────────────────────────────────
+@TRAIN_MESSAGE
+CALL KOJO_TRAIN_MESSAGE
+IF !RESULT
+	IF TFLAG:ＳＰ行動 >= 200
+		CALL SP_TRAIN_MESSAGE
+	ELSE
+		TRYCCALLFORM TRAIN_MESSAGE_{TFLAG:ACT}
+		CATCH
+			RETURN 0
+		ENDCATCH
+	ENDIF
+	WAIT
+ENDIF
+RETURN RESULT
+
+;────────────────────────────────────
+;調教対象行動 地の文(リアクション後)
+;
+;調教対象リアクションが決まったらここからメッセージを呼び出します。
+;口上で指定することによって置換した文章を表示し呼ばれないようにすることができます。
+;────────────────────────────────────
+@TRAIN_MESSAGE2
+;COMが優先REACTのときは処理せずに戻す。ACTが放置プレイ/休ませる/栄養剤を飲ませるなら通す@/L
+SIF IS_NOWCOMNAME("なすがまま") && !IS_NOWACTNAME("放置プレイ/休ませる/栄養剤を飲ませる")
+	RETURN 0
+CALL KOJO_TRAIN_MESSAGE2
+IF !RESULT
+	;SHOW_USERCOM_COMにツールチップが仕込まれたので封印。ここでREACT派生を表示するようにしてもいいのかも知れない
+	;IF !IS_NOWCOMNAME("なすがまま")					;COM:なすがままなら弾く
+	;	PRINTFORML [%COM_RANK(TFLAG:REACT負荷)%]
+	;	PRINTL
+	;ENDIF
+	;調教項目毎の地の文を呼び出し
+	TRYCCALLFORM TRAIN_MESSAGE2_{TFLAG:ACT}
+		RETURN RESULT
+	CATCH
+		RETURN 0
+	ENDCATCH
+ENDIF
+RETURN RESULT
+
+;────────────────────────────────────
+;リアクション後の脱衣アニメ表示
+;────────────────────────────────────
+@TRAIN_MESSAGE2_5_ANIME
+;衣装変更でない場合は戻る
+SIF !IS_NOWACTNAME("衣装の変更を要求する") || !IS_COMGRONAME("消極的従う/平然と従う/積極的従う")
+	RETURN RESULT
+PRINTL
+;服を脱いだ場合
+IF TFLAG:ACT派生 == 0 && IS_COMGRONAME("消極的従う/平然と従う/積極的従う")
+	;調教対象服装の表示
+	CALL CLOTHE_SHOW(MASTER)
+;服を着た場合
+ELSEIF  TFLAG:ACT派生 && IS_COMGRONAME("消極的従う/平然と従う/積極的従う")
+	;調教対象服装の表示
+	CALL CLOTHE_SHOW(MASTER, 1)
+ENDIF
+RETURN RESULT
+
+;────────────────────────────────────
+;調教者行動地の文(行動毎)
+;
+;リアクション前、リアクション後の地の文を一箇所にまとめた
+;REACTION後、RESULT値が1以外の場合はREACTION_MESSAGEも呼び出される
+;────────────────────────────────────
+;ACT分類毎にファイルを切り分け。個別のファイルはACT_MESSAGEフォルダへ移設@/L

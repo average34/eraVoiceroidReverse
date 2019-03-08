@@ -1,0 +1,5698 @@
+﻿;キャラによる性格決定質問。
+;補正値は結構適当。担当者が勝手にやってます
+
+;霊夢＠ぱ。
+@CHARAMAKE_K1(ARG)
+SELECTCASE ARG
+	CASE 0
+		PRINTFORMW 「おはよう。良かったわね。最初の部屋は、私よ」
+	CASE 9
+		PRINTFORMW 「疲れたかしら？　最後は私よ」
+	CASEELSE
+		PRINTFORMW 「おはよう。次は私ね」
+ENDSELECT
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「質問させてもらうわね。これからあなたは幻想郷に来るそうだけど」
+PRINTFORMW 「あなたにとっての幻想って、どういうもの？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 春の朝のように温かいもの
+PRINTFORMDL [2] 夏の昼のように熱いもの
+PRINTFORMDL [3] 秋の夕のように儚いもの
+PRINTFORMDL [4] 冬の夜のように冷たいもの
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「答えられない。それも仕方ないかもね」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「優しい人なのかしら？　わかったわ」
+		CALLF CM_PROF("攻撃", -20)
+		CALLF CM_PROF("素直さ", 10)
+		CALLF CM_PROF("プライド", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("知性", -10)
+		CALLF CM_PROF("モラル", 10)
+		CALLF CM_PROF("楽観", 10)
+	CASE 2
+		PRINTFORML 「…暑苦しいわね」
+		CALLF CM_PROF("攻撃", 20)
+		CALLF CM_PROF("素直さ", -10)
+		CALLF CM_PROF("プライド", 10)
+		CALLF CM_PROF("羞恥", -10)
+		CALLF CM_PROF("知性", -10)
+		CALLF CM_PROF("衝動", 10)
+	CASE 3
+		PRINTFORML 「…幻想っぽいかもね。どうだか知らないけど」
+		CALLF CM_PROF("楽観", -20)
+		CALLF CM_PROF("被虐", 20)
+		CALLF CM_PROF("プライド", 20)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("知性", 10)
+		CALLF CM_PROF("潔癖", 20)
+		CALLF CM_PROF("神経質", 10)
+		CALLF CM_PROF("素直さ", 10)
+	CASE 4
+		PRINTFORML 「…ずいぶん悲しいこと言うのね？」
+		CALLF CM_PROF("楽観", -30)
+		CALLF CM_PROF("被虐", 20)
+		CALLF CM_PROF("プライド", 20)
+		CALLF CM_PROF("素直さ", -20)
+		CALLF CM_PROF("モラル", -10)
+		CALLF CM_PROF("倒錯", 20)
+		CALLF CM_PROF("潔癖", 10)
+ENDSELECT
+PRINTFORMW 「それじゃ、おやすみなさい――」
+RETURN 1
+
+
+;魔理沙＠ぱ。
+@CHARAMAKE_K2(ARG)
+PRINTFORMW 「さあ私の番だ、起きてもらおうじゃないか」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「お前に質問をしよう。なあに、簡単なことだ」
+PRINTFORMW 「勝負において、相手に手加減をされた。そんなときどうする？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 舐めるなと食って掛かる
+PRINTFORMDL [2] 必死に努力して見返す
+PRINTFORMDL [3] 気を遣ってくれたことを喜ぶ
+PRINTFORMDL [4] 自分の無力を嘆く
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「だんまりか。面白くないな」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「そうだな…そうしたい気持ちもわかる」
+		CALLF CM_PROF("攻撃", 20)
+		CALLF CM_PROF("素直さ", 10)
+		CALLF CM_PROF("プライド", 20)
+		CALLF CM_PROF("衝動", 20)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("知性", -10)
+		CALLF CM_PROF("潔癖", 10)
+	CASE 2
+		PRINTFORML 「…できれば、いいけどな」
+		CALLF CM_PROF("被虐", 10)
+		CALLF CM_PROF("素直さ", 10)
+		CALLF CM_PROF("楽観", 30)
+		CALLF CM_PROF("モラル", 10)
+	CASE 3
+		PRINTFORML 「それで本当に満足なのか？」
+		CALLF CM_PROF("攻撃", -10)
+		CALLF CM_PROF("被虐", 10)
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("プライド", -30)
+		CALLF CM_PROF("好奇心", -20)
+	CASE 4
+		PRINTFORML 「…それじゃ何も変わらないぜ」
+		CALLF CM_PROF("楽観", -30)
+		CALLF CM_PROF("被虐", 10)
+		CALLF CM_PROF("プライド", -20)
+		CALLF CM_PROF("攻撃", -20)
+ENDSELECT
+PRINTFORMW 「まあいい。おやすみだ――」
+RETURN 1
+
+;ルーミア＠ぱ。
+@CHARAMAKE_K3(ARG)
+PRINTFORMW 「夜だよー、起きて起きて」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「私からも質問するからね。素直に答えてよ？」
+PRINTFORMW 「おいしいステーキを食べるとき、まず何から食べる？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 霜降りの一番美味しそうなところ
+PRINTFORMDL [2] 付け合せのニンジンソテー
+PRINTFORMDL [3] とりあえずスープを一口
+PRINTFORMDL [4] 周りに合わせる
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「悩んでるとお肉が逃げちゃうよ？」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「うん、やっぱりそうだよねー」
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("プライド", -20)
+		CALLF CM_PROF("衝動", 30)
+		CALLF CM_PROF("羞恥", -10)
+		CALLF CM_PROF("知性", -20)
+		CALLF CM_PROF("潔癖", -10)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("モラル", -10)
+		CALLF CM_PROF("Ｃ好き", 20)
+		CALLF CM_PROF("Ｖ好き", 30)
+		CALLF CM_PROF("Ｂ好き", -10)
+	CASE 2
+		PRINTFORML 「えええ…なにそれ」
+		CALLF CM_PROF("被虐", 10)
+		CALLF CM_PROF("素直さ", -10)
+		CALLF CM_PROF("プライド", 10)
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("潔癖", 10)
+		CALLF CM_PROF("倒錯", 10)
+		CALLF CM_PROF("Ｖ好き", -10)
+	CASE 3
+		PRINTFORML 「うっわ、おカタい」
+		CALLF CM_PROF("攻撃", -10)
+		CALLF CM_PROF("被虐", 10)
+		CALLF CM_PROF("衝動", -20)
+		CALLF CM_PROF("プライド", 20)
+		CALLF CM_PROF("神経質", 20)
+		CALLF CM_PROF("潔癖", 20)
+		CALLF CM_PROF("Ｂ好き", 30)
+	CASE 4
+		PRINTFORML 「…なんか、かっこ悪」
+		CALLF CM_PROF("楽観", -10)
+		CALLF CM_PROF("被虐", 20)
+		CALLF CM_PROF("プライド", -20)
+		CALLF CM_PROF("攻撃", -10)
+		CALLF CM_PROF("羞恥", 30)
+		CALLF CM_PROF("衝動", -20)
+		CALLF CM_PROF("神経質", 10)
+ENDSELECT
+PRINTFORMW 「うん、おっけー。じゃあね――」
+RETURN 1
+
+
+;大妖精＠ぱ。
+@CHARAMAKE_K4(ARG)
+PRINTFORMW 「おはようございます、大丈夫です？」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「では私からの質問です」
+PRINTFORMW 「ずばりお聞きします。私はどんな子に見えますか？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 心優しく素直な少女
+PRINTFORMDL [2] 性格のねじ曲がった小娘
+PRINTFORMDL [3] 恐れ知らずの悪戯娘
+PRINTFORMDL [4] ちんこ大好き淫乱娘
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「黙られると困ってしまうんですが…」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「良かった…嬉しいです」
+		CALLF CM_PROF("攻撃", -10)
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("プライド", -20)
+		CALLF CM_PROF("衝動", -30)
+		CALLF CM_PROF("羞恥", -10)
+		CALLF CM_PROF("知性", -20)
+		CALLF CM_PROF("潔癖", -20)
+		CALLF CM_PROF("楽観", 30)
+		CALLF CM_PROF("倒錯", -30)
+	CASE 2
+		PRINTFORML 「多分それ、ねじ曲がってるのはあなたの方。まったく…」
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("素直さ", -20)
+		CALLF CM_PROF("プライド", 10)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("モラル", -10)
+		CALLF CM_PROF("倒錯", 10)
+	CASE 3
+		PRINTFORML 「妖精ですものね。ふふふっ」
+		CALLF CM_PROF("好奇心", 20)
+		CALLF CM_PROF("被虐", 10)
+		CALLF CM_PROF("潔癖", 20)
+		CALLF CM_PROF("神経質", 20)
+	CASE 4
+		PRINTFORML 「ちょ…っ、何ですかそれ！？　……もう」
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("好奇心", 20)
+		CALLF CM_PROF("倒錯", 10)
+		CALLF CM_PROF("モラル", -30)
+		CALLF CM_PROF("潔癖", -20)
+		CALLF CM_PROF("Ｖ好き", 20)
+ENDSELECT
+PRINTFORMW 「それでは、おやすみなさい――」
+RETURN 1
+
+
+;チルノ＠ぱ。
+@CHARAMAKE_K5(ARG)
+PRINTFORMW 「さあ起きろ！　起きるか冬眠するか選んでもらうよ！」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「あたいからの質問だよ！」
+PRINTFORMW 「氷といえば何！？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] アイスたべたいなぁ
+PRINTFORMDL [2] 冷たく悲しい、そして儚い
+PRINTFORMDL [3] 別に何とも…
+PRINTFORMDL [9] バカ
+CALL INPUTINTD(0, 1, 2, 3, 9)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「…もしかして聞かれてる意味わかってない？　バカ？」
+		PRINTFORMW 「まったく…もう知らないよ！　おやすみ！」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「食べ物のことしか頭に無いの？」
+		PRINTFORMW 「そんなに好きなら夢でもたらふく食べればいいよ！」
+		CALLF CM_PROF("素直さ", 10)
+		CALLF CM_PROF("プライド", -10)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("羞恥", -10)
+		CALLF CM_PROF("知性", -20)
+		CALLF CM_PROF("潔癖", -10)
+		CALLF CM_PROF("楽観", 20)
+	CASE 2
+		PRINTFORML 「ふふん、詩的なこと言うのね！」
+		PRINTFORMW 「ゆっくり休んでいいわ、おやすみ――」
+		CALLF CM_PROF("素直さ", -20)
+		CALLF CM_PROF("プライド", 20)
+		CALLF CM_PROF("楽観", -20)
+		CALLF CM_PROF("知性", 10)
+		CALLF CM_PROF("モラル", -10)
+		CALLF CM_PROF("倒錯", 10)
+	CASE 3
+		PRINTFORML 「な、なにぃー！」
+		PRINTFORMW 「あんたなんか冬眠してしまえー！」
+		CALLF CM_PROF("好奇心", -20)
+		CALLF CM_PROF("被虐", -10)
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("潔癖", 20)
+		CALLF CM_PROF("神経質", 20)
+	CASE 9
+		PRINTFORML 「ばっバカ？　なんだそれーーー！？」
+		PRINTFORMW 「永眠させてやるー！　この、この、このっ！」
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("被虐", 20)
+		CALLF CM_PROF("衝動", 30)
+		CALLF CM_PROF("好奇心", 30)
+		CALLF CM_PROF("倒錯", 20)
+		CALLF CM_PROF("知性", -20)
+		CALLF CM_PROF("モラル", -30)
+		CALLF CM_PROF("Ｃ好き", 10)
+ENDSELECT
+RETURN 1
+
+
+;美鈴＠へんたゐ
+@CHARAMAKE_K6(ARG)
+PRINTFORMW 「もしもーし、起きてますか？」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「大丈夫みたいですね、それじゃ質問を……」
+PRINTFORMW 「用事の最中に抑えきれない眠気が！　その時、あなたはどうしますか？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 耐えて頑張る
+PRINTFORMDL [2] 少し休憩して頑張る
+PRINTFORMDL [3] 諦めて寝る
+PRINTFORMDL [4] 気付いたら寝ていた
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「……もしかして寝てませんよね？」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「結構頑張り屋さんなんですね、すごいです」
+		CALLF CM_PROF("攻撃", -10)
+		CALLF CM_PROF("素直さ", -10)
+		CALLF CM_PROF("プライド", 20)
+		CALLF CM_PROF("衝動", -20)
+		CALLF CM_PROF("知性", 10)
+		CALLF CM_PROF("潔癖", 10)
+		CALLF CM_PROF("倒錯", -20)
+		CALLF CM_PROF("神経質", 10)
+		CALLF CM_PROF("モラル", 20)
+	CASE 2
+		PRINTFORML 「少し休憩がいつの間にか本休憩に……って事もありますよね……」
+		CALLF CM_PROF("素直さ", 10)
+		CALLF CM_PROF("プライド", 10)
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("知性", 20)
+		CALLF CM_PROF("潔癖", -10)
+		CALLF CM_PROF("倒錯", -10)
+		CALLF CM_PROF("モラル", 10)
+	CASE 3
+		PRINTFORML 「そうですよね、時には諦めも肝心ですよ！」
+		CALLF CM_PROF("プライド", -20)
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("知性", -10)
+		CALLF CM_PROF("好奇心", 20)
+		CALLF CM_PROF("楽観", 20)
+		CALLF CM_PROF("衝動", 20)
+		CALLF CM_PROF("被虐", 10)
+		CALLF CM_PROF("潔癖", -20)
+		CALLF CM_PROF("倒錯", -20)
+		CALLF CM_PROF("神経質", -20)
+		CALLF CM_PROF("モラル", -20)
+	CASE 4
+		PRINTFORML 「そうですよね、意識するより前に寝てますよね……」
+		CALLF CM_PROF("被虐", 20)
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("楽観", 30)
+		CALLF CM_PROF("衝動", 30)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("倒錯", -10)
+		CALLF CM_PROF("潔癖", -20)
+		CALLF CM_PROF("神経質", -30)
+		CALLF CM_PROF("モラル", -10)
+ENDSELECT
+PRINTFORMW 「質問は終わりです、お疲れ様でした――――ふぇぇ！？」
+PRINTFORMW 「さ、咲夜さん！？　私は仕事中に寝るなんて事ないですよ！」
+PRINTFORMW 「ひゃぁあぁっ、ごめんなさぃぃ………………」
+RETURN 1
+
+
+;小悪魔＠こぁの人
+;ちょっと夢魔っぽい感じで
+@CHARAMAKE_K7(ARG)
+PRINTFORMW 「おやすみのところ、失礼しますね」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「ふふ、いい夢を見られていたようですね……」
+PRINTFORML 「少し夢に手を加えさせて頂いて、淫らな夢を見させてあげましたが……」
+PRINTFORMW 「どのような夢だったか聞かせていただけますか？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] お豆さん
+PRINTFORMDL [2] おっぱい！おっぱい！
+PRINTFORMDL [3] ぬっぷぬっぷ
+PRINTFORMDL [4] おしりしゅごいのー
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「……答えられないほどいい夢だった、ということですね」
+		;無回答の補正値は固定
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「顔面騎乗？なかなかいい夢じゃないですか」
+		PRINTFORMDL 小悪魔はくすりと笑った
+		CALLF CM_PROF("被虐", -10)
+		CALLF CM_PROF("素直さ", 10)
+		CALLF CM_PROF("プライド", -20)
+		CALLF CM_PROF("羞恥", -10)
+		CALLF CM_PROF("モラル", 10)
+		CALLF CM_PROF("Ｃ好き", 60)
+		CALLF CM_PROF("Ｖ好き", -20)
+		CALLF CM_PROF("Ｂ好き", -20)
+		CALLF CM_PROF("Ａ好き", -20)
+	CASE 2
+		PRINTFORML 「あらあら、ぱふぱふしていただいてたんですか？」
+		PRINTFORML 「それは悪いタイミングで起こしてしまったようですね」
+		PRINTFORMDL 小悪魔はにやにやとあなたを見ている
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("羞恥", -10)
+		CALLF CM_PROF("モラル", 10)
+		CALLF CM_PROF("Ｃ好き", -20)
+		CALLF CM_PROF("Ｖ好き", -20)
+		CALLF CM_PROF("Ｂ好き", 60)
+		CALLF CM_PROF("Ａ好き", -20)
+	CASE 3
+		PRINTFORML 「うふふ、楽しまれていたようですね」
+		PRINTFORMDL 小悪魔はにっこりと笑った
+		CALLF CM_PROF("素直さ", 10)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("羞恥", -10)
+		CALLF CM_PROF("同性愛", -20)
+		IF TALENT:MASTER:オトコ
+			CALLF CM_PROF("Ｃ好き", 60)
+			CALLF CM_PROF("Ｖ好き", -20)
+		ELSEIF TALENT:MASTER:ふたなり
+			CALLF CM_PROF("Ｃ好き", 30)
+			CALLF CM_PROF("Ｖ好き", 30)
+		ELSE
+			CALLF CM_PROF("Ｃ好き", -20)
+			CALLF CM_PROF("Ｖ好き", 60)
+		ENDIF
+		CALLF CM_PROF("Ｂ好き", -20)
+		CALLF CM_PROF("Ａ好き", -20)
+	CASE 4
+		PRINTFORML 「お尻……なかなかマニアックですねぇ」
+		PRINTFORMDL 小悪魔は少し驚いたようだ
+		CALLF CM_PROF("素直さ", 10)
+		CALLF CM_PROF("好奇心", 20)
+		CALLF CM_PROF("羞恥", -10)
+		CALLF CM_PROF("倒錯", 20)
+		CALLF CM_PROF("潔癖", -20)
+		CALLF CM_PROF("Ｃ好き", -20)
+		CALLF CM_PROF("Ｖ好き", -20)
+		CALLF CM_PROF("Ｂ好き", -20)
+		CALLF CM_PROF("Ａ好き", 60)
+ENDSELECT
+PRINTFORMW 「それではごゆっくり、お休みください」
+RETURN 1
+
+;パチュリー＠/L
+@CHARAMAKE_K8(ARG)
+PRINTFORMW 「いらっしゃい。ここから先に進みたいなら私の質問に答えて」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「緊張しなくていいわ。簡単な錬金術に関する問題よ」
+PRINTFORMW 「四大元素の火、水、気、地を表す時に、yod he vau heという四つの文字を用いるのだけれど」
+PRINTFORMW 「この中から水を表すものを当ててみて」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] ヨッド 温と乾、または意思 
+PRINTFORMDL [2] ヘー 寒と湿、または理解 
+PRINTFORMDL [3] ヴァウ 温と湿、または心
+PRINTFORMDL [4] ヘー 寒と乾、または身体
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「答えたくないならそれでもいいわ」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「それは『火』ね。火は父であり、神と宇宙の能動的原理を意味するわ」
+		CALLF CM_PROF("攻撃", 20)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("プライド", 30)
+		CALLF CM_PROF("衝動", 20)
+		CALLF CM_PROF("羞恥", -30)
+		CALLF CM_PROF("倒錯", 20)
+		CALLF CM_PROF("モラル", -40)
+	CASE 2
+		PRINTFORML 「あら、当てたわね？ 水は母であり受動的原理を意味するものでもあるの」
+		CALLF CM_PROF("モラル", 20)
+		CALLF CM_PROF("Ｖ好き", 10)
+		CALLF CM_PROF("潔癖", 30)
+		CALLF CM_PROF("Ｂ好き", 20)
+		CALLF CM_PROF("素直さ", 10)
+		CALLF CM_PROF("神経質", 30)
+		CALLF CM_PROF("楽観", -20)
+		CALLF CM_PROF("被虐", 20)
+	CASE 3
+		PRINTFORML 「それは『気』ね。気が表すのは息子」
+		PRINTFORML 「火と水の結合の産物の気、意思と理解の結合の産物の心に照応するわ」
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("潔癖", 10)
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("羞恥", -20)
+		CALLF CM_PROF("好奇心", 30)
+		CALLF CM_PROF("プライド", 10)
+	CASE 4
+		PRINTFORML 「それは『地』ね。地が現すのは娘」
+		PRINTFORML 「大地と身体に照応し火、水、気が凝固、または物質化したものという事ね」 
+		CALLF CM_PROF("同性愛", -20)
+		CALLF CM_PROF("倒錯", 30)
+		CALLF CM_PROF("モラル", -20)
+		CALLF CM_PROF("羞恥", -20)
+		CALLF CM_PROF("知性", 10)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("Ｖ好き", 40)
+		CALLF CM_PROF("Ａ好き", 20)
+ENDSELECT
+PRINTFORMW 「ではお行きなさい――」
+RETURN 1
+
+
+;咲夜@/L
+@CHARAMAKE_K9(ARG)
+PRINTFORMW 「さぁ、目を覚ましなさい。あまり手間を掛けさせないで」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「時間が勿体無いからさっさと終わらせましょう」
+PRINTFORML 「さて、ここにいくつかのナイフがあるけど」
+PRINTFORMW 「あなたならどれを選ぶかしら？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] ククリナイフ
+PRINTFORMDL [2] ツールナイフ
+PRINTFORMDL [3] ダガーナイフ
+PRINTFORMDL [4] ナイフなんて必要ない！
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「それは優柔不断で選べない、と解釈させてもらうわね」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「なかなかいい選択ね。殺傷力はかなりのものよ」
+		CALLF CM_PROF("攻撃", 30)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("プライド", 10)
+		CALLF CM_PROF("衝動", 30)
+		CALLF CM_PROF("知性", 10)
+		CALLF CM_PROF("倒錯", -20)
+		CALLF CM_PROF("楽観", 30)
+		CALLF CM_PROF("Ｂ好き", 20)
+	CASE 2
+		PRINTFORML 「まぁ、便利ではあるわね。器用貧乏とも言えるけど」
+		CALLF CM_PROF("知性", 30)
+		CALLF CM_PROF("素直さ", 10)
+		CALLF CM_PROF("モラル", 20)
+		CALLF CM_PROF("Ｃ好き", 20)	
+		CALLF CM_PROF("衝動", -20)
+		CALLF CM_PROF("楽観", 30)
+		CALLF CM_PROF("神経質", 20)
+		CALLF CM_PROF("攻撃", -20)
+	CASE 3
+		PRINTFORML 「フフ、生意気ね。あなたに使いこなせるのかしら？」
+		CALLF CM_PROF("知性", -10)
+		CALLF CM_PROF("潔癖", 10)
+		CALLF CM_PROF("攻撃", 20)
+		CALLF CM_PROF("羞恥", -20)
+		CALLF CM_PROF("好奇心", 20)
+		CALLF CM_PROF("潔癖", -10)
+		CALLF CM_PROF("Ａ好き", 30)
+	CASE 4
+		PRINTFORML 「過剰な自信は死を招くわよ？」
+		CALLF CM_PROF("知性", -30)
+		CALLF CM_PROF("倒錯", 30)
+		CALLF CM_PROF("モラル", 30)
+		CALLF CM_PROF("羞恥", 20)
+		CALLF CM_PROF("神経質", -20)
+		CALLF CM_PROF("プライド", 20)
+		CALLF CM_PROF("Ｖ好き", -30)
+		CALLF CM_PROF("被虐", 20)
+ENDSELECT
+PRINTFORML 「私の用件は以上よ」
+PRINTFORMW 「さっさと出て行って頂戴」
+RETURN 1
+
+
+;レミリア＠紅レミの人
+@CHARAMAKE_K10(ARG)
+SELECTCASE ARG
+	CASE 0
+		PRINTFORMW 「早速だけど、質問に答えてもらうわよ」
+	CASE 9
+		PRINTFORMW 「最後のシメは私よ。喜びなさい」
+	CASEELSE
+		PRINTFORMW 「じゃあ次は私の質問に答えてもらおうかな」
+ENDSELECT
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「この世で最も強い力って何だと思う？」
+PRINTFORMW 「面白い答えを期待してるわよ」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 権力
+PRINTFORMDL [2] 暴力
+PRINTFORMDL [3] 財力
+PRINTFORMDL [4] 愛情
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「答えない……か。禅問答の真似事かしら」
+		PRINTFORMW 「なかなか良い答えだとは思うけれど、いかんせん地味すぎる！」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「強いって、何かを従えるってことなのかもねぇ」
+		PRINTFORMW 「いいわ。それじゃあまた会う時まで――」
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("プライド", 20)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("知性", 10)
+	CASE 2
+		PRINTFORML 「やっぱり力といえばこれね。わかりやすくっていいわ」
+		PRINTFORMW 「私もこれには自信があるのよ」
+		CALLF CM_PROF("攻撃", 30)
+		CALLF CM_PROF("被虐", -10)
+		CALLF CM_PROF("素直さ", 10)
+		CALLF CM_PROF("衝動", 20)
+		CALLF CM_PROF("Ｖ好き", 10)
+	CASE 3
+		PRINTFORML 「幻想郷でも目立たないながら、歴然とした力を持ってるのよね」
+		PRINTFORMW 「最も強いかどうかは別として」
+		CALLF CM_PROF("攻撃", -10)
+		CALLF CM_PROF("知性", 10)
+		CALLF CM_PROF("モラル", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 4
+		PRINTFORML 「……なるほど。普通そういう事を言う奴は舌先三寸なんだけど」
+		PRINTFORMW 「もしかして、あなたがそれを証明してくれるのかしら」
+		CALLF CM_PROF("攻撃", -10)
+		CALLF CM_PROF("素直さ", 10)
+		CALLF CM_PROF("羞恥", -10)
+		CALLF CM_PROF("Ｃ好き", 20)
+		CALLF CM_PROF("Ｖ好き", 10)
+		CALLF CM_PROF("Ａ好き", 10)
+		CALLF CM_PROF("Ｂ好き", 10)
+ENDSELECT
+RETURN 1
+
+
+;フランドール@やぁふぁ
+@CHARAMAKE_K11(ARG)
+IF RAND:2
+	CALL CHARAMAKE_K11_2(ARG)
+	RETURN 2
+ENDIF
+PRINTFORMW 「ねえ、起きて。いつまでも寝てちゃ、退屈」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「……知りたいことがあるんだけど。血って、どこから出るの？」
+PRINTFORML 「人間からは血が出るっていうのに、私いつも見たことないんだから」
+PRINTFORMW 「新鮮で真っ赤なの……飲んでみたいの。どこから飲めるか、知ってる？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 首筋から
+PRINTFORMDL [2] 二の腕から
+PRINTFORMDL [3] 唇から
+PRINTFORMDL [4] アソコから
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORMW 「あら？ 知らないんだ。なーんだ……つまらないわ」
+		PRINTFORML 「やっぱり壊した時に出てくるのかな？」
+		PRINTFORMW 「今度はできるだけ、そーっと……どかーん！ ってしてみるわ。あははは」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+;狂気な感じ
+	CASE 1
+		PRINTFORML 「ふーん、そこに噛み付いてるの、前に見たことあったけど。ふふ……」
+		PRINTFORML 「やっぱりそこからなんだぁ。根本からたっくさん出てきそう、ドクッドクッって」
+		PRINTFORMW 「そしたら浴びるように赤いの飲めるかしら」
+		CALLF CM_PROF("被虐", 20)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("衝動", 20)
+		CALLF CM_PROF("倒錯", 20)
+		CALLF CM_PROF("モラル", -20)
+		CALLF CM_PROF("好奇心", 20)
+;Ｓっ気な感じ
+	CASE 2
+		PRINTFORML 「ふーん、そんなところから出るだぁ、考えもしなかったわ」
+		PRINTFORMW 「それじゃあさっそく、どかーんって……あら、だめなの？」
+		CALLF CM_PROF("神経質", 10)
+		CALLF CM_PROF("衝動", 20)
+		CALLF CM_PROF("知性", 10)
+		CALLF CM_PROF("潔癖", 10)
+		CALLF CM_PROF("倒錯", 10)
+;エロＳっ気な感じ
+	CASE 3
+		PRINTFORML 「私の唇を合わせればいいの？ それってキスじゃない」
+		PRINTFORMW 「………ん、…ん……ちゅ……」
+		PRINTFORMW 「ぷは………ふふ。ねえ、こうしたらどうやって出てくるのかしら」
+		PRINTFORMW 「このまま吐き出してくれたら、たっくさん飲めるのに」
+		CALLF CM_PROF("プライド", 10)
+		CALLF CM_PROF("羞恥", -10)
+		CALLF CM_PROF("Ａ好き", 10)
+		CALLF CM_PROF("同性愛", 20)
+		CALLF CM_PROF("被虐", -10)
+		CALLF CM_PROF("知性", 20)
+		CALLF CM_PROF("衝動", -20)
+;無知ちゅっちゅな感じ
+	CASE 4
+		PRINTFORML 「……？ アソコって、どこのこと？」
+		PRINTFORMW 「なあに？ 内緒にするっていうの？ 教えてよ」
+		PRINTFORMW 「知ってるんでしょ。ねえ、教えてよ……ねえ、ねえ」
+		CALLF CM_PROF("知性", 10)
+		CALLF CM_PROF("好奇心", 30)
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("Ｃ好き", 10)
+		CALLF CM_PROF("Ｖ好き", 20)
+		CALLF CM_PROF("Ｂ好き", 10)
+		CALLF CM_PROF("Ａ好き", 10)
+		CALLF CM_PROF("被虐", -20)
+ENDSELECT
+PRINTFORMW 「……まあいいわ。今度また、絶対に飲むんだから……うふふ」
+RETURN 1
+
+
+;フランドール２＠ふらさな
+@CHARAMAKE_K11_2(ARG)
+PRINTFORMW 「あ、起きた？　なかなか起きないから、もう　きゅっ　としちゃおうかと思っちゃった」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「驚かせちゃったかしら。別にとって食べたりなんかしないわ　私の質問に答えて欲しいだけ」
+PRINTFORMW 「私とお遊びをするとしたらどんな遊びがいいかしら？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 鬼ごっこ
+PRINTFORMDL [2] かくれんぼ
+PRINTFORMDL [3] おままごと
+PRINTFORMDL [4] 弾幕ごっこ
+PRINTFORMDL [5] お医者さんごっこ
+PRINTFORMDL [9] イケナイお遊び
+CALL INPUTINTD(0, 1, 2, 3, 4, 5, 9)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「どうして答えないの？　私とはお遊びしたくないのかしら？」
+		;無回答の補正値は固定
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「定番ね。…吸血”鬼”が鬼ごっこというのもおかしな感じだわ」
+		CALLF CM_PROF("攻撃", 20)
+		CALLF CM_PROF("被虐", 20)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("楽観", -10)
+	CASE 2
+		PRINTFORML 「かくれんぼ？　私スペカで姿隠せるけど…　え、それはダメ？ 残念」
+		CALLF CM_PROF("攻撃", -10)
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("知性", 10)
+		CALLF CM_PROF("神経質", 20)
+	CASE 3
+		PRINTFORML 「楽しそう。配役は…あなたがパパで私がママ、咲夜が…（中略）残ったペット役はお姉様ね！」
+		CALLF CM_PROF("攻撃", -20)
+		CALLF CM_PROF("好奇心", 20)
+		CALLF CM_PROF("羞恥", -10)
+		CALLF CM_PROF("楽観",  20)
+		CALLF CM_PROF("潔癖", 10)
+		CALLF CM_PROF("モラル", 20)
+	CASE 4
+		PRINTFORML 「へえ、あなた弾幕ごっこに自信があるのね。　私得意なのよ？」
+		CALLF CM_PROF("攻撃", 20)
+		CALLF CM_PROF("プライド", 10)
+		CALLF CM_PROF("楽観", -10)
+		CALLF CM_PROF("知性", 10)
+	CASE 5
+		PRINTFORML 「えー？　あなた変な事考えてない？」
+		CALLF CM_PROF("被虐", 10)
+		CALLF CM_PROF("素直さ", -10)
+		CALLF CM_PROF("プライド", -20)
+		CALLF CM_PROF("好奇心", 30)
+		CALLF CM_PROF("羞恥", -10)
+		CALLF CM_PROF("知性", -10)
+		CALLF CM_PROF("倒錯", 20)
+		CALLF CM_PROF("Ｂ好き", 20)
+		CALLF CM_PROF("モラル", -20)
+	CASE 9
+		PRINTFORML 「えっ？　…正直なのね。でもそういうの嫌いじゃないわ」
+		CALLF CM_PROF("素直さ", 30)
+		CALLF CM_PROF("プライド", 20)
+		CALLF CM_PROF("衝動",  30)
+		CALLF CM_PROF("羞恥", -20)
+		CALLF CM_PROF("モラル", -30)
+		CALLF CM_PROF("Ｃ好き", 30)
+		CALLF CM_PROF("Ｖ好き", 20)
+ENDSELECT
+PRINTFORMW 「それじゃあね　幻想郷に来たら本当に遊びましょ」
+RETURN 1
+
+
+;レティ＠shiraiwaR
+@CHARAMAKE_K12(ARG)
+PRINTFORMW 「ん、起きたのね。……じゃあ早速だけど私の質問に答えてもらおうかしら」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「ああ、正解なんてないから知恵を絞る必要はないわよ？」
+PRINTFORMW 「あなたは、冬に何を求める？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 身も凍るような寒さ
+PRINTFORMDL [2] 休み
+PRINTFORMDL [3] 儚さ
+PRINTFORMDL [4] 夏
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「それは冬なんていらないってことなのかしら」
+		PRINTFORML 「それとも単に答えられないだけなのかしらね」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「貴方はそう思うのね」
+		CALLF CM_PROF("攻撃", -10)
+		CALLF CM_PROF("素直さ", -20)
+		CALLF CM_PROF("プライド", -20)
+		CALLF CM_PROF("モラル", 30)
+	CASE 2
+		PRINTFORML 「…………あなたは年中それを求めてるんじゃないの……？」
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("プライド", -10)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("知性", -20)
+	CASE 3
+		PRINTFORML 「そうね、冬は儚いからこそだものね」
+		PRINTFORML 「美人薄命って妖怪に美人はいないってことかしらね」
+		CALLF CM_PROF("被虐", 20)
+		CALLF CM_PROF("倒錯", 20)
+		CALLF CM_PROF("潔癖", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 4
+		PRINTFORML 「ああ、まあ確かに冬になったら夏を求めるわよね」
+		PRINTFORML 「夏になったらなったで冬を求めるんでしょうけどね」
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("プライド", -10)
+		CALLF CM_PROF("楽観", 30)
+		CALLF CM_PROF("羞恥", -10)
+ENDSELECT
+PRINTFORMW 「まあ、どうでもいいんだけど」
+PRINTFORMW 「それじゃあまた、おやすみなさい」
+RETURN 1
+
+
+;橙@咲の人
+@CHARAMAKE_K13(ARG)
+PRINTFORMW 「はい起きた起きたっ！　私の質問に答えたらまた寝かせてあげるから！」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORMW 「もしあなたがマヨヒガに迷い込んだらどうする？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] こんな所にいられるか！　俺は出口を探すぞ！
+PRINTFORMDL [2] 手頃な家庭用品をもらっていく
+PRINTFORMDL [3] とりあえず裸になる
+PRINTFORMDL [4] メイドさんとイチャイチャする
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「答えたくないんだ…ふぅん、それでもいいけど」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「せっかちなんだね。せいぜい、殺されないようにね～」
+		CALLF CM_PROF("プライド", 10)
+		CALLF CM_PROF("素直さ", 10)
+		CALLF CM_PROF("神経質", 10)
+		CALLF CM_PROF("楽観", -20)
+	CASE 2
+		PRINTFORML 「確かに持ち帰れば幸せになれるけど…果たしてマヨヒガから出れるかな？」
+		CALLF CM_PROF("知性", 20)
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("羞恥", -10)
+	CASE 3
+		PRINTFORML 「なに信号信号叫んでるの？」
+		CALLF CM_PROF("倒錯", 30)
+		CALLF CM_PROF("Ｃ好き", 10)
+		CALLF CM_PROF("モラル", -10)
+		CALLF CM_PROF("潔癖", -10)
+		CALLF CM_PROF("知性", -20)
+		CALLF CM_PROF("プライド", -30)
+		CALLF CM_PROF("羞恥", -20)
+	CASE 4
+		PRINTFORML 「その幸せな時間はいつまで続くかな…？」
+		CALLF CM_PROF("倒錯", 10)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("知性", -10)
+ENDSELECT
+PRINTFORMW 「こんなところかな…ゆっくり休んでいいよ、おやすみ」
+RETURN 1
+
+
+;アリス＠/L
+@CHARAMAKE_K14(ARG)
+PRINTFORMW 「あら、ごきげんよう。丁度いい機会だから質問に答えて頂戴」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORMW 「準備はいいかしら？ ちょっとした魔術と占星術に関する質問よ」
+PRINTFORML 「例えば太陽の影響力を引き出す為の指輪を作る場合」
+PRINTFORMW 「どんな金属を使えばいいかしら？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 鉄に埋め込まれたルビー、或いは種類は何であれ紅い石
+PRINTFORMDL [2] 銀に埋め込まれた真珠、水晶或いは石英
+PRINTFORMDL [3] 金に埋め込まれたダイヤモンド、或いはトパーズ
+PRINTFORMDL [4] 銅に埋め込まれたエメラルド、或いはトルコ石
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「少しは考えてみる気もないのかしら？ 愚鈍、ね」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「残念。それは火星の場合ね」
+		CALLF CM_PROF("攻撃", 30)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("プライド", 20)
+		CALLF CM_PROF("衝動", 30)
+		CALLF CM_PROF("羞恥", -30)
+		CALLF CM_PROF("知性", -10)
+		CALLF CM_PROF("倒錯", 20)
+	CASE 2
+		PRINTFORML 「残念。それは月の場合ね」
+		CALLF CM_PROF("Ｃ好き", 10)
+		CALLF CM_PROF("Ｖ好き", 10)
+		CALLF CM_PROF("Ａ好き", -10)
+		CALLF CM_PROF("Ｂ好き", 10)
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("衝動", -20)
+	CASE 3
+		PRINTFORML 「正解よ。あなた、なかなか見込みがあるわね？」
+		CALLF CM_PROF("知性", 30)
+		CALLF CM_PROF("潔癖", 10)
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("羞恥", -20)
+		CALLF CM_PROF("好奇心", 30)
+	CASE 4
+		PRINTFORML 「残念。それは金星ね」
+		CALLF CM_PROF("同性愛", 20)
+		CALLF CM_PROF("倒錯", 30)
+		CALLF CM_PROF("モラル", -20)
+		CALLF CM_PROF("羞恥", -20)
+		CALLF CM_PROF("知性", 10)
+ENDSELECT
+PRINTFORMW 「ご苦労様。幸運を祈ってるわ」
+RETURN 1
+
+
+;リリーホワイト@咲の人
+@CHARAMAKE_K15(ARG)
+PRINTFORMW 「起きてください～。私から質問、いきますよー」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORMW 「春ってどんな季節だと思います？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 出会いと別れの季節
+PRINTFORMDL [2] 桜餅とか酒が美味い季節
+PRINTFORMDL [3] どんな季節とかどうでもいい、春を売れ
+PRINTFORMDL [4] はるは、サ□ンシ○プ
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「どうして黙るんですか…？」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「桜色した出会いと別れ…ロマンチストですね」
+		CALLF CM_PROF("素直さ", 10)
+		CALLF CM_PROF("同性愛", 10)
+		CALLF CM_PROF("被虐", 10)
+		CALLF CM_PROF("楽観", -20)
+		CALLF CM_PROF("神経質", -10)
+	CASE 2
+		PRINTFORML 「宴会とか好きなんですか？　幻想郷の皆さんも好きなんですよ～」
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("潔癖", -10)
+		CALLF CM_PROF("知性", -10)
+	CASE 3
+		PRINTFORML 「え、ちょ、それは…なんか違うと思います…もぅ」
+		CALLF CM_PROF("同性愛", 20)
+		CALLF CM_PROF("Ｃ好き", 10)
+		CALLF CM_PROF("Ｖ好き", 10)
+		CALLF CM_PROF("Ｂ好き", 10)
+		CALLF CM_PROF("Ａ好き", 10)
+		CALLF CM_PROF("プライド", -30)
+	CASE 4
+		PRINTFORML 「それ、質問の答えになってません」
+		CALLF CM_PROF("知性", -30)
+		CALLF CM_PROF("モラル", -20)
+		CALLF CM_PROF("衝動", 20)
+		CALLF CM_PROF("楽観", 20)
+ENDSELECT
+PRINTFORMW 「春眠暁を覚えず…おやすみなさい～」
+RETURN 1
+
+
+;リリカ@咲の人
+@CHARAMAKE_K16(ARG)
+PRINTFORMW 「ね、ね、起きてよ～。面倒だと思うけど、私の質問に付き合ってほしいの」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「どんな楽器を弾いてみたいと思ってる？」
+PRINTFORMW 「そんな深く考えないでね」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] ギター
+PRINTFORMDL [2] トランペット
+PRINTFORMDL [3] ピアノ
+PRINTFORMDL [4] カズー
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「ノーコメントかー…楽器、嫌い？」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「弦楽器を選んだかー。弦が切れると結構危険だよ？」
+		CALLF CM_PROF("被虐", 20)
+		CALLF CM_PROF("潔癖", 10)
+		CALLF CM_PROF("衝動", -20)
+		CALLF CM_PROF("好奇心", -20)
+	CASE 2
+		PRINTFORML 「管楽器かー。肺活量、大丈夫？」
+		CALLF CM_PROF("楽観", 30)
+		CALLF CM_PROF("倒錯", 10)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("神経質", -10)
+	CASE 3
+		PRINTFORML 「だよね、だよね！　やっぱり鍵盤楽器はいいよね！」
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("知性", -10)
+		CALLF CM_PROF("プライド", -10)
+	CASE 4
+		PRINTFORML 「……ずいぶんと渋いもの選ぶんだね」
+		CALLF CM_PROF("Ａ好き", 30)
+		CALLF CM_PROF("同性愛", 10)
+		CALLF CM_PROF("知性", -10)
+		CALLF CM_PROF("攻撃", -30)
+ENDSELECT
+PRINTFORMW 「質問はこれで終わりだよ。邪魔してごめんね、おやすみなさい」
+RETURN 1
+
+
+;メルラン@咲の人
+@CHARAMAKE_K17(ARG)
+PRINTFORMW 「おっはよ～！　ちょっとだけ私に時間をちょうだいね♪」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「どうすればみんな幸せになれるかな？」
+PRINTFORMW 「あなたならどう考える？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 人の幸せは人それぞれ。同時の幸せはない
+PRINTFORMDL [2] みんな同じこと考えればいいと思う
+PRINTFORMDL [3] 何も考えず、誰かの指示に従ってればいいと思う
+PRINTFORMDL [4] エロは世界を救う
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「答えられない？　それとも幸せが何なのかわからないのかな？」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「ずいぶんとドライな考えねぇ。でもそれが正しいのかもしれないわよ」
+		CALLF CM_PROF("知性", 20)
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("素直さ", -20)
+	CASE 2
+		PRINTFORML 「意思の統一、って奴ね。でもそれって本当に幸せなのかしら？」
+		CALLF CM_PROF("神経質", 20)
+		CALLF CM_PROF("素直さ", 10)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("知性", -10)
+		CALLF CM_PROF("攻撃", -10)
+	CASE 3
+		PRINTFORML 「何も考えずに動くのって楽で幸せよね。でもそれは生きてるって言えるかな？」
+		CALLF CM_PROF("プライド", -20)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("被虐", -10)
+		CALLF CM_PROF("羞恥", -20)
+	CASE 4
+		PRINTFORML 「わお、大胆。本能に従うのが幸せ、なのかもしれないかもね」
+		CALLF CM_PROF("倒錯", 10)
+		CALLF CM_PROF("同性愛", 10)
+		CALLF CM_PROF("Ｖ好き", 10)
+		CALLF CM_PROF("Ａ好き", 10)
+		CALLF CM_PROF("潔癖",   -20)
+		CALLF CM_PROF("モラル", -20)
+ENDSELECT
+PRINTFORMW 「質問はおしまい。それじゃ、またね～♪」
+RETURN 1
+
+
+;ルナサ@咲の人
+@CHARAMAKE_K18(ARG)
+PRINTFORMW 「…目、覚めた？　少しだけ私に付き合って」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORMW 「もしあなたが元気がない時、どうやって元気を取り戻す？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 音楽を聴く
+PRINTFORMDL [2] 本を読む
+PRINTFORMDL [3] 身体を動かす
+PRINTFORMDL [4] 身体を動かす(性的に)
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「……そう」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「音楽はいいよね…私の音楽も聴いてく？」
+		PRINTFORML 「え、いらない？　残念…」
+		CALLF CM_PROF("知性", 10)
+		CALLF CM_PROF("プライド", 10)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("羞恥", -10)
+	CASE 2
+		PRINTFORML 「内容次第じゃもっと元気なくなるけど…本も悪くはない」
+		CALLF CM_PROF("素直さ", -10)
+		CALLF CM_PROF("神経質", 10)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("知性", 20)
+	CASE 3
+		PRINTFORML 「運動で気分を高揚させるのもありかも…」
+		CALLF CM_PROF("攻撃", 20)
+		CALLF CM_PROF("被虐", 10)
+		CALLF CM_PROF("倒錯", 10)
+		CALLF CM_PROF("潔癖", -20)
+	CASE 4
+		PRINTFORML 「……！？　…えっち」
+		CALLF CM_PROF("Ｃ好き", 20)
+		CALLF CM_PROF("Ｂ好き", 20)
+		CALLF CM_PROF("モラル", -30)
+		CALLF CM_PROF("羞恥", -20)
+ENDSELECT
+PRINTFORMW 「質問は終わり、ゆっくり休んでね」
+RETURN 1
+
+
+;妖夢@咲の人
+@CHARAMAKE_K19(ARG)
+PRINTFORMW 「おはようございます。私の質問に答えてくださいね」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「目の前には草の生い茂ったとても広い庭があり、あなたはそれを整えるように言われました」
+PRINTFORML 「まともにやれば一日はかかる大仕事になりそうです」
+PRINTFORMW 「さて、あなたはどうしますか？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 真面目に庭を整える
+PRINTFORMDL [2] 人を呼んで手伝ってもらう
+PRINTFORMDL [3] さぼる
+PRINTFORMDL [4] これだけ広ければ青姦し放題！
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「答えてくれないなんて……斬りますよ？」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「普通はそうですよね」
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("プライド", 10)
+		CALLF CM_PROF("攻撃", -10)
+		CALLF CM_PROF("被虐", -10)
+	CASE 2
+		PRINTFORML 「うーん…それも一つの手、ですね」
+		CALLF CM_PROF("知性", 20)
+		CALLF CM_PROF("同性愛", 10)
+		CALLF CM_PROF("プライド", -10)
+		CALLF CM_PROF("楽観", -10)
+	CASE 3
+		PRINTFORML 「それは人としてどうなんですか…？」
+		CALLF CM_PROF("衝動", 20)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("知性", -10)
+		CALLF CM_PROF("プライド", -10)
+		CALLF CM_PROF("モラル", -20)
+	CASE 4
+		PRINTFORML 「ま、真面目に答えてくださいっ！！」
+		CALLF CM_PROF("倒錯", 20)
+		CALLF CM_PROF("Ｃ好き", 10)
+		CALLF CM_PROF("羞恥", -10)
+		CALLF CM_PROF("潔癖", -20)
+		CALLF CM_PROF("モラル", -20)
+ENDSELECT
+PRINTFORMW 「…お疲れ様です、それではよい夢を」
+RETURN 1
+
+
+;幽々子@咲の人
+@CHARAMAKE_K20(ARG)
+PRINTFORMW 「ふふ、起きたみたいね」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「気構えなくていいわ、質問を一つするだけだから」
+PRINTFORMW 「あなたはどんな桜が好きかしら？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 八分～満開の綺麗な桜
+PRINTFORMDL [2] 咲き始めの桜
+PRINTFORMDL [3] 死体が埋まってるような、ミステリー桜
+PRINTFORMDL [4] 花より団子。桜よりさくらんぼが好き
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「答えてくれないのね…それとも、桜が嫌い？」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「やっぱり桜は満開に咲いてるのが一番よね」
+		CALLF CM_PROF("プライド", 20)
+		CALLF CM_PROF("同性愛", 10)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("攻撃", -20)
+	CASE 2
+		PRINTFORML 「咲き始めが好きだなんて変わってるわね」
+		PRINTFORML 「でも桜は桜、好きなことには変わりないわ」
+		CALLF CM_PROF("被虐", 10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("潔癖", 10)
+		CALLF CM_PROF("素直さ", -20)
+	CASE 3
+		PRINTFORML 「不謹慎なことだけど、そこもまた桜の魅力なのかもしれないわね…」
+		CALLF CM_PROF("攻撃", 30)
+		CALLF CM_PROF("好奇心", 20)
+		CALLF CM_PROF("倒錯", 10)
+		CALLF CM_PROF("楽観", -10)
+		CALLF CM_PROF("モラル", -20)
+	CASE 4
+		PRINTFORML 「あらあら、食い意地が張ってるのね」
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("知性", -20)
+		CALLF CM_PROF("神経質", -10)
+		CALLF CM_PROF("Ｃ好き", 20)
+ENDSELECT
+PRINTFORMW 「それじゃ質問は終わり、また会えたら会いましょう…？」
+RETURN 1
+
+
+;藍@Enter
+@CHARAMAKE_K21(ARG)
+PRINTFORMW 「おはよう。ぐっすり眠れたか？　寝起きで悪いが少し質問に答えてもらうぞ」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「お前は私の式だとする」
+PRINTFORML 「何か一つ、家事を手伝えと私が言った」
+PRINTFORMW 「さぁ、お前なら何を手伝う？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 掃除
+PRINTFORMDL [2] 皿洗い
+PRINTFORMDL [3] 蔵の整理
+PRINTFORMDL [4] 子作り
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「む、手伝いたくないのか？」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「まぁ、無難な選択だな」
+		CALLF CM_PROF("素直さ", 10)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("潔癖", 20)
+	CASE 2
+		PRINTFORML 「一緒に皿洗いか。それもいいな」
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("同性愛", 10)
+		CALLF CM_PROF("潔癖", 10)
+		CALLF CM_PROF("モラル", 10)
+		CALLF CM_PROF("Ｂ好き", 10)
+		CALLF CM_PROF("攻撃", -30)
+	CASE 3
+		PRINTFORML 「ほう、なかなか粋なこともやろうとするんだな。いいことだ」
+		CALLF CM_PROF("好奇心", 30)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("神経質", -10)
+		CALLF CM_PROF("Ａ好き", 10)
+		CALLF CM_PROF("羞恥", 10)
+	CASE 4
+		PRINTFORML 「は？　ん？　まぁ、家の事と書いて『家事』だしな……それもありか……」
+		CALLF CM_PROF("Ｖ好き", 20)
+		CALLF CM_PROF("倒錯", 10)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("素直さ", 10)
+		CALLF CM_PROF("Ｃ好き", 20)
+		CALLF CM_PROF("羞恥", -20)
+ENDSELECT
+PRINTFORMW 「ふむ、お前はそう考えているのか。分かった。後は休んでいいぞ」
+RETURN 1
+
+
+;紫＠空っぽ
+@CHARAMAKE_K22(ARG)
+PRINTFORMW 「何度目か知らないけれど、おはよう」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「早速質問に答えてもらうわ」
+PRINTFORMW 「幸せな夢の世界、星が近い宇宙、誰も知らない深海、自分の部屋。今あなたはどこに行きたいかしら？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 夢の世界
+PRINTFORMDL [2] 宇宙
+PRINTFORMDL [3] 深海
+PRINTFORMDL [4] 自分の部屋
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「時間切れ、心に留めておくのね」
+		;無回答の補正値は固定
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「夢の中はとても素敵な場所よ、帰るのが嫌になるくらいにね……」
+		CALLF CM_PROF("素直さ", 10)
+		CALLF CM_PROF("衝動",   10)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("楽観",   20)
+		CALLF CM_PROF("知性",  -10)
+		CALLF CM_PROF("モラル",   -10)
+	CASE 2
+		PRINTFORML 「星の輝きはとても美しいわ、ただし近づく者に容赦も慈悲もない」
+		CALLF CM_PROF("被虐",   10)
+		CALLF CM_PROF("好奇心", 30)
+		CALLF CM_PROF("知性",   30)
+	CASE 3
+		PRINTFORML 「海の底の底、天照の管轄外には何が潜むのかしらね……」
+		CALLF CM_PROF("被虐",   30)
+		CALLF CM_PROF("衝動",   10)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("神経質", 10)
+		CALLF CM_PROF("Ｂ好き", 20)
+	CASE 4
+		PRINTFORML 「……そう、あなたは賢いわね。自分を忘れると終わりよ」
+		CALLF CM_PROF("素直さ",  -10)
+		CALLF CM_PROF("プライド", 10)
+		CALLF CM_PROF("好奇心",  -20)
+		CALLF CM_PROF("楽観",     -20)
+		CALLF CM_PROF("知性",     20)
+		CALLF CM_PROF("モラル",   10)
+		CALLF CM_PROF("神経質",   10)
+ENDSELECT
+PRINTFORMW 「いつか連れて行ってあげるわ、機会があればね……」
+RETURN 1
+
+
+;萃香＠むのう
+@CHARAMAKE_K23(ARG)
+PRINTFORMW 「おや、起きたかい」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「なに、簡単な質問さ、難しく考える必要はない」
+PRINTFORMW 「絶対に敵わない敵に出会ったら、あなたはどうする？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 立ち向かう、逃走は無いのだ！
+PRINTFORMDL [2] 全力で逃げる、逃走しか無いのだ！
+PRINTFORMDL [3] 許してください、俺には家族が！
+PRINTFORMDL [4] だんなぁ！　舎弟にしてください！
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「なんでそこで黙るかなぁ？」
+		;無回答の補正値は固定
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「お、良い答えだねぇ！」
+		CALLF CM_PROF("攻撃", 30)
+		CALLF CM_PROF("プライド", 30)
+		CALLF CM_PROF("衝動", 20)
+		CALLF CM_PROF("知性", -20)
+	CASE 2
+		PRINTFORML 「ふーん？　普通だねぇ」
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("知性", 10)
+		CALLF CM_PROF("楽観", -20)
+		CALLF CM_PROF("攻撃", -10)
+	CASE 3
+		PRINTFORML 「それで許してくれる相手ならいいんじゃない？」
+		CALLF CM_PROF("楽観", 20)
+		CALLF CM_PROF("被虐", 10)
+		CALLF CM_PROF("プライド", -20)
+		CALLF CM_PROF("知性", -10)
+		CALLF CM_PROF("羞恥", -10)
+	CASE 4
+		PRINTFORML 「誇りの一つも無いんだねぇ！」
+		CALLF CM_PROF("楽観", 30)
+		CALLF CM_PROF("モラル", -20)
+		CALLF CM_PROF("プライド", -30)
+ENDSELECT
+PRINTFORMW 「こんなものかな、それじゃ、おやすみ」
+RETURN 1
+
+
+;リグル＠むのう
+@CHARAMAKE_K24(ARG)
+PRINTFORMW 「やぁ、目は覚めた？」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「聞きたい事があるの、答えてもらうわよ」
+PRINTFORMW 「虫ってどう思う？　やっぱり気持ち悪い？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 気持ち悪いと思います
+PRINTFORMDL [2] 昆虫大好きです
+PRINTFORMDL [3] そんなことより、蹴らないでくれませんか
+PRINTFORMDL [4] そんなことより、パンツの下はどうなってますか？
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「虫だけに無視ってこと？　寒いよ！」
+		PRINTFORMW 「もういいから、さっさと寝なよ！」
+		;無回答の補正値は固定
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「正直ね！」
+		PRINTFORMW 「でも、綺麗な虫もいるのよ、忘れないでね」
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("モラル", 10)
+		CALLF CM_PROF("神経質", 10)
+		CALLF CM_PROF("潔癖", 10)
+		CALLF CM_PROF("好奇心", -10)
+	CASE 2
+		PRINTFORML 「へー！　珍しい人ね」
+		PRINTFORMW 「聞きたいことも聞けたし、もういいわよ、おやすみ」
+		CALLF CM_PROF("好奇心", 20)
+		CALLF CM_PROF("同性愛", 10)
+		CALLF CM_PROF("知性", 10)
+		CALLF CM_PROF("潔癖", -10)
+	CASE 3
+		PRINTFORML 「蹴ってないわよ！　そっちが勝手に突っ込んできてるだけでしょ！」
+		PRINTFORML 「大体こっちに来る方が悪いのよ、落ちてくるのを待ってれば…」
+		PRINTFORMW 「って勝手に寝るなー！」
+		CALLF CM_PROF("被虐", -30)
+		CALLF CM_PROF("Ｖ好き", 30)
+		CALLF CM_PROF("Ａ好き", 30)
+		CALLF CM_PROF("衝動", 20)
+		CALLF CM_PROF("倒錯", 20)
+	CASE 4
+		PRINTFORML 「え？　どうって…別に何もついて……って何言わせるの！」
+		PRINTFORML 「なんなのよあなた、ちゃんと質問の意味分かってる？」
+		PRINTFORMW 「はぁ……もういい、もう寝なさい」
+		CALLF CM_PROF("衝動", 20)
+		CALLF CM_PROF("好奇心", 30)
+		CALLF CM_PROF("同性愛",20)
+		CALLF CM_PROF("Ｃ好き",30)
+		CALLF CM_PROF("モラル", -30)
+		CALLF CM_PROF("神経質", -30)
+ENDSELECT
+RETURN 1
+
+
+;ミスティア＠shiraiwaR
+@CHARAMAKE_K25(ARG)
+PRINTFORMW 「はい起きてー！夜雀の声で起こされるなんて滅多に無いよー！」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「好きな歌を教えて？」
+PRINTFORMW 「ああ、聴くのでも歌うのでもいいから」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] ロック
+PRINTFORMDL [2] ポップス
+PRINTFORMDL [3] クラシック
+PRINTFORMDL [4] 演歌
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「好きな歌が無いのかな、それともこの中に無かっただけかな～♪」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「激しいのが好き？　なかなかいい趣味じゃない！」
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("衝動", 30)
+		CALLF CM_PROF("知性", -10)
+	CASE 2
+		PRINTFORML 「たまには普通もいいよね！」
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("楽観", 20)
+	CASE 3
+		PRINTFORML 「時を越えて認められた名作～」
+		PRINTFORML 「時を越えるまで認められなかった名作～♪」
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("プライド", 30)
+		CALLF CM_PROF("神経質", 30)
+		CALLF CM_PROF("潔癖", 10)
+	CASE 4
+		PRINTFORML 「聞かせるこぶしが握れない～♪」
+		CALLF CM_PROF("衝動", 20)
+		CALLF CM_PROF("モラル", 20)
+ENDSELECT
+PRINTFORMW 「じゃあ次に会うときまで、夜空に気をつけてね」
+RETURN 1
+
+
+;慧音＠へんたゐ
+@CHARAMAKE_K26(ARG)
+PRINTFORMW 「どうだ、大丈夫か……？」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「大丈夫みたいだな、早速だが質問だ」
+PRINTFORMW 「１＋１は？……まぁ、答えて欲しい」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] ２
+PRINTFORMDL [2] 田
+PRINTFORMDL [3] ３
+PRINTFORMDL [4] 正解は？
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「……出来れば答えて欲しかったのだが……」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「……正解だな、当然分かるだろうが……」
+		CALLF CM_PROF("攻撃", -10)
+		CALLF CM_PROF("素直さ", 30)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("プライド", 20)
+		CALLF CM_PROF("衝動", -20)
+		CALLF CM_PROF("知性", 10)
+		CALLF CM_PROF("潔癖", 10)
+		CALLF CM_PROF("倒錯", -20)
+		CALLF CM_PROF("神経質", 20)
+		CALLF CM_PROF("モラル", 20)
+	CASE 2
+		PRINTFORML 「ふむ、よく物事を考える人間のようだな」
+		CALLF CM_PROF("素直さ", -10)
+		CALLF CM_PROF("プライド", 10)
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("知性", 20)
+		CALLF CM_PROF("潔癖", 20)
+		CALLF CM_PROF("倒錯", 10)
+		CALLF CM_PROF("モラル", 10)
+	CASE 3
+		PRINTFORML 「……本気か？」
+		CALLF CM_PROF("プライド", -20)
+		CALLF CM_PROF("素直さ", -20)
+		CALLF CM_PROF("知性", -20)
+		CALLF CM_PROF("好奇心", 30)
+		CALLF CM_PROF("楽観", 20)
+		CALLF CM_PROF("衝動", 20)
+		CALLF CM_PROF("被虐", 20)
+		CALLF CM_PROF("潔癖", -20)
+		CALLF CM_PROF("倒錯", 20)
+		CALLF CM_PROF("神経質", -20)
+		CALLF CM_PROF("モラル", -20)
+	CASE 4
+		PRINTFORML 「ほう、そういう答え方をしてくるか」
+		CALLF CM_PROF("攻撃", 30)
+		CALLF CM_PROF("被虐", -20)
+		CALLF CM_PROF("素直さ", -20)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("好奇心", 20)
+		CALLF CM_PROF("倒錯", 20)
+		CALLF CM_PROF("潔癖", 20)
+		CALLF CM_PROF("神経質", 20)
+		CALLF CM_PROF("モラル", -20)
+ENDSELECT
+PRINTFORML 「ありがとう、参考になったよ」
+PRINTFORMW 「それでは、おやすみだな……」
+RETURN 1
+
+
+;てゐ＠Jてゐの人
+@CHARAMAKE_K27(ARG)
+PRINTFORMW 「ほら、起きた起きた。時は金なり、一寸の光陰軽んずべからずってね」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「ちょっとした質問。ちゃっちゃと答えてよ」
+PRINTFORMW 「だだっ広い河があるの。あんたはこの河を渡らないといけない。どうやって渡る？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 実は橋が架かっているので、それを使う
+PRINTFORMDL [2] 橋なんてなかった。泳いで渡ろう
+PRINTFORMDL [3] いや、もう少し冴えたやり方があるよね？
+PRINTFORMDL [4] 何もかも嫌になった。諦めよう
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「０点。決断ひとつできない奴に幸運は訪れないよ」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「つまんないの選んだわねー。あんたさ、そんなんで生きてて楽しいの？」
+		CALLF CM_PROF("攻撃", -10)
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("プライド", -20)
+		CALLF CM_PROF("衝動", 30)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", -10)
+		CALLF CM_PROF("知性", -10)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("モラル", -10)
+		CALLF CM_PROF("Ｖ好き", 30)
+	CASE 2
+		PRINTFORML 「はい残念。あんたは河に棲むワニザメの餌食よ。１４へ行け」
+		PRINTFORML 「力任せのごり押しで何でも解決できるとは思わないことね」
+		CALLF CM_PROF("被虐", 20)
+		CALLF CM_PROF("素直さ", -10)
+		CALLF CM_PROF("プライド", 10)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("知性", -20)
+		CALLF CM_PROF("楽観", 20)
+		CALLF CM_PROF("潔癖", 10)
+		CALLF CM_PROF("倒錯", 10)
+		CALLF CM_PROF("Ｃ好き", 30)
+	CASE 3
+		PRINTFORML 「ま、そう考えるのが普通よね」
+		PRINTFORML 「首の上に乗ってるものが飾りじゃないなら、せいぜい使ってあげなくちゃ」
+		CALLF CM_PROF("攻撃", -10)
+		CALLF CM_PROF("被虐", 10)
+		CALLF CM_PROF("素直さ", -20)
+		CALLF CM_PROF("衝動", -20)
+		CALLF CM_PROF("プライド", 20)
+		CALLF CM_PROF("知性", 20)
+		CALLF CM_PROF("神経質", 20)
+		CALLF CM_PROF("Ａ好き", 30)
+	CASE 4
+		PRINTFORML 「どうしてそこで諦めるのよそこでー」
+		CALLF CM_PROF("楽観", -20)
+		CALLF CM_PROF("被虐", 20)
+		CALLF CM_PROF("プライド", -20)
+		CALLF CM_PROF("攻撃", -10)
+		CALLF CM_PROF("羞恥", 30)
+		CALLF CM_PROF("衝動", -20)
+		CALLF CM_PROF("Ｂ好き", 30)
+ENDSELECT
+PRINTFORMW 「……ん、お疲れさん。じゃあね」
+RETURN 1
+
+
+;鈴仙@/L
+@CHARAMAKE_K28(ARG)
+PRINTFORMW 「もしもーし。起きてますかー？」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「やっと起きましたね。では、唐突ですが質問です」
+PRINTFORMW 「あなたが狂気から連想するものを教えてください」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] ピンク・フロイド
+PRINTFORMDL [2] 座薬
+PRINTFORMDL [3] 狂気の瞳
+PRINTFORMDL [4] ミシェル・フーコー
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「思いつきませんか？ 仕方ないですね」
+		CALLF CM_PROF("知性", -30)
+		CALLF CM_PROF("好奇心", -20)
+		CALLF CM_PROF("羞恥", -10)
+		CALLF CM_PROF("プライド", -10)
+	CASE 1
+		PRINTFORML 「なんです？ それ」
+		CALLF CM_PROF("攻撃", 20)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("プライド", 10)
+		CALLF CM_PROF("衝動", 30)
+		CALLF CM_PROF("神経質", 40)
+		CALLF CM_PROF("知性", 10)
+		CALLF CM_PROF("倒錯", 20)
+		CALLF CM_PROF("楽観", -30)
+	CASE 2
+		PRINTFORML 「ちょと意味がわかりませんね……」
+		CALLF CM_PROF("攻撃", 40)
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("モラル", -20)
+		CALLF CM_PROF("Ｂ好き", 10)
+		CALLF CM_PROF("被虐", -30)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("楽観", 20)
+	CASE 3
+		PRINTFORML 「うふ、なかなか良い事を言いますね」
+		CALLF CM_PROF("知性", 30)
+		CALLF CM_PROF("潔癖", 10)
+		CALLF CM_PROF("攻撃", -30)
+		CALLF CM_PROF("羞恥", -20)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("潔癖", 10)
+		CALLF CM_PROF("Ｂ好き", 20)
+	CASE 4
+		PRINTFORML 「誰です？ 聞いた事ありませんね」
+		CALLF CM_PROF("知性", 40)
+		CALLF CM_PROF("倒錯", 10)
+		CALLF CM_PROF("モラル", 30)
+		CALLF CM_PROF("羞恥", -20)
+		CALLF CM_PROF("神経質", 20)
+		CALLF CM_PROF("プライド", 10)
+		CALLF CM_PROF("Ａ好き", -30)
+		CALLF CM_PROF("Ｃ好き", -10)
+ENDSELECT
+PRINTFORML 「ではお気をつけて――」
+PRINTFORMW 「体調が悪くなった時には永遠亭に来てくださいね」
+RETURN 1
+
+
+;永琳@Enter
+@CHARAMAKE_K29(ARG)
+PRINTFORMW 「あら、目が覚めたのね。ちょうどいいわ、あなたに聞きたいことがあるの」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORMW 「もし、もしよ？　あなたが私を殺したくなった」
+PRINTFORMW 「そしたら、どんな死に方を私に望むかしら？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 即死
+PRINTFORMDL [2] 窒息死
+PRINTFORMDL [3] 安楽死
+PRINTFORMDL [4] 死んでも生き返るから意味無いんじゃないんですか？
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「……変な質問しちゃってごめんなさいね」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「まぁ、本当に嫌いなら今すぐ死んじゃえ、って感じよね」
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("被虐", 10)
+	CASE 2
+		PRINTFORML 「苦しむのを楽しむのかしら？」
+		CALLF CM_PROF("被虐", 20)
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("倒錯", 10)
+		CALLF CM_PROF("好奇心", 20)
+	CASE 3
+		PRINTFORML 「あなた……優しいのね。死ぬけど」
+		CALLF CM_PROF("モラル", 20)
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("倒錯", -10)
+		CALLF CM_PROF("潔癖", 10)
+	CASE 4
+		PRINTFORML 「そうよ。うん、そうよ。だからあなたに私は殺せない。ふふふ」
+		CALLF CM_PROF("好奇心", -20)
+		CALLF CM_PROF("被虐", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("素直さ", 10)
+ENDSELECT
+PRINTFORMW 「付き合ってくれてありがとね。じゃ、おやすみ」
+RETURN 1
+
+
+;輝夜@toroiya
+@CHARAMAKE_K30(ARG)
+PRINTFORMW 「あら、こんな所にやってくるだなんて、とんだ物好きがいるものね」
+PRINTFORMW 「早速だけど質問に答えてもらうわ」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「あなたの目の前に4つの宝物があるの」
+PRINTFORML 「あなたならどれを選ぶ？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 本物と瓜二つの贋作
+PRINTFORMDL [2] 手作りの陶器
+PRINTFORMDL [3] 欲望を実体化する鏡
+PRINTFORMDL [4] この水晶体に写ってるお前
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「どれも欲しくないのかしら？　まあ、それも一つの選択肢ね」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「例え偽物でも、本物同様の見た目を持つ物を欲しがるのね。人間の欲って本当、底知れないわ」
+		CALLF CM_PROF("素直さ", -10)
+		CALLF CM_PROF("知性", 10)
+		CALLF CM_PROF("モラル", -10)
+		CALLF CM_PROF("プライド", 30)
+	CASE 2
+		PRINTFORML 「宝の価値はその物自体の要素だけでなく、籠められた愛情によっても決まるものなのね」
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("同性愛", 10)
+		CALLF CM_PROF("潔癖", 10)
+		CALLF CM_PROF("モラル", 10)
+	CASE 3
+		PRINTFORML 「何時の世も権力者も欲しがるであろう宝ね。人の欲望は尽きないのよ」
+		CALLF CM_PROF("好奇心", 20)
+		CALLF CM_PROF("プライド", 20)
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("Ａ好き", 10)
+	CASE 4
+		PRINTFORML 「は？　な、何を言ってるのか全く分からないわ……」
+		CALLF CM_PROF("Ｖ好き", 20)
+		CALLF CM_PROF("倒錯", 20)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("知性", 10)
+ENDSELECT
+PRINTFORMW 「なるほどね、私の質問に付き合ってくれて感謝するわ」
+RETURN 1
+
+
+;妹紅＠Librarian
+@CHARAMAKE_K31(ARG)
+PRINTFORML 「こんな夜暗をほっつき歩く人間だなんて。お前もまた肝試しなんでしょ？」
+PRINTFORMW 「試すついでに私の話を聞いていきなさい」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「それじゃあ、質問にでも答えてもらおうかな」
+PRINTFORMW 「殺したいくらいに憎いやつがぽっくりと死んでしまった。そんな時はどうする？ 」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] それはそれでいいかと溜飲を下げる
+PRINTFORMDL [2] 死んだのであれば、それの後追いをする
+PRINTFORMDL [3] 殺すのは自分だったのに、と歯噛みする
+PRINTFORMDL [4] なんとしてでも死体を鞭打つ
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「突飛な質問だから、考えあぐねるのも無理はないか」
+		PRINTFORMW 「今度があるなら、もうちょっと工夫するかな」
+
+		;無回答の補正値は固定
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「人間は死んでしまったらそこまでだからね」
+		PRINTFORMW 「人生はまだ捨てたものでもないし」
+		CALLF CM_PROF("攻撃", 20)
+		CALLF CM_PROF("被虐", -30)
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("プライド", -20)
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -20)
+		CALLF CM_PROF("羞恥", -10)
+		CALLF CM_PROF("楽観", 20)
+		CALLF CM_PROF("知性", -10)
+		CALLF CM_PROF("倒錯", -10)
+		CALLF CM_PROF("潔癖", -10)
+		CALLF CM_PROF("モラル", -10)
+		CALLF CM_PROF("神経質", -10)
+		CALLF CM_PROF("Ｃ好き", 10)
+	CASE 2
+		PRINTFORML 「驚いた、死ぬっていうの？」
+		PRINTFORMW 「……いや、確かにその気持ちはわかるけどさ」
+		CALLF CM_PROF("攻撃", -20)
+		CALLF CM_PROF("被虐", 20)
+		CALLF CM_PROF("素直さ", 30)
+		CALLF CM_PROF("プライド", 30)
+		CALLF CM_PROF("衝動", 30)
+		CALLF CM_PROF("好奇心", 20)
+		CALLF CM_PROF("羞恥", 30)
+		CALLF CM_PROF("楽観", -30)
+		CALLF CM_PROF("知性", -10)
+		CALLF CM_PROF("倒錯", 30)
+		CALLF CM_PROF("同性愛", 30)
+		CALLF CM_PROF("潔癖", 20)
+		CALLF CM_PROF("モラル", 20)
+		CALLF CM_PROF("神経質", 20)
+		CALLF CM_PROF("Ｃ好き", -10)
+		CALLF CM_PROF("Ｖ好き", 20)
+		CALLF CM_PROF("Ｂ好き", 10)
+		CALLF CM_PROF("Ａ好き", 20)
+	CASE 3
+		PRINTFORML 「徒に憎しみを醗酵させないほうがいいよ」
+		PRINTFORMW 「いつか、手段と目的を取り違えてしまうかもしれない」
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("被虐", -10)
+		CALLF CM_PROF("素直さ", -10)
+		CALLF CM_PROF("プライド", 20)
+		CALLF CM_PROF("衝動", -20)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("楽観", -20)
+		CALLF CM_PROF("知性", 20)
+		CALLF CM_PROF("倒錯", 10)
+		CALLF CM_PROF("同性愛", 20)
+		CALLF CM_PROF("潔癖", 10)
+		CALLF CM_PROF("モラル", -20)
+		CALLF CM_PROF("神経質", 30)
+		CALLF CM_PROF("Ｃ好き", 10)
+		CALLF CM_PROF("Ｖ好き", -10)
+		CALLF CM_PROF("Ｂ好き", 10)
+		CALLF CM_PROF("Ａ好き", -10)
+	CASE 4
+		PRINTFORML 「ひえぇ。 私では考えがつかないことだよ」
+		PRINTFORMW 「もう、そんな事はできないし」
+		CALLF CM_PROF("攻撃", 30)
+		CALLF CM_PROF("被虐", -30)
+		CALLF CM_PROF("素直さ", -20)
+		CALLF CM_PROF("プライド", -10)
+		CALLF CM_PROF("衝動", 30)
+		CALLF CM_PROF("好奇心", 30)
+		CALLF CM_PROF("羞恥", -20)
+		CALLF CM_PROF("楽観", -10)
+		CALLF CM_PROF("知性", -10)
+		CALLF CM_PROF("倒錯", 30)
+		CALLF CM_PROF("同性愛", -10)
+		CALLF CM_PROF("潔癖", -20)
+		CALLF CM_PROF("モラル", -30)
+		CALLF CM_PROF("神経質", -10)
+		CALLF CM_PROF("Ｃ好き", 30)
+		CALLF CM_PROF("Ｖ好き", -10)
+		CALLF CM_PROF("Ｂ好き", -10)
+		CALLF CM_PROF("Ａ好き", -10)
+ENDSELECT
+PRINTFORMW 「私はずっとここにいるよ。機会があれば、また遭うこともあるかもね」
+RETURN 1
+
+
+;文＠YMayaya
+@CHARAMAKE_K32(ARG)
+PRINTFORMW 「あ、目が覚めたんですね。おはようございますー」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「起きがけに悪いんですけど、1枚撮らせてください」
+PRINTFORMW 「何かポーズ取ってくれると嬉しいんですけど…？」
+PRINTL 
+PRINTFORMDL [0] 何もしない
+PRINTFORMDL [1] そのまま寝る
+PRINTFORMDL [2] ピースする
+PRINTFORMDL [3] Ｍ字開脚する
+PRINTFORMDL [4] アヘ顔ダブルピースする
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「何かポーズしてくださいよ、つまらない人ですねぇ…」
+		PRINTFORMW 「まあ、目覚めたてですし仕方ないですかね おやすみなさい」
+		;無回答の補正値は固定
+		CALLF CM_PROF("衝動",   -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥",    10)
+		CALLF CM_PROF("神経質",  10)
+	CASE 1
+		PRINTFORML 「おや、寝顔ですか」
+		PRINTFORMW 「なかなか良いですね、安心しきってる表情が良いです」
+		CALLF CM_PROF("素直さ",    10)
+		CALLF CM_PROF("衝動",     -10)
+		CALLF CM_PROF("好奇心",   -10)
+		CALLF CM_PROF("楽観",      10)
+		CALLF CM_PROF("神経質",   -10)
+	CASE 2
+		PRINTFORML 「うーん…、普通すぎますね」
+		PRINTFORMW 「まあとりあえず１枚、いただきましたー」
+		CALLF CM_PROF("素直さ",    10)
+		CALLF CM_PROF("衝動",     -10)
+		CALLF CM_PROF("好奇心",   -10)
+		CALLF CM_PROF("羞恥",      10)
+	CASE 3
+		PRINTFORML 「これは思い切りましたね…」
+		PRINTFORMW 「まさか起きたばかりでここまでしていただけるとは思いませんでしたよ、では１枚ー」
+		CALLF CM_PROF("素直さ",    20)
+		CALLF CM_PROF("プライド", -10)
+		CALLF CM_PROF("衝動",      20)
+		CALLF CM_PROF("好奇心",    20)
+		CALLF CM_PROF("知性",     -10)
+		CALLF CM_PROF("モラル",   -10)
+		CALLF CM_PROF("倒錯",      10)
+		CALLF CM_PROF("羞恥",      10)
+	CASE 4
+		PRINTFORML 「とんだ変態を捕まえてしまったみたいですね…」
+		CALLF CM_PROF("素直さ",   30)
+		CALLF CM_PROF("プライド",  -30)
+		CALLF CM_PROF("衝動",      30)
+		CALLF CM_PROF("好奇心",    30)
+		CALLF CM_PROF("羞恥",     -30)
+		CALLF CM_PROF("知性",     -30)
+		CALLF CM_PROF("潔癖",     -30)
+		CALLF CM_PROF("モラル",   -30)
+		CALLF CM_PROF("倒錯",      30)
+ENDSELECT
+RETURN 1
+
+
+;メディスン＠kapnaluqa
+@CHARAMAKE_K33(ARG)
+PRINTFORMW 「ほら、人間。起きて、起きてよ」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「起きた？　じゃあ、ちょっと参考にするから教えてね」
+PRINTFORML 「スーさんにも教えてあげるんだから真面目に答えてよ」
+PRINTFORMW 「毒と言えばなに？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] トリカブト
+PRINTFORMDL [2] 酸素
+PRINTFORMDL [3] 恋
+PRINTFORMDL [4] 毒なんてよくわからない
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「無視するなんて、私が人形だから馬鹿にしてるの？」
+		PRINTFORMW 「やっぱり人形の地位向上のためには人間と戦わなきゃならないようね」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「とってもとってもすごいスーさんの大先輩ね！」
+		PRINTFORML 「でも、人間はこの大先輩もお薬にしてた」
+		PRINTFORMW 「要するに使い方次第ってことわかってる？」
+		CALLF CM_PROF("攻撃", 30)
+		CALLF CM_PROF("衝動", 30)
+		CALLF CM_PROF("好奇心",20)
+		CALLF CM_PROF("Ｖ好き", 10)
+	CASE 2
+		PRINTFORML 「酸素も確かに毒。人間を燃やし尽くして壊しちゃう猛毒」
+		PRINTFORML 「あなた、でもその毒なしじゃ、人間は生きていけない」
+		PRINTFORMW 「人間のくせに大切なことを知ってるのね。えらいわ」
+		CALLF CM_PROF("知性", 30)
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("神経質", 10)
+		CALLF CM_PROF("プライド", 10)
+		CALLF CM_PROF("Ａ好き", 10)
+	CASE 3
+		PRINTFORML 「恋？　恋って楽しくて素敵なんじゃないの？」
+		PRINTFORML 「それでも毒なの？　つまり毒の楽しくて素敵？」
+		PRINTFORMW 「そんな風に考える人間もいるのね……」
+		CALLF CM_PROF("楽観", 20)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("倒錯", 20)
+		CALLF CM_PROF("被虐", 10)
+		CALLF CM_PROF("倒錯", 10)
+		CALLF CM_PROF("プライド", -10)
+	CASE 4
+		PRINTFORML 「馬鹿な人間！　自分の周りに毒がいっぱいあるのに」
+		PRINTFORMW 「毎日の食べ物、道端の花、みんなみんな毒なのに、それを知らないなんて」
+		CALLF CM_PROF("モラル", 20)
+		CALLF CM_PROF("羞恥", -20)
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("知性", -20)
+		CALLF CM_PROF("潔癖", 10)
+		CALLF CM_PROF("Ｃ好き", 10)
+ENDSELECT
+PRINTFORMW 「よくわかったわ。それじゃあスーさんが待ってるから、おやすみ」
+RETURN 1
+
+
+;幽香＠kapnaluqa
+@CHARAMAKE_K34(ARG)
+PRINTFORMW 「いつまで寝てるつもり？　はやく起きなさい」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「じゃあ、質問に答えてもらおうかしら…」
+PRINTFORMW 「そうね……この中で一番いいと思う歌を教えて」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 春風の　花の吹雪に　埋まれて　ゆきもやられぬ　志賀の山路
+PRINTFORMDL [2] 五月待つ　花橘の　香りをかげば　昔の人の　袖の香ぞする
+PRINTFORMDL [3] 雨ふれば　かさとり山の　もみぢ葉は　ゆきかふ人の　袖さへぞてる
+PRINTFORMDL [4] 白雪の　所もわかず　ふりしけば　巌にも咲く　花とこそみれ
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「なんとも思わない？　そう……つまらないわね」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「素直なのね。あら……褒めているのよ？」
+		PRINTFORML 「もちろん桜は最高なのだから楽しんで悪いことはないわ」
+		CALLF CM_PROF("楽観", 20)
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("羞恥", -10)
+		CALLF CM_PROF("潔癖", -10)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("Ｃ好き", 10)
+		CALLF CM_PROF("Ｖ好き", 10)
+		CALLF CM_PROF("Ｂ好き", -10)
+		CALLF CM_PROF("Ａ好き", -10)
+	CASE 2
+		PRINTFORML 「そう……もしかして貴方にも切ない思い出があるのかしら？」
+		CALLF CM_PROF("攻撃", -10)
+		CALLF CM_PROF("被虐", 10)
+		CALLF CM_PROF("素直さ", -10)
+		CALLF CM_PROF("プライド", -10)
+		CALLF CM_PROF("神経質", 20)
+		CALLF CM_PROF("モラル", 10)
+		CALLF CM_PROF("潔癖", -10)
+		CALLF CM_PROF("倒錯", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 3
+		PRINTFORML 「貴方が心惹かれたのは鮮やかな紅葉？
+		PRINTFORML 　それともそれを誰かと一緒にみた思い出かしら？」
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("衝動", 20)
+		CALLF CM_PROF("好奇心", 20)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("潔癖", -20)
+		CALLF CM_PROF("Ｃ好き", 20)
+		CALLF CM_PROF("Ａ好き", -20)
+	CASE 4
+		PRINTFORML 「あえてこの歌を選ぶわけね……確かに真っ白な雪も綺麗ね
+		PRINTFORML 　でも、美しくはあっても冬は冷たく、花々だって眠っていることを忘れないことね」
+		CALLF CM_PROF("素直さ", -20)
+		CALLF CM_PROF("倒錯", 20)
+		CALLF CM_PROF("同性愛", 20)
+		CALLF CM_PROF("モラル", -10)
+		CALLF CM_PROF("神経質", 10)
+		CALLF CM_PROF("潔癖", 10)
+		CALLF CM_PROF("Ｃ好き", -10)
+		CALLF CM_PROF("Ｖ好き", -10)
+		CALLF CM_PROF("Ｂ好き", -10)
+		CALLF CM_PROF("Ａ好き", 20)
+ENDSELECT
+PRINTFORMW 「よくわかったわ。それじゃあおやすみなさい。いい夢を見れるといいわね」
+RETURN 1
+
+
+;小町＠CPMの人
+@CHARAMAKE_K35(ARG)
+PRINTFORML 「やあ、おはよう」
+PRINTFORMW 「ちょいと来てくれ。何、難しい事はさせないさ」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「さて、そこらに小石が転がってるだろ。それを適当に積んでおいてくれ」
+PRINTFORML 「その間に私はちょっと寝てるから、良いほど積んだら起こしてくれ」
+PRINTFORMW 「じゃ、頑張れよ」
+LOCAL = 0
+LOCAL:1 = 0
+$SET_LOOP
+FOR LOCAL:2, 0, LOCAL
+	PRINTD ■
+NEXT
+PRINTL 
+PRINTFORMDL [0] 帰る
+PRINTFORMDL [1] 積む
+PRINTFORMDL [2] 起こす
+INPUT
+IF RESULT == 0
+	PRINTFORML 「何も言わずにお帰り、かい」
+	PRINTFORMW 「やれやれ」
+	CALLF CM_PROF("衝動", -10)
+	CALLF CM_PROF("好奇心", -10)
+	CALLF CM_PROF("羞恥", 10)
+	CALLF CM_PROF("神経質", 10)
+	RETURN 1
+ELSEIF RESULT == 1
+	LOCAL++
+ELSEIF RESULT == 2
+	GOTO LOOP_BREAK
+ENDIF
+IF PERCENT((LOCAL-6)*10)
+	PRINTFORMDW 積んでいた石は崩れてしまった……
+	LOCAL = 2
+	LOCAL:1++
+ENDIF
+GOTO SET_LOOP
+$LOOP_BREAK
+IF LOCAL:1 == 0
+	SELECTCASE LOCAL
+		CASE IS <= 3
+			PRINTFORML 「なんだ、全然積んで無いじゃないか」
+			PRINTFORML 「まあ、それで良いほどってなら、仕方ない」
+			CALLF CM_PROF("素直さ", -20)
+			CALLF CM_PROF("衝動", 30)
+			CALLF CM_PROF("楽観", 30)
+			CALLF CM_PROF("モラル", -30)
+			CALLF CM_PROF("神経質", -30)
+			CALLF CM_PROF("潔癖", -30)
+			CALLF CM_PROF("Ｃ好き", 20)
+			CALLF CM_PROF("Ｖ好き", -20)
+			CALLF CM_PROF("Ｂ好き", -10)
+			CALLF CM_PROF("Ａ好き", -10)
+			
+		CASE IS <= 10
+			PRINTFORML 「ふーん。そこそこ積めたみたいじゃないか」
+			CALLF CM_PROF("素直さ", 10)
+			CALLF CM_PROF("衝動", -10)
+			CALLF CM_PROF("楽観", 10)
+			CALLF CM_PROF("モラル", 10)
+			CALLF CM_PROF("神経質", 10)
+			CALLF CM_PROF("Ｃ好き", 10)
+			CALLF CM_PROF("Ｖ好き", 10)
+			CALLF CM_PROF("Ｂ好き", 10)
+			CALLF CM_PROF("Ａ好き", -10)
+			
+		CASEELSE
+			PRINTFORML 「ほほぉ。こりゃまた沢山積んだもんだ」
+			CALLF CM_PROF("素直さ", 30)
+			CALLF CM_PROF("衝動", -30)
+			CALLF CM_PROF("楽観", -30)
+			CALLF CM_PROF("モラル", 30)
+			CALLF CM_PROF("神経質", 30)
+			CALLF CM_PROF("潔癖", 30)
+			CALLF CM_PROF("Ｃ好き", -20)
+			CALLF CM_PROF("Ｖ好き", 30)
+			CALLF CM_PROF("Ｂ好き", 20)
+			CALLF CM_PROF("Ａ好き", 20)
+			
+	ENDSELECT
+ELSE
+	IF LOCAL == 2 && LOCAL:1 == 1
+		PRINTFORML 「ん、崩れちまった？　まあ、そう言う事もあるさ」
+		PRINTFORML 「気を落としなさんな」
+		CALLF CM_PROF("楽観", -30)
+		CALLF CM_PROF("モラル", -10)
+		CALLF CM_PROF("神経質", -20)
+		CALLF CM_PROF("潔癖", -30)
+		CALLF CM_PROF("Ｃ好き", 10)
+		CALLF CM_PROF("Ｖ好き", -10)
+		CALLF CM_PROF("Ｂ好き", 10)
+		CALLF CM_PROF("Ａ好き", -10)
+		
+	ELSE
+		PRINTFORML 「ほうほう。途中で崩れたけど、頑張ったと」
+		PRINTFORML 「偉い偉い」
+		CALLF CM_PROF("楽観", 20)
+		CALLF CM_PROF("モラル", 30)
+		CALLF CM_PROF("神経質", 20)
+		CALLF CM_PROF("潔癖", 30)
+		CALLF CM_PROF("Ｃ好き", -10)
+		CALLF CM_PROF("Ｖ好き", 30)
+		CALLF CM_PROF("Ｂ好き", 10)
+		CALLF CM_PROF("Ａ好き", 30)
+		
+	ENDIF
+ENDIF
+PRINTFORMW 「帰してやるから、ゆっくり眠りな」
+RETURN 1
+
+
+;映姫＠Crow
+@CHARAMAKE_K36(ARG)
+PRINTFORML 「目を開けて下さい」
+PRINTFORMW 「私が見えますか？　うふふ、こっちです」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「では、私からも一つ問いましょう」
+PRINTFORML 「貴方が今までに犯した最も酷い悪行を思い浮かべなさい」
+PRINTFORMW 「その被害者の立場になった場合、相手を許すことができますか？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 悪行など身に覚えがない
+PRINTFORMDL [2] 許せる
+PRINTFORMDL [3] たぶん許せると思う
+PRINTFORMDL [4] 絶対に許せないよ
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「……わかりました」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「貴方は少し嘘を吐き過ぎる」
+		CALLF CM_PROF("攻撃",      +5)
+		CALLF CM_PROF("プライド", +10)
+		CALLF CM_PROF("素直さ",   -20)
+		CALLF CM_PROF("楽観",     +20)
+
+	CASE 2
+		PRINTFORML 「ふふ、良いでしょう」
+		PRINTFORML 「貴方が再びこの地へ来たとき、答えを出しましょうか」
+		CALLF CM_PROF("モラル",   +20)
+		CALLF CM_PROF("プライド", -10)
+		CALLF CM_PROF("素直さ",   -10)
+		CALLF CM_PROF("楽観",     +10)
+
+	CASE 3
+		PRINTFORML 「加害者と被害者では受け止め方がまるで違います」
+		PRINTFORML 「貴方がハッキリ出来ないということは、きっとそういうことなのでしょう」
+		CALLF CM_PROF("モラル",   +10)
+		CALLF CM_PROF("プライド", -10)
+		CALLF CM_PROF("素直さ",   +10)
+		CALLF CM_PROF("神経質",   +10)
+	CASE 4
+		PRINTFORML 「生きている限り、犯した罪は貴方を縛り、相手をも縛り続けます」
+		PRINTFORML 「死後に私達のような存在が必要とされる所以です」
+		CALLF CM_PROF("プライド",  20)
+		CALLF CM_PROF("素直さ",   +20)
+		CALLF CM_PROF("神経質",   +20)
+
+ENDSELECT
+PRINTFORMW 「さあ、行きなさい」
+RETURN 1
+
+
+;静葉＠Crow
+@CHARAMAKE_K37(ARG)
+PRINTFORMW 「あ、起きたね」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「私からは当然、秋に対する質問です」
+PRINTFORMW 「あなたが秋と聞いて思い浮かべるのはどれかな？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 食欲の秋
+PRINTFORMDL [2] 読書の秋
+PRINTFORMDL [3] スポーツの秋
+PRINTFORMDL [4] その他の秋
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「もしかして、秋、嫌いだったりする……？」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「何食べても美味しい季節だよね」
+		PRINTFORML 「馬は肥えても良いけど、あなたは気をつけてね」
+		CALLF CM_PROF("素直さ",  +10)
+		CALLF CM_PROF("衝動",    +10)
+		CALLF CM_PROF("楽観",    +10)
+		CALLF CM_PROF("知性",    -20)
+		CALLF CM_PROF("神経質",  -20)
+		CALLF CM_PROF("Ｂ好き",  +10)
+	CASE 2
+		PRINTFORML 「秋の夜長に気ままに読書、風流だよね」
+		CALLF CM_PROF("攻撃",    -20)
+		CALLF CM_PROF("衝動",    -20)
+		CALLF CM_PROF("知性",    +30)
+		CALLF CM_PROF("倒錯",    -10)
+		CALLF CM_PROF("モラル",  +10)
+		CALLF CM_PROF("神経質",  +10)
+	CASE 3
+		PRINTFORML 「聞くところによると、外の世界には運動会ってお祭りがあるみたいだね」
+		PRINTFORML 「私も見てみたいなぁ……」
+		CALLF CM_PROF("攻撃",    +20)
+		CALLF CM_PROF("被虐",    -10)
+		CALLF CM_PROF("衝動",    +10)
+		CALLF CM_PROF("羞恥",    -10)
+		CALLF CM_PROF("知性",    -10)
+		CALLF CM_PROF("神経質",  -10)
+		CALLF CM_PROF("Ｖ好き",  +10)
+	CASE 4
+		PRINTFORML 「芸術、ハイキング、温泉……秋は何をしても素晴らしい季節です」
+		PRINTFORML 「えっちなこと……？　ええっ！？」
+		CALLF CM_PROF("素直さ",  -10)
+		CALLF CM_PROF("好奇心",  +20)
+		CALLF CM_PROF("羞恥",    -20)
+		CALLF CM_PROF("倒錯",    +20)
+		CALLF CM_PROF("同性愛",  +10)
+		CALLF CM_PROF("潔癖",    -10)
+		CALLF CM_PROF("モラル",  -10)
+ENDSELECT
+PRINTFORMW 
+RETURN 1
+
+
+;穣子＠Crow
+@CHARAMAKE_K38(ARG)
+PRINTFORMW 「ほら、起きた起きた」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「ぼけっとしてるけどあんた大丈夫？」
+PRINTFORML 「豊穣の神の私からは、豊かさについて答えてもらうわ」
+PRINTFORMW 「豊かさって、あんたにとってどういうこと？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 食べ切れないほどの食物
+PRINTFORMDL [2] 使い切れないほどの金銭
+PRINTFORMDL [3] 他人を慈しみ、思いやれる余裕
+PRINTFORMDL [4] おっぱい
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「答えられない？　心が貧しいのね」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「お腹いっぱい食べられるって幸せなことよね」
+		CALLF CM_PROF("素直さ",  +10)
+		CALLF CM_PROF("プライド",-10)
+		CALLF CM_PROF("衝動",    +10)
+		CALLF CM_PROF("好奇心",  +10)
+		CALLF CM_PROF("羞恥",    -10)
+		CALLF CM_PROF("楽観",    +10)
+		CALLF CM_PROF("神経質",  -20)
+	CASE 2
+		PRINTFORML 「お金はじゃんじゃん使うことで豊かさを周囲に分け与えることになるの」
+		PRINTFORML 「どう？　無駄に貯めこんでたりしてない？」
+		CALLF CM_PROF("素直さ",  +10)
+		CALLF CM_PROF("知性",    +10)
+		CALLF CM_PROF("倒錯",    +10)
+		CALLF CM_PROF("潔癖",    -20)
+		CALLF CM_PROF("モラル",  -20)
+		CALLF CM_PROF("神経質",  +10)
+	CASE 3
+		PRINTFORML 「物質的な豊かさより、精神的な豊かさをあんたは選ぶっていうのね」
+		CALLF CM_PROF("被虐",    +10)
+		CALLF CM_PROF("素直さ",  -10)
+		CALLF CM_PROF("衝動",    -10)
+		CALLF CM_PROF("好奇心",  -10)
+		CALLF CM_PROF("楽観",    -10)
+		CALLF CM_PROF("潔癖",    +10)
+		CALLF CM_PROF("モラル",  +20)
+	CASE 4
+		PRINTFORML 「あーもう！　わかったわよ！」
+		CALLF CM_PROF("プライド",-10)
+		CALLF CM_PROF("羞恥",    -10)
+		CALLF CM_PROF("知性",    -10)
+		CALLF CM_PROF("潔癖",    -10)
+		CALLF CM_PROF("衝動",    +20)
+		CALLF CM_PROF("Ｂ好き",  +40)
+ENDSELECT
+PRINTFORMW 「はい、もう行っていいわ」
+RETURN 1
+
+
+;雛＠/L
+@CHARAMAKE_K39(ARG)
+PRINTFORMW 「厄神の部屋へようこそ。少しの間だけどゆっくりしていって」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「そうそう、厄祓いについてあなたの考えを聞かせてもらえないかしら？」
+PRINTFORMW 「ねぇ、正直に答えて」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] お守り等で神仏に頼る
+PRINTFORMDL [2] 香を焚く等して、厄を追い出す
+PRINTFORMDL [3] 流し雛等の身代わりを立てる
+PRINTFORMDL [4] 抜いてください厄神様！
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「あっ、そう！ 答えたくないなら別にいいけど」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「無難なところね。それなりの効果もあると思うわよ」
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("好奇心", -20)
+		CALLF CM_PROF("モラル", 20)
+		CALLF CM_PROF("衝動", -30)
+		CALLF CM_PROF("知性", 20)
+		CALLF CM_PROF("攻撃", 10)
+	CASE 2
+		PRINTFORML 「香を焚くねぇ。私はちょっと疑問だけど」
+		CALLF CM_PROF("好奇心", 40)
+		CALLF CM_PROF("楽観", 30)
+		CALLF CM_PROF("Ａ好き", 20)
+		CALLF CM_PROF("倒錯", 20)
+		CALLF CM_PROF("素直さ", -40)
+		CALLF CM_PROF("衝動", 20)
+		CALLF CM_PROF("神経質", 40)
+	CASE 3
+		PRINTFORML 「いい判断ね。その効果は私が保証するわ」
+		CALLF CM_PROF("知性", 30)
+		CALLF CM_PROF("潔癖", 20)
+		CALLF CM_PROF("神経質", 20)
+		CALLF CM_PROF("羞恥", 20)
+		CALLF CM_PROF("好奇心", 30)
+		CALLF CM_PROF("被虐", 10)
+	CASE 4
+		PRINTFORML 「……何の冗談？」
+		PRINTFORML 「厄神を怒らせると酷い事になるけど、あなたそれでもいいのかしら？」
+		CALLF CM_PROF("同性愛", 10)
+		CALLF CM_PROF("倒錯", 30)
+		CALLF CM_PROF("モラル", -40)
+		CALLF CM_PROF("羞恥", -30)
+		CALLF CM_PROF("知性", -40)
+		CALLF CM_PROF("衝動", 50)
+		CALLF CM_PROF("素直さ", 40)
+		CALLF CM_PROF("攻撃", 20)
+ENDSELECT
+PRINTFORML 「厄祓いが必要になったら、私のところにきなさい」
+PRINTFORMW 「では気をつけていってらっしゃい――」
+RETURN 1
+
+
+;にとり＠紅レミの人
+@CHARAMAKE_K40(ARG)
+PRINTFORMW 「おはよー。まだ眠そうだね」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「じゃあ私から一つ質問」
+PRINTFORML 「修理の依頼を受けてはるばる遠くまでやって来たはいいものの」
+PRINTFORMW 「大事な工具を一つ忘れて来ちゃったんだよね。どうしよ」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] もう駄目だ。おしまいだ……
+PRINTFORMDL [2] いや、遠くても取りに帰ろう
+PRINTFORMDL [3] 道具がなければ、作っちゃえばいいじゃない
+PRINTFORMDL [4] 私がマクガイバーだ！
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「完全に放心状態だねぇ」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「ショックが大きかったのかな」
+		CALLF CM_PROF("素直さ", 10)
+		CALLF CM_PROF("衝動", 30)
+		CALLF CM_PROF("楽観", -20)
+		CALLF CM_PROF("Ｂ好き", 20)
+	CASE 2
+		PRINTFORML 「まぁ、仕方ないよね」
+		CALLF CM_PROF("被虐", 10)
+		CALLF CM_PROF("素直さ", 10)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("モラル", 10)
+		CALLF CM_PROF("Ｃ好き", 10)
+	CASE 3
+		PRINTFORML 「どうせなら良いのを作らなきゃね」
+		CALLF CM_PROF("プライド", 10)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("知性", 10)
+		CALLF CM_PROF("Ｖ好き", 10)
+	CASE 4
+		PRINTFORML 「ひゅい！？（かっこいい……！）」
+		CALLF CM_PROF("プライド", 10)
+		CALLF CM_PROF("好奇心", 20)
+		CALLF CM_PROF("知性", 30)
+		CALLF CM_PROF("Ａ好き", 10)
+ENDSELECT
+PRINTFORMW 「とりあえず頑張ってみるよ。ありがと」
+RETURN 1
+
+
+;椛@Enter
+@CHARAMAKE_K41(ARG)
+PRINTFORML 「あ、おはようございます。お目覚めになられましたね」
+PRINTFORMW 「突然ですが、少し、付き合ってもらえませんか？」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「犬って可愛いですよね。あなたもそう思いますか？」
+PRINTFORMW 「じゃあ、犬の行動で一番好きなことってなんですか？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] おすわり
+PRINTFORMDL [2] お手
+PRINTFORMDL [3] ちんちん
+PRINTFORMDL [4] 交尾
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「犬、嫌いなんですか？　残念です……」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「おすわりして、尻尾ふりふりするの、可愛いですよね」
+		CALLF CM_PROF("被虐", -10)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("知性", 10)
+	CASE 2
+		PRINTFORML 「肉球がふにふにしてて気持ちいいですよね」
+		CALLF CM_PROF("素直さ", 30)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("潔癖", -10)
+		CALLF CM_PROF("モラル", 10)
+	CASE 3
+		PRINTFORML 「何かおねだりしてるみたいで可愛いですよね。時々、足に抱きついてくるのも可愛いです」
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("プライド", -10)
+		CALLF CM_PROF("神経質", -10)
+	CASE 4
+		PRINTFORML 「ふえぇ！　ま、まさか、獣姦とか、イケちゃう、感じです……か……？」
+		CALLF CM_PROF("Ｖ好き", 20)
+		CALLF CM_PROF("倒錯", 20)
+		CALLF CM_PROF("潔癖", -30)
+		CALLF CM_PROF("プライド", -10)
+ENDSELECT
+PRINTFORMW 「むー、付き合ってくれてありがとうございました。それでは、おやすみなさい」
+RETURN 1
+
+
+;早苗＠早苗様の人
+@CHARAMAKE_K42(ARG)
+PRINTFORMW 「すみません、少しお聞きしたいのですけど、いいですか？」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORMW 「神様って、たくさん居ると思います？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 居る
+PRINTFORMDL [2] 神は一人しか居ない
+PRINTFORMDL [3] 神など存在しない
+PRINTFORMDL [4] 私が神だ
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「シカトですか？　祟られても知らないわよ！」
+		;無回答の補正値は固定
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「そうですよね、やっぱり神様はたくさん居るのが賑やかでいいですよねー」
+		PRINTFORML 「守矢神社は３人も神様が居るんですよ、是非参拝しにきてくださいね」
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("潔癖", -10)
+		CALLF CM_PROF("神経質", -10)
+	CASE 2
+		PRINTFORML 「はあそうですか、今の所一神教はメジャーですもんね」
+		PRINTFORML 「私達も見習ってもっと信者を増やさないといけないですね」
+		CALLF CM_PROF("モラル", 10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("潔癖", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 3
+		PRINTFORML 「人間の力をずいぶんと高く評価してるのね」
+		PRINTFORML 「それとも科学っていう神様を知らずに信仰してるだけかしら」
+		CALLF CM_PROF("プライド", 10)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("攻撃", 10)
+	CASE 4
+		PRINTFORML 「あ、神様でしたか、すみません分からなくて」
+		PRINTFORML 「最近雑多な神様が増えてきたなぁ」
+		CALLF CM_PROF("好奇心", 20)
+		CALLF CM_PROF("Ｃ好き", 30)
+		CALLF CM_PROF("Ｖ好き", 30)
+		CALLF CM_PROF("プライド", 30)
+		
+ENDSELECT
+PRINTFORMW 「それじゃ、私は神事がありますのでこれで」
+RETURN 1
+
+
+;神奈子＠Librarian
+@CHARAMAKE_K43(ARG)
+PRINTFORMW 「我を呼ぶのは何処の人ぞ」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「と、言いたいけども、今回は質問に答えてもらうよ」
+PRINTFORMW 「あなたは私を何と呼ぶ。神か、仏か、それとも妖怪？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 誰でもいい
+PRINTFORMDL [2] 神様
+PRINTFORMDL [3] 仏様
+PRINTFORMDL [4] 妖怪
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「おやおや、触らぬ神に祟りなし、ということね」
+		PRINTFORMW 「実際、これくらいで祟りはしないから、安心なさい」
+		;無回答の補正値は固定
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORMW 「そういう答えも嫌いじゃないわ。ちょっとした変わり者なんでしょうね、貴方も」
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("被虐", -10)
+		CALLF CM_PROF("素直さ", -20)
+		CALLF CM_PROF("プライド", 20)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("好奇心", -20)
+		CALLF CM_PROF("知性", -10)
+		CALLF CM_PROF("倒錯", -10)
+		CALLF CM_PROF("潔癖", -10)
+		CALLF CM_PROF("モラル", -10)
+		CALLF CM_PROF("神経質", -20)
+		CALLF CM_PROF("Ｃ好き", 10)
+		CALLF CM_PROF("Ｖ好き", -10)
+	CASE 2
+		PRINTFORMW 「それは正しい認識ね。山を見て、一つ感謝の祈りでもするといい」
+		CALLF CM_PROF("攻撃", -10)
+		CALLF CM_PROF("被虐", 10)
+		CALLF CM_PROF("素直さ", 30)
+		CALLF CM_PROF("プライド", -20)
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 20)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("倒錯", -10)
+		CALLF CM_PROF("潔癖", 10)
+		CALLF CM_PROF("モラル", 20)
+		CALLF CM_PROF("神経質", 10)
+		CALLF CM_PROF("Ｃ好き", -10)
+		CALLF CM_PROF("Ｖ好き", 20)
+		CALLF CM_PROF("Ｂ好き", -10)
+		CALLF CM_PROF("Ａ好き", 20)
+	CASE 3
+		PRINTFORML 「残念だけど、修行というのは趣味ではないよ」
+		PRINTFORMW 「苦行を通して悟るのは、結局それでは仏にはなれないということだけだから」
+		CALLF CM_PROF("素直さ", -20)
+		CALLF CM_PROF("プライド", -10)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("好奇心", 20)
+		CALLF CM_PROF("羞恥", -10)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("潔癖", -20)
+		CALLF CM_PROF("モラル", 10)
+		CALLF CM_PROF("神経質", -10)
+		CALLF CM_PROF("Ｃ好き", -10)
+		CALLF CM_PROF("Ｖ好き", -10)
+		CALLF CM_PROF("Ｂ好き", 10)
+		CALLF CM_PROF("Ａ好き", 10)
+	CASE 4
+		PRINTFORML 「間違ってはいないけど、少し違う」
+		PRINTFORMW 「私が信仰を失えば、一時だけは仲間入りだけどね」
+		CALLF CM_PROF("攻撃", 20)
+		CALLF CM_PROF("被虐", 10)
+		CALLF CM_PROF("素直さ", -20)
+		CALLF CM_PROF("プライド", 20)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("好奇心", 20)
+		CALLF CM_PROF("羞恥", -10)
+		CALLF CM_PROF("楽観", -10)
+		CALLF CM_PROF("知性", 20)
+		CALLF CM_PROF("倒錯", 20)
+		CALLF CM_PROF("同性愛", 10)
+		CALLF CM_PROF("潔癖", -10)
+		CALLF CM_PROF("モラル", -10)
+		CALLF CM_PROF("神経質", -10)
+		CALLF CM_PROF("Ｃ好き", 10)
+		CALLF CM_PROF("Ｖ好き", 10)
+		CALLF CM_PROF("Ｂ好き", -20)
+		CALLF CM_PROF("Ａ好き", 10)
+ENDSELECT
+PRINTFORML 「さて、ほんの顔見せですまないけど、もう行かなきゃならないんだ」
+PRINTFORMW 「また遭う事があったらでいいから、ちょっと信仰していって欲しいね」
+RETURN 1
+
+
+;諏訪子＠CPMの人
+@CHARAMAKE_K44(ARG)
+PRINTFORMW 「さあ、起きた起きた」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「神様だって暇じゃないんだ。さっさと進めるよ」
+PRINTFORMW 「貴方にとって梅雨はどんな季節？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 雨続きで憂鬱な季節
+PRINTFORMDL [2] 実りのための準備の季節
+PRINTFORMDL [3] 静かに過ごせる穏やかな季節
+PRINTFORMDL [4] 外に出れないってことはやることは一つ
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「はいはい、分かったよ」
+		PRINTFORMW 「もうさっさと眠りな」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「確かに出歩けないと鬱屈しちゃうよね」
+		PRINTFORMW 「じゃあ、おやすみ」
+		CALLF CM_PROF("攻撃",     10)
+		CALLF CM_PROF("衝動",     20)
+		CALLF CM_PROF("攻撃",     10)
+		CALLF CM_PROF("素直さ",   10)
+	CASE 2
+		PRINTFORML 「だよねぇ。そうだよねぇ。うんうん」
+		PRINTFORMW 「ありがとう、ゆっくり休んでね」
+		CALLF CM_PROF("知性",     20)
+		CALLF CM_PROF("衝動",     -10)
+		CALLF CM_PROF("プライド", -10)
+		CALLF CM_PROF("モラル",   10)
+		CALLF CM_PROF("Ｂ好き",   10)
+	CASE 3
+		PRINTFORML 「雨音を聞きながら本を読んだりとか？　良いねぇ良いねぇ」
+		PRINTFORMW 「時間取らせちゃったね。おやすみ」
+		CALLF CM_PROF("衝動",     -20)
+		CALLF CM_PROF("攻撃",     -20)
+		CALLF CM_PROF("モラル",   10)
+		CALLF CM_PROF("知性",     10)
+	CASE 4
+		PRINTFORML 「おやおや。お盛んだねぇ。一発ヤってくかい？」
+		PRINTFORMW 「……なんて冗談だよ。ネンネはさっさとお寝んねしな」
+		CALLF CM_PROF("知性",     -20)
+		CALLF CM_PROF("モラル",   -20)
+		CALLF CM_PROF("倒錯",     10)
+		CALLF CM_PROF("攻撃",     20)
+		CALLF CM_PROF("衝動",     20)
+		CALLF CM_PROF("同性愛",   10)
+		CALLF CM_PROF("Ｃ好き",   10)
+		CALLF CM_PROF("Ｖ好き",   10)
+ENDSELECT
+RETURN 1
+
+
+;サニー@Enter
+@CHARAMAKE_K45(ARG)
+PRINTFORMW 「ほら、起きなさい！　質問の時間よ！」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORMW 「突然だけど、あなたの家は壊れたわ」
+PRINTFORMW 「よし、じゃあ引っ越しましょう！　ということで、どこに引っ越す？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 雨の降りにくい紅魔館周辺
+PRINTFORMDL [2] 桜の綺麗な白玉楼周辺
+PRINTFORMDL [3] 医療施設が近い永遠亭周辺
+PRINTFORMDL [4] 四季折々の花を眺められる花畑周辺
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「あれ？　ホームレスがいいの？」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「雨が降ると憂鬱な気分になるよね。いい判断だわ」
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("神経質", 10)
+		CALLF CM_PROF("被虐", -10)
+		CALLF CM_PROF("知性", 10)
+	CASE 2
+		PRINTFORML 「桜は綺麗よね。私も好き」
+		CALLF CM_PROF("被虐", -20)
+		CALLF CM_PROF("攻撃", -10)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("Ｃ好き", 10)
+		CALLF CM_PROF("楽観", 20)
+	CASE 3
+		PRINTFORML 「まぁ、何かあったときに便利ね。そういうのがあると」
+		CALLF CM_PROF("神経質", 20)
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("楽観", -20)
+		CALLF CM_PROF("潔癖", 20)
+		CALLF CM_PROF("被虐", 20)
+	CASE 4
+		PRINTFORML 「それもいいわね。飽きない一年は素敵だなぁって」
+		CALLF CM_PROF("好奇心", 30)
+		CALLF CM_PROF("被虐", -10)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("素直さ", 10)
+ENDSELECT
+PRINTFORMW 「大丈夫よ。今の時代、そう簡単に家は壊れないわ。安心しておやすみ」
+RETURN 1
+
+
+;ルナ@Enter
+@CHARAMAKE_K46(ARG)
+PRINTFORMW 「あら？　もう少し寝てると思ったんだけど……起きちゃったかしら」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORMW 「ちょっとだけ、私の質問に答えてくれる？　だめ？」
+PRINTFORMW 「ありがとう。じゃあ、一つ」
+PRINTFORMW 「あなたが森を歩いていると、一匹の小さな妖精が虎挟みにかかっていました。あなたならどうする？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 可哀想だ 助ける
+PRINTFORMDL [2] それは誰かの獲物だ 見捨てる
+PRINTFORMDL [3] 可愛そうだ 連れて帰る
+PRINTFORMDL [4] いい獲物だ 犯す
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「……」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「妖精側にしては、それが一番嬉しい答えね、ありがと」
+		CALLF CM_PROF("素直さ", 10)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("攻撃", -10)
+		CALLF CM_PROF("モラル", 20)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("潔癖", -10)
+	CASE 2
+		PRINTFORML 「そうね。もしかしたら一番正当な答えかもしれないわね」
+		CALLF CM_PROF("潔癖", 20)
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("倒錯", 10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("モラル", -10)
+		CALLF CM_PROF("知性", 20)
+	CASE 3
+		PRINTFORML 「そう。じゃあ、幸せにしてあげてちょうだいね」
+		CALLF CM_PROF("モラル", 10)
+		CALLF CM_PROF("衝動", 30)
+		CALLF CM_PROF("倒錯", 10)
+		CALLF CM_PROF("潔癖", -10)
+		CALLF CM_PROF("モラル", 10)
+		CALLF CM_PROF("プライド", -10)
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("Ｂ好き", 10)
+	CASE 4
+		PRINTFORML 「人間は、性欲には抗えないのかしらね」
+		CALLF CM_PROF("素直さ", 30)
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("羞恥", -10)
+		CALLF CM_PROF("モラル", -20)
+		CALLF CM_PROF("神経質", -20)
+		CALLF CM_PROF("Ｖ好き", 20)
+		CALLF CM_PROF("Ｃ好き", 10)
+ENDSELECT
+PRINTFORMW 「あなたは本当はどんな対応をするのかしらね。おやすみ」
+RETURN 1
+
+
+;スターサファイア＠kouhei
+@CHARAMAKE_K47(ARG)
+PRINTFORMW 「私の質問に答えるのはあなたかしら？」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「なら、さっそく本題に移らせてもらうわ」
+PRINTFORMW 「あなたが一番好きな星や星座はこの中だとどれかしら？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] きらめく一等星
+;PRINTFORMDL [] かすかな六等星
+PRINTFORMDL [2] 壮大な星団
+PRINTFORMDL [3] 動きの読めない惑星
+PRINTFORMDL [4] 君の瞳
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「星空に興味無いの？　それとも星が見えない？」
+		PRINTFORML 「都会人って悲しいわね」
+		;無回答の補正値は固定
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「強い輝きは自然とみんなを引き寄せるわ、あなたもそんな人たちの一人」
+		PRINTFORML 「あなたも自然と人を引き付けられる、太陽みたいな人になれるといいわね」
+		PRINTFORML 「でも忘れないで、煌めく星のそばには、たくさんの幽かな星たちがいるものよ」
+		CALLF CM_PROF("知性", 20)
+		CALLF CM_PROF("プライド", 10)
+		CALLF CM_PROF("羞恥", -10)
+		CALLF CM_PROF("神経質", -10)
+	;CASE 
+		;PRINTFORML 「……変わってるわね」
+		;PRINTFORML 「でも、あなたみたいな人が砂漠に落ちた一粒の石を見つけるのかしらね」
+		;CALLF CM_PROF("倒錯", 20)
+		;CALLF CM_PROF("神経質", 10)
+		;CALLF CM_PROF("好奇心", 10)
+		;CALLF CM_PROF("素直さ", -10)
+	CASE 2
+		PRINTFORML 「一つ一つの星の輝きは儚くても、みんなの力を合わせればかけがえのないものになる」
+		PRINTFORML 「私達にも、そういう協力することでの可能性が大いにあるはずだわ」
+		PRINTFORML 「その結果、私独りが目立たなくなったとしても、きっとその方がいいはずよね」
+		CALLF CM_PROF("楽観", 20)
+		CALLF CM_PROF("モラル", 20)
+		CALLF CM_PROF("素直さ", 10)
+		CALLF CM_PROF("被虐", 10)
+	CASE 3
+		PRINTFORML 「自分の思い通りにならないから面白い、そういう考え方もあるわね」
+		PRINTFORML 「でも惑星は一人では輝けない、輝く恒星のそばにいないとね」
+		CALLF CM_PROF("倒錯", 20)
+		CALLF CM_PROF("神経質", 10)
+		CALLF CM_PROF("知性", 10)
+		CALLF CM_PROF("被虐", 10)
+	CASE 4
+		PRINTFORML 「え？　ちょっ、ま」
+		PRINTFORML 「……ろりこん？」
+		CALLF CM_PROF("衝動", 20)
+		CALLF CM_PROF("素直さ", 10)
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("Ｂ好き", 10)
+		CALLF CM_PROF("知性", -10)
+		CALLF CM_PROF("潔癖", -10)
+ENDSELECT
+PRINTFORML 「……私の話聞いてるのかしら？　まだ眠そうね」
+PRINTFORMW 「おやすみ。またいつか会いましょう」
+RETURN 1
+
+
+;阿求＠Crow
+@CHARAMAKE_K48(ARG)
+PRINTFORMW 「あ、気づきましたね」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「待ちかねましたよ、ようやく私の番ですね」
+PRINTFORML 「では軽めに行きますよ？」
+PRINTFORMW 「貴方の余命、この中でどれかひとつ選べと言われたらどうします？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] お金や異性など、欲望に全く困らない生活を1年
+PRINTFORMDL [2] 家庭を持ち、子供が生まれるなど平凡な幸せで15年
+PRINTFORMDL [3] 現状維持のまま30年
+PRINTFORMDL [4] 不老不死
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「まぁ、そうですよね」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「太く短く、わかりやすいですねー」
+		PRINTFORML 「でもきっかり一年ですよ？  耐えられます？」
+		CALLF CM_PROF("素直",   +10)
+		CALLF CM_PROF("モラル", -30)
+		CALLF CM_PROF("神経質", -30)
+		CALLF CM_PROF("楽観",   +20)
+		CALLF CM_PROF("Ｖ好き", +20)
+		CALLF CM_PROF("Ｃ好き", +20)
+		CALLF CM_PROF("好奇心", +20)
+		
+	CASE 2
+		PRINTFORML 「良いですよね、平凡な幸せというのも」
+		PRINTFORML 「お子さんが大事な時期に置いて逝くことになりますけどね♪」
+		CALLF CM_PROF("モラル", +10)
+		CALLF CM_PROF("知性",   +20)
+		CALLF CM_PROF("Ｂ好き", +10)
+		CALLF CM_PROF("楽観",   -20)
+		CALLF CM_PROF("好奇心", -20)
+
+	CASE 3
+		PRINTFORML 「現状すでに幸せなら、当然これを選ぶべきですよね」
+		CALLF CM_PROF("モラル", +10)
+		CALLF CM_PROF("神経質", +20)
+		CALLF CM_PROF("好奇心", -20)
+
+	CASE 4
+		PRINTFORML 「正気ですか？」
+		CALLF CM_PROF("素直さ", +30)
+		CALLF CM_PROF("モラル", -30)
+		CALLF CM_PROF("知性",   -30)
+		CALLF CM_PROF("潔癖",   -30)
+		CALLF CM_PROF("好奇心", +20)
+
+ENDSELECT
+PRINTFORMW 「色んな意味で、これから頑張ってくださいね」
+RETURN 1
+
+
+;蓮子＠CPMの人
+@CHARAMAKE_K49(ARG)
+PRINTFORMW 「ちょっと起きてくれるかしら」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「はい、おはよう。目覚めに一つ頭を捻ってもらうわ」
+PRINTFORMW 「時間の流れってどうなってると思う？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 過去から未来へ
+PRINTFORMDL [2] 不連続な配列
+PRINTFORMDL [3] 今しかない
+PRINTFORMDL [4] キミとキスしていれば止まる
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「まだ頭が回ってないのかしら？」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「そう、それが普通の答えね」
+		CALLF CM_PROF("素直さ",   20)
+		CALLF CM_PROF("神経質",   10)
+		CALLF CM_PROF("倒錯",     -10)
+		CALLF CM_PROF("攻撃",     -10)
+	CASE 2
+		PRINTFORML 「観測の精度を超えたスキマには、一体何があるのかしらね……」
+		CALLF CM_PROF("知性",     20)
+		CALLF CM_PROF("倒錯",     10)
+		CALLF CM_PROF("素直さ",   -30)
+	CASE 3
+		PRINTFORML 「信じられるのは己が感覚だけ。貴方は良い哲学者になれそうね」
+		CALLF CM_PROF("衝動",     10)
+		CALLF CM_PROF("楽観",     20)
+		CALLF CM_PROF("羞恥",     -10)
+		CALLF CM_PROF("素直さ",   30)
+	CASE 4
+		PRINTFORML 「お誘いは嬉しいけど、もう相手が居るのよね」
+		CALLF CM_PROF("攻撃",     10)
+		CALLF CM_PROF("衝動",     20)
+		CALLF CM_PROF("モラル",   -20)
+		CALLF CM_PROF("倒錯",     10)
+		CALLF CM_PROF("潔癖",     -20)
+		CALLF CM_PROF("Ｂ好き",   10)
+ENDSELECT
+PRINTFORMW 「私からはこれでおしまいね。おやすみ」
+RETURN 1
+
+
+;メリー＠CPMの人
+@CHARAMAKE_K50(ARG)
+PRINTFORMW 「私メリーさん。貴方の目の前に居るの」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「起きた？　じゃあ、質問よ」
+PRINTFORMW 「貴方は暗いトンネルの中を歩いています。トンネルを抜けた先には何が有るかしら？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 自分の住む町
+PRINTFORMDL [2] またトンネル
+PRINTFORMDL [3] 異世界
+PRINTFORMDL [4] 雪国
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「帰り道だったのね」
+		CALLF CM_PROF("倒錯",     -10)
+		CALLF CM_PROF("楽観",     10)
+		CALLF CM_PROF("好奇心",   -10)
+		CALLF CM_PROF("衝動",     -10)
+	CASE 2
+		PRINTFORML 「ふざけてるのかしら？　それとも……？」
+		CALLF CM_PROF("衝動",     20)
+		CALLF CM_PROF("攻撃",     10)
+		CALLF CM_PROF("倒錯",     10)
+		CALLF CM_PROF("被虐",     10)
+	CASE 3
+		PRINTFORML 「トンネルとは即ち境界。踏み越えればそこは違う世界……」
+		CALLF CM_PROF("好奇心",   20)
+		CALLF CM_PROF("素直さ",   -10)
+		CALLF CM_PROF("倒錯",     20)
+		CALLF CM_PROF("攻撃",     10)
+		CALLF CM_PROF("Ａ好き",   10)
+	CASE 4
+		PRINTFORML 「ヤスナリね！」
+		CALLF CM_PROF("同性愛",   20)
+		CALLF CM_PROF("楽観",     10)
+		CALLF CM_PROF("素直さ",   20)
+		CALLF CM_PROF("知性",     20)
+ENDSELECT
+PRINTFORMW 「じゃあ、メリーさんは帰るわ。おやすみなさい」
+RETURN 1
+
+
+;衣玖＠空っぽ
+@CHARAMAKE_K51(ARG)
+PRINTFORMW 「おはようございます、隣失礼しますね」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「質問、なのですが……」
+PRINTFORMW 「あなたは今、何をなされたいのですか？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 女の子とイチャつきたい
+PRINTFORMDL [2] 君と話がしたい
+PRINTFORMDL [3] 君の体を触りたい
+PRINTFORMDL [4] 胸に触る
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「別に答えたくないなら、よいのですよ」
+		PRINTFORMW 「それでは……お休みなさいませ」
+		;無回答の補正値は固定
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「正直ですね、好感が持てますよ」
+		PRINTFORMW 「それでは……お休みなさいませ」
+		CALLF CM_PROF("素直さ",   10)
+		CALLF CM_PROF("プライド", 15)
+		CALLF CM_PROF("衝動",     -20)
+		CALLF CM_PROF("好奇心",   -10)
+		CALLF CM_PROF("羞恥",     10)
+		CALLF CM_PROF("楽観",     -10)
+		CALLF CM_PROF("知性",     15)
+		CALLF CM_PROF("神経質",   10)
+	CASE 2
+		PRINTFORML 「私とですか？……ふふ、機会があれば喜んで」
+		PRINTFORMW 「それでは……お休みなさいませ」
+		CALLF CM_PROF("素直さ",   10)
+		CALLF CM_PROF("プライド", 10)
+		CALLF CM_PROF("衝動",     -10)
+		CALLF CM_PROF("楽観",     -10)
+		CALLF CM_PROF("知性",     10)
+		CALLF CM_PROF("モラル",   10)
+	CASE 3
+		PRINTFORML 「正直ですね、今はダメですよ」
+		PRINTFORMW 「それでは……お休みなさいませ」
+		CALLF CM_PROF("素直さ",   20)
+		CALLF CM_PROF("プライド", -10)
+		CALLF CM_PROF("衝動",     -10)
+		CALLF CM_PROF("好奇心",   10)
+		CALLF CM_PROF("知性",     -10)
+		CALLF CM_PROF("同性愛",   -10)
+	CASE 4
+		PRINTFORMW 「そのまま寝ていればよいでしょう」
+		CALLF CM_PROF("素直さ",   30)
+		CALLF CM_PROF("プライド", -30)
+		CALLF CM_PROF("衝動",     30)
+		CALLF CM_PROF("好奇心",   20)
+		CALLF CM_PROF("羞恥",     -30)
+		CALLF CM_PROF("楽観",     10)
+		CALLF CM_PROF("知性",     -30)
+		CALLF CM_PROF("同性愛",   -30)
+		CALLF CM_PROF("潔癖",     -30)
+		CALLF CM_PROF("モラル",   -30)
+		CALLF CM_PROF("神経質",   -30)
+		CALLF CM_PROF("Ｂ好き",   30)
+ENDSELECT
+RETURN 1
+
+
+;天子＠CPMの人
+@CHARAMAKE_K52(ARG)
+;1％でブロン子
+IF PERCENT(1)
+	CALL CHARAMAKE_K52_2(ARG)
+	RETURN 2
+ENDIF
+PRINTFORMW 「さあ、起きなさい！」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「天人である私が来てあげたんだから、さっさと答えなさいよ」
+PRINTFORMW 「明日の天気は何が良い？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 晴れ
+PRINTFORMDL [2] 曇り
+PRINTFORMDL [3] 雨
+PRINTFORMDL [4] 休みになるから台風
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「何とか言いなさいよ」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「晴れって気持ち良いわよね。ちょっと暑苦しいけど」
+		CALLF CM_PROF("素直さ",   20)
+		CALLF CM_PROF("楽観",     10)
+		CALLF CM_PROF("羞恥",     -20)
+		CALLF CM_PROF("好奇心",   10)
+	CASE 2
+		PRINTFORML 「過ごしやすい天気よね。でも、それを選ぶって、疲れてるの？」
+		CALLF CM_PROF("被虐",     10)
+		CALLF CM_PROF("神経質",   20)
+		CALLF CM_PROF("モラル",   10)
+		CALLF CM_PROF("攻撃",     -10)
+	CASE 3
+		PRINTFORML 「月に一回ぐらいは、雨音を聞きながら読書ってのも悪くないわね」
+		CALLF CM_PROF("知性",     10)
+		CALLF CM_PROF("潔癖",     10)
+		CALLF CM_PROF("攻撃",     -20)
+		CALLF CM_PROF("衝動",     -10)
+	CASE 4
+		PRINTFORML 「あんたさー。『振り替え』って知ってる？」
+		CALLF CM_PROF("衝動",     30)
+		CALLF CM_PROF("素直さ",   30)
+		CALLF CM_PROF("知性",     -20)
+		CALLF CM_PROF("モラル",   -20)
+ENDSELECT
+PRINTFORMW 「じゃ、おやすみ」
+RETURN 1
+
+
+;ブロン子さん＠ふらさな
+@CHARAMAKE_K52_2(ARG)
+PRINTFORMW 
+PRINTL 
+CALL CHARA_CUTIN("一級天人", "ブロン子さん", "Dame Bronko")
+PRINTL 
+PRINTFORML 「おいィ？いつまで寝てるんですかねぇ…？　早く起きるべきそうすべき」
+PRINTFORMW 「今から私が質おｍんするのでｶｶッと答えてくだふぁい」
+PRINTFORML 「私は緋想の剣を使い手なんだが相手が残念な事に竜宮の遣いを使ってきたので「お前それで良いのか？」と言うと「何いきなり話かけて来てるわけ？」と言われた。」
+PRINTFORML 私の弟が袖の熟練者なのだがわたしはいつも勝つから相手が気の毒になったので聞いただけなんだがむかついたので「お前緋想の剣でﾎﾞｺるわ・・」と
+PRINTFORML 言って開始直後に力を溜めて前ﾊｲｽﾗしたら多分リアルでビビったんだろうな、、ｶﾞｰﾄﾞ固めてたからｷｬﾝｾﾙしてｶｶッっとﾀﾞｯｼｭしながらｷｯｸしたらかなり青ざめてた
+PRINTFORML わたしは一気に空中にとんだんだけどイクが硬直しててわたしの動きを見失ったのか動いてなかったからタケノコでｶﾞｰﾄﾞを崩した上についげきの天啓でさらにﾀﾞﾒｰｼﾞは加速した。
+PRINTFORML わざと距離をとり「私はこのまま台風待ちでもいいんだが？」というとようやく必死な顔してなんか袖のはしっこから氷出してきた。
+PRINTFORML わたしは書き換え非想の剣で回避、これは一歩間違えるとｶｳﾝﾀｰで大ﾀﾞﾒｰｼﾞを受ける隠し技なので後ろのギャラリーが拍手し出した。
+PRINTFORML 私は「うるさい、気が散る。一瞬の油断が命取り」というとｷﾞｬﾗﾘｰは黙った
+PRINTFORML イクは必死にやってくるが、時既に時間切れ、下段ｶﾞｰﾄﾞを固めた私にｽｷはなかった
+PRINTFORML たまに来る下段ｶﾞｰﾄﾞでは防げない攻撃も頭突きで撃退、終わる頃にはズタズタにされた深海魚の雑魚がいた
+PRINTFORML 「いつでもｽﾍﾟｶでトドメは刺せた、あの時氷だそうとしたときにも実はズタズタに出来た、」とかいった
+PRINTFORML （中略）
+PRINTFORMW 変な空間になったので私はミステリーを残す為勝ちの画面になったと同時に回線切ったが多分したらば界で伝説になってる？
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] なにいきなり話しかけてきてるわけ？
+PRINTFORMDL [2] おいィ？お前らは今の質問聞こえたか？
+PRINTFORMDL [3] やっぱり緋想の剣もってないとだめかー　すごいなーあこがれちゃうなー
+PRINTFORMDL [4] ゆかてん馬鹿にする気？そうならあんたも牛ね！
+PRINTFORMDL [5] はー？肉盾とか時代遅れですしおすし
+PRINTFORMDL [6] ブロン子さんちゅっちゅ＾＾
+PRINTFORMDL [9] ９問で良い（謙虚）
+CALL INPUTINTD(0, 1, 2, 3, 4 ,5, 6, 9)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「おいィ？　お前人の話聞かない?ですか？」
+		;無回答の補正値は固定
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「お前気炎万丈の剣でバラバラに引き裂くは…」
+		CALLF CM_PROF("攻撃", 20)
+		CALLF CM_PROF("プライド", 10)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("知性", -20)
+	CASE 2
+		PRINTFORML 「聞こえた」／「確かに言ったな」／「私のログにはばっちり保存済」
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("被虐", 10)
+		CALLF CM_PROF("素直さ", -10)
+		CALLF CM_PROF("羞恥", -10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 3
+		PRINTFORML 「ほうお前はなかなかわかってるようだな　ピーチをおごってやろう」
+		CALLF CM_PROF("攻撃", -10)
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("プライド", -20)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("モラル", 10)
+	CASE 4
+		PRINTFORML 「おい　馬鹿やめろ　このスレは早くも終了ですね」
+		CALLF CM_PROF("攻撃", 20)
+		CALLF CM_PROF("プライド", 30)
+		CALLF CM_PROF("倒錯", 20)
+		CALLF CM_PROF("同性愛", 50)
+		CALLF CM_PROF("モラル", -30)
+		CALLF CM_PROF("神経質", 20)
+	CASE 5
+		PRINTFORML 「こいつ絶対天狗だろ…汚いなさすが天狗きたない」
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("素直さ", -20)
+		CALLF CM_PROF("プライド", 20)
+		CALLF CM_PROF("楽観", -20)
+		CALLF CM_PROF("潔癖", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 6
+		PRINTFORML 「下ネタはやめろと言ってるｻﾙ!!」
+		CALLF CM_PROF("被虐", 20)
+		CALLF CM_PROF("羞恥", -20)
+		CALLF CM_PROF("モラル", -30)
+		CALLF CM_PROF("Ｃ好き", 20)
+		CALLF CM_PROF("Ｖ好き", 10)
+		CALLF CM_PROF("Ｂ好き", 30)
+		CALLF CM_PROF("Ａ好き", 30)
+	CASE 9
+		PRINTFORML 「それほどでもない（謙虚）」
+		CALLF CM_PROF("攻撃", -9)
+		CALLF CM_PROF("被虐", -9)
+		CALLF CM_PROF("素直さ", 9)
+		CALLF CM_PROF("プライド", 9)
+		CALLF CM_PROF("楽観", -9)
+		CALLF CM_PROF("知性", 9)
+		CALLF CM_PROF("潔癖", 9)
+		CALLF CM_PROF("モラル", 9)
+		CALLF CM_PROF("神経質", 9)
+
+ENDSELECT
+PRINTFORMW 「この質問に答えることでリアル世界よりも充実した幻想郷生活が認可された　お前全力で眠っていいぞ」
+RETURN 1
+
+
+;豊姫＠ぱ。
+@CHARAMAKE_K53(ARG)
+SELECTCASE ARG
+	CASE 0
+		PRINTFORMW 「最初の部屋へようこそ、迷い人さん」
+	CASE 9
+		PRINTFORMW 「お疲れ様。最後の部屋は私よ」
+	CASEELSE
+		PRINTFORMW 「ふふ、目を覚ましました？」
+ENDSELECT
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「質問させていただきましょう。ふふ、シンプルにね」
+PRINTFORMW 「海と山、地上にもあるわよね。あなたはどちらがお好き？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 海
+PRINTFORMDL [2] 山
+PRINTFORMDL [3] 川
+PRINTFORMDL [4] 君
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「禅問答ではないのよ。そんなに黙りこまなくっても、ねえ？」
+		PRINTFORMW 「お行きなさい。これでは私も得るところがないものね」
+		;無回答の補正値は固定
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「汚れた海はおぞましく紅く染まると聞きます」
+		PRINTFORMW 「海は生命の源、すなわち穢れの温床。ふふ、因業なものですね」
+		CALLF CM_PROF("攻撃", -20)
+		CALLF CM_PROF("被虐", 30)
+		CALLF CM_PROF("素直さ", 30)
+		CALLF CM_PROF("プライド", -20)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 20)
+		CALLF CM_PROF("倒錯", -10)
+		CALLF CM_PROF("同性愛", -10)
+		CALLF CM_PROF("潔癖", -20)
+		CALLF CM_PROF("モラル", 10)
+		CALLF CM_PROF("Ｃ好き", -10)
+		CALLF CM_PROF("Ｖ好き", -10)
+		CALLF CM_PROF("Ｂ好き", 20)
+		CALLF CM_PROF("Ａ好き", -10)
+	CASE 2
+		PRINTFORML 「夜の山は月光を受け、四つ足どもの跋扈する血腥い世界」
+		PRINTFORMW 「月は静謐にして美麗が本意。獣や妖怪どもはなんと傲慢なのかしら」
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("プライド", -10)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("知性", -20)
+		CALLF CM_PROF("潔癖", -10)
+		CALLF CM_PROF("モラル", -10)
+		CALLF CM_PROF("Ｃ好き", -10)
+		CALLF CM_PROF("Ｖ好き", 20)
+		CALLF CM_PROF("Ｂ好き", -10)
+		CALLF CM_PROF("Ａ好き", -10)
+	CASE 3
+		PRINTFORML 「ひねくれた小人よ。ただ、川は海と山を繋ぐ清い道」
+		PRINTFORMW 「案外と、その考えは正鵠を射ているのかもしれないわね」
+		CALLF CM_PROF("素直さ", -30)
+		CALLF CM_PROF("プライド", 10)
+		CALLF CM_PROF("衝動", 20)
+		CALLF CM_PROF("好奇心", 20)
+		CALLF CM_PROF("羞恥", -20)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("知性", 30)
+		CALLF CM_PROF("倒錯", 10)
+		CALLF CM_PROF("モラル", -10)
+		CALLF CM_PROF("Ｃ好き", -10)
+		CALLF CM_PROF("Ｖ好き", -10)
+		CALLF CM_PROF("Ｂ好き", -10)
+		CALLF CM_PROF("Ａ好き", 20)
+	CASE 4
+		PRINTFORML 「地上の者は胡乱なことを言うのね」
+		PRINTFORMW 「ありがとう。でも私は、人の話を聞かない人は嫌いかな」
+		CALLF CM_PROF("攻撃", -10)
+		CALLF CM_PROF("被虐", 20)
+		CALLF CM_PROF("素直さ", -30)
+		CALLF CM_PROF("プライド", -10)
+		CALLF CM_PROF("衝動", 30)
+		CALLF CM_PROF("好奇心", 30)
+		CALLF CM_PROF("羞恥", -30)
+		CALLF CM_PROF("楽観", 30)
+		CALLF CM_PROF("知性", -20)
+		CALLF CM_PROF("モラル", -10)
+		CALLF CM_PROF("神経質", -20)
+		CALLF CM_PROF("Ｃ好き", 10)
+		CALLF CM_PROF("Ｖ好き", -10)
+		CALLF CM_PROF("Ｂ好き", 10)
+		CALLF CM_PROF("Ａ好き", -10)
+ENDSELECT
+RETURN 1
+
+
+;依姫＠ぱ。
+@CHARAMAKE_K54(ARG)
+SELECTCASE ARG
+	CASE 0
+		PRINTFORMW 「お目覚め？　早くに起こして悪いとは思うけど」
+	CASE 9
+		PRINTFORMW 「その顔、相当たらい回されてきたのね。大丈夫、私で最後よ」
+	CASEELSE
+		PRINTFORMW 「さて、手短に参りましょうか」
+ENDSELECT
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「人間は神を頼り社へ参る。屋代とは神の依り代であるから」
+PRINTFORMW 「問います。貴方の依りたい、力を借りたい神とは？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 菅原道真
+PRINTFORMDL [2] 大国主命
+PRINTFORMDL [3] 伊邪那美命
+PRINTFORMDL [4] 素盞鳴尊
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「祀らぬ者を救う神はありません」
+		PRINTFORMW 「祈りの声を上げ信仰すること、これが始まりなのです」
+		;無回答の補正値は固定
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「道真といえば学問の神。貴方は文官か、科挙に臨む者ですか？」
+		PRINTFORMW 「知恵までも神頼みとはいかにも強欲。天神様も大変よね」
+		CALLF CM_PROF("被虐", -20)
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("プライド", -20)
+		CALLF CM_PROF("好奇心", -20)
+		CALLF CM_PROF("羞恥", -10)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("知性", 30)
+		CALLF CM_PROF("潔癖", 10)
+		CALLF CM_PROF("Ａ好き", 10)
+	CASE 2
+		PRINTFORML 「ダイコク様は様々に言い伝えられる姿多き神。大変な美男と言うわね」
+		;ちんこある
+		IF PENIS(MASTER)
+			PRINTFORMW 「彼の力ならどんな女も心乱れます。もしかするとこの私でさえ」
+			CALLF CM_PROF("攻撃", 10)
+			CALLF CM_PROF("被虐", -20)
+			CALLF CM_PROF("素直さ", 20)
+			CALLF CM_PROF("プライド", 20)
+			CALLF CM_PROF("衝動", 20)
+			CALLF CM_PROF("楽観", 10)
+			CALLF CM_PROF("知性", -20)
+			SIF TALENT:MASTER:ふたなり
+				CALLF CM_PROF("同性愛", 30)
+			CALLF CM_PROF("潔癖", -10)
+			CALLF CM_PROF("モラル", -20)
+			CALLF CM_PROF("神経質", -10)
+			CALLF CM_PROF("Ｃ好き", 30)
+			CALLF CM_PROF("Ｖ好き", -10)
+			CALLF CM_PROF("Ｂ好き", -10)
+			CALLF CM_PROF("Ａ好き", -10)
+		;ちんこない
+		ELSE
+			PRINTFORMW 「…何その顔。貴方、抱かれてみたいのね？」
+			CALLF CM_PROF("攻撃", -20)
+			CALLF CM_PROF("被虐", 30)
+			CALLF CM_PROF("素直さ", 10)
+			CALLF CM_PROF("プライド", -30)
+			CALLF CM_PROF("衝動", 20)
+			CALLF CM_PROF("好奇心", 20)
+			CALLF CM_PROF("羞恥", -20)
+			CALLF CM_PROF("楽観", 20)
+			CALLF CM_PROF("知性", -10)
+			CALLF CM_PROF("同性愛", -20)
+			CALLF CM_PROF("潔癖", -20)
+			CALLF CM_PROF("モラル", -20)
+			CALLF CM_PROF("Ｖ好き", 30)
+		ENDIF
+	CASE 3
+		PRINTFORML 「イザナミ様は国産みの神。豊穣と多産を司る、穢れなき御方」
+		PRINTFORMW 「…穢れてしまった彼女は、黄泉に棲む死と嫉妬の神。女とは悲しい生き物ね」
+		CALLF CM_PROF("攻撃", -30)
+		CALLF CM_PROF("被虐", 20)
+		CALLF CM_PROF("素直さ", 10)
+		CALLF CM_PROF("プライド", 20)
+		CALLF CM_PROF("羞恥", 30)
+		CALLF CM_PROF("楽観", -20)
+		CALLF CM_PROF("倒錯", 30)
+		CALLF CM_PROF("同性愛", -10)
+		CALLF CM_PROF("潔癖", 20)
+		CALLF CM_PROF("モラル", 10)
+		CALLF CM_PROF("神経質", 10)
+		CALLF CM_PROF("Ｂ好き", 20)
+	CASE 4
+		PRINTFORML 「不浄から産まれし荒ぶる神。貴方はそんなに力を欲しいの？」
+		PRINTFORMW 「彼の妻は美しく豊かな稲田姫様。貴方は賢妻に巡り合えるのかしら」
+		CALLF CM_PROF("攻撃", 30)
+		CALLF CM_PROF("被虐", -30)
+		CALLF CM_PROF("素直さ", -20)
+		CALLF CM_PROF("プライド", 30)
+		CALLF CM_PROF("衝動", 30)
+		CALLF CM_PROF("好奇心", 20)
+		CALLF CM_PROF("羞恥", -30)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("知性", -20)
+		CALLF CM_PROF("倒錯", 20)
+		CALLF CM_PROF("潔癖", -30)
+		CALLF CM_PROF("モラル", -30)
+		CALLF CM_PROF("Ｃ好き", 20)
+ENDSELECT
+RETURN 1
+
+
+;レイセン＠ぱ。
+@CHARAMAKE_K55(ARG)
+SELECTCASE ARG
+	CASE 0
+		PRINTFORMW 「おはよう、夢よ。起きなさい」
+	CASE 9
+		PRINTFORMW 「私が最後でいいのかな。この夢ももうすぐ終わるわ」
+	CASEELSE
+		PRINTFORMW 「おはよう。残念？　まだ夢よ」
+ENDSELECT
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「どんな夢を見ています？　夢…誰かに追われる夢、見ませんか？」
+PRINTFORMW 「罪を犯して追われるの。さあ、貴方は誰に追われているの？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 自分が裏切った仲間
+PRINTFORMDL [2] 法をかざす警察官
+PRINTFORMDL [3] 嫉妬に狂う女
+PRINTFORMDL [4] 誰も追ってこない
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「追われたことがないのかしら」
+		PRINTFORMW 「…それとも、罪が大きく重すぎて顧みることができない？」
+		;無回答の補正値は固定
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「理由なんて関係なく、裏切りは罪よ。合わせる顔もないのに追われるの」
+		PRINTFORMW 「一番辛いのはそれを追う者。とても、悲しいですよね」
+		CALLF CM_PROF("攻撃", -20)
+		CALLF CM_PROF("被虐", 20)
+		CALLF CM_PROF("プライド", -20)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("羞恥", 30)
+		CALLF CM_PROF("楽観", -30)
+		CALLF CM_PROF("倒錯", 30)
+		CALLF CM_PROF("同性愛", 10)
+		CALLF CM_PROF("潔癖", -10)
+		CALLF CM_PROF("モラル", -10)
+		CALLF CM_PROF("神経質", 20)
+	CASE 2
+		PRINTFORML 「法を破るのは罪。みんなが決めたみんなのためのルール、そりゃ正しいわ」
+		PRINTFORMW 「違反者はみんなでボコボコにすればいいってことね」
+		CALLF CM_PROF("攻撃", 20)
+		CALLF CM_PROF("被虐", -10)
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("羞恥", -20)
+		CALLF CM_PROF("楽観", -20)
+		CALLF CM_PROF("モラル", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 3
+		PRINTFORML 「貴方を巡ってか、貴方が誑かした人を巡ってか。どちらにしてもね」
+		PRINTFORMW 「結局、人心を惑わした貴方がその罪を背負い、逃げ回るのよね」
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("被虐", 20)
+		CALLF CM_PROF("素直さ", -10)
+		CALLF CM_PROF("プライド", 10)
+		CALLF CM_PROF("衝動", 20)
+		CALLF CM_PROF("好奇心", 20)
+		CALLF CM_PROF("羞恥", -10)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("知性", -20)
+		CALLF CM_PROF("倒錯", 20)
+		CALLF CM_PROF("モラル", -10)
+		CALLF CM_PROF("神経質", -10)
+		CALLF CM_PROF("Ｃ好き", 10)
+	CASE 4
+		PRINTFORML 「逃げても気に留められない。なくなっても問題がない、無い方がいい歯車」
+		PRINTFORMW 「いなくなっても罪にならないのは、今までが罪だったってこと。悲しいわ」
+		CALLF CM_PROF("攻撃", -30)
+		CALLF CM_PROF("被虐", 20)
+		CALLF CM_PROF("素直さ", -30)
+		CALLF CM_PROF("プライド", -30)
+		CALLF CM_PROF("衝動", -20)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("楽観", -30)
+		CALLF CM_PROF("倒錯", 20)
+		CALLF CM_PROF("同性愛", 10)
+		CALLF CM_PROF("潔癖", 20)
+		CALLF CM_PROF("モラル", 10)
+		CALLF CM_PROF("神経質", 20)
+		CALLF CM_PROF("Ｃ好き", -10)
+		CALLF CM_PROF("Ａ好き", 10)
+ENDSELECT
+RETURN 1
+
+
+;霖之助@Enter
+@CHARAMAKE_K56(ARG)
+;1％でこーりん
+IF PERCENT(1)
+	CALL CHARAMAKE_K56_2(ARG)
+	RETURN 2
+ENDIF
+PRINTFORMW 「おっ、目が覚めたかい？　いきなりで悪いけど、ちょっと質問に答えてもらうよ」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「さて、君は幻想郷の外の世界を知ってるらしいけど」
+PRINTFORMW 「僕も外界の物とかには少々知識もあるんだ」
+PRINTFORMW 「そこで質問だ。君の一番好きな家具は何かな？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] パソコン
+PRINTFORMDL [2] 冷暖房機
+PRINTFORMDL [3] 箪笥
+PRINTFORMDL [4] 浴槽
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「んー、何か難しい質問だったかな？」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「あれはいい。板を打つと硝子に文字が浮かぶ不思議な道具だ」
+		CALLF CM_PROF("素直さ", 30)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("知性", 30)
+	CASE 2
+		PRINTFORML 「季節が変わると便利だね。ああいうのは」
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("楽観", 30)
+		CALLF CM_PROF("衝動", 10)
+	CASE 3
+		PRINTFORML 「箪笥、深みがあっていいね。使えば使うほど威厳が増すよ」
+		CALLF CM_PROF("知性", 20)
+		CALLF CM_PROF("潔癖", 10)
+		CALLF CM_PROF("プライド", 20)
+		CALLF CM_PROF("神経質", 30)
+	CASE 4
+		PRINTFORML 「浴槽？　あれは家具に入るのかな？　確かに湯船は気持ちいいけど」
+		CALLF CM_PROF("潔癖", 30)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("モラル", 20)
+		CALLF CM_PROF("素直さ", 10)
+ENDSELECT
+PRINTFORMW 「答えてくれてありがとう。じゃあ、また休んで頑張って。応援してるよ」
+RETURN 1
+
+
+;こーりん@Enter
+@CHARAMAKE_K56_2(ARG)
+PRINTFORMW 「おっ、目が覚めたかい？　いきなりで悪いけど、ちょっと質問に答えてもらうよ」
+PRINTFORMDW なぜか、霖之助は裸だった……
+PRINTL 
+CALL CHARA_CUTIN("動きすぎる原作レイパー", "こーりん", "Koooooooooorin")
+PRINTL 
+PRINTFORMW 「さて、僕は今こんな姿で君の前にいるわけなんだけど……」
+PRINTFORMW 「どうだい？　どこか責めたくなるところはないかい？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] そのぶっとい肉棒
+PRINTFORMDL [2] 鍛えあげられた胸板
+PRINTFORMDL [3] 引き締まったお尻
+PRINTFORMDL [4] 女を呼んでこい
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「……ふふふ、君は受けのほうがいいみたいだね」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「そうかい？　精の付くものをたくさん食べてるからね」
+		CALLF CM_PROF("Ｃ好き", 20)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("潔癖", -10)
+		CALLF CM_PROF("プライド", -10)
+	CASE 2
+		PRINTFORML 「まぁ、これでも毎日鍛えてるんだ。もしもの時のためにね」
+		CALLF CM_PROF("Ｂ好き", 20)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("羞恥", -10)
+		CALLF CM_PROF("プライド", -10)
+	CASE 3
+		PRINTFORML 「な、なんだって？　こっちの穴は……だ、だめぇ……だよ……」
+		CALLF CM_PROF("Ａ好き", 20)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("倒錯", -10)
+		CALLF CM_PROF("潔癖", -10)
+	CASE 4
+		PRINTFORML 「えっ？　ぼ、僕じゃあ何か不足かい？」
+		CALLF CM_PROF("Ｖ好き", -20)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("モラル", -10)
+		CALLF CM_PROF("素直さ", 10)
+ENDSELECT
+PRINTFORMW 「ふふふ、イイ夢を見れるといいね。おやすみ」
+RETURN 1
+
+
+;キスメ＠ぱ。
+@CHARAMAKE_K57(ARG)
+PRINTFORML 「うわっ起きた！？」
+PRINTFORMDW 声がした方を見上げると…
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「仕方ない、質問させてもらうからね」
+PRINTFORMW 「戸棚の整理をしていたら、何かが頭に落ちてきた。それは何？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 黒板消し
+PRINTFORMDL [2] へそくり
+PRINTFORMDL [3] 昔の恋人の写真
+PRINTFORMDL [4] 白骨
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「はい、時間切れよ」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「誰がそんなもの仕掛けるのさ！　あんたに当たるのはこっちー」
+		CALLF CM_PROF("被虐", 10)
+		CALLF CM_PROF("素直さ", -10)
+		CALLF CM_PROF("プライド", -10)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("好奇心", 20)
+		CALLF CM_PROF("Ａ好き", 20)
+	CASE 2
+		PRINTFORML 「はいはい、そんなうまい話はありません。お疲れ様ー」
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("楽観", 30)
+		CALLF CM_PROF("モラル", -10)
+		CALLF CM_PROF("知性", -10)
+		CALLF CM_PROF("羞恥", -20)
+		CALLF CM_PROF("Ｃ好き", 10)
+	CASE 3
+		PRINTFORML 「気まずいねえ。処分しとくのを勧めるわ。はい、またね」
+		CALLF CM_PROF("攻撃", -10)
+		CALLF CM_PROF("被虐", 20)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("同性愛", -20)
+		CALLF CM_PROF("プライド", -20)
+		CALLF CM_PROF("潔癖", 10)
+		CALLF CM_PROF("Ｖ好き", 20)
+	CASE 4
+		PRINTFORML 「楽しい家に住んでるのね。それじゃ、お帰りよ」
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("被虐", 10)
+		CALLF CM_PROF("倒錯", 30)
+		CALLF CM_PROF("楽観", -10)
+		CALLF CM_PROF("知性", -10)
+		CALLF CM_PROF("神経質", -10)
+		CALLF CM_PROF("Ｂ好き", 10)
+ENDSELECT
+PRINTFORMDW ごつん、と頭に桶が当たり、%CALLNAME:MASTER%は気を失った…
+RETURN 1
+
+
+;ヤマメ＠ぱ。
+@CHARAMAKE_K58(ARG)
+PRINTFORMW 「おや、お目覚めかい。悪いね、起こしちゃって」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「さて、質問させてもらうのがここのルールだったね」
+PRINTFORMW 「そうねえ…あんたは急に病気になったとき、どうする？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 布団で寝込む
+PRINTFORMDL [2] 医者にかかる
+PRINTFORMDL [3] 病は気から、普段通り活動
+PRINTFORMDL [4] 祈祷師を呼ぶ
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「その弱い気持ちに病は巣食う。あんた、取り殺されるよ？」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「自然治癒力というやつね。人間に備わった強さだわ」
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("好奇心", -20)
+		CALLF CM_PROF("モラル", 10)
+		CALLF CM_PROF("衝動", -20)
+		CALLF CM_PROF("知性", 20)
+		CALLF CM_PROF("倒錯", -20)
+		CALLF CM_PROF("Ｂ好き", 10)
+	CASE 2
+		PRINTFORML 「賢いね。けど、そうして体が弱くなる。それは本当の病よ」
+		CALLF CM_PROF("攻撃", -20)
+		CALLF CM_PROF("楽観", -20)
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("衝動", -20)
+		CALLF CM_PROF("知性", 30)
+		CALLF CM_PROF("神経質", 20)
+		CALLF CM_PROF("Ｃ好き", 10)
+		CALLF CM_PROF("Ａ好き", 10)
+	CASE 3
+		PRINTFORML 「あんたは一度痛い目に遭ったほうがいいかもね。結核あたり？」
+		CALLF CM_PROF("攻撃", 20)
+		CALLF CM_PROF("プライド", 30)
+		CALLF CM_PROF("被虐", 30)
+		CALLF CM_PROF("潔癖", -10)
+		CALLF CM_PROF("素直さ", -20)
+	CASE 4
+		PRINTFORML 「…面白いことを言うのね。ふふ、私にゃそんなの効かないよ？」
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("素直さ", -20)
+		CALLF CM_PROF("モラル", 10)
+		CALLF CM_PROF("好奇心", 30)
+		CALLF CM_PROF("知性", -10)
+		CALLF CM_PROF("倒錯", 10)
+ENDSELECT
+PRINTFORMW 「それじゃおやすみ。お大事にね――」
+RETURN 1
+
+
+;パルスィ＠ぱ。
+@CHARAMAKE_K59(ARG)
+PRINTFORMW 「この橋の守りは私。さっさと起きなさい、沈めるわよ？」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「妬みは人を醜くもし、殺しもする…でも、何かをするエネルギーにもなる」
+PRINTFORMW 「唇から血が出るくらいに、妬ましい。貴方にとってそれはどんなこと？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 幸せそうな恋人たちのこと
+PRINTFORMDL [2] 脚光と名声を受ける成功者のこと
+PRINTFORMDL [3] 日々を豊かに過ごす富者のこと
+PRINTFORMDL [4] こんなに可愛い君のこと
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「答えない、いいえ、認めないのね。哀れだわ」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「ふふ…ありがちな気持ち。だからこそ、その毒も強い」
+		CALLF CM_PROF("攻撃", 20)
+		CALLF CM_PROF("被虐", 20)
+		CALLF CM_PROF("モラル", -10)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("知性", -20)
+		CALLF CM_PROF("楽観", -20)
+		CALLF CM_PROF("Ｃ好き", 20)
+		CALLF CM_PROF("Ａ好き", -10)
+	CASE 2
+		PRINTFORML 「力を得てみたら？　努力、できるんでしょう」
+		CALLF CM_PROF("被虐", -20)
+		CALLF CM_PROF("楽観", 20)
+		CALLF CM_PROF("プライド", 20)
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("好奇心", 20)
+		CALLF CM_PROF("知性", 30)
+		CALLF CM_PROF("モラル", 10)
+		CALLF CM_PROF("Ｃ好き", -10)
+		CALLF CM_PROF("Ａ好き", 20)
+	CASE 3
+		PRINTFORML 「恵まれた怠惰、本人は幸せなのかしら。でも、妬ましいわね」
+		CALLF CM_PROF("攻撃", 20)
+		CALLF CM_PROF("素直さ", -20)
+		CALLF CM_PROF("被虐", 10)
+		CALLF CM_PROF("潔癖", -20)
+		CALLF CM_PROF("倒錯", -20)
+		CALLF CM_PROF("衝動", -20)
+		CALLF CM_PROF("Ｂ好き", -20)
+	CASE 4
+		PRINTFORML 「…は？　ちょ、意味わかんない。や、やめてよね……こほん」
+		CALLF CM_PROF("攻撃", -10)
+		CALLF CM_PROF("素直さ", -20)
+		CALLF CM_PROF("モラル", 10)
+		CALLF CM_PROF("好奇心", 30)
+		CALLF CM_PROF("知性", -10)
+		CALLF CM_PROF("倒錯", 30)
+		CALLF CM_PROF("同性愛", 10)
+		CALLF CM_PROF("Ｃ好き", 30)
+		CALLF CM_PROF("Ｖ好き", -20)
+		CALLF CM_PROF("プライド", -30)
+ENDSELECT
+PRINTFORMW 「…じゃ、お別れね。せいぜい、健全で居られるといいわね――」
+RETURN 1
+
+
+;勇儀@Enter
+@CHARAMAKE_K60(ARG)
+PRINTFORMW 「やっと起きたかい。気分はどうだい？　ははは、よく眠れたかい？」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORMW 「まぁ、まだ頭回らんだろうけど、ちょいと質問に答えてもらうよ。いいかい？」
+PRINTFORML 「お前は酒が大好きな酒豪だ。あ？　好きじゃない？　なら甘酒だ」
+PRINTFORMW 「そこでだな、お前が酒を飲むにあたって、一番好きな場合、ってなんだ？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 一人バーで煙草と一緒にウイスキー
+PRINTFORMDL [2] 友人数人と和食を肴に日本酒
+PRINTFORMDL [3] 飲み会で油物にビール
+PRINTFORMDL [4] 婚約者とワイン
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「酔いが回るもんは嫌いかい？」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「鯔背だねぇ、あんた渋いよ。格好いい」
+		CALLF CM_PROF("プライド", 20)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("攻撃", -10)
+		CALLF CM_PROF("衝動", 20)
+		CALLF CM_PROF("知性", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 2
+		PRINTFORML 「私もそれが一番好きだよ。鬼は日本酒が大好きなんだ」
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("プライド", 10)
+		CALLF CM_PROF("同性愛", 10)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("知性", 10)
+	CASE 3
+		PRINTFORML 「大人数なのはいいが、どうもあの酒は不味くてなぁ」
+		CALLF CM_PROF("衝動", 20)
+		CALLF CM_PROF("楽観", 20)
+		CALLF CM_PROF("倒錯", 10)
+		CALLF CM_PROF("モラル", 10)
+		CALLF CM_PROF("好奇心", 30)
+	CASE 4
+		PRINTFORML 「それが、所謂『ろまん』ってやつなのかい？」
+		CALLF CM_PROF("Ｃ好き", 20)
+		CALLF CM_PROF("潔癖", 10)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("楽観", 30)
+ENDSELECT
+PRINTFORMW 「よし、一丁あがったね。お疲れ。あとは休んでおくれ」
+RETURN 1
+
+
+;さとり＠/L
+@CHARAMAKE_K61(ARG)
+PRINTFORMW 「さぁ、目を覚ます時間よ！」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL
+PRINTFORML 「いきなりだけど私の質問に答えて」
+PRINTFORML 「心を読むから一々答える必要はないわ」
+PRINTFORMW 「『地底』から連想するものを心に描いてみて」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 地底人 
+PRINTFORMDL [2] 地獄 
+PRINTFORMDL [3] 間欠泉地下センター
+PRINTFORMDL [4] 目の前の少女を心の中で……
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML (……何も読み取れない？ 本当に何も考えていないのね)
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML (……地底人？ どうやら私達に偏見を持ってるみたいね) 
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("知性", -20)
+		CALLF CM_PROF("攻撃", 30)
+		CALLF CM_PROF("Ｖ好き", 10)
+		CALLF CM_PROF("倒錯", 20)
+		CALLF CM_PROF("好奇心", -10)
+	CASE 2
+		PRINTFORML (……ありきたりでつまらないわね) 
+		CALLF CM_PROF("素直さ", 30)
+		CALLF CM_PROF("好奇心", -20)
+		CALLF CM_PROF("潔癖", 20)
+		CALLF CM_PROF("モラル", 10)
+		CALLF CM_PROF("Ｂ好き", 20)
+		CALLF CM_PROF("知性", -10)
+	CASE 3
+		PRINTFORML (……どうして知ってるのかしら？ ちょっと不気味ね)
+		CALLF CM_PROF("知性", 30)
+		CALLF CM_PROF("楽観", 20)
+		CALLF CM_PROF("モラル", -10)
+		CALLF CM_PROF("Ｃ好き", 20)
+		CALLF CM_PROF("羞恥", -20)
+		CALLF CM_PROF("同性愛", 10)
+	CASE 4
+		PRINTFORML (……なんていやらしい。初対面の私にこんな恥知らずな感情を抱けるなんて…) 
+		CALLF CM_PROF("攻撃", 30)
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("プライド", -20)
+		CALLF CM_PROF("衝動", 30)
+		CALLF CM_PROF("倒錯", 20)
+		CALLF CM_PROF("モラル", -30)
+		CALLF CM_PROF("神経質", -20)
+		CALLF CM_PROF("Ａ好き", 20)
+ENDSELECT
+PRINTFORML 「なかなかおもしろかったわ」
+PRINTFORMW 「さっさと先へ進んでくださいね」
+RETURN 1
+
+
+;燐@Enter
+@CHARAMAKE_K62(ARG)
+PRINTFORMW 「ほら、起きて。ほらほら、日が暮れちゃうよ」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORMW 「これからあたいが質問するから、\@ TALENT:MASTER:オトコ ? お兄さん # お姉さん \@は正直に答えて頂戴ね」
+PRINTFORMW 「はい、\@ TALENT:MASTER:オトコ ? お兄さん # お姉さん \@は死にました」
+PRINTFORMW 「で、死後、どこに逝きたい？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 天国
+PRINTFORMDL [2] 地獄
+PRINTFORMDL [3] 地底
+PRINTFORMDL [4] 私は神だ　神は死なぬ
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「おやぁ？　どうしちゃったのかな？　死ぬことに怯えてる？」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「そりゃあ天国に逝きたいよね。その時はあたいに運ばれないように……」
+		PRINTFORMW 「\@ TALENT:MASTER:オトコ ? お兄さん # お姉さん \@が死後まで幸せになれることを祈ってるよ♪」
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("好奇心", 20)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("被虐", 10)
+		CALLF CM_PROF("Ｂ好き", 10)
+	CASE 2
+		PRINTFORML 「おやおや？　これはまたずいぶんと珍しいね。自分から地獄に身を投じたいとは」
+		CALLF CM_PROF("被虐", 40)
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("倒錯", 10)
+		CALLF CM_PROF("好奇心", 20)
+		CALLF CM_PROF("楽観", -20)
+		CALLF CM_PROF("神経質", 10)
+		CALLF CM_PROF("知性", 10)
+	CASE 3
+		PRINTFORML 「へぇ、\@ TALENT:MASTER:オトコ ? お兄さん # お姉さん \@も威勢がいいね。あたいも待ってるから存分に生を楽しんでね♪」
+		CALLF CM_PROF("モラル", 10)
+		CALLF CM_PROF("衝動", 20)
+		CALLF CM_PROF("倒錯", 10)
+		CALLF CM_PROF("潔癖", -10)
+		CALLF CM_PROF("Ｃ好き", 10)
+		CALLF CM_PROF("Ｖ好き", 10)
+		CALLF CM_PROF("Ｂ好き", 10)
+		CALLF CM_PROF("Ａ好き", 10)
+	CASE 4
+		PRINTFORML 「へぇ、そう言っておいて、\@ TALENT:MASTER:オトコ ? お兄さん # お姉さん \@が運ばれるのが楽しみだよ」
+		CALLF CM_PROF("好奇心", -20)
+		CALLF CM_PROF("被虐", -10)
+		CALLF CM_PROF("羞恥", -10)
+		CALLF CM_PROF("素直さ", -10)
+		CALLF CM_PROF("プライド", 20)
+		CALLF CM_PROF("同性愛", 10)
+		CALLF CM_PROF("楽観", 30)
+		CALLF CM_PROF("倒錯", 20)
+ENDSELECT
+PRINTFORMW 「にゃはっ♪　ありがとね。それじゃあ、死ぬようにぐっすり眠ってね、\@ TALENT:MASTER:オトコ ? お兄さん # お姉さん \@。バイバイ」
+RETURN 1
+
+
+;霊烏路空 @Ies
+@CHARAMAKE_K63(ARG)
+SELECTCASE ARG
+	CASE 0 TO 1
+		PRINTFORMW 「え！？もう来たの？まだ質問考えてないよ･･･」
+	CASE 7 TO 9
+		PRINTFORML 「ちょっと来るの遅いんじゃない？待ちくたびれたよ」
+		PRINTFORMW 「まぁいいわ！質問よ！えーと･･･」
+	CASEELSE
+		PRINTFORMW 「さぁ、次は私の質問に答えてもらうわ！覚悟しなさい！」
+ENDSELECT
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+
+SELECTCASE ARG
+	CASE 7 TO 9
+		PRINTFORML 「ちょっとまって！質問忘れた！」
+		PRINTFORMW 「うーん、しょうがないからあなたの質問に答えてあげるわ！」
+		PRINTL 
+		PRINTFORMDL [0] 特にない
+		PRINTFORMDL [1] 今日も可愛いね
+		PRINTFORMDL [2] フュージョンって気持ちいいの？
+		PRINTFORMDL [3] スリーサイズ教えて！
+		PRINTFORMDL [4] 今日のぱんつ何色？
+		CALL INPUTINTD(0, 1, 2, 3, 4)
+		SELECTCASE RESULT
+			CASE 0
+				PRINTFORML 「うーん、何を聞こうとしたんだっけ？」
+				CALLF CM_PROF("衝動", -10)
+				CALLF CM_PROF("好奇心", -10)
+				CALLF CM_PROF("羞恥", 10)
+				CALLF CM_PROF("神経質", 10)
+			CASE 1
+				PRINTFORML 「え、えーっと、質問じゃないけどありがと！」
+				CALLF CM_PROF("素直さ",   -20)
+				CALLF CM_PROF("好奇心",   +10)
+				CALLF CM_PROF("羞恥",     +20)
+				CALLF CM_PROF("倒錯",     -20)
+				CALLF CM_PROF("潔癖",     +20)
+				CALLF CM_PROF("モラル",   +30)
+				CALLF CM_PROF("神経質",   +10)
+			CASE 2
+				PRINTFORML 「すごく気持ちいいよ！でも時間がないからまた今度ね！」
+				CALLF CM_PROF("攻撃",     +10)
+				CALLF CM_PROF("被虐",     +10)
+				CALLF CM_PROF("衝動",     +20)
+				CALLF CM_PROF("好奇心",   +20)
+				CALLF CM_PROF("楽観",     -20)
+				CALLF CM_PROF("Ｖ好き",   +30)
+			CASE 3
+				PRINTFORML 「スリーマイル？　なんか聞いたことあるよ！」
+				CALLF CM_PROF("攻撃",     +10)
+				CALLF CM_PROF("プライド", -20)
+				CALLF CM_PROF("衝動",     +20)
+				CALLF CM_PROF("好奇心",   +20)
+				CALLF CM_PROF("羞恥",     -20)
+				CALLF CM_PROF("倒錯",     +10)
+				CALLF CM_PROF("潔癖",     -20)
+				CALLF CM_PROF("モラル",   -20)
+				CALLF CM_PROF("Ｂ好き",   +30)
+			CASE 4
+				PRINTFORML 「今日は確か･･･って答えるワケないでしょ！」
+				CALLF CM_PROF("攻撃",     +20)
+				CALLF CM_PROF("プライド", -20)
+				CALLF CM_PROF("衝動",     +30)
+				CALLF CM_PROF("好奇心",   +20)
+				CALLF CM_PROF("羞恥",     -20)
+				CALLF CM_PROF("倒錯",     +10)
+				CALLF CM_PROF("潔癖",     -20)
+				CALLF CM_PROF("モラル",   -30)
+				CALLF CM_PROF("Ｃ好き",   +30)
+				CALLF CM_PROF("Ａ好き",   +20)
+		ENDSELECT
+	CASEELSE
+		SELECTCASE ARG
+			CASE 0 TO 1
+				PRINTFORMW 「えーと、た、太陽ってどう思う？」
+			CASEELSE
+				PRINTFORML 「今日も眩しく輝く太陽！」
+				PRINTFORMW 「あなたにとって太陽って一体なにかしら？」
+		ENDSELECT
+		PRINTL 
+		PRINTFORMDL [0] 答えない
+		PRINTFORMDL [1] 天の恵み
+		PRINTFORMDL [2] 水素とヘリウムの塊
+		PRINTFORMDL [3] 宇宙エナジー
+		PRINTFORMDL [4] それは君の笑顔さ！
+		CALL INPUTINTD(0, 1, 2, 3, 4)
+		SELECTCASE RESULT
+			CASE 0
+				PRINTFORML 「え？わからないの？もしかして馬鹿？」
+				CALLF CM_PROF("衝動", -10)
+				CALLF CM_PROF("好奇心", -10)
+				CALLF CM_PROF("羞恥", 10)
+				CALLF CM_PROF("神経質", 10)
+			CASE 1
+				PRINTFORML 「太陽は恵みの神様の力よ！だからあまり調子にのってると天罰が下るわ。」
+				CALLF CM_PROF("モラル",   +20)
+				CALLF CM_PROF("潔癖",     +20)
+				CALLF CM_PROF("素直さ",   +20)
+				CALLF CM_PROF("好奇心",   -10)
+				CALLF CM_PROF("被虐",     -20)
+
+			CASE 2
+				PRINTFORML 「水素たちが融合して大爆発するの。よく知ってるじゃん！」
+				CALLF CM_PROF("好奇心",   +20)
+				CALLF CM_PROF("知性",     +20)
+				CALLF CM_PROF("プライド", +10)
+				CALLF CM_PROF("神経質",   +10)
+				CALLF CM_PROF("衝動",     +10)
+			CASE 3
+				PRINTFORML 「うふふ、そうよ！太陽は究極のエネルギーなの！」
+				CALLF CM_PROF("衝動",     +30)
+				CALLF CM_PROF("神経質",   -20)
+				CALLF CM_PROF("倒錯",     +20)
+				CALLF CM_PROF("好奇心",   +10)
+			CASE 4
+				PRINTFORML 「ふふふ、うれしい事言ってくれるじゃない！」
+				CALLF CM_PROF("衝動",     +10)
+				CALLF CM_PROF("羞恥",     -20)
+				CALLF CM_PROF("素直さ",   +10)
+				CALLF CM_PROF("好奇心",   +30)
+				CALLF CM_PROF("Ｂ好き",   +10)
+				
+		ENDSELECT
+ENDSELECT
+
+SELECTCASE ARG
+	CASE 9
+		PRINTFORMW 「あ、もう次行っていいよ！えっ？これで終わり？」
+	CASEELSE
+		PRINTFORMW 「あ、もう次行っていいよ。」
+ENDSELECT
+
+RETURN 1
+
+
+;こいし＠Ies
+@CHARAMAKE_K64(ARG)
+SELECTCASE ARG
+	CASE 0
+		PRINTFORMW 「お目覚めね！早速だけど質問に答えてもらうわ。」
+	CASE 9
+		PRINTFORMW 「疲れてる？私で最後だから、答えてくれるかしら？」
+	CASEELSE
+		PRINTFORMW 「ねぇ、起きてる？次は私よ。」
+ENDSELECT
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「質問よ。」
+PRINTFORMW 「ある日突然、あなたの三つ目の目が開きました。では、その目の能力は？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 心を読み取る目
+PRINTFORMDL [2] 千里先を見通す目
+PRINTFORMDL [3] 相手に呪いをかける目
+PRINTFORMDL [4] 衣類が透けて見える目
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「あら？思いつかないの？それとも私の話、聞いてなかった？」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「そんなものが欲しいの？」
+		PRINTFORML 「他人の心なんて覗いたところで、いい事なんてないのに。」
+			CALLF CM_PROF("攻撃",     +20)
+			CALLF CM_PROF("衝動",     +10)
+			CALLF CM_PROF("好奇心",   +20)
+			CALLF CM_PROF("モラル",   -20)
+			CALLF CM_PROF("知性",     +10)
+			CALLF CM_PROF("被虐",     -20)
+			CALLF CM_PROF("神経質",   +30)
+	CASE 2
+		PRINTFORML 「山の見張り役にでもなりたいのかしら？」
+			CALLF CM_PROF("神経質",   +30)
+			CALLF CM_PROF("プライド", +10)
+			CALLF CM_PROF("好奇心",   +20)
+			CALLF CM_PROF("モラル",   +10)
+			CALLF CM_PROF("潔癖",     +10)
+	CASE 3
+		PRINTFORML 「誰かに恨みでもあるのかしら？」
+		PRINTFORML 「でもその目はきっとあなたを呪うわ。」
+			CALLF CM_PROF("攻撃",     +30)
+			CALLF CM_PROF("衝動",     +10)
+			CALLF CM_PROF("倒錯",     +10)
+			CALLF CM_PROF("モラル",   -20)
+			CALLF CM_PROF("被虐",     -20)
+	CASE 4
+		PRINTFORML 「あら、素直ね。正直なのはいいけど、私の方見ないでくれる？」
+			CALLF CM_PROF("素直さ",   +30)
+			CALLF CM_PROF("プライド", -20)
+			CALLF CM_PROF("モラル",   -20)
+			CALLF CM_PROF("好奇心",   +10)
+			CALLF CM_PROF("Ｂ好き",   +10)
+			CALLF CM_PROF("羞恥",     -20)
+			CALLF CM_PROF("潔癖",     -20)
+ENDSELECT
+
+SELECTCASE ARG
+	CASE 0
+		PRINTFORMW 「こんな感じで質問が続くから。さぁ、次はあっち。」
+	CASE 9
+		PRINTFORMW 「質問は私でおしまい。もう一度無意識に還るといいわ。」
+	CASEELSE
+		PRINTFORMW 「次はあっちよ。いってらっしゃい。」
+ENDSELECT
+
+RETURN 1
+
+
+;ナズーリン＠CPMの人
+@CHARAMAKE_K65(ARG)
+PRINTFORMW 「悪いがちょっと起きて貰おう。質問の時間だ」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「一緒に商売している相手に騙されて大損扱いたとしよう」
+PRINTFORMW 「さて、悪いのは誰かな？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 騙された自分が悪い
+PRINTFORMDL [2] 騙した相手が悪い
+PRINTFORMDL [3] どちらが悪いとも言えない
+PRINTFORMDL [4] 守ってくれないお上が悪い
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「黙りかい？　まあ、いいさ」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「ふむ。殊勝な心掛けだな」
+		CALLF CM_PROF("知性",     10)
+		CALLF CM_PROF("被虐",     20)
+		CALLF CM_PROF("モラル",   20)
+		CALLF CM_PROF("衝動",     -10)
+	CASE 2
+		PRINTFORML 「尤もな答えだが、自分の身は自分で守るものだ。覚えておくと良い」
+		CALLF CM_PROF("素直さ",   20)
+		CALLF CM_PROF("衝動",     10)
+		CALLF CM_PROF("楽観",     20)
+		CALLF CM_PROF("攻撃",     20)
+	CASE 3
+		PRINTFORML 「ぼかして曖昧なままにしておくのは、あまりいい姿勢とは言えないな」
+		CALLF CM_PROF("神経質",   20)
+		CALLF CM_PROF("楽観",     -10)
+		CALLF CM_PROF("羞恥",     10)
+		CALLF CM_PROF("潔癖",     10)
+	CASE 4
+		PRINTFORML 「君は支配されることを望むのだね」
+		CALLF CM_PROF("羞恥",     -20)
+		CALLF CM_PROF("楽観",     20)
+		CALLF CM_PROF("知性",     -20)
+		CALLF CM_PROF("攻撃",     10)
+		CALLF CM_PROF("衝動",     10)
+ENDSELECT
+PRINTFORMW 「これで質問の時間は終わり。おやすみだ」
+RETURN 1
+
+
+;小傘＠CPMの人
+@CHARAMAKE_K66(ARG)
+PRINTFORMW 「うらめしやー！」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「……うん、やっぱり驚かないよね」
+PRINTFORMW 「ねぇ、どうすれば驚くかなぁ？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 場所とか時間とか文言とか色々考える事あるよね？
+PRINTFORMDL [2] 預金が0になったらきっと驚く
+PRINTFORMDL [3] いやいや、そんなことないよ、驚いたよ？
+PRINTFORMDL [4] とりあえず、脱ぎましょう
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「そしてー　無視ー　されるー」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「……分かってるよ。分かってるけどさぁ」
+		CALLF CM_PROF("知性",     20)
+		CALLF CM_PROF("攻撃",     10)
+		CALLF CM_PROF("被虐",     -20)
+		CALLF CM_PROF("楽観",     -10)
+	CASE 2
+		PRINTFORML 「預金？　え、え。　……あ、お金のこと？」
+		CALLF CM_PROF("素直さ",   10)
+		CALLF CM_PROF("プライド", 20)
+		CALLF CM_PROF("モラル",   -10)
+		CALLF CM_PROF("衝動",     10)
+	CASE 3
+		PRINTFORML 「……気持ちだけ貰っておくね」
+		CALLF CM_PROF("潔癖",     20)
+		CALLF CM_PROF("プライド", 10)
+		CALLF CM_PROF("モラル",   10)
+		CALLF CM_PROF("神経質",   20)
+	CASE 4
+		PRINTFORML 「早苗と同じ事言うー」
+		CALLF CM_PROF("倒錯",     30)
+		CALLF CM_PROF("潔癖",     -30)
+		CALLF CM_PROF("羞恥",     -30)
+		CALLF CM_PROF("衝動",     20)
+		CALLF CM_PROF("知性",     -10)
+		CALLF CM_PROF("同性愛",   10)
+ENDSELECT
+PRINTFORMW 「じゃあ、おやすみ。表は蕎麦屋ー……」
+RETURN 1
+
+
+;一輪@Enter
+@CHARAMAKE_K67(ARG)
+PRINTFORMW 「起きましたね。じゃあちょっとばかり質問に答えてもらいましょう」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「あなたは宝物を見つけに探検しに行きました」
+PRINTFORMW 「すると、そこで大きな拳が殴りかかってくるではありませんか」
+PRINTFORMW 「さぁ、そこであなたはどうします？」
+PRINTFORMW 「と雲山が言っております」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 逃げる
+PRINTFORMDL [2] 避ける
+PRINTFORMDL [3] 立ち向かう
+PRINTFORMDL [4] どうせ雲だろ
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「あら、答えられないんですか？」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「ふふん、普通だったらそうしますよね」
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("攻撃", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("知性", 10)
+		CALLF CM_PROF("衝動", 10)
+	CASE 2
+		PRINTFORML 「それが避けられるものだったらいいんですけどね」
+		CALLF CM_PROF("好奇心", -20)
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("プライド", 10)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("知性", 10)
+	CASE 3
+		PRINTFORML 「ほう、なかなか勇敢ですね」
+		CALLF CM_PROF("衝動", 20)
+		CALLF CM_PROF("攻撃", 20)
+		CALLF CM_PROF("倒錯", 10)
+		CALLF CM_PROF("モラル", 10)
+		CALLF CM_PROF("プライド", 30)
+	CASE 4
+		PRINTFORML 「ひねくれてますね……」
+		CALLF CM_PROF("好奇心", -20)
+		CALLF CM_PROF("素直さ", -40)
+		CALLF CM_PROF("羞恥", -10)
+		CALLF CM_PROF("プライド", -30)
+ENDSELECT
+PRINTFORMW 「答えてくれて嬉しいです。あとはゆっくり休んでください」
+PRINTFORMW 「と雲山が言っております」
+RETURN 1
+
+
+;ムラサ＠CPMの人
+@CHARAMAKE_K68(ARG)
+PRINTFORML 「もし…………もしもーし」
+PRINTFORMW 「お目覚めでしょうか。ちょっとお聞きしたい事がございまして」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「はい、ありがとうございます。簡単……ってわけでないですけど、正解は無いのでお気楽に」
+PRINTFORMW 「貴方は頼りない板切れ一枚で辛うじて海に浮かんでいます」
+PRINTFORMW 「そして目の前には溺れかけている人が助けを求めて手を伸ばしています」
+PRINTFORMW 「しかし、掴んでいる板切れは二人分の体重を支えられそうにありませんし、板無しでは貴方は溺れてしまいます」
+PRINTFORMW 「さて、貴方ならどうしますか？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 板を譲って、目の前の人を助ける
+PRINTFORMDL [2] 自分が助かるために、目の前の人を見殺しにする
+PRINTFORMDL [3] やってみなければ支えきれないかどうか分からないので、目の前の人を助ける
+PRINTFORMDL [4] 溺れかけている人が子供なら、板を譲って助ける
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「そうね。これは難しくて答えのない問題。黙りを責められる者は居ないわ」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「優しいのね。願わくば、その優しさが報われんことを」
+		CALLF CM_PROF("被虐", 20)
+		CALLF CM_PROF("プライド", -10)
+		CALLF CM_PROF("倒錯", 10)
+		CALLF CM_PROF("モラル", 20)
+		CALLF CM_PROF("潔癖", 20)
+	CASE 2
+		PRINTFORML 「貴方みたいな人って……嫌いじゃないわ」
+		CALLF CM_PROF("衝動", 20)
+		CALLF CM_PROF("攻撃", 20)
+		CALLF CM_PROF("プライド", 10)
+		CALLF CM_PROF("モラル", -20)
+		CALLF CM_PROF("倒錯", 10)
+	CASE 3
+		PRINTFORML 「哀れ二人は冷たい海の底へ……現実はそう言うものよ」
+		CALLF CM_PROF("楽観", 20)
+		CALLF CM_PROF("知性", -20)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("好奇心", 10)
+	CASE 4
+		PRINTFORML 「ふうん……貴方は“優等生”ね」
+		CALLF CM_PROF("潔癖", 10)
+		CALLF CM_PROF("プライド", 20)
+		CALLF CM_PROF("モラル", 10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("知性", 20)
+ENDSELECT
+PRINTFORMW 「変な質問しちゃってごめんなさいね。おやすみなさい」
+RETURN 1
+
+
+;星＠CPMの人
+@CHARAMAKE_K69(ARG)
+PRINTFORMW 「起きて……起きてください」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「起きましたか？　では、一つお聞きします」
+PRINTFORMW 「大事にしている物を無くしてしまったとき、貴方はどこから探しますか？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 机の引き出しの中
+PRINTFORMDL [2] 台所
+PRINTFORMDL [3] 道ばた
+PRINTFORMDL [4] そんなことより踊りましょう
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「答えて頂けないのですか。残念です」
+		PRINTFORM 「それではまた
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「灯台下暗し。意外とそう言う所にあるのですよね」
+		PRINTFORM 「さあ質問は終わりました。
+		CALLF CM_PROF("楽観",     20)
+		CALLF CM_PROF("素直さ",   20)
+		CALLF CM_PROF("衝動",     -10)
+		CALLF CM_PROF("羞恥",     10)
+	CASE 2
+		PRINTFORML 「お腹空いてるんですか？　私はちょっと空いてます」
+		PRINTFORM 「まあ、とりあえず
+		CALLF CM_PROF("神経質", 10)
+		CALLF CM_PROF("楽観",     10)
+		CALLF CM_PROF("羞恥",     -10)
+		CALLF CM_PROF("好奇心",   10)
+		CALLF CM_PROF("Ｖ好き",   10)
+	CASE 3
+		PRINTFORML 「いきなり外だなんて……」
+		PRINTFORM 「あ、質問は終わりです。
+		CALLF CM_PROF("衝動",     20)
+		CALLF CM_PROF("攻撃",     10)
+		CALLF CM_PROF("倒錯",     20)
+		CALLF CM_PROF("知性",     -10)
+		CALLF CM_PROF("Ａ好き",   10)
+	CASE 4
+		PRINTFORML 「寝ぼけていらっしゃるのですか？」
+		PRINTFORM 「そのまま
+		CALLF CM_PROF("攻撃",     10)
+		CALLF CM_PROF("モラル",   -20)
+		CALLF CM_PROF("潔癖",     -20)
+		CALLF CM_PROF("衝動",     20)
+		CALLF CM_PROF("好奇心",   10)
+		CALLF CM_PROF("Ｃ好き",   10)
+		CALLF CM_PROF("Ｂ好き",   20)
+ENDSELECT
+PRINTFORMW おやすみください」
+RETURN 1
+
+
+;白蓮＠CPMの人
+@CHARAMAKE_K70(ARG)
+PRINTFORMW 「おはようございます。一つよろしいでしょうか」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「少し漠然とした質問かも知れませんが、お答え頂ければ」
+PRINTFORMW 「信仰とは何でしょうか？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 信じて受け入れること
+PRINTFORMDL [2] 教義を理解し、自分のものにすること
+PRINTFORMDL [3] 御利益という権利を得るための義務
+PRINTFORMDL [4] 欲しければ股を開け
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「お答え頂けませんか……」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「そうですね。多くの人にとってはそうでしょう」
+		CALLF CM_PROF("素直さ",   10)
+		CALLF CM_PROF("知性",     -10)
+		CALLF CM_PROF("好奇心",   -10)
+		CALLF CM_PROF("攻撃",     -10)
+	CASE 2
+		PRINTFORML 「それが理想ですが、その境地に達せる人は少なく……」
+		CALLF CM_PROF("知性",     20)
+		CALLF CM_PROF("楽観",     -10)
+		CALLF CM_PROF("モラル",   20)
+		CALLF CM_PROF("潔癖",     20)
+	CASE 3
+		PRINTFORML 「何事も対価は必要。そう言う事ですね……」
+		CALLF CM_PROF("素直さ",   -20)
+		CALLF CM_PROF("攻撃",     10)
+		CALLF CM_PROF("衝動",     20)
+		CALLF CM_PROF("知性",     10)
+	CASE 4
+		PRINTFORML 「……貴方のような人のことも考えなければならない。難しいものです」
+		CALLF CM_PROF("知性",     -30)
+		CALLF CM_PROF("攻撃",     20)
+		CALLF CM_PROF("衝動",     30)
+		CALLF CM_PROF("潔癖",     -20)
+		CALLF CM_PROF("モラル",   -30)
+		CALLF CM_PROF("Ｃ好き",   10)
+		CALLF CM_PROF("Ｖ好き",   10)
+ENDSELECT
+PRINTFORMW 
+RETURN 1
+
+
+;ぬえ＠CPMの人
+@CHARAMAKE_K71(ARG)
+PRINTFORMW 「ほら、寝ぼけてないで起きなさい」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「お前は何者だって？　そんなことは分かりっこないの。質問に答えなさい」
+PRINTFORMW 「木々に囲まれた奥深い山で、目の前を何かが過ぎ去ったわ。それは何？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 落ち葉
+PRINTFORMDL [2] 妖怪
+PRINTFORMDL [3] 野鳥
+PRINTFORMDL [4] 人
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「黙ってるなんて生意気ね。まあ良いわ」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「つまらん答えだなぁ。まあ良いわ」
+		CALLF CM_PROF("衝動",     -20)
+		CALLF CM_PROF("楽観",     20)
+		CALLF CM_PROF("素直さ",   10)
+		CALLF CM_PROF("好奇心",   -10)
+		CALLF CM_PROF("Ｃ好き",   10)
+	CASE 2
+		PRINTFORML 「お前はそこで終わりだな！」
+		CALLF CM_PROF("被虐",     20)
+		CALLF CM_PROF("楽観",     -20)
+		CALLF CM_PROF("好奇心",   10)
+		CALLF CM_PROF("衝動",     20)
+		CALLF CM_PROF("Ｖ好き",   10)
+	CASE 3
+		PRINTFORML 「まあ、それぐらいは居るだろうね」
+		CALLF CM_PROF("楽観",     10)
+		CALLF CM_PROF("素直さ",   10)
+		CALLF CM_PROF("衝動",     -10)
+		CALLF CM_PROF("神経質",   10)
+		CALLF CM_PROF("Ｂ好き",   10)
+	CASE 4
+		PRINTFORML 「へぇ……あんた素質あるよ。面白い」
+		CALLF CM_PROF("攻撃",     20)
+		CALLF CM_PROF("倒錯",     30)
+		CALLF CM_PROF("衝動",     20)
+		CALLF CM_PROF("好奇心",   -10)
+		CALLF CM_PROF("モラル",   -30)
+		CALLF CM_PROF("Ａ好き",   10)
+ENDSELECT
+PRINTFORMW 「さあ、質問は終わり。後は寝るなり好きにしな」
+RETURN 1
+
+
+;はたて@Enter
+@CHARAMAKE_K72(ARG)
+PRINTFORMW 「目覚めたね。じゃあ早速私の質問に答えてもらうわ！」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORMW 「ケータイっていいわよね」
+PRINTFORMW 「あなたのケータイってどんなケータイ？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] デコ電
+PRINTFORMDL [2] アプリ多めのビジネスケータイ
+PRINTFORMDL [3] 異性の連絡先いっぱいのチャラいケータイ
+PRINTFORMDL [4] ケータイ……持ってない
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「あれ、電子機器は苦手？」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「そうよね。やっぱり自分好みにアレンジしてこそカワイーケータイ、って感じー」
+		CALLF CM_PROF("好奇心", 20)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("被虐", 10)
+	CASE 2
+		PRINTFORML 「へぇー。結構使い込んでるんだね。プロフェッショナル？」
+		CALLF CM_PROF("知性", 20)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("潔癖", 10)
+		CALLF CM_PROF("プライド", 10)
+		CALLF CM_PROF("モラル", 10)
+
+		CALLF CM_PROF("好奇心", 20)
+	CASE 3
+		PRINTFORML 「そ、そうなんだ。合コンとかも、やっぱたくさん参加しちゃう系ー？」
+		CALLF CM_PROF("Ｃ好き", 20)
+		CALLF CM_PROF("Ｖ好き", 10)
+		CALLF CM_PROF("衝動", 20)
+		CALLF CM_PROF("モラル", -10)
+		CALLF CM_PROF("潔癖", -10)
+		CALLF CM_PROF("神経質", -10)
+	CASE 4
+		PRINTFORML 「持ってないんだ……時々不便だとか思わない？」
+		CALLF CM_PROF("好奇心", -20)
+		CALLF CM_PROF("被虐", 10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("素直さ", 10)
+		CALLF CM_PROF("潔癖", 10)
+		CALLF CM_PROF("神経質", 10)
+		CALLF CM_PROF("知性", -10)
+ENDSELECT
+PRINTFORMW 「ふむふむ、いい情報が得られたわ。聞き込み料はツケにしておいてね。おやすみ」
+RETURN 1
+
+
+;華扇＠ぱ。
+@CHARAMAKE_K73(ARG)
+SELECTCASE ARG
+	CASE 0
+		PRINTFORMW 「私が最初？　だからといって加減は致しません」
+	CASE 9
+		PRINTFORMW 「最後って？　物事は終わりと思ってからが本番なのです」
+	CASEELSE
+		PRINTFORMW 「ずいぶん幸せそうな寝顔でしたね？」
+ENDSELECT
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORMW 「いいですか？　そもそも貴方は夢だと思ってたるんでいるのです」
+PRINTFORMW 「これはまさに邯鄲の夢。貴方の人生の功罪を見つめる崇高なものです」
+PRINTFORMW 「中には貴方の心の痛みを抉る質問をする者もあるでしょう」
+PRINTFORMW 「気取る必要はないのです。いいですか？　貴方の身の丈のまま答えなさい」
+PRINTFORMW 「欲深いことを恥じる必要はありません。急いては事を仕損じると言いますね」
+PRINTFORMW 「焦って気取った返答を試みたとしても、それは貴方の身には着かないでしょう」
+PRINTFORMW 「そういえばあの巫女が言っていましたね、欲を無くしたいという欲について」
+PRINTFORMW 「欲を無くそうと急いでしまえばそれは確かに新しい欲と言えるでしょう」
+PRINTFORMW 「ですから貴方は急ぐことなく、今の自分に正直に返答しなければいけません」
+PRINTFORMW 「聞いていますか？　こら、どこを見ているのです？」
+PRINTFORMW 「え？　胸？　こ、こらっ！」
+PRINTFORMW 「…いくら正直にと言っても限度があります。どうやら貴方には若干の修正が必要ですね」
+PRINTFORMW 「いいですか！？　そもそも問答というのは――」
+PRINTW 
+LOCAL = GETCOLOR()
+RESETCOLOR
+CALL FADEIN(8, "　くどくど…")
+CALL FADEIN(8, "　　　　くどくど…")
+CALL FADEIN(8, "　　　　　　　くどくど…")
+PRINTW 
+CALL FADEIN(8, "　くどくど…")
+CALL FADEIN(8, "　　　　くどくど…")
+CALL FADEIN(8, "　　　　　　　くどくど…")
+SETCOLOR LOCAL
+PRINTW 
+PRINTFORMW 「――と、いうように心を隠すのもさらけ出すのも併せて真実を見るのです」
+PRINTFORMW 「ただ正直に答えると言ってもそれは難しいことなのです」
+PRINTFORMW 「先ほど貴方は自分の欲望に悪びれず答えて見せましたが」
+PRINTFORMW 「それは本当に正直な答えと言えるのでしょうか？」
+PRINTFORMW 「人間誰しも良心や羞恥心といったものを持ち合わせているのです」
+PRINTFORMW 「欲望に正直な答えとは、それらを欺いていることになるのです」
+PRINTFORMW 「…もし貴方がそうした人間として当たり前の理性すら備えていないなら別の話ですが」
+PRINTFORMW 「それはもはや人とは言えないでしょう。妖怪、いいえそれ以下のモノです」
+PRINTFORMW 「ですので仮に、貴方にもまっとうな理性が多少は備わっているとして話します」
+PRINTFORMW 「そうした理性や良心を欺いて、抱いている欲望をそのまま話すことを」
+PRINTFORMW 「正直な答えとは呼べません」
+PRINTFORMW 「私の言う正直な答えとは、上っ面の美辞麗句でも世辞でもなく」
+PRINTFORMW 「ましてや箍の外れた欲望を放言することでもありません」
+PRINTFORMW 「それはつまり自分の内面と向き合って――」
+PRINTW 
+RESETCOLOR
+CALL FADEIN(8, "　くどくど…")
+CALL FADEIN(8, "　　　　くどくど…")
+CALL FADEIN(8, "　　　　　　　くどくど…")
+PRINTW 
+CALL FADEIN(8, "　くどくど…")
+CALL FADEIN(8, "　　　　くどくど…")
+CALL FADEIN(8, "　　　　　　　くどくど…")
+SETCOLOR LOCAL
+PRINTW 
+PRINTFORMW 「――いいですか？　聞いていますか？　今、何の話ですか？」
+PRINTFORMW 「…ええそうです、今日の夕飯の話です。ほうれん草の御浸しが食べたいですね」
+PRINTFORMW 「そうですか。いえ、貴方の希望とか聞いていませんので」
+PRINTFORMW 「ああもう！　そもそも夕飯の話などしていないわ！」
+PRINTFORMW 「やはり貴方はそういう不真面目なところがいけない！」
+PRINTFORMW 「この夢だって、そうやって何でも適当に言って済まそうとする！」
+PRINTFORMW 「そんなことでこれから行われる凌ｊ………こほん」
+PRINTFORMW 「これから貴方がされることを耐え切り、自分を保つなんてことはできません」
+PRINTFORMW 「一つ一つの質問を心の中で反芻し、深く考え、恥ずかしくない答えをなさい」
+PRINTFORMW 「ほら！　今寝てましたよね！？」
+PRINTFORMW 「――ああもう、これだから人間は！　いいですか――」
+PRINTW 
+RESETCOLOR
+CALL FADEIN(8, "　くどくど…")
+CALL FADEIN(8, "　　　　くどくど…")
+CALL FADEIN(8, "　　　　　　　くどくど…")
+CALL FADEIN(8, "　　　　　　　　　　うとうと…")
+PRINTW 
+CALL FADEIN(8, "　くどくど…")
+CALL FADEIN(8, "　　　　くどくど…")
+CALL FADEIN(8, "　　　　　　　くどくど…")
+CALL FADEIN(8, "　　　　　　　　　　すやすや…")
+SETCOLOR LOCAL
+PRINTW 
+PRINTFORMW 「――と、いうわけです。起きていますか？　少しでも理解できましたか？」
+PRINTFORMW 「……まさか、右クリックで飛ばしてなんかいませんよね？」
+PRINTL 
+LOCAL = MESSKIP()
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] すみません、飛ばしました
+PRINTFORMDL [2] いえ飛ばしてなんかいません
+PRINTFORMDL [3] 夕飯はハンバーグがいいです
+PRINTFORMDL [4] あと５分
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「あの、もし。ひょっとして寝ています？」
+		PRINTFORMW 「…馬の耳に念仏、ね。もう知りません、どこへなりとお行きなさい」
+		;無回答の補正値は固定
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		;飛ばしてる
+		IF LOCAL
+			PRINTFORML 「正直でよろしい。心がけは褒められたものではありませんが」
+			PRINTFORMW 「その心を忘れずに。それでは、お休みなさい」
+			CALLF CM_PROF("攻撃", -10)
+			CALLF CM_PROF("被虐", -10)
+			CALLF CM_PROF("素直さ", 20)
+			CALLF CM_PROF("プライド", -10)
+			CALLF CM_PROF("衝動", 20)
+			CALLF CM_PROF("好奇心", -10)
+			CALLF CM_PROF("羞恥", -10)
+			CALLF CM_PROF("楽観", 20)
+			CALLF CM_PROF("知性", -10)
+			CALLF CM_PROF("潔癖", -20)
+			CALLF CM_PROF("モラル", 10)
+			CALLF CM_PROF("神経質", -10)
+			CALLF CM_PROF("Ｃ好き", 10)
+		;飛ばしてない
+		ELSE
+			PRINTFORML 「…あら？　飛ばさずに聞いてくれていたんじゃないの？」
+			PRINTFORMW 「もしかして、お説教されたいのです？　変な人間ね」
+			CALLF CM_PROF("攻撃", -20)
+			;ドＭ認定してやろう
+			CALLF CM_PROF("被虐", 60)
+			CALLF CM_PROF("素直さ", -20)
+			CALLF CM_PROF("プライド", -20)
+			CALLF CM_PROF("衝動", 20)
+			CALLF CM_PROF("好奇心", 20)
+			CALLF CM_PROF("羞恥", -10)
+			CALLF CM_PROF("知性", 10)
+			CALLF CM_PROF("倒錯", 30)
+			CALLF CM_PROF("同性愛", 20)
+			CALLF CM_PROF("潔癖", -10)
+			CALLF CM_PROF("モラル", -10)
+			CALLF CM_PROF("神経質", -10)
+			CALLF CM_PROF("Ｃ好き", -20)
+			CALLF CM_PROF("Ｖ好き", 20)
+			CALLF CM_PROF("Ａ好き", 30)
+		ENDIF
+	CASE 2
+		;飛ばしてる
+		IF LOCAL
+			PRINTFORML 「嘘おっしゃい！　貴方は飛ばしているんじゃないの？」
+			PRINTFORMW 「そもそも右クリックなど使おうという魂胆が、ええい、修行よ！」
+			CALLF CM_PROF("攻撃", 20)
+			CALLF CM_PROF("被虐", -30)
+			CALLF CM_PROF("素直さ", -30)
+			CALLF CM_PROF("プライド", 20)
+			CALLF CM_PROF("衝動", 30)
+			CALLF CM_PROF("好奇心", -30)
+			CALLF CM_PROF("羞恥", -20)
+			CALLF CM_PROF("楽観", 30)
+			CALLF CM_PROF("知性", -20)
+			CALLF CM_PROF("潔癖", -20)
+			CALLF CM_PROF("モラル", -30)
+			CALLF CM_PROF("神経質", -10)
+			CALLF CM_PROF("Ｃ好き", 20)
+			CALLF CM_PROF("Ｖ好き", -20)
+			CALLF CM_PROF("Ｂ好き", -20)
+			CALLF CM_PROF("Ａ好き", -20)
+		;飛ばしてない
+		ELSE
+			PRINTFORML 「……どうやら本当のようね」
+			PRINTFORMW 「その誠実さを忘れないで。幸運を祈ります」
+			CALLF CM_PROF("攻撃", -20)
+			CALLF CM_PROF("被虐", 20)
+			CALLF CM_PROF("素直さ", 30)
+			CALLF CM_PROF("プライド", -10)
+			CALLF CM_PROF("衝動", -20)
+			CALLF CM_PROF("好奇心", 30)
+			CALLF CM_PROF("羞恥", 20)
+			CALLF CM_PROF("楽観", 10)
+			CALLF CM_PROF("知性", 20)
+			CALLF CM_PROF("倒錯", -20)
+			CALLF CM_PROF("同性愛", -10)
+			CALLF CM_PROF("潔癖", 10)
+			CALLF CM_PROF("モラル", 30)
+			CALLF CM_PROF("神経質", 30)
+			CALLF CM_PROF("Ｃ好き", -20)
+			CALLF CM_PROF("Ｖ好き", 20)
+			CALLF CM_PROF("Ｂ好き", 20)
+			CALLF CM_PROF("Ａ好き", 20)
+		ENDIF
+	CASE 3
+		PRINTFORML 「好きなものばかり食べていては心の栄養にならないわ。精進よ」
+		PRINTFORMW 「…ツッコんでもらえると思ったの？　甘いわね」
+		CALLF CM_PROF("攻撃", -20)
+		CALLF CM_PROF("被虐", 20)
+		CALLF CM_PROF("素直さ", -20)
+		CALLF CM_PROF("衝動", 20)
+		CALLF CM_PROF("好奇心", 20)
+		CALLF CM_PROF("羞恥", -20)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("知性", -20)
+		CALLF CM_PROF("倒錯", 10)
+		CALLF CM_PROF("潔癖", -20)
+		CALLF CM_PROF("モラル", -10)
+		CALLF CM_PROF("神経質", -30)
+		CALLF CM_PROF("Ｖ好き", 20)
+	CASE 4
+		PRINTFORML 「最初から私の話など聞く気はなかったということね…！」
+		PRINTFORMW 「貴方のような者は、寿命を迎えるのも早いわ。せいぜい太く短く生きなさい！」
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("被虐", -20)
+		CALLF CM_PROF("素直さ", -10)
+		CALLF CM_PROF("プライド", 10)
+		CALLF CM_PROF("衝動", 20)
+		CALLF CM_PROF("好奇心", -20)
+		CALLF CM_PROF("羞恥", -20)
+		CALLF CM_PROF("楽観", 30)
+		CALLF CM_PROF("知性", -20)
+		CALLF CM_PROF("モラル", -10)
+		CALLF CM_PROF("神経質", -20)
+		CALLF CM_PROF("Ｂ好き", 10)
+ENDSELECT
+RETURN 1
+
+
+;響子＠ぱ。
+@CHARAMAKE_K74(ARG)
+PRINTFORMW 「おはよーございます」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「挨拶ができない子はろくな大人にならないよ！」
+PRINTFORMW 「おはよーございます！」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] おはようございます
+PRINTFORMDL [2] あと五分
+PRINTFORMDL [3] うるせえ黙れ
+PRINTFORMDL [4] はいはい、おはようおはよう
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「こだまもかえらぬ、人の耳に念仏ってね」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「おはようございます。うんうん、挨拶はしっかりね」
+		CALLF CM_PROF("攻撃", -20)
+		CALLF CM_PROF("素直さ", 30)
+		CALLF CM_PROF("プライド", -10)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("羞恥", -10)
+		CALLF CM_PROF("知性", -10)
+		CALLF CM_PROF("潔癖", -10)
+	CASE 2
+		PRINTFORML 「お寺の朝は早い。目覚ましがわりに人間の悲鳴が響くのよ！」
+		CALLF CM_PROF("被虐", 10)
+		CALLF CM_PROF("素直さ", 10)
+		CALLF CM_PROF("プライド", -20)
+		CALLF CM_PROF("楽観", 30)
+		CALLF CM_PROF("知性", -10)
+		CALLF CM_PROF("モラル", -10)
+	CASE 3
+		PRINTFORML 「うるせえ黙れ！　こちとらヤマビコよ！」
+		CALLF CM_PROF("攻撃", 30)
+		CALLF CM_PROF("被虐", -10)
+		CALLF CM_PROF("素直さ", -20)
+		CALLF CM_PROF("プライド", 20)
+		CALLF CM_PROF("モラル", -20)
+		CALLF CM_PROF("神経質", 20)
+	CASE 4
+		PRINTFORML 「覇気がないねえ。お寺で鍛えたほうがいいんじゃないの？」
+		CALLF CM_PROF("モラル", -20)
+		CALLF CM_PROF("被虐", 10)
+		CALLF CM_PROF("プライド", -20)
+		CALLF CM_PROF("攻撃", -10)
+		CALLF CM_PROF("倒錯", -10)
+ENDSELECT
+PRINTFORMW 「では今度は、おやすみなさい。うん、挨拶はいいね」
+RETURN 1
+
+
+;芳香＠ぱ。
+@CHARAMAKE_K75(ARG)
+PRINTFORMW 「うおおーーー！」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「大変なのだあ！　質問しようとしたことを忘れてしまったぞおぅ！」
+PRINTFORMW 「そこのお前！　知らないかうぁ！？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 神を信じますか？
+PRINTFORMDL [2] 好きな芸能人は？
+PRINTFORMDL [3] ごはん？　おふろ？　それとも…
+PRINTFORMDL [4] 知りません
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「へんじがない　ただのしかばねのようだあああ」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「ぬうう、宗教はいかんぞお！　争いを呼ぶのだぞぉう！」
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("プライド", -10)
+		CALLF CM_PROF("モラル", 10)
+		CALLF CM_PROF("羞恥", -10)
+		CALLF CM_PROF("衝動", 10)
+	CASE 2
+		PRINTFORML 「うおおー！　意味がわからーん！　これでも墓地ではアイドルなのだぁあ」
+		CALLF CM_PROF("倒錯", -10)
+		CALLF CM_PROF("素直さ", 10)
+		CALLF CM_PROF("好奇心", 20)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("知性", -10)
+		CALLF CM_PROF("モラル", -10)
+	CASE 3
+		PRINTFORML 「えっちなのはいかんぞぉ、あれだけはいかんのじゃ」
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("素直さ", 10)
+		CALLF CM_PROF("楽観", 20)
+		CALLF CM_PROF("モラル", -20)
+		CALLF CM_PROF("潔癖", -30)
+		CALLF CM_PROF("Ｃ好き", 30)
+		CALLF CM_PROF("Ｖ好き", 30)
+	CASE 4
+		PRINTFORML 「うむ！　我々も知らんぞぉ！　仲間に…なにぃ、ならんだとおぅ！」
+		CALLF CM_PROF("素直さ", 30)
+		CALLF CM_PROF("好奇心", -20)
+		CALLF CM_PROF("潔癖", 10)
+		CALLF CM_PROF("モラル", 20)
+		CALLF CM_PROF("倒錯", -30)
+ENDSELECT
+PRINTFORMW 「ぬおー！！　さーらーばーだー」
+RETURN 1
+
+
+;青娥＠ぱ。
+@CHARAMAKE_K76(ARG)
+PRINTFORMW 「うふふ、ねぼすけさん。さあ、起きて起きて」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「質問させてもらいますね。深く考えずに答えてください」
+PRINTFORMW 「他人が持っているものをどうしても欲しくなったら、どうします？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 諦める
+PRINTFORMDL [2] 代わりを探す
+PRINTFORMDL [3] 奪う
+PRINTFORMDL [4] 交渉する
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「黙っていても、欲が無くなったりはしないわよ」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「あらあら…ふふふ、可愛い人なんですね」
+		CALLF CM_PROF("攻撃", -30)
+		CALLF CM_PROF("プライド", -20)
+		CALLF CM_PROF("素直さ", 10)
+		CALLF CM_PROF("モラル", 30)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("倒錯", -10)
+	CASE 2
+		PRINTFORML 「そうして誤魔化し続けて……ふふ、人間って面白いのね」
+		CALLF CM_PROF("攻撃", -10)
+		CALLF CM_PROF("素直さ", -20)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("楽観", 30)
+		CALLF CM_PROF("知性", 20)
+		CALLF CM_PROF("モラル", 10)
+		CALLF CM_PROF("Ａ好き", 20)
+		CALLF CM_PROF("Ｂ好き", 10)
+	CASE 3
+		PRINTFORML 「そう。貴方も、私の側なのね……一緒にタオを学ぶ？」
+		CALLF CM_PROF("攻撃", 30)
+		CALLF CM_PROF("被虐", -30)
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("衝動", 20)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("モラル", -30)
+		CALLF CM_PROF("倒錯", 10)
+		CALLF CM_PROF("Ｃ好き", 20)
+		CALLF CM_PROF("Ｖ好き", 10)
+	CASE 4
+		PRINTFORML 「お金？　それとも人情ってやつ？　そんなもので解決するかしら…」
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("被虐", 10)
+		CALLF CM_PROF("楽観", 20)
+		CALLF CM_PROF("プライド", -20)
+		CALLF CM_PROF("知性", 20)
+		CALLF CM_PROF("モラル", 10)
+		CALLF CM_PROF("倒錯", -10)
+ENDSELECT
+PRINTFORMW 「参考になりました。それでは、良い夢を――」
+RETURN 1
+
+
+;屠自古＠ぱ。
+@CHARAMAKE_K77(ARG)
+PRINTFORMW 「やれやれ。さあ起きた起きた」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「質問させてもらうわよ。答えたくなかったらまあ、いいわ」
+PRINTFORMW 「貴方はお風呂に入るとき、身体のどこから洗う？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 肩や腕
+PRINTFORMDL [2] 足
+PRINTFORMDL [3] 頭
+PRINTFORMDL [4] \@ PENIS(MASTER) ? ちんこ # まんまん \@
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「無回答、ね。はい、おつかれさま」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「あまり面白みのない答えね」
+		CALLF CM_PROF("Ｂ好き", 30)
+		CALLF CM_PROF("Ｖ好き", -20)
+		CALLF CM_PROF("Ｃ好き", -20)
+	CASE 2
+		PRINTFORML 「そう。足、足ねぇ……感覚を忘れたわ」
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("好奇心", 10)
+		CALLF CM_PROF("Ａ好き", 20)
+		CALLF CM_PROF("Ｂ好き", -20)
+	CASE 3
+		PRINTFORML 「頭……言っちゃ悪いけど、少し変わってると思うわ」
+		CALLF CM_PROF("プライド", 10)
+		CALLF CM_PROF("知性", 10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("倒錯", 10)
+		CALLF CM_PROF("神経質", 10)
+		CALLF CM_PROF("Ａ好き", 10)
+	CASE 4
+		PRINTFORML 「…ま、大切な部分だしね」
+		CALLF CM_PROF("素直さ", 10)
+		CALLF CM_PROF("被虐", 10)
+		CALLF CM_PROF("楽観", 20)
+		CALLF CM_PROF("プライド", -20)
+		CALLF CM_PROF("知性", -20)
+		CALLF CM_PROF("モラル", -10)
+		CALLF CM_PROF("潔癖", 20)
+		CALLF CM_PROF("Ｖ好き", 20)
+		CALLF CM_PROF("Ｃ好き", 20)
+ENDSELECT
+PRINTFORMW 「じゃあこれで終わりかなあ。おやすみ――」
+RETURN 1
+
+
+;布都＠ぱ。
+@CHARAMAKE_K78(ARG)
+PRINTFORMW 「来たか」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「待ちわびたぞ。おぬしが我等に力を授けるという神仙の者だな？」
+PRINTFORMW 「…隠さずともよい。そうであろう？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] そうです
+PRINTFORMDL [2] 人違いです
+PRINTFORMDL [3] 頭が高いぞ
+PRINTFORMDL [4] いえ、新聞の勧誘です
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「…そうか、なるほど。我に試練を与えようというのだな？」
+		PRINTFORMW 「いいだろう、後日また来るがいい。さらばだ――」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「やはりそうか！　ならばこうしてはおれん！」
+		PRINTFORMW 「我は太子様を呼びに行く。さらばだ――」
+		CALLF CM_PROF("素直さ", -20)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("モラル", -10)
+	CASE 2
+		PRINTFORML 「なんと！？　そうか、ふ、ふふ…我には力を得る資格がまだないというのだな」
+		PRINTFORMW 「いいだろう、その試練受けて立つ。後日また来るがいい。さらばだ――」
+		CALLF CM_PROF("攻撃", -10)
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("プライド", -10)
+		CALLF CM_PROF("モラル", 20)
+	CASE 3
+		PRINTFORML 「くっ…我を誰だと思っているのだ」
+		PRINTFORMW 「いいだろう。日を改め、戦いで決着をつける。さらばだ――」
+		CALLF CM_PROF("攻撃", 10)
+		CALLF CM_PROF("被虐", -10)
+		CALLF CM_PROF("プライド", 30)
+		CALLF CM_PROF("神経質", 10)
+		CALLF CM_PROF("モラル", -10)
+	CASE 4
+		PRINTFORML 「…し、新聞？」
+		PRINTFORMW 「ええい、そのような下世話なものはいらぬ。帰れ帰れ――」
+		CALLF CM_PROF("素直さ", -20)
+		CALLF CM_PROF("衝動", 30)
+		CALLF CM_PROF("楽観", 20)
+		CALLF CM_PROF("知性", -10)
+		CALLF CM_PROF("モラル", -10)
+		CALLF CM_PROF("潔癖", -20)
+ENDSELECT
+RETURN 1
+
+
+;神子＠ぱ。
+@CHARAMAKE_K79(ARG)
+PRINTFORMW 「来ましたね。おはようございます」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「君がくるのを待っていたのです」
+PRINTFORMW 「さあ、君のしたいこと――欲を教えなさい。あ、話さなくてもいいです」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] いいから股開けよ
+PRINTFORMDL [2] 腹へった
+PRINTFORMDL [3] 寝かせて
+PRINTFORMDL [4] いじめてください
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「黙っていても私は君の欲を聞くことができるのです」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「なんと…ふむ。悪い気はしませんが、困るわね」
+		CALLF CM_PROF("攻撃", 20)
+		CALLF CM_PROF("被虐", -20)
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("衝動", 20)
+		CALLF CM_PROF("倒錯", 10)
+		CALLF CM_PROF("潔癖", -10)
+		CALLF CM_PROF("モラル", -30)
+		CALLF CM_PROF("Ｃ好き", 10)
+		CALLF CM_PROF("Ｖ好き", 10)
+	CASE 2
+		PRINTFORML 「…呆れるといいますか。良いと思います、健康的で」
+		CALLF CM_PROF("素直さ", 30)
+		CALLF CM_PROF("被虐", 10)
+		CALLF CM_PROF("プライド", -20)
+		CALLF CM_PROF("楽観", 30)
+		CALLF CM_PROF("知性", -20)
+		CALLF CM_PROF("羞恥", -20)
+		CALLF CM_PROF("神経質", -20)
+		CALLF CM_PROF("Ａ好き", 10)
+	CASE 3
+		PRINTFORML 「疲れているの？　起こしてごめんなさい」
+		CALLF CM_PROF("素直さ", 10)
+		CALLF CM_PROF("被虐", 10)
+		CALLF CM_PROF("楽観", 20)
+		CALLF CM_PROF("好奇心", -20)
+		CALLF CM_PROF("知性", 10)
+		CALLF CM_PROF("倒錯", -10)
+	CASE 4
+		PRINTFORML 「な、なんですって？　まったく…変態というやつですか？」
+		CALLF CM_PROF("攻撃", -20)
+		CALLF CM_PROF("被虐", 30)
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("知性", -10)
+		CALLF CM_PROF("倒錯", 30)
+		CALLF CM_PROF("モラル", -10)
+		CALLF CM_PROF("潔癖", -20)
+		CALLF CM_PROF("Ａ好き", 20)
+ENDSELECT
+PRINTFORMW 「それでは欲深き君。今しばし、おやすみなさい――」
+RETURN 1
+
+
+;マミゾウ＠ぱ。
+@CHARAMAKE_K80(ARG)
+PRINTFORMW 「うぉっほん。起きたかのう」
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「少し話をしていかんかね」
+PRINTFORMW 「そうじゃの。おぬし、好きな昔話は何かのう？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 桃太郎
+PRINTFORMDL [2] シンデレラ
+PRINTFORMDL [3] 浦島太郎
+PRINTFORMDL [4] かちかち山
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「むう…寂しいのう」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「鬼とみれば攻め落とし奪ってもよい…ほっほ、人間は昔からそうじゃ」
+		CALLF CM_PROF("攻撃", 20)
+		CALLF CM_PROF("被虐", -20)
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("倒錯", -20)
+		CALLF CM_PROF("潔癖", -10)
+		CALLF CM_PROF("モラル", 10)
+	CASE 2
+		PRINTFORML 「西洋の話じゃな。おぬしなかなかろまんちすとじゃのう」
+		CALLF CM_PROF("攻撃", -20)
+		CALLF CM_PROF("被虐", 20)
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("プライド", 20)
+		CALLF CM_PROF("衝動", -20)
+		CALLF CM_PROF("羞恥", 20)
+		CALLF CM_PROF("楽観", 20)
+		CALLF CM_PROF("モラル", 10)
+		CALLF CM_PROF("Ｖ好き", 10)
+	CASE 3
+		PRINTFORML 「人も妖怪もちっぽけなもんじゃ、一時の愉しみも幸せかもしれぬ」
+		CALLF CM_PROF("被虐", 20)
+		CALLF CM_PROF("素直さ", -10)
+		CALLF CM_PROF("楽観", -20)
+		CALLF CM_PROF("好奇心", 20)
+		CALLF CM_PROF("知性", 20)
+		CALLF CM_PROF("倒錯", 20)
+		CALLF CM_PROF("Ｂ好き", -20)
+		CALLF CM_PROF("Ｃ好き", 20)
+	CASE 4
+		PRINTFORML 「おほん、うぉっほん。……何だか暑くなってきたのう」
+		CALLF CM_PROF("攻撃", 30)
+		CALLF CM_PROF("被虐", -20)
+		CALLF CM_PROF("素直さ", -20)
+		CALLF CM_PROF("プライド", 20)
+		CALLF CM_PROF("衝動", 30)
+		CALLF CM_PROF("好奇心", 20)
+		CALLF CM_PROF("モラル", -30)
+		CALLF CM_PROF("倒錯", 20)
+		CALLF CM_PROF("Ａ好き", 20)
+ENDSELECT
+PRINTFORMW 「そろそろ時間かのう。おやすみじゃよ――」
+RETURN 1
+
+
+;小鈴＠ぱ。
+@CHARAMAKE_K81(ARG)
+SELECTCASE ARG
+	CASE 0
+		PRINTFORMW 「早起きね。鈴奈庵へようこそ」
+	CASE 9
+		PRINTFORMW 「こんにちは。あなたの夢ももうじき終わりね」
+	CASEELSE
+		PRINTFORMW 「あら？　いらっしゃい。本をお探しかしら？」
+ENDSELECT
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:ローマ字)
+PRINTL 
+PRINTFORML 「うちではもっぱら外来本が人気なのよ。外の世界の本」
+PRINTFORMW 「それで、あなたが探しているのはどんな本？」
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 学術書
+PRINTFORMDL [2] 春画本
+PRINTFORMDL [3] 妖魔本
+PRINTFORMDL [4] 小説
+CALL INPUTINTD(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 「そうね、よく見たら本なんて読まなさそうな顔してる」
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 「本にあるのは古人の糟魄のみ。でも、それは寿命の短い人間にとっては十分な宝ね」
+		CALLF CM_PROF("プライド", 10)
+		CALLF CM_PROF("好奇心", 20)
+		CALLF CM_PROF("羞恥", 20)
+		CALLF CM_PROF("楽観", -20)
+		CALLF CM_PROF("知性", 50)
+		CALLF CM_PROF("倒錯", 20)
+		CALLF CM_PROF("同性愛", 20)
+		CALLF CM_PROF("潔癖", 30)
+		CALLF CM_PROF("モラル", 20)
+		CALLF CM_PROF("神経質", 20)
+		CALLF CM_PROF("Ｃ好き", -20)
+		CALLF CM_PROF("Ａ好き", 30)
+	CASE 2
+		PRINTFORML 「あら正直な方。でも、昔の美人画はあなたの思うような物じゃないかもね」
+		CALLF CM_PROF("被虐", 10)
+		CALLF CM_PROF("素直さ", 20)
+		CALLF CM_PROF("プライド", -10)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("楽観", 10)
+		CALLF CM_PROF("知性", -20)
+		CALLF CM_PROF("倒錯", -20)
+		CALLF CM_PROF("潔癖", -10)
+		CALLF CM_PROF("モラル", -30)
+		CALLF CM_PROF("Ｃ好き", 10)
+		CALLF CM_PROF("Ｂ好き", 20)
+	CASE 3
+		PRINTFORML 「これはお貸しできないわ。第一あなたには読めないでしょう？」
+		CALLF CM_PROF("攻撃", 30)
+		CALLF CM_PROF("被虐", 10)
+		CALLF CM_PROF("衝動", 10)
+		CALLF CM_PROF("羞恥", -10)
+		CALLF CM_PROF("楽観", -10)
+		CALLF CM_PROF("倒錯", 30)
+		CALLF CM_PROF("潔癖", -20)
+		CALLF CM_PROF("モラル", -20)
+	CASE 4
+		PRINTFORML 「小説はよいですね。いっそ書かれます？　印刷は当店で請け負いますよ」
+		CALLF CM_PROF("攻撃", -20)
+		CALLF CM_PROF("被虐", 10)
+		CALLF CM_PROF("素直さ", 30)
+		CALLF CM_PROF("プライド", -30)
+		CALLF CM_PROF("衝動", -20)
+		CALLF CM_PROF("羞恥", 20)
+		CALLF CM_PROF("楽観", -30)
+		CALLF CM_PROF("知性", 10)
+		CALLF CM_PROF("倒錯", 10)
+		CALLF CM_PROF("同性愛", 40)
+		CALLF CM_PROF("潔癖", 10)
+		CALLF CM_PROF("モラル", 20)
+		CALLF CM_PROF("神経質", -20)
+		CALLF CM_PROF("Ｖ好き", 30)
+ENDSELECT
+PRINTFORMW 「お帰りはあちら。返却期限はまたのお越しで。おやすみなさい」
+RETURN 1

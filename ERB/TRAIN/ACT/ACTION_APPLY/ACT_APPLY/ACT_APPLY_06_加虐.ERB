@@ -1,0 +1,327 @@
+﻿;────────────────────────────────────
+;060,スパンキング（Ｓ/Ｎ/Ｈ/Ａ）[罰]（接触、痛み、中毒充足）
+;────────────────────────────────────
+@ACTION_APPLY_60
+;調教者サド素質、技巧、加虐、調教レベルに応じて痛みSOURCE増加
+SOURCE:MASTER:痛み = 80 * (TALENT:サド + 1) + GET_ABL(TARGET, "技巧") * (GET_ABL(TARGET, "加虐") + 10) * 15 / 100 + (GET_ABL(TARGET, "技巧") / 10 + GET_TRAINLV(TARGET) + 1) * (TALENT:サド * 3 + 1) * (10 + TALENT:サド)
+;痛みSOURCEに応じて接触SOURCE増加
+SOURCE:MASTER:接触 = 200 + SOURCE:MASTER:痛み / 10
+;調教対象マゾっ気、苦痛中毒、痛みSOURCEに応じて中毒充足SOURCE増加
+SOURCE:MASTER:中毒充足 = GET_ABL(MASTER, "マゾっ気") * (GET_ABL(MASTER, "苦痛中毒") - 10) * (GET_ABL(MASTER, "苦痛中毒") + 10) * SOURCE:MASTER:痛み / 100000
+;中毒充足SOURCEが負の値をとらないよう調整
+SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 < 0 ? 0 # SOURCE:MASTER:中毒充足
+;顔面騎乗系解除
+CALL FACESITTING_SET(0)
+;調教者自慰を中断
+TEQUIP:自慰中 &= ~2
+;調教者マゾっ気に応じて勃起度上昇
+TCVAR:MASTER:今回の勃起 += 50 + (GET_ABL(MASTER, "マゾっ気") - 20) * 2
+TFLAG:経過時間 += 2
+
+;────────────────────────────────────
+;061,鞭（Ｎ/Ｈ/Ａ）[罰]（痛み、中毒充足、トラウマ）
+;────────────────────────────────────
+@ACTION_APPLY_61
+;調教者サド素質、技巧、加虐、調教レベルに応じて痛みSOURCE増加
+SOURCE:MASTER:痛み = 250 * (TALENT:サド + 1) + GET_ABL(TARGET, "技巧") * (GET_ABL(TARGET, "加虐") + 20) / 10 + (GET_ABL(TARGET, "技巧") + GET_ABL(TARGET, "技巧") + GET_TRAINLV(TARGET) * 10) * (TALENT:サド * 2 + 1) * (10 + TALENT:サド) / 10
+;心根優しい素質が存在すると痛みSOURCE0.9倍
+SIF TALENT:心根優しい
+	TIMES SOURCE:MASTER:痛み , 0.90
+;調教対象マゾっ気、苦痛中毒、痛みSOURCEに応じて中毒充足SOURCE増加
+SOURCE:MASTER:中毒充足 = GET_ABL(MASTER, "マゾっ気") * (GET_ABL(MASTER, "苦痛中毒") - 10) * (GET_ABL(MASTER, "苦痛中毒") + 10) * SOURCE:MASTER:痛み / 100000
+;中毒充足SOURCEが負の値をとらないよう調整
+SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 < 0 ? 0 # SOURCE:MASTER:中毒充足
+;痛みSOURCEに応じてトラウマSOURCE増加、中毒充足SOURCEによって減少
+SOURCE:MASTER:トラウマ = SOURCE:MASTER:痛み / 2 - SOURCE:MASTER:中毒充足
+;トラウマSOURCEが負の値をとらないよう調整
+SOURCE:MASTER:トラウマ = SOURCE:MASTER:トラウマ < 0 ? 0 # SOURCE:MASTER:トラウマ
+;トラウマ(刻印)の元がこの調教だった場合、トラウマSOURCEを1.5倍にする
+SIF CFLAG:MASTER:トラウマ == 61
+	TIMES SOURCE:MASTER:トラウマ , 1.50
+;顔面騎乗系解除
+CALL FACESITTING_SET(0)
+;調教者自慰を中断
+TEQUIP:自慰中 &= ~2
+;調教者マゾっ気に応じて勃起度上昇
+TCVAR:MASTER:今回の勃起 += 50 + (GET_ABL(MASTER, "マゾっ気") - 20) * 3
+TFLAG:経過時間 += 2
+
+;────────────────────────────────────
+;062,針（Ｈ/Ａ）[罰]（痛み、逸脱、中毒充足、トラウマ、出血）
+;────────────────────────────────────
+@ACTION_APPLY_62
+;調教者サド素質、技巧、加虐、針さばき、調教レベルに応じて痛みSOURCE増加
+SOURCE:MASTER:痛み = 450 * (TALENT:サド + 1) + GET_ABL(TARGET, "技巧") * (GET_ABL(TARGET, "加虐") + 1) * (2 + TALENT:針さばき * 3) / 100 + (GET_ABL(TARGET, "技巧") + GET_ABL(TARGET, "技巧") + GET_TRAINLV(TARGET) * 10) * (TALENT:サド + TALENT:針さばき * 2 + 1) * (10 + TALENT:サド) / 10
+;心根優しい素質が存在すると痛みSOURCE0.8倍
+SIF TALENT:心根優しい
+	TIMES SOURCE:MASTER:痛み , 0.80
+;痛みSOURCE、調教対象調教レベル、マゾっ気、苦痛中毒に応じて逸脱SOURCE増加
+SOURCE:MASTER:逸脱 = 200 + SOURCE:MASTER:痛み / 2 - CFLAG:MASTER:調教レベル * 30 - GET_ABL(MASTER, "マゾっ気") * 6 - GET_ABL(MASTER, "苦痛中毒") * 20
+;逸脱SOURCEが負の値をとらないよう調整
+SOURCE:MASTER:逸脱 = SOURCE:MASTER:逸脱 < 0 ? 0 # SOURCE:MASTER:逸脱
+;調教対象マゾっ気、苦痛中毒、痛みSOURCEに応じて中毒充足SOURCE増加
+SOURCE:MASTER:中毒充足 = GET_ABL(MASTER, "マゾっ気") * (GET_ABL(MASTER, "苦痛中毒") - 10) * (GET_ABL(MASTER, "苦痛中毒") + 10) * SOURCE:MASTER:痛み / 100000
+;中毒充足SOURCEが負の値をとらないよう調整
+SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 < 0 ? 0 # SOURCE:MASTER:中毒充足
+;痛みSOURCEに応じてトラウマSOURCE増加、中毒充足SOURCEによって減少
+SOURCE:MASTER:トラウマ = SOURCE:MASTER:痛み / 2 - SOURCE:MASTER:中毒充足
+;トラウマSOURCEが負の値をとらないよう調整
+SOURCE:MASTER:トラウマ = SOURCE:MASTER:トラウマ < 0 ? 0 # SOURCE:MASTER:トラウマ
+;トラウマ(刻印)の元がこの調教だった場合、トラウマSOURCEを1.5倍にする
+SIF CFLAG:MASTER:トラウマ == 62
+	TIMES SOURCE:MASTER:トラウマ , 1.50
+;出血
+;男/ふたなりならペニス、女ならヴァギナに血液汚れ追加
+IF TALENT:MASTER:オトコ || TALENT:MASTER:ふたなり
+	STAIN:MASTER:ペニス |= 32
+ELSE
+	STAIN:MASTER:ヴァギナ |= 32
+ENDIF
+;胸に血液汚れ追加
+STAIN:MASTER:胸 |= 32
+;顔面騎乗系解除
+CALL FACESITTING_SET(0)
+;調教者、調教対象自慰を中断
+TEQUIP:自慰中 = 0
+;調教者マゾっ気に応じて勃起度上昇
+TCVAR:MASTER:今回の勃起 += 50 + (GET_ABL(MASTER, "マゾっ気") - 20) * 4
+TFLAG:経過時間 += 2
+
+;────────────────────────────────────
+;063,縄（Ｓ/Ｎ/Ｈ/Ａ）[罰]（拘束、中毒充足）
+;────────────────────────────────────
+@ACTION_APPLY_63
+;本当はいろんな縛り方を作りたいが面倒すぎます…暫定的に縛りの強度だけをTEQUIP:縄に記入します
+;拘束時
+IF TFLAG:ACT派生 == 0
+	;反抗刻印、調教者調教レベル、技巧、縛り上手素質に応じて拘束SOURCE増加
+	SOURCE:MASTER:拘束 = 200 + (MARK:反抗刻印 + GET_TRAINLV(TARGET)) * (GET_ABL(TARGET, "技巧") + 10) * 5 * (TALENT:縛り上手 * 3 + 2) / 10
+	;マゾっ気、拘束中毒、拘束SOURCEに応じて中毒充足SOURCE増加
+	SOURCE:MASTER:中毒充足 = GET_ABL(MASTER, "マゾっ気") * (GET_ABL(MASTER, "拘束中毒") - 10) * (GET_ABL(MASTER, "拘束中毒") + 10) * SOURCE:MASTER:拘束 / 100000
+	;中毒充足SOURCEが負の値をとらないよう調整
+	SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 < 0 ? 0 # SOURCE:MASTER:中毒充足
+	;縄で拘束(拘束SOURCEに応じて強度上昇)
+	TEQUIP:縄 = 1 + SOURCE:MASTER:拘束 / 500
+;解除時
+ELSE
+	;縄で拘束解除
+	TEQUIP:縄 = 0
+ENDIF
+;顔面騎乗系解除
+CALL FACESITTING_SET(0)
+;調教者、調教対象自慰を中断
+TEQUIP:自慰中 = 0
+;調教者マゾっ気に応じて勃起度上昇
+TCVAR:MASTER:今回の勃起 += 50 + (GET_ABL(MASTER, "マゾっ気") - 20)
+TFLAG:経過時間 += 2
+
+;────────────────────────────────────
+;064,アイマスク（Ｓ/Ｎ/Ｈ/Ａ）[罰]（拘束、中毒充足、トラウマ）
+;────────────────────────────────────
+@ACTION_APPLY_64
+;装着時
+IF TFLAG:ACT派生 == 0
+	;加虐、調教者調教レベル、技巧、縛り上手素質に応じて拘束SOURCE増加
+	SOURCE:MASTER:拘束 = 100 + (GET_ABL(TARGET, "加虐") + GET_TRAINLV(TARGET) * 10) * (GET_ABL(TARGET, "技巧") + 10) * 5 * (TALENT:縛り上手 + 2) / 10
+	;マゾっ気、拘束中毒、拘束SOURCEに応じて中毒充足SOURCE増加
+	SOURCE:MASTER:中毒充足 = GET_ABL(MASTER, "マゾっ気") * (GET_ABL(MASTER, "拘束中毒") - 10) * (GET_ABL(MASTER, "拘束中毒") + 10) * SOURCE:MASTER:拘束 / 100000
+	;中毒充足SOURCEが負の値をとらないよう調整
+	SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 < 0 ? 0 # SOURCE:MASTER:中毒充足
+	;拘束SOURCEに応じてトラウマSOURCE増加、中毒充足SOURCEによって減少
+	SOURCE:MASTER:トラウマ = SOURCE:MASTER:拘束 / 2 - SOURCE:MASTER:中毒充足
+	;トラウマSOURCEが負の値をとらないよう調整
+	SOURCE:MASTER:トラウマ = SOURCE:MASTER:トラウマ < 0 ? 0 # SOURCE:MASTER:トラウマ
+	;トラウマ(刻印)の元がこの調教だった場合、トラウマSOURCEを1.5倍にする
+	SIF CFLAG:MASTER:トラウマ == 64
+		TIMES SOURCE:MASTER:トラウマ , 1.50
+	;アイマスク装着
+	TEQUIP:アイマスク = 1
+;解除時
+ELSE
+	;アイマスク解除
+	TEQUIP:アイマスク = 0
+ENDIF
+;顔面騎乗系解除
+CALL FACESITTING_SET(0)
+;調教者自慰を中断
+TEQUIP:自慰中 &= ~2
+;調教者マゾっ気に応じて勃起度上昇
+TCVAR:MASTER:今回の勃起 += 50 + (GET_ABL(MASTER, "マゾっ気") - 20)
+TFLAG:経過時間 += 1
+
+;────────────────────────────────────
+;065,ボールギャグ（Ｎ/Ｈ/Ａ）[罰]（拘束、中毒充足、トラウマ）
+;────────────────────────────────────
+@ACTION_APPLY_65
+;装着時
+IF TFLAG:ACT派生 == 0
+	;加虐、調教者調教レベル、縛り上手素質に応じて拘束SOURCE増加
+	SOURCE:MASTER:拘束 = 350 + (GET_ABL(TARGET, "加虐") + GET_TRAINLV(TARGET) * 10) * (TALENT:縛り上手 + 1)
+	;マゾっ気、拘束中毒、拘束SOURCEに応じて中毒充足SOURCE増加
+	SOURCE:MASTER:中毒充足 = GET_ABL(MASTER, "マゾっ気") * (GET_ABL(MASTER, "拘束中毒") - 10) * (GET_ABL(MASTER, "拘束中毒") + 10) * SOURCE:MASTER:拘束 / 100000
+	;中毒充足SOURCEが負の値をとらないよう調整
+	SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 < 0 ? 0 # SOURCE:MASTER:中毒充足
+	;拘束SOURCEに応じてトラウマSOURCE増加、中毒充足SOURCEによって減少
+	SOURCE:MASTER:トラウマ = SOURCE:MASTER:拘束 / 2 - SOURCE:MASTER:中毒充足
+	;トラウマSOURCEが負の値をとらないよう調整
+	SOURCE:MASTER:トラウマ = SOURCE:MASTER:トラウマ < 0 ? 0 # SOURCE:MASTER:トラウマ
+	;トラウマ(刻印)の元がこの調教だった場合、トラウマSOURCEを1.5倍にする
+	SIF CFLAG:MASTER:トラウマ == 65
+		TIMES SOURCE:MASTER:トラウマ , 1.50
+	;ボールギャグ装着
+	TEQUIP:ボールギャグ = 1
+;解除時
+ELSE
+	;ボールギャグ解除
+	TEQUIP:ボールギャグ = 0
+ENDIF
+;顔面騎乗系解除
+CALL FACESITTING_SET(0)
+;調教者自慰を中断
+TEQUIP:自慰中 &= ~2
+;調教者マゾっ気に応じて勃起度上昇
+TCVAR:MASTER:今回の勃起 += 50 + (GET_ABL(MASTER, "マゾっ気") - 2)
+TFLAG:経過時間 += 1
+
+;────────────────────────────────────
+;066,罵倒（Ｎ/Ｈ/Ａ）[罰]（逸脱、中毒充足）
+;────────────────────────────────────
+@ACTION_APPLY_66
+;調教者会話、加虐、ランクに応じて逸脱SOURCE増加
+SOURCE:MASTER:逸脱 = 200 + (GET_ABL(TARGET, "会話") + 10) * (GET_ABL(TARGET, "加虐") + 10) * CFLAG:ランク * 5 / 100
+;マゾっ気、拘束中毒、逸脱SOURCEに応じて中毒充足SOURCE増加
+SOURCE:MASTER:中毒充足 = GET_ABL(MASTER, "マゾっ気") * (GET_ABL(MASTER, "拘束中毒") - 10) * (GET_ABL(MASTER, "拘束中毒") + 10) * SOURCE:MASTER:逸脱 / 100000
+;中毒充足SOURCEが負の値をとらないよう調整
+SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 < 0 ? 0 # SOURCE:MASTER:中毒充足
+;中毒充足SOURCE分逸脱SOURCE減少(フィードバック)
+SOURCE:MASTER:逸脱 -= SOURCE:MASTER:中毒充足
+;逸脱SOURCEが負の値をとらないよう調整
+SOURCE:MASTER:逸脱 = SOURCE:MASTER:逸脱 < 0 ? 0 # SOURCE:MASTER:逸脱
+TFLAG:経過時間 += 1
+;話題『罵倒』を既出とする
+TFLAG:既出の話題 |= 64
+
+;────────────────────────────────────
+;067,三角木馬（Ｈ/Ａ）[罰]（快Ｖ、情愛逆、痛み、拘束、逸脱、中毒充足、トラウマ）
+;────────────────────────────────────
+@ACTION_APPLY_67
+;開始時
+IF TFLAG:ACT派生 == 0
+	;マゾっ気、苦痛中毒、ドＭ素質に応じて快ＶSOURCE増加
+	SOURCE:MASTER:快Ｖ = (GET_ABL(MASTER, "マゾっ気") - 30) * GET_ABL(MASTER, "苦痛中毒") * (TALENT:MASTER:ドＭ + 2) / 2
+	;快ＶSOURCEが負の値をとらないよう調整
+	SOURCE:MASTER:快Ｖ = SOURCE:MASTER:快Ｖ < 0 ? 0 # SOURCE:MASTER:快Ｖ
+	;調教者加虐、技巧、調教レベル、サド素質に応じて痛みSOURCE増加
+	SOURCE:MASTER:痛み = 1000 + GET_ABL(TARGET, "加虐") * GET_ABL(TARGET, "技巧") * 50 / 100 + GET_TRAINLV(TARGET) * (TALENT:サド * 3 + 2) * 20
+	;反抗刻印、技巧に応じて拘束SOURCE増加
+	SOURCE:MASTER:拘束 = 50 + (MARK:反抗刻印 + 1) * (GET_ABL(TARGET, "技巧") + 10)
+	;痛みSOURCEに応じて逸脱SOURCE増加、調教レベル、マゾっ気、苦痛中毒によって減少
+	SOURCE:MASTER:逸脱 = 1800 + SOURCE:MASTER:痛み / 2 - CFLAG:MASTER:調教レベル * 50 - GET_ABL(MASTER, "マゾっ気") * 20 - GET_ABL(MASTER, "苦痛中毒") * 60
+	;逸脱SOURCEが負の値をとらないよう調整
+	SOURCE:MASTER:逸脱 = SOURCE:MASTER:逸脱 < 0 ? 0 # SOURCE:MASTER:逸脱
+	;マゾっ気、苦痛中毒、痛みSOURCEに応じて中毒充足SOURCE増加
+	SOURCE:MASTER:中毒充足 = GET_ABL(MASTER, "マゾっ気") * (GET_ABL(MASTER, "苦痛中毒") - 30) * (GET_ABL(MASTER, "苦痛中毒") + 10) * SOURCE:MASTER:痛み / 80000
+	;中毒充足SOURCEが負の値をとらないよう調整
+	SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 < 0 ? 0 # SOURCE:MASTER:中毒充足
+	;痛み、拘束SOURCEに応じてトラウマSOURCE増加、中毒充足SOURCEによって減少
+	SOURCE:MASTER:トラウマ = SOURCE:MASTER:痛み / 2 + SOURCE:MASTER:拘束 / 5 - SOURCE:MASTER:中毒充足
+	;トラウマSOURCEが負の値をとらないよう調整
+	SOURCE:MASTER:トラウマ = SOURCE:MASTER:トラウマ < 0 ? 0 # SOURCE:MASTER:トラウマ
+	;トラウマ(刻印)の元がこの調教だった場合、トラウマSOURCEを1.5倍にする
+	SIF CFLAG:MASTER:トラウマ == 67
+		TIMES SOURCE:MASTER:トラウマ , 1.50
+	;中毒充足SOURCEに応じて情愛SOURCE増加、痛み、逸脱、トラウマSOURCEによって減少
+	SOURCE:MASTER:情愛 += SOURCE:MASTER:中毒充足 - SOURCE:MASTER:痛み - SOURCE:MASTER:逸脱 - SOURCE:MASTER:トラウマ
+	;情愛SOURCEが正の値をとらないよう調整
+	SOURCE:MASTER:情愛 = SOURCE:MASTER:情愛 > 0 ? 0 # SOURCE:MASTER:情愛
+	;三角木馬に乗せる
+	TEQUIP:三角木馬 = 1
+;終了時
+ELSE
+	;三角木馬から降ろす
+	TEQUIP:三角木馬 = 0
+ENDIF
+;顔面騎乗系解除
+CALL FACESITTING_SET(0)
+;調教者、調教対象自慰を中断
+TEQUIP:自慰中 = 0
+;調教者マゾっ気に応じて勃起度上昇
+TCVAR:MASTER:今回の勃起 += 50 + (GET_ABL(MASTER, "マゾっ気") - 30) * 4
+TFLAG:経過時間 += 3
+
+@ACTION_APPLY2_67
+;MASTERが処女なら、処女喪失が起こる
+TCVAR:MASTER:処女喪失 = TALENT:MASTER:処女
+
+;────────────────────────────────────
+;068,浣腸器＋プラグ（Ｎ/Ｈ/Ａ）[罰]（快Ａ、痛み、拘束<=プラグのこと、逸脱、中毒充足、トラウマ）
+;────────────────────────────────────
+@ACTION_APPLY_68
+;注入/追加
+IF TFLAG:ACT派生 == 0 || TFLAG:ACT派生 == 2
+	;浣腸液注入(量1か2)
+	IF TFLAG:ACT派生 == 0
+		TEQUIP:浣腸器＋プラグ = 1 + RAND:2
+	;浣腸液追加(量1から3)
+	ELSE
+		TEQUIP:浣腸器＋プラグ += 1 + RAND:3
+	ENDIF
+	;調教対象調教レベル、技巧、調教者道具使い素質、調教対象ドＭ素質、液量に応じて快ＡSOURCE増加
+	SOURCE:MASTER:快Ａ = 20 * (CFLAG:MASTER:調教レベル + 1) + (GET_ABL(MASTER, "技巧") - 30) * GET_ABL(MASTER, "マゾっ気") * (TALENT:道具使い + TALENT:MASTER:ドＭ + TEQUIP:浣腸器＋プラグ) * 30 / 100
+	;快ＡSOURCEが負の値をとらないよう調整
+	SOURCE:MASTER:快Ａ = SOURCE:MASTER:快Ａ < 0 ? 0 # SOURCE:MASTER:快Ａ
+	;ここの痛みは腹痛の処理です。経験不足のほうはアナル未開発による痛みです。
+	;液量に応じて痛みSOURCE増加
+	SOURCE:MASTER:痛み = 200 + TEQUIP:浣腸器＋プラグ * 100
+	;液量に応じて拘束SOURCE増加
+	SOURCE:MASTER:拘束 = 50 + TEQUIP:浣腸器＋プラグ * 100
+	;快Ａ、痛みSOURCEに応じて逸脱SOURCE増加、調教レベル、マゾっ気によって減少
+	SOURCE:MASTER:逸脱 = SOURCE:MASTER:快Ａ / 2 + SOURCE:MASTER:痛み / 2 - CFLAG:MASTER:調教レベル * 20 - GET_ABL(MASTER, "マゾっ気") * 10
+	;逸脱SOURCEが負の値をとらないよう調整
+	SOURCE:MASTER:逸脱 = SOURCE:MASTER:逸脱 < 0 ? 0 # SOURCE:MASTER:逸脱
+	;マゾっ気、Ａ感覚、快ＡSOURCEに応じて中毒充足SOURCE増加
+	SOURCE:MASTER:中毒充足 = (GET_ABL(MASTER, "マゾっ気") - 30) * GET_ABL(MASTER, "Ａ感覚") * 25 * SOURCE:MASTER:快Ａ / 10000
+	;中毒充足SOURCEが負の値をとらないよう調整
+	SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 < 0 ? 0 # SOURCE:MASTER:中毒充足
+	;経験不足
+	;導管はすでに入れてますから追加の注入は経験不足の処理を行いません
+	IF TFLAG:ACT派生 == 0
+		;Ａ経験不足であればあるほど快ＡSOURCE減衰、痛み、逸脱SOURCE増加
+		IF EXP:MASTER:Ａ経験 < 1
+			TIMES SOURCE:MASTER:快Ａ , 0.80
+			SOURCE:MASTER:痛み += 100
+			SOURCE:MASTER:逸脱 += 2000
+		ELSEIF EXP:MASTER:Ａ経験 < 6
+			TIMES SOURCE:MASTER:快Ａ , 0.90
+			SOURCE:MASTER:逸脱 += 1500
+		ELSEIF EXP:MASTER:Ａ経験 < 11
+			SOURCE:MASTER:逸脱 += 1000
+		ELSEIF EXP:MASTER:Ａ経験 < 21
+			SOURCE:MASTER:逸脱 += 500
+		ENDIF
+	ENDIF
+;排出
+ELSE
+	;液量に応じて快ＡSOURCE増加
+	SOURCE:MASTER:快Ａ = 500 * TEQUIP:浣腸器＋プラグ * (100 + RAND:11 - RAND:11) / 100
+	;快Ａに応じて逸脱SOURCE増加、調教対象調教レベル、マゾっ気、倒錯的、ドＭ素質によって減少
+	SOURCE:MASTER:逸脱 = SOURCE:MASTER:快Ａ - CFLAG:MASTER:調教レベル * 80 - GET_ABL(MASTER, "マゾっ気") * 40 - TALENT:MASTER:倒錯的 * 500 - TALENT:MASTER:ドＭ * 1000
+	;調教レベル、Ａ感覚、快ＡSOURCEに応じて中毒充足SOURCE増加
+	SOURCE:MASTER:中毒充足 = (CFLAG:MASTER:調教レベル - 5) * (GET_ABL(MASTER, "Ａ感覚") + 5) * 2 * SOURCE:MASTER:快Ａ / 1000
+	;中毒充足SOURCEが負の値をとらないよう調整
+	SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 < 0 ? 0 # SOURCE:MASTER:中毒充足
+	;浣腸液排出
+	TEQUIP:浣腸器＋プラグ = 0
+ENDIF
+;痛み、拘束、逸脱SOURCEに応じてトラウマSOURCE増加
+SOURCE:MASTER:トラウマ = SOURCE:MASTER:痛み / 3 + SOURCE:MASTER:拘束 / 3 + SOURCE:MASTER:逸脱 / 3
+;中毒充足SOURCEが正であればトラウマSOURCE抹消
+SOURCE:MASTER:トラウマ = SOURCE:MASTER:中毒充足 > 0 ? 0 # SOURCE:MASTER:トラウマ
+;トラウマ(刻印)の元がこの調教だった場合、トラウマSOURCEを1.5倍にする
+SIF CFLAG:MASTER:トラウマ == 68
+	TIMES SOURCE:MASTER:トラウマ , 1.50
+;顔面騎乗系解除
+CALL FACESITTING_SET(0)
+;調教者、調教対象自慰を中断
+TEQUIP:自慰中 = 0
+TFLAG:経過時間 += 3

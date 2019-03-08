@@ -1,0 +1,253 @@
+﻿;追加処理及びサブイベント
+
+@EVENTTURNEND
+#PRI
+#DIM オートモードカウント
+IF FLAG:オートモード > 0 && FLAG:オートモード表示設定 == 1
+	SKIPDISP 1
+ENDIF
+;最初に回復処理を入れる
+CALL BASE_RECOVERY
+
+;ムラムラフラグ
+FOR LOCAL, 0, CHARANUM
+	CFLAG:LOCAL:むらむら += 1
+NEXT
+
+;妊娠処理
+FOR LOCAL, 1, CHARANUM
+	CALL PREGNACY_CHECK(LOCAL)
+NEXT
+
+FOR LOCAL, 1, CHARANUM
+	CALL MASTER_PREGNACY_CHECK(LOCAL)
+NEXT
+SIF CFLAG:MASTER:妊娠
+	CFLAG:MASTER:妊娠 ++
+CALL MASTER_PREGNACY
+
+;現行版の挙動を見た限りだとCFLAG:TARGET:好意 > 3000では敷居が低すぎる感じなので > 5000に。CFLAG:M好意 > 2000も追加
+;さらにCFLAG:TARGET:アライメント < 0を条件から外してみる@/L
+SIF TARGET > 0 && !CFLAG:TARGET:奴隷の首輪封印 && CFLAG:TARGET:好意 > 5000 && CFLAG:M好意 > 2000 && TALENT:サド && !ITEM:奴隷の首輪
+	CALL SLAVE_COLLAR
+
+;日常(非調教時)イベント
+CALL DAILY_LIFE
+
+;────────────────────────────────────
+;薬剤のクールダウン
+;────────────────────────────────────
+IF TARGET > 0
+	;ローション
+	FLAG:ロシヒート -= FLAG:ロシヒート / (5 - TALENT:調合知識 * 3) + GET_TRAINLV(TARGET) * (1 + ABL:技巧) / 3
+	SIF FLAG:ロシヒート < 0
+		FLAG:ロシヒート = 0
+	;媚薬
+	FLAG:媚薬ヒート -= FLAG:媚薬ヒート / (5 - TALENT:調合知識 * 3) + GET_TRAINLV(TARGET) * (1 + ABL:欲望) / 3
+	SIF FLAG:媚薬ヒート < 0
+		FLAG:媚薬ヒート = 0
+	;栄養剤
+	FLAG:栄養ヒート -= FLAG:栄養ヒート / (6 - TALENT:調合知識 * 3) + GET_TRAINLV(TARGET) * (2 + TALENT:治療) / 2
+	SIF FLAG:栄養ヒート < 0
+		FLAG:栄養ヒート = 0
+	;治療
+	FLAG:治療ヒート -= (BASE:体力 / 100) * (5 + GET_TRAINLV(TARGET)) / (10 - TALENT:治療 * 3)
+	SIF FLAG:治療ヒート < 0
+		FLAG:治療ヒート = 0
+ENDIF
+;────────────────────────────────────
+;いろいろ
+;────────────────────────────────────
+;CALL EVENTCHECK_M
+;FLAG:0 = 0
+
+;日時更新
+CALL NEXTTIME
+IF FLAG:オートモード > 0
+	SKIPDISP 0
+	オートモードカウント++
+	IF FLAG:オートモード == オートモードカウント
+		オートモードカウント = 0
+		BEGIN SHOP
+	ELSE
+		BEGIN TRAIN
+	ENDIF
+ELSE
+	BEGIN SHOP
+ENDIF
+
+
+@PREGNACY_CHECK(ARG)
+CFLAG:ARG:膣精 = CFLAG:ARG:膣精 * MIN(CFLAG:ARG:M好意 + CFLAG:ARG:好意 , 9000) / 10000
+SIF TALENT:ARG:妊娠 || CFLAG:ARG:妊娠
+	CFLAG:ARG:膣精 = 0
+
+SIF CFLAG:ARG:膣精 > 10000 && !CFLAG:ARG:妊娠
+	CFLAG:ARG:妊娠 = 1
+SIF CFLAG:ARG:妊娠
+	CFLAG:ARG:妊娠 ++
+IF CFLAG:ARG:妊娠 == 5
+		DRAWLINE
+		PRINTFORMW %CALLNAME:ARG%のお腹がわずかに膨らんでいる
+		PRINTFORMW どうやら%CALLNAME:MASTER%の子を妊娠したようだ
+		CALL KOJO_EVENT(8, 0)
+		TALENT:ARG:妊娠 = 1
+		TALENT:ARG:母乳体質 = 1
+		MAXBASE:ARG:母乳 = 10000
+ENDIF
+IF TALENT:ARG:妊娠
+	IF CFLAG:ARG:妊娠 == 15
+		DRAWLINE
+		PRINTFORMW %CALLNAME:ARG%のお腹がだいぶ膨らんできた
+		PRINTFORMW そろそろ生まれそうです
+		CALL KOJO_EVENT(8, 1)
+	ELSEIF  CFLAG:ARG:妊娠 >= 16 + RAND:3
+			LOCAL = 0
+			DRAWLINE
+			CALL KOJO_EVENT(8, 2)
+			PRINTFORMW %CALLNAME:ARG%が産気づいたようです。
+			PRINTFORMW ………
+			PRINTFORMW ……
+			PRINTFORMW …
+			PRINTFORMW 
+			PRINTFORM %CALLNAME:ARG%は%CALLNAME:MASTER%
+			PRINTFORM に励まされながら、
+		IF RAND:2 == 0
+			PRINTFORM 母親似のかわいい女の子
+			CFLAG:ARG:娘 ++
+			CFLAG:MASTER:娘 ++
+			LOCAL = 0
+		ELSE
+			PRINTFORM 父親似の元気な男の子
+			CFLAG:ARG:息子 ++
+			CFLAG:MASTER:息子 ++
+			LOCAL = 1
+		ENDIF
+		CFLAG:ARG:子持ち ++
+		CFLAG:MASTER:子持ち ++
+		TALENT:ARG:妊娠 = 0
+		TALENT:ARG:母性 = 1
+		CFLAG:ARG:妊娠 = 0
+		PRINTFORMW を無事出産しました。
+		CALL KOJO_EVENT(8, 3 + LOCAL)
+		PRINTFORMW 赤ん坊を抱っこした%CALLNAME:ARG%は、我が子と%CALLNAME:MASTER%に向けて微笑んでいます。
+	ENDIF
+ENDIF
+
+IF !FLAG:妊娠
+	TALENT:ARG:妊娠 = 0
+	TALENT:ARG:母乳体質 = 0
+	CFLAG:ARG:膣精 = 0
+	CFLAG:ARG:妊娠 = 0
+ENDIF
+
+;子持ちフラグは両方の妊娠機能オフフラグがある場合のみ削除
+IF !FLAG:妊娠 && FLAG:奴隷妊娠 == 0
+	CFLAG:ARG:子持ち = 0
+	CFLAG:MASTER:子持ち = 0
+	CFLAG:ARG:息子 = 0
+	CFLAG:MASTER:息子 = 0
+	CFLAG:ARG:娘 = 0
+	CFLAG:MASTER:娘 = 0
+ENDIF
+
+;ご主人様の妊娠チェック
+@MASTER_PREGNACY_CHECK(ARG)
+SIF !FLAG:奴隷妊娠
+	RETURN 0
+;コンフィグで愛情によって妊娠率変動を選んでいる場合
+IF FLAG:奴隷妊娠 == 1
+	CFLAG:ARG:M膣精 = CFLAG:ARG:M膣精 * MIN(CFLAG:ARG:M好意 + CFLAG:ARG:好意 , 9000) / 10000
+;コンフィグによって愛情に関係なく妊娠を選んでいる場合
+ELSEIF FLAG:奴隷妊娠 == 2
+	CFLAG:ARG:M膣精 = CFLAG:ARG:M膣精 * 7 / 10
+ENDIF
+
+SIF TALENT:MASTER:妊娠 || CFLAG:MASTER:妊娠
+	CFLAG:ARG:M膣精 = 0
+
+IF RAND:(1 + CFLAG:ARG:M膣精 / 10) > RAND:10000 && !CFLAG:MASTER:妊娠
+	;妊娠フラグ
+	CFLAG:MASTER:妊娠 = 1
+	;父親のキャラの通し番号を保存
+	CFLAG:MASTER:46 = CFLAG:ARG:91
+ENDIF
+
+@MASTER_PREGNACY
+;父親不明の関係で、調教者が奴隷（主人公）を妊娠させた場合の口上はまだ書けません。
+;KOJO_EVENT(9)を枠として用意しておきます。
+IF CFLAG:MASTER:妊娠 == 5
+	DRAWLINE
+	PRINTFORMW %CALLNAME:MASTER%のお腹がわずかに膨らんでいる
+	;この時点で父親不明
+	PRINTFORMW どうやら妊娠してしまったようだ･･･
+	TALENT:MASTER:妊娠 = 1
+	TALENT:MASTER:母乳体質 = 1
+	MAXBASE:MASTER:母乳 = 10000
+ENDIF
+IF TALENT:MASTER:妊娠
+	IF CFLAG:MASTER:妊娠 == 15
+		DRAWLINE
+		PRINTFORMW %CALLNAME:MASTER%のお腹がだいぶ膨らんできた
+		PRINTFORMW そろそろ生まれそうです
+	ELSEIF CFLAG:MASTER:妊娠 >= 16 + RAND:3
+			;父親検索
+			LOCAL:1 = 0
+			FOR LOCAL,1,CHARANUM
+				IF CFLAG:MASTER:46 == CFLAG:LOCAL:91
+					LOCAL:1 = LOCAL
+					BREAK
+				ENDIF
+			NEXT
+			LOCAL = 0
+			DRAWLINE
+			PRINTFORMW %CALLNAME:MASTER%の腹部に激しい痛みが走った
+			PRINTFORMW ついに子供が生まれるようだ
+			PRINTFORMW ………
+			PRINTFORMW ……
+			PRINTFORMW …
+			PRINTFORMW
+			PRINTFORM %CALLNAME:MASTER%は
+			IF RAND:2 == 0
+				PRINTFORM かわいい女の子
+				SIF LOCAL:1 > 0
+					CFLAG:(LOCAL:1):娘 ++
+				CFLAG:MASTER:娘 ++
+				LOCAL = 0
+			ELSE
+				PRINTFORM 元気な男の子
+				SIF LOCAL:1 > 0
+					CFLAG:(LOCAL:1):息子 ++
+				CFLAG:MASTER:息子 ++
+				LOCAL = 1
+			ENDIF
+			PRINTFORMW を無事出産しました
+			SIF LOCAL:1
+				PRINTFORML 生まれた子供はどことなく%CALLNAME:(LOCAL:1)%に似ている…
+			LOCAL:2 = TARGET
+			TARGET = LOCAL:1
+			TARGET = LOCAL:2
+			SIF LOCAL:1 > 0
+				CFLAG:(LOCAL:1):子持ち ++
+			CFLAG:MASTER:子持ち ++
+			TALENT:MASTER:妊娠 = 0
+			TALENT:MASTER:母性 = 1
+			CFLAG:MASTER:妊娠 = 0
+	ENDIF
+ENDIF
+
+IF FLAG:奴隷妊娠 == 0
+	TALENT:MASTER:妊娠 = 0
+	TALENT:MASTER:母乳体質 = 0
+	CFLAG:MASTER:M膣精 = 0
+	CFLAG:MASTER:妊娠 = 0
+ENDIF
+
+@SLAVE_COLLAR
+DRAWLINE
+CALL KOJO_EVENT(7)
+CALL VOIDLINE_IF(RESULT)
+PRINTFORML 激しい調教のためぐったりとしている%CALLNAME:MASTER%に
+PRINTFORML %CALLNAME:TARGET%は自らの奴隷であることを示す首輪を装着させた…
+PRINTFORMW 【奴隷の首輪】を手に入れました。
+ITEM:奴隷の首輪 = 1

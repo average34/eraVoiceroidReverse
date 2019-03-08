@@ -1,0 +1,390 @@
+﻿EVENT_DAILY.ERBを例とするERB構文の読み方解説です。RETURNが分からんという人向けに書かれてあります。
+改造したり口上書いたりしたいけど、ERBで何やってるか分からんという人に読んでもらえれば嬉しいです。
+毎度のことながら素人がなんとなく把握した範囲での説明なので、間違っている可能性が大いにあります。
+────────────────────────────────────
+@EVENTTURNENDについて
+────────────────────────────────────
+	まずEVENT_S.ERBというファイルを開いてもらいたい
+	2行目から
+		@EVENTTURNEND
+		#PRI
+		SIF FLAG:1700
+			BEGIN SHOP
+		;最初に回復処理を入れる
+		CALL BASE_RECOVERY
+	また少し飛んで
+		;日常など
+		SIF FLAG:2006
+		CALL DAILY_LIFE
+
+		;────────────────────────────────────
+		;薬剤のクールダウン
+		;────────────────────────────────────
+		IF FLAG:1700 == 0 && TARGET > 0
+	と書かれている。
+		;最初に回復処理を入れる
+	という一文はコメントアウト処理（行頭に;をつける）が行われており、EMUERAに実行されないので、無視して構わない。
+
+	@EVENTTURNEND
+	は調教が終わる度に呼び出される仕様になっており、拠点での調教終了時以外にも、監禁中、ダンジョンでの遭遇戦終了時にも呼び出される。
+	監禁中はともかくとして、ダンジョンで敵から逃げ切ったときに日常イベントが発生しては困った事態になってしまう。
+
+────────────────────────────────────
+SIFについて
+────────────────────────────────────
+		SIF FLAG:1700
+			BEGIN SHOP
+	はそれを防止するための構文であり、
+		SIF 〇〇
+			～～
+	の意味は
+	もし〇〇を満たすならば～～を実行するという意味である。
+		IF 〇〇
+			～～
+		ENDIF
+	と同じ意味であるが、SIFはENDIFが不要であり、直後の一行しか判定が及ばないという違いがある。
+		SIF FLAG:1700
+			BEGIN SHOP
+		CALL BASE_RECOVERY
+	という構文ならば、
+	もしFLAG:1700が0以外ならBEGIN SHOPを実行する。
+	という意味であり、CALL BASE_RECOVERYはSIFの判定が及ばないので注意が必要である。
+
+	FLAG:1700にはダンジョン探索開始時に各ダンジョンに対応した数値が代入され、探索終了時にはFLAG:1700 = 0となる。
+	したがって、ダンジョンでの遭遇戦終了時にはBEGIN SHOPという命令が実行されるわけである。
+	BEGIN SHOPという命令については詳しく説明しないが、この命令が実行されると日常が発生しないということを知っていればよい。
+
+	遭遇戦以外ではBEGIN SHOP命令が実行されず、CALL BASE_RECOVERY以下の命令が上から順に実行されてゆく。
+		SIF FLAG:2006
+		CALL DAILY_LIFE
+	はFLAG:2006が0以外ならCALL DAILY_LIFEという命令を実行する、という意味であることはお分かりだろう。
+	FLAG:2006はコンフィグで設定するフラグであり、日常生活の描写機能がONならばFLAG:2006 = 1、OFFならばFLAG:2006 = 0である。
+	すなわちコンフィグで日常をONにすると、CALL DAILY_LIFEという命令が実行されることになる。
+
+────────────────────────────────────
+CALLについて
+────────────────────────────────────
+	CALL DAILY_LIFEとは@DAILY_LIFEというひとまとめの構文を実行するという命令であり、
+	この命令が実行されるとEVENT_DAILY.ERBファイルに書き込まれた@DAILY_LIFE以後の命令が実行されてゆくことになる。
+	また、CALLで呼び出された構文を読み終えるとCALL以降の構文、ここでは
+		;────────────────────────────────────
+		;薬剤のクールダウン
+		;────────────────────────────────────
+		IF FLAG:1700 == 0 && TARGET > 0
+	が再び上から順に読まれて行く。
+
+────────────────────────────────────
+RETURNについて
+────────────────────────────────────
+	さて、ここでEVENT_DAILY.ERBを開いて構文を見てみよう。
+		@DAILY_LIFE
+		;監禁中は発生しない
+		SIF FLAG:1701
+			RETURN 0
+		;拠点に夢魔が住んでいる
+		SIF FLAG:15 < 2
+			RETURN 0
+		DRAWLINE
+	となっている。
+	先程、遭遇戦で日常は発生しないと書いたが、監禁中も発生しない。そのための処理が、
+		;監禁中は発生しない
+		SIF FLAG:1701
+			RETURN 0
+	である。FLAG:1701はお持ち帰りが発生すると数値が代入されるので、監禁中にはRETURN 0という命令が実行される。
+	ある関数でRETURN 0が読まれると、それ以降の構文は読み込まれず、その関数はそれ以上は実行されない。
+	@DAILY_LIFEは@EVENTTURNENDの31行目のCALL DAILY_LIFEから呼ばれたので、
+	ここでRETURN 0されると@EVENTTURNENDのCALL DAILY_LIFEより後の構文が読まれていくことになる。
+	RETURN 0の0が気になるところだが、それは後ほど説明する。
+	
+		SIF FLAG:1701
+			RETURN 0
+	により監禁中はそれ以後の構文が読み込まれず、日常が描写されないことは理解できただろうか。
+	
+	ここまで、ダンジョン探索中でない、日常生活コンフィグがONである、また監禁中でないならば5行目以降の
+		;拠点に夢魔が住んでいる
+		SIF FLAG:15 < 2
+			RETURN 0
+		DRAWLINE
+		RESULT = 0
+	が実行される。
+	FLAG:15については説明しないが、拠点に夢魔が住んでいなければRETURN 0を実行して日常を発生させないようにしている。
+	DRAWLINEはEMUERAの画面に
+	-----------------------------------------------------------------------------------------------------------
+	という横線を引けという命令である。
+
+────────────────────────────────────
+RESULTについて
+────────────────────────────────────
+	DRAWLINEの次の行でRESULT = 0ということをしている。
+	RESULTはFLAGや一文字変数(A～Z)と同じく、数値の入れ物であり、ERBファイルのなかのいろいろな場所で数値を代入されており、
+	この時点でもおそらく何かの数値が代入されている。
+	RESULTを後の構文で用いるためにRESULTに0を代入して初期化する必要がある。
+	これ以後の
+		;品評会(拠点に夢魔がいる状態で時間経過するとその夢魔の品評会フラグが+1され、品評会フラグの総量が100を超えると発生)
+		A = 0
+		LOCAL:1 = 0
+		FOR LOCAL, 0, CHARANUM
+			CFLAG:LOCAL:160 += 1
+			A += CFLAG:LOCAL:160
+			SIF CFLAG:LOCAL:9 > CFLAG:(LOCAL:1):9
+				LOCAL:1 = LOCAL
+		NEXT
+		;SIF A > 100 && !FLAG:14
+		;	FLAG:14 = 1
+		;IF FLAG:14 == 1 && TIME == 0
+		;	CALL COMPETITION(LOCAL:1)
+		;	FLAG:14 = 2
+		;	RETURN 0
+		;ENDIF
+	はこの文章を書いている現在未実装であるので気にしなくて良い。
+
+────────────────────────────────────
+LOCAL:1～LOCAL:4
+────────────────────────────────────
+	ここからいよいよ本格的な処理が始まる。
+	まずはLOCAL:1,LOCAL:2,LOCAL:3,LOCAL:4(LOCALもRESULT同様数値の入れ物である。詳しくはローカル変数.txtを参照されたし)に
+	拠点に住んでいる夢魔のキャラ登録番号を割り振る。
+	例えば能力表示画面で
+		 [  0] あなた           体力(3295/3295)  [LV 12 NEXT  26236]
+		-----------------------------------------------------------------------------------------------------------
+		 [  1] スキュラ         体力(2930/2930)  [LV  9 NEXT   3424]
+		 [  2] ラミア           体力(2200/2200)  [LV 15 NEXT  10719] 
+	となっているとするとキャラ名の左の数字がキャラ登録番号に相当すると考えていい。
+	上のデータならLOCAL:1,LOCAL:2にそれぞれ1もしくは2が代入され、LOCAL:3,LOCAL:4には数値が代入されず0のままである。
+	このような処理を
+		;LOCAL:1～4にキャラ登録番号を代入、キャラがいなければLOCAL: = 0
+		LOCAL:1 = 0
+		LOCAL:2 = 0
+		LOCAL:3 = 0
+		LOCAL:4 = 0
+		LOCAL = 4
+		WHILE LOCAL
+			LOCAL:5 = RAND:(CHARANUM - 1) + 1 
+			SIF 5 - LOCAL == FLAG:15
+				BREAK
+			IF CFLAG:(LOCAL:5):92 || LOCAL:5 == LOCAL:1 || LOCAL:5 == LOCAL:2 || LOCAL:5 == LOCAL:3 || LOCAL:5 == LOCAL:4 || NO:(LOCAL:5) == 0
+				CONTINUE
+			ELSE
+				LOCAL:(5 - LOCAL) = LOCAL:5
+				LOCAL -= 1
+			ENDIF
+		WEND
+	で行っているわけであるが、わからなければ読み飛ばしても構わない。
+	ちなみに迷宮にお帰りいただいたユニークは選択されないようになっている。
+	
+	これ以後は増築中につき暫定的な処理となっている。
+	今のところ、調教中に失神したなら
+		CALL DAILY_LIFE_NURSING
+	それ以外では
+		TRYCALL DAILY_LIFE_1(LOCAL:1,LOCAL:2,LOCAL:3,LOCAL:4)
+	という命令が実行される。
+
+────────────────────────────────────
+TRYCALLについて
+────────────────────────────────────
+	もし@～～という関数がない場合CALL ～～という命令は使うとEMUERAに怒られてエラーとなってしまう。
+	TRYCALL ～～という命令はその意味を推測できると思うが、@～～がない場合でも実行可能である。
+	現在、TRYCALL DAILY_LIFE_1(LOCAL:1,LOCAL:2,LOCAL:3,LOCAL:4)とあるがTRYCALLである必要はなく、
+	あくまで暫定的な処置である。
+
+────────────────────────────────────
+@DAILY_LIFE_1(ARG,ARG:1,ARG:2,ARG:3)
+────────────────────────────────────
+		TRYCALL DAILY_LIFE_1(LOCAL:1,LOCAL:2,LOCAL:3,LOCAL:4)
+	で
+		DAILY_LIFE_1(ARG,ARG:1,ARG:2,ARG:3)
+	を	呼び出すと
+		ARG,ARG:1,ARG:2,ARG:3
+	にそれぞれ
+		LOCAL:1,LOCAL:2,LOCAL:3,LOCAL:4
+	が代入される。
+	CALL ～～()、@～～()というセットは()内の変数を受け渡すことができるのである。
+	ARGには対象となる夢魔のキャラ登録番号が入っているはずなので、
+	TALENT:ARG:○でその夢魔の素質を見てやったり、
+	MARK:ARG:2でその「あなた」が夢魔にどれだけ陥落されたかを見ることもできる。
+	@以降は
+		@DAILY_LIFE_1(ARG,ARG:1,ARG:2,ARG:3)
+		$SELECTER
+		LOCAL = RAND:20
+		TRYCALLFORM DAILY_LIFE_1_{LOCAL}(ARG,ARG:1,ARG:2,ARG:3)
+		SIF !RESULT
+			GOTO SELECTER
+		RETURN RESULT
+	となっており、ここで描写させる日常の選択が行われている。
+
+────────────────────────────────────
+$とGOTO
+────────────────────────────────────
+		$SELECTER
+	は
+		GOTO SELECTER
+	とセットになっている。
+	SELECTERという文字にはあまり意味がなく、$LOOP_1、GOTO LOOP_1でも機能は同じである。
+	GOTO ～～とはこの構文が読みこまれると、上から順に構文を読んでいくという原則に逆らって、
+	同じ関数のなかにある$～～以降が読まれていくことになる。
+
+	$SELECTER以降の処理を見ていくと、まず
+		LOCAL = RAND:20
+	によってLOCAL に0から19までの乱数が代入され
+		TRYCALLFORM DAILY_LIFE_1_{LOCAL}(ARG,ARG:1,ARG:2,ARG:3)
+	という命令が実行されている。
+	
+	TRYCALLFORMとはTRYCALLと似た命令であるが、{}でくくられた領域については変数の中身を識別してくれるという特徴がある。
+	ここでLOCAL = RAND:20によりLOCALに4が代入されたとすると(LOCAL = 4)
+		TRYCALL DAILY_LIFE_1_{LOCAL}
+	ならば
+		@DAILY_LIFE_1_{LOCAL}
+	という関数が呼ばれてしまうが
+		TRYCALLFORM DAILY_LIFE_1_{LOCAL}
+	ならば
+		@DAILY_LIFE_1_4
+	という関数を呼び出すことができるのである。
+	
+	今現在@DAILY_LIFE_1_0(ARG,ARG:1,ARG:2,ARG:3)から@DAILY_LIFE_1_8(ARG,ARG:1,ARG:2,ARG:3)まで存在する。
+	つまりLOCALが0～8ならばこれらの関数が呼び出されるわけであるが、
+	LOCAL = 15などのように存在しない関数を呼び出そうとした場合はどうなるだろうか。
+	TRYCALLの場合、存在しない関数を呼び出そうとすれば、その命令は無視されて、後の構文が読み込まれてゆく。
+	すなわち
+		SIF !RESULT
+			GOTO SELECTER
+	が実行される
+	SIF !RESULT とはRESULTに数値が代入されていなければという意味であり、SIF RESULT == 0とすることもできる。
+	前述した通りRESULTはすでに初期化(RESULT = 0)されており、それ以後RESULTの値について変動していないので、
+		TRYCALLFORM DAILY_LIFE_1_{LOCAL}
+	により存在しない関数を呼び出した場合はGOTO SELECTERが実行される。
+		$SELECTER
+		LOCAL = RAND:20
+		TRYCALLFORM DAILY_LIFE_1_{LOCAL}(ARG,ARG:1,ARG:2,ARG:3)
+		SIF !RESULT
+			GOTO SELECTER
+	するとループが生じ、LOCAL = RAND:20の再抽選が行われるので、
+	結局は@DAILY_LIFE_1_0(ARG,ARG:1,ARG:2,ARG:3)から@DAILY_LIFE_1_8(ARG,ARG:1,ARG:2,ARG:3)のいずれかの関数を
+	呼び出すことができるのである。
+
+────────────────────────────────────
+RETURN の中身
+────────────────────────────────────
+	さて
+		LOCAL = RAND:20
+	によってLOCAL = 4と代入されたとする。このとき
+		TRYCALLFORM DAILY_LIFE_1_{LOCAL}(ARG,ARG:1,ARG:2,ARG:3)
+	によって
+		;スキンシップ4
+		@DAILY_LIFE_1_4(ARG,ARG:1,ARG:2,ARG:3)
+		SIF !PENIS(MASTER)
+			RETURN 0
+		SIF MARK:ARG:2 < 5
+			RETURN 0
+		PRINTFORMW %CALLNAME:MASTER%が食事を取っていると%CALLNAME:ARG%が相席してもいいかと尋ねてきた
+			PRINT [0] - 嫌な予感がする　
+			PRINT [1] - 一緒に食べる
+			$INPUT_LOOP1
+			INPUT
+			SIF RESULT < 0 || RESULT > 1
+				GOTO INPUT_LOOP1
+		～～
+	が呼び出される。
+	例によって上から順に読んでいくと
+		SIF !PENIS(MASTER)
+			RETURN 0
+	によりRETURN 0されることがわかる。
+	PENIS(MASTER)とは詳しく説明しないが、別のERBファイルに書き込まれた式中関数であり、
+	MASTERにチンコがある時は1が代入され、なければ0が代入される
+		────────────────────────────────────
+		MASTER,TARGET,ASSI
+			MASTER,TARGET,ASSIとはRESULTやFLAGと同じく数値の入れ物である。
+			一般的にMASTERには「あなた」のキャラ登録番号、TARGETには調教対象のキャラ登録番号、ASSIには助手のキャラ登録番号が代入されている。
+			MASTERにEXPを取得させるなら
+				EXP:MASTER:○ += 1
+			であるし、ASSIの種族で何かしたいなら
+				IF NO:ASSI == ○
+			となる。ただし、助手の設定をしていない場合はASSI = -1となっており、このままではエラーがでるので
+				IF ASSI > 0 && NO:ASSI == ○
+			とすべきである。(A && B はAとBを同時に満たすという意味)
+		────────────────────────────────────
+	
+	よって
+		SIF !PENIS(MASTER)
+			RETURN 0
+	では、MASTERにチンコが無いときにRETURN 0される。
+
+	RETURN 0されるとそれ以上関数が読まれることなくCALLされた元の関数に戻る。この場合
+		@DAILY_LIFE_1(ARG,ARG:1,ARG:2,ARG:3)
+		$SELECTER
+		LOCAL = RAND:20
+	→	TRYCALLFORM DAILY_LIFE_1_{LOCAL}(ARG,ARG:1,ARG:2,ARG:3)
+		SIF !RESULT
+			GOTO SELECTER
+		RETURN RESULT
+	の
+		SIF !RESULT
+			GOTO SELECTER
+	が次に読まれることになる。
+	実はRETURN 0の0とはRESULTに代入する数値を意味している。
+	この場合RETURN 0されるとRESULT = 0なのでGOTO SELECTERが読み込まれてLOCALの再抽選が行われる。
+	仮に
+		SIF !PENIS(MASTER)
+			RETURN 1
+	ならばどうであろうか？
+	このとき
+		SIF !RESULT
+			GOTO SELECTER
+		RETURN RESULT
+	ではRESULT = 1であるのでSIFの直後の一行は読み込まれず、
+	RETURN RESULT、つまりRESULTにRESULTを代入、つまりRESULT = 1のままでRETURNされ、
+	LOCALの再抽選とTRYCALLFORM DAILY_LIFE_1_{LOCAL}は行われない。
+	
+	RETURN RESULT以降は現在のところ何も起こらないが、RESULTに代入された数値を判別することで、
+	MASTERの身に何が起こったのかを以後の処理に反映させることが可能である。
+
+────────────────────────────────────
+INPUTについて
+────────────────────────────────────
+	マスターにチンコがついていない場合、またマスターがキャラ登録番号がARGの夢魔にそれほど屈服していない場合は
+	RETURN 0されて日常イベントの再抽選が行われる。
+	その処理を抜けるとPRINTFORMWが現れて文章が表示される。
+		SIF !PENIS(MASTER)
+			RETURN 0
+		SIF MARK:ARG:2 < 5
+			RETURN 0
+		PRINTFORMW %CALLNAME:MASTER%が食事を取っていると%CALLNAME:ARG%が相席してもいいかと尋ねてきた
+			PRINT [0] - 嫌な予感がする　
+			PRINT [1] - 一緒に食べる
+			$INPUT_LOOP1
+			INPUT
+			SIF RESULT < 0 || RESULT > 1
+				GOTO INPUT_LOOP1
+	なにか選択肢を出したい場合、INPUTを用いる。
+	INPUTが読み込まれると、EMUERAの画面は一度止まり、その時数値が入力されたり、[0]のようなボタンが押されると
+	RESULT にその数値が代入される。
+	上の例では[0] - 嫌な予感がする　 [1] - 一緒に食べる　という選択肢以外の数値を入力されても困るので、
+			SIF RESULT < 0 || RESULT > 1
+				GOTO INPUT_LOOP1
+	という処理によりRESULTが0や1でないときはもう一度選択させている。
+	
+	INPUT以下で[0] - 嫌な予感がする　もしくは [1] - 一緒に食べる　を選択した場合RESULTには0か1が代入されているはずなので
+		IF RESULT == 0
+		
+		ELSEIF RESULT == 1
+		
+		ENDIF
+	という処理により選択しに応じた分岐を作ることができる。
+
+────────────────────────────────────
+WAITについて
+────────────────────────────────────
+	選択しにより分岐させ、適当な文章を出力させたら、後はEXP:MASTER:○やEXP:ARG:○で経験などを増加させている。
+	その後
+		WAIT
+		RETURN 1
+	という処理に続くのだが、WAITという命令はPRINTW と同様、クリックにより先に進ませるときに用いる。
+	その次のRETURN 1は先程も解説したが、RESULTに1を代入させてこの関数を終わらせるという命令である。
+	RETURNすると
+		@DAILY_LIFE_1(ARG,ARG:1,ARG:2,ARG:3)
+		$SELECTER
+		LOCAL = RAND:20
+		TRYCALLFORM DAILY_LIFE_1_{LOCAL}(ARG,ARG:1,ARG:2,ARG:3)
+	→	SIF !RESULT
+			GOTO SELECTER
+		RETURN RESULT
+	→の場所から再び構文が読まれるので、日常の描写処理から抜け出すことができる。

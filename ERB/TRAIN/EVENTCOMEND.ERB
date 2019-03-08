@@ -1,0 +1,2660 @@
+﻿;==================================================
+;
+;コマンド終了処理
+;
+;==================================================
+@EVENTCOMEND
+;カウント変数
+#DIM LCOUNT, 2
+;調教対象好感度増減値
+#DIM M好意増減
+;調教者好感度増減値
+#DIM T好意増減
+;調教対象経験値上昇値
+#DIM M経験上昇
+;調教者経験値上昇値
+#DIM T経験上昇
+;罪悪感上昇値
+#DIM 罪悪感上昇
+;アライメント変動値
+#DIM アラ変動
+;調教対象体力回復値
+#DIM M体力回復
+;調教対象気力回復値
+#DIM M気力回復
+;調教者体力回復値
+#DIM T体力回復
+;調教者気力回復値
+#DIM T気力回復
+;ヒート値減少量
+#DIM クール値
+;調教継続基準値
+#DIM 継続基準値
+
+;────────────────────────────────────
+;絶頂系前回ターン参照フラグのリセット
+;────────────────────────────────────
+;LOCAL初期化
+VARSET LOCAL
+FOR LCOUNT, 0, CHARANUM
+	VARSET TCVAR:LCOUNT:0, 0, 80, 90
+NEXT
+
+;────────────────────────────────────
+;母乳と写真の計算
+;────────────────────────────────────
+;助手ACTが写真撮影
+SIF TFLAG:助手ACT == 52
+	CALL SELL_PHOTO
+
+
+;────────────────────────────────────
+;好感度の計算（調教対象）
+;────────────────────────────────────
+;LOCAL初期化
+VARSET LOCAL
+
+;好感度アップ、魅惑素質を元に増減値の種を作る
+M好意増減 = TFLAG:好感度アップ + TALENT:魅惑 * (RAND:3 + 1)
+
+;CUP:MASTER:快Ｘによって増減値増加
+FOR LCOUNT, 0, 4
+	SIF CUP:MASTER:LCOUNT > 100
+		M好意増減 += 1 + CUP:MASTER:LCOUNT / 1000
+NEXT
+
+;その他要素による増減
+SIF M好意増減 > 0
+	M好意増減 = M好意増減 * (10 + GET_ABL(MASTER, "従順")) * (2 + CFLAG:MASTER:調教レベル / 3) * (11 - MARK:反抗刻印) * (3 + TALENT:MASTER:素直 - TALENT:MASTER:反抗的 + TALENT:魅惑 + TALENT:親しみやすい - TALENT:近寄り難い) / 100
+SIF M好意増減 < 0
+	M好意増減 = M好意増減 * (1 + MARK:反抗刻印) * (100 - GET_ABL(MASTER, "従順")) * (3 + TALENT:MASTER:反抗的 - TALENT:MASTER:素直 + TALENT:MASTER:生意気 - TALENT:威圧感) / 100
+
+;好意増減値を決定
+SIF M好意増減 != 0
+	M好意増減 = ABLOSI_10(M好意増減 * 50)
+
+;好感度を増減
+CFLAG:M好意 += M好意増減
+
+;地の文表示
+SIF M好意増減 != 0
+	PRINTFORML %CALLNAME:TARGET%への好感度\@ M好意増減 >= 0 ? + # \@{M好意増減}　(現在値{CFLAG:M好意})
+
+
+;────────────────────────────────────
+;好感度の計算（調教者）
+;────────────────────────────────────
+;LOCAL初期化
+VARSET LOCAL
+
+;PALAM上昇等を元に増減値の種を作る
+T好意増減 = BASE:満足 / 200 + (CUP:快Ｃ + CUP:快Ｖ + CUP:快Ａ + CUP:快Ｂ) / 250 + (CUP:MASTER:欲情 + CUP:MASTER:屈服 - CUP:MASTER:反抗) / 150 + (SOURCE:MASTER:情愛 + SOURCE:MASTER:達成) / 100 + (NOWEX:Ｃ絶頂 + NOWEX:Ｖ絶頂 + NOWEX:Ａ絶頂 + NOWEX:Ｂ絶頂 + NOWEX:噴乳 + NOWEX:射精) * 2
+
+;調教対象好感度上昇中かつリアクションが従順であれば追加で増加
+SIF M好意増減 > 0 && TFLAG:REACT分類 < 5
+	T好意増減 += RAND:M好意増減 * (3 + TALENT:MASTER:魅惑 * 2 + TALENT:MASTER:親しみやすい - TALENT:MASTER:近寄り難い + TALENT:MASTER:情緒豊か - TALENT:MASTER:感情乏しい) / 8
+;調教者快感が大きければ追加で増加
+FOR LCOUNT, 0, 4
+	SIF CUP:LCOUNT > 100
+		T好意増減 += 1
+NEXT
+
+;調教対象に魅惑素質があれば追加で増加
+SIF TALENT:MASTER:魅惑
+	T好意増減 += 1
+
+;苛立ちと相殺
+IF BASE:苛立ち > 0
+	;好意増減値が大きくなるほど苛立ちへの相殺効率は落ちる
+	IF BASE:苛立ち - T好意増減 / 3 > BASE:苛立ち / 2
+		BASE:苛立ち -= T好意増減 / 3
+	ELSEIF BASE:苛立ち - T好意増減 / 3 > 0
+		BASE:苛立ち /= 2
+	ELSE
+		BASE:苛立ち /= 3
+	ENDIF
+	;苛立ちが大きくなるほど好意増減値は割合で減る
+	T好意増減 = T好意増減 * (MAXBASE:苛立ち - BASE:苛立ち) / MAXBASE:苛立ち
+ENDIF
+
+;現在の調教対象好感度が大きいほど大きくなる補正値を作る
+LOCAL = (CFLAG:M好意 - 500) / 200
+;補正値を-5～5の範囲に収める
+LOCAL = LIMIT(LOCAL, -5, 5)
+;調教対象好感度上昇、下降予定に従って別の補正を行う
+SIF T好意増減 > 0
+	T好意増減 = T好意増減 * (10 + GET_ABL(MASTER, "従順")) * (6 + LOCAL + TALENT:MASTER:魅惑 * 2 + TALENT:MASTER:親しみやすい - TALENT:MASTER:近寄り難い) / ((30 + MARK:MASTER:トラウマ) * 10)
+SIF T好意増減 < 0
+	T好意増減 = T好意増減 * (100 - GET_ABL(MASTER, "従順")) * (3 + MARK:反抗刻印 + TALENT:MASTER:反抗的 * 2 - TALENT:MASTER:素直) / ((20 + CFLAG:MASTER:調教レベル * 2 + LOCAL * 3) * 10)
+;好感度増減は-5～40の範囲に収める
+T好意増減 = LIMIT(T好意増減, -5, 40)
+
+;好感度を増減
+CFLAG:好意 += T好意増減
+
+;地の文表示
+IF T好意増減 != 0
+	IF TALENT:MASTER:読心能力 == 1
+		PRINTFORML %CALLNAME:MASTER%への好感度が\@ T好意増減 >= 0 ? 上がったようだ # 下がったようだ \@
+	ELSEIF TALENT:MASTER:読心能力 == 2
+		PRINTFORML %CALLNAME:MASTER%への好感度\@ T好意増減 >= 0 ? + # \@{T好意増減}　(現在値{CFLAG:好意})
+	ENDIF
+ENDIF
+
+
+;────────────────────────────────────
+;経験値の計算（調教対象）
+;────────────────────────────────────
+;LOCAL初期化
+VARSET LOCAL
+
+;経験値アップを元に上昇値の種を作る
+M経験上昇 = TFLAG:経験値アップ
+
+;欲情上昇値の1/100だけ経験値上昇(上限20)
+M経験上昇 += LIMIT(CUP:MASTER:欲情 / 100, 0, 20)
+;欲情上昇値が500を突破すると0～1の負の補正がかかる
+SIF CUP:MASTER:欲情 > 500
+	M経験上昇 -= RAND:2
+
+;恭順上昇値の3/200だけ経験値上昇(上限30)
+M経験上昇 += LIMIT(3 * CUP:MASTER:恭順 / 200, 0, 30)
+;恭順上昇値が200を突破すると0～1の負の補正がかかる
+SIF CUP:MASTER:恭順 > 200
+	M経験上昇 -= RAND:2
+
+;恥情上昇値のRAND:(1/125)だけ経験値上昇(上限15)
+LOCAL = LIMIT(CUP:MASTER:恥情 / 125, 0, 16) + 1
+M経験上昇 += RAND:LOCAL
+
+;反抗上昇値の3/1000だけ経験値上昇を抑制(下限-6)
+M経験上昇 -= LIMIT(3 * CUP:MASTER:反抗 / 1000, 0, 6)
+
+;抑鬱上昇値の1/240だけ経験値上昇を抑制(下限-5)
+M経験上昇 -= LIMIT(CUP:MASTER:抑鬱 / 240, 0, 5)
+
+;奉仕の追加経験値
+IF TFLAG:ACT分類 == 5
+	;REACT分類が消極的従う
+	SIF IS_COMGRONAME("消極的従う")
+		M経験上昇 += 4
+	;REACT分類が積極的従う
+	SIF IS_COMGRONAME("積極的従う")
+		M経験上昇 += 7
+ENDIF
+
+;従順と習得早い/遅いの補正
+M経験上昇 = (M経験上昇 + 1) * (50 + GET_ABL(MASTER, "従順") * 2) * (2 + TALENT:MASTER:習得早い - TALENT:MASTER:習得遅い) / 120
+
+;調教対象絶頂時、経験値倍
+FOR LCOUNT, 0, 4
+	SIF NOWEX:MASTER:LCOUNT
+		M経験上昇 *= 2
+NEXT
+;調教者絶頂時、経験値3倍
+FOR LCOUNT, 0, 4
+	SIF NOWEX:LCOUNT
+		M経験上昇 *= 3
+NEXT
+
+;調教者が調教対象よりも経験豊富(貧弱)であるとき経験値上昇(下降)
+M経験上昇 = M経験上昇 * (CFLAG:調教レベル + 5) / (CFLAG:MASTER:調教レベル + 5)
+
+;最低1の経験値は手に入る
+SIF M経験上昇 < 1
+	M経験上昇 = 1
+
+IF FLAG:3134 == 1
+	TIMES M経験上昇, 1.50
+ELSEIF FLAG:3134 == 2
+	TIMES M経験上昇 , 2.00
+ENDIF
+
+;地の文表示
+IF M経験上昇 > 0
+	CFLAG:MASTER:調教経験 += M経験上昇
+	PRINTFORML %CALLNAME:MASTER%経験値+{M経験上昇}
+ENDIF
+
+
+;────────────────────────────────────
+;経験値の計算（調教者）
+;────────────────────────────────────
+;上昇値初期化
+T経験上昇 = 0
+
+;各パラメーターの上昇値を見る
+FOR LCOUNT, 0, 50
+	;潤滑は無視
+	SIF LCOUNT == 4
+		CONTINUE
+	;PALAM上昇値の9/2500を経験値に加算(上限9)
+	T経験上昇 += LIMIT(9 * CUP:MASTER:LCOUNT / 2500, 0, 9)
+NEXT
+
+;屈服と恭順は高く評価され、反抗と抑鬱は負の要素とする
+
+;屈服上昇値の3/2500だけ経験値上昇(上限3)
+T経験上昇 += LIMIT(3 * CUP:MASTER:屈服 / 2500, 0, 3)
+;屈服上昇値が200を突破すると0～1の正の補正がかかる
+SIF CUP:MASTER:屈服 > 200
+	T経験上昇 += RAND:2
+
+;恭順上昇値の3/2500だけ経験値上昇(上限3)
+T経験上昇 += LIMIT(3 * CUP:MASTER:恭順 / 2500, 0, 3)
+;恭順上昇値が200を突破すると0～1の正の補正がかかる
+SIF CUP:MASTER:恭順 > 200
+	T経験上昇 += RAND:2
+
+;反抗上昇値の9/2500だけ経験値上昇を抑制(下限-9)
+T経験上昇 -= LIMIT(9 * CUP:MASTER:反抗 / 2500, 0, 9)
+
+;抑鬱上昇値の9/2500だけ経験値上昇を抑制(下限-9)
+T経験上昇 -= LIMIT(9 * CUP:MASTER:抑鬱 / 2500, 0, 9)
+
+;調教対象の反応による変動
+;REACT分類が消極的従う
+SIF IS_COMGRONAME("消極的従う")
+	T経験上昇 += 2
+;REACT分類が積極的従う
+SIF IS_COMGRONAME("積極的従う")
+	T経験上昇 += 5
+;REACT分類が許しを乞う
+SIF IS_COMGRONAME("許しを乞う")
+	T経験上昇 += 1
+;REACT分類が暴れる
+SIF IS_COMGRONAME("暴れる")
+	T経験上昇 -= 3
+;REACT分類が要求に応じない
+SIF IS_COMGRONAME("拒否")
+	T経験上昇 -= 1
+
+;調教対象絶頂時、経験値3倍
+FOR LCOUNT, 0, 4
+	SIF NOWEX:MASTER:LCOUNT
+		T経験上昇 *= 3
+NEXT
+;調教者絶頂時、経験値倍
+FOR LCOUNT, 0, 4
+	SIF NOWEX:LCOUNT
+		T経験上昇 *= 2
+NEXT
+
+;調教対象から精液を搾り取ると経験値上昇
+T経験上昇 += DOWNBASE:MASTER:射精 / 100
+
+;調教対象が調教者よりも経験豊富(貧弱)であるとき経験値上昇(下降)
+T経験上昇 = T経験上昇 * (CFLAG:MASTER:調教レベル + 5) / (CFLAG:調教レベル + 5)
+
+;習得早い/遅いの補正
+T経験上昇 = T経験上昇 * (3 + TALENT:習得早い * 2 - TALENT:習得遅い * 2) / 2
+
+;上昇値が-5を下回らない限り最低1の経験値は手に入る
+SIF T経験上昇 > -5 && T経験上昇 < 1
+	T経験上昇 = 1
+
+;地の文表示
+IF T経験上昇 > 0
+	CFLAG:調教経験 += T経験上昇
+	PRINTFORML %CALLNAME:TARGET%経験値+{T経験上昇}
+ENDIF
+
+
+;────────────────────────────────────
+;罪悪感とアライメント変動
+;────────────────────────────────────
+
+;いわゆるカルマ値
+
+;上昇値等初期化
+罪悪感上昇 = 0
+VARSET LOCAL
+
+;恐怖と抑鬱を見る(3/1000上昇、上限3)
+罪悪感上昇 += LIMIT(3 * (CUP:MASTER:恐怖 + CUP:MASTER:抑鬱) / 1000, 0, 3)
+;1000を突破した場合0～1の追加補正
+SIF (CUP:MASTER:恐怖 + CUP:MASTER:抑鬱) > 1000
+	罪悪感上昇 += RAND:2
+
+;サド、お仕置きモード、調教対象の反抗が激しい、一つでも満たせば苦痛と不快はカルマに加算しません
+IF !TALENT:サド && (MARK:反抗刻印 * 150 < CUP:MASTER:反抗) && !TFLAG:お仕置きフラグ
+	;恐怖と抑鬱を見る(1/300上昇、上限4)
+	罪悪感上昇 += LIMIT((CUP:MASTER:苦痛 + CUP:MASTER:不快) / 300, 0, 4)
+	;さらにRAND:(1/600)上昇(0～2)
+	LOCAL = LIMIT((CUP:MASTER:苦痛 + CUP:MASTER:不快) / 600, 0, 2) + 1
+	罪悪感上昇 += RAND:LOCAL
+ENDIF
+
+;優しい性格ならハードなメニューをこなしただけでも罪悪感
+SIF (TALENT:大人しい || TALENT:心根優しい) && (TFLAG:ターン方針 > 3 || TFLAG:ACT分類 == 6 || TFLAG:ACT分類 == 7 || TFLAG:ACT分類 == 8)
+	罪悪感上昇 += 2
+
+;素質による補正
+SIF TALENT:大人しい || TALENT:心根優しい
+	TIMES 罪悪感上昇 , 1.50
+SIF TALENT:生意気 || TALENT:サド || TALENT:意地悪
+	TIMES 罪悪感上昇 , 0.50
+
+;罪悪感増加
+CFLAG:罪悪感 += 罪悪感上昇
+
+;罪悪感の消滅、これも調教中では下がるスピードがかなり遅いです
+;CFLAG:罪悪感が大きく、罪悪感上昇が小さいほど減少速度は速い(-3～0)
+LOCAL = (6 * CFLAG:罪悪感) - (100 * 罪悪感上昇)
+LOCAL = (LOCAL / 200) + ((LOCAL % 200) > RAND:200)
+CFLAG:罪悪感 -= LIMIT(LOCAL, 0, 3)
+
+;罪悪感が10以下の時、罪悪感上昇が0以下なら1/2の確率で罪悪感-1
+SIF CFLAG:罪悪感 <= 10 && 罪悪感上昇 <= 0
+	CFLAG:罪悪感 -= RAND:2
+
+;罪悪感は負にならない
+SIF CFLAG:罪悪感 < 0
+	CFLAG:罪悪感 = 0
+
+;使用変数初期化
+アラ変動 = 0
+VARSET LOCAL
+
+;MASTERの応答で基本値が決まる
+;好印象大
+IF TFLAG:REACT印象 == 1
+	アラ変動 = 500
+;好印象小
+ELSEIF TFLAG:REACT印象 == 2
+	アラ変動 = 200
+;悪印象小
+ELSEIF TFLAG:REACT印象 == 3
+	アラ変動 = -200
+;悪印象大
+ELSEIF TFLAG:REACT印象 == 4
+	アラ変動 = -500
+;０から遠ざかる
+ELSEIF TFLAG:REACT印象 == 5
+	IF CFLAG:アライメント > 0
+		アラ変動 = 200
+	ELSE
+		アラ変動 = -200
+	ENDIF
+;０に近づく
+ELSEIF TFLAG:REACT印象 == 6
+	IF CFLAG:アライメント > 0
+		アラ変動 = -200
+	ELSE
+		アラ変動 = 200
+	ENDIF
+ELSE
+;影響なし
+	アラ変動 = 0
+ENDIF
+
+;アライメント変動傾向の変動
+;連続で正(負)にアライメントが変動し続けると正(負)に加算され続ける
+;アライメント変動の正負が変化するとリセット(+-0もリセット対象)
+IF アラ変動 > 0
+	IF TFLAG:アライメント変動傾向 >= 0
+		TFLAG:アライメント変動傾向 ++
+	ELSE
+		TFLAG:アライメント変動傾向 = 0
+	ENDIF
+ELSEIF アラ変動 < 0
+	IF TFLAG:アライメント変動傾向 <= 0
+		TFLAG:アライメント変動傾向 --
+	ELSE
+		TFLAG:アライメント変動傾向 = 0
+	ENDIF
+ELSE
+	TFLAG:アライメント変動傾向 = 0
+ENDIF
+
+;性格で倍率が決まる。
+;最小値50(Mデレ)、最大値150(Sツン)、素質変動しない/させないキャラではLOCAL = 100
+LOCAL = (CFLAG:SM性格 + CFLAG:ツンデレ + 200) / 2
+
+;Mデレならアライメント変動が+の方向に補正がかかる
+IF アラ変動 < 0
+	アラ変動 = アラ変動 * LOCAL / 100
+ELSE
+	アラ変動 = アラ変動 * (200 - LOCAL) / 100
+ENDIF
+
+;ビッチならより極端な値をとる。(最大25％の増減)
+アラ変動 = アラ変動 * (CFLAG:ビッチ + 300) / 300
+
+;平時アライメントから遠ざかる時、現アライメントが極端な値であれば変動を0に近づける
+;平時アライメントが0であることを前提とした場合、平時アライメントとアライメントの……
+;差が0の時1倍、差が20の時約0.4倍、差が40の時約0.2倍
+;※平時アライメントは10倍で保存されているので、使うときは1/10にする
+
+;アライメント変動を見ると平時アライメントから遠ざかる時
+IF (CFLAG:平時ア / 10 > CFLAG:アライメント && アラ変動 < 0) || (CFLAG:平時ア / 10 < CFLAG:アライメント && アラ変動 > 0)
+	
+	;LOCAL:1に分子(アライメントが0から遠ざかると小さくなる)を代入
+	LOCAL:1 = 20 - ABS(CFLAG:アライメント) / 5
+	;LOCAL:2に分母(アライメントが平時から遠ざかると大きくなる)を代入
+	LOCAL:2 = LOCAL:1 + ABS(CFLAG:平時ア / 10 - CFLAG:アライメント)
+	;※結果として、0または平時からアライメントが遠いとき補正が0倍に近づく
+	
+	;分子は最低0
+	SIF LOCAL:1 < 0
+		LOCAL:1 = 0
+	;分母は最低1(0で除算の防止)
+	SIF LOCAL:2 <= 0
+		LOCAL:2 = 1
+	
+	;アライメント極端化抑止計算
+	アラ変動 = アラ変動 * LOCAL:1 / LOCAL:2
+ENDIF
+
+;アライメント変動
+CFLAG:アライメント += アラ変動 / 100
+
+
+;────────────────────────────────────
+;お仕置き関連の処理
+;────────────────────────────────────
+
+;LOCAL初期化
+VARSET LOCAL
+
+;苛立ちによる加算
+LOCAL += ABSQSI(DOWNBASE:満足 - DOWNBASE:苛立ち) * POWER(2, -6 + TALENT:衝動的 - TALENT:自制的 + 10) / 1024
+;反抗による加算
+LOCAL += SQRT(CUP:MASTER:反抗) * POWER(2, -6 + TALENT:悲観的 - TALENT:楽観的 + 10) / 1024
+
+;気の強さ、観念、受容力、血の気に従って補正後、お仕置きポイントにLOCAL加算
+LOCAL:1 = TALENT:反抗的 - TALENT:臆病 + TALENT:悲観的 - TALENT:楽観的
+LOCAL:2 = TALENT:短気 - TALENT:慎重 + TALENT:衝動的 - TALENT:自制的
+TFLAG:お仕置きポイント += LOCAL * POWER(2, (LOCAL ? LOCAL:1 # -LOCAL:1) + LOCAL:2 + 10) / 1024
+;お仕置きポイントは負にならない
+SIF TFLAG:お仕置きポイント < 0
+	TFLAG:お仕置きポイント = 0
+
+;LOCAL初期化
+VARSET LOCAL
+
+;お仕置き中に入れる予定の条件
+;TALENT:意地悪 - TALENT:心根優しい
+
+;お仕置きモードの発生と解消
+;お仕置き中は
+IF TFLAG:お仕置きフラグ > 0
+	;調教対象を痛めたり屈服させたりでいらいら解消。この場合簡単に降伏させるより無理やり折らせたほうが気持ち良いと思いますので、恭順の比重を屈服より低く設定しました
+	LOCAL = CUP:MASTER:屈服 / 15 + CUP:MASTER:恐怖 / 30 + CUP:MASTER:恭順 / 30 - CUP:MASTER:反抗 / 20 + CUP:MASTER:苦痛 / 20 + CUP:MASTER:恥情 / 75 + CUP:MASTER:不快 / 60 + CUP:MASTER:抑鬱 / 75
+	;苛立ちを減衰させ、半分だけ満足が増加
+	BASE:苛立ち -= LOCAL
+	BASE:満足 += LOCAL / 2
+	;お仕置き宣言の場合はこのターン決してお仕置きモード解消しません（哀願を聞き入れた場合だけが例外）
+	IF !IS_NOWACTNAME("お仕置きと宣言する") || IS_COMGRONAME("許しを乞う")
+		;調教対象の降伏、調教者の満足、二つの条件のどれかを満たしたらお仕置きモード解消
+		IF (CUP:MASTER:屈服 + CUP:MASTER:恐怖 + CUP:MASTER:恭順 > CUP:MASTER:反抗 + CUP:MASTER:不快 + CUP:MASTER:抑鬱) || (BASE:満足 - BASE:苛立ち > 100 + RAND:50)
+			;お仕置きポイントを半分弱に低減
+			TFLAG:お仕置きポイント -= TFLAG:お仕置きポイント / 2 - 5
+			;苛立ち半減
+			BASE:苛立ち /= 2
+			;お仕置きポイントを0～30の範囲に収める
+			TFLAG:お仕置きポイント = LIMIT(TFLAG:お仕置きポイント, 0, 30)
+			;お仕置き終了
+			TFLAG:お仕置きフラグ = 0
+		ENDIF
+	ENDIF
+;ちょっと複雑な計算をしてるみたいだが、お仕置きポイントを100まで貯めればお仕置きモードという認識で大丈夫です。
+ELSEIF TFLAG:お仕置きポイント + RAND:40 - RAND:10 > 100 + TALENT:意地悪 * 3 - TALENT:心根優しい * RAND:5 - TALENT:サド * 5 - TALENT:プライド高い * (1 + RAND:3) + TALENT:プライド低い * (1 + RAND:2)
+	;お仕置き開始
+	TFLAG:お仕置きフラグ = 1
+	;お仕置きポイント半減
+	TFLAG:お仕置きポイント /= 2
+	;押し倒し、性交解除
+	TEQUIP:押し倒し中 = 0
+	TEQUIP:性交中 = 0
+	TEQUIP:性交奉仕中 = 0
+ENDIF
+;今日の方針がお仕置きであれば常にお仕置き中
+IF TFLAG:今日の方針 == 2
+	TFLAG:お仕置きフラグ = 1
+ENDIF
+
+
+;────────────────────────────────────
+;TEQUIP処理
+;────────────────────────────────────
+CALL EVENT_EQUIP
+
+
+;────────────────────────────────────
+;勃起計算
+;────────────────────────────────────
+;残り精力が少ないと勃起しにくくなるように
+
+;LOCAL初期化
+VARSET LOCAL
+
+;調教対象に男性器が存在する場合
+IF PENIS(MASTER)
+	;理性が低くなると補正値が減少(-6～0)
+	LOCAL -= 6 - LIMIT(6 * BASE:MASTER:理性 / 500, 0, 6)
+	;媚薬によって補正値減少
+	SIF TEQUIP:媚薬
+		LOCAL -= 5
+	;残り精力が少なくなると補正値上昇(0～9)
+	LOCAL += 9 - LIMIT(18 * BASE:MASTER:射精 / MAXBASE:MASTER:射精, 0, 9)
+	;残り精力が0ならさらに補正値+1、要強制勃起オン
+	IF BASE:MASTER:射精 == 0
+		LOCAL += 1
+		TCVAR:MASTER:要強制勃起 = 1
+	ENDIF
+	;残り体力が少なくなると補正値上昇(0～7)
+	LOCAL += 7 - LIMIT(14 * BASE:MASTER:体力 / MAXBASE:MASTER:体力, 0, 7)
+	;残り気力が少なくなると補正値上昇(0～7)
+	LOCAL += 7 - LIMIT(14 * BASE:MASTER:気力 / MAXBASE:MASTER:気力, 0, 7)
+	;勃起度が800超過なら追加補正
+	IF TCVAR:MASTER:勃起度 > 800
+		LOCAL = LOCAL + (20 - LOCAL) * (TCVAR:MASTER:勃起度 - 800) / 700
+	ENDIF
+	;補正値は20以上にならない
+	SIF LOCAL >= 20
+		LOCAL = 19
+ENDIF
+;現在の勃起度を記憶
+TCVAR:MASTER:前の勃起度 = TCVAR:MASTER:勃起度
+;補正値が大きいほど勃起度上昇を減衰
+
+;勃起の処理
+;前立腺刺激・強
+IF TCVAR:MASTER:前立腺刺激 > 1
+	;ほぼ一発でびんびんに
+	TCVAR:MASTER:勃起度 += 500 + TCVAR:MASTER:今回の勃起 * (20 - LOCAL) / 10
+;前立腺刺激・弱
+ELSEIF TCVAR:MASTER:前立腺刺激 == 1
+	;固定値+100つき
+	TCVAR:MASTER:勃起度 += 100 + TCVAR:MASTER:今回の勃起 * (20 - LOCAL) / 20
+;通常（要強制勃起ではない）
+ELSEIF !TCVAR:MASTER:要強制勃起
+	TCVAR:MASTER:勃起度 += TCVAR:MASTER:今回の勃起 * (20 - LOCAL) / 20
+ENDIF
+
+;射精処理
+IF NOWEX:MASTER:射精
+	;前立腺刺激・強
+	IF TCVAR:MASTER:前立腺刺激 > 1
+		;減衰しない
+	;空射精・前立腺射精
+	ELSEIF NOWEX:MASTER:射精 == 1 || NOWEX:MASTER:射精 == 5
+		;勃起度が減衰しにくい
+		TCVAR:MASTER:勃起度 = TCVAR:MASTER:勃起度 / 2 + GET_ABL(TARGET, "技巧") * 5
+	;射精/射精(早漏)/A責射精
+	ELSEIF NOWEX:MASTER:射精 == 2 || NOWEX:MASTER:射精 > 3
+		;調教者技巧によって勃起度維持
+		TCVAR:MASTER:勃起度 = TCVAR:MASTER:勃起度 / 3 + GET_ABL(TARGET, "技巧") * 5
+	;大量射精
+	ELSEIF NOWEX:MASTER:射精 == 3
+		;調教者技巧によって勃起度維持
+		TCVAR:MASTER:勃起度 = TCVAR:MASTER:勃起度 / 5 + GET_ABL(TARGET, "技巧") * 3
+	ENDIF
+	;媚薬使用時、勃起度増加
+	IF TEQUIP:媚薬
+		TCVAR:MASTER:勃起度 = TCVAR:MASTER:勃起度 * 5 / 4
+	ENDIF
+	;抜かず中は勃起度1000以上を維持
+	SIF TEQUIP:性交奉仕中 && TFLAG:抜かず && TCVAR:MASTER:勃起度 < 1000
+		TCVAR:MASTER:勃起度 = 1000
+ENDIF
+
+
+;────────────────────────────────────
+;疲弊の処理、ゲージの負数防止
+;────────────────────────────────────
+;休憩などで疲弊が負数になったらここでリセット
+SIF TFLAG:調教者消耗度 < 0
+	TFLAG:調教者消耗度 = 0
+SIF TFLAG:消耗度 < 0
+	TFLAG:消耗度 = 0
+
+;調教対象体力が0以下
+IF BASE:MASTER:体力 <= 0
+	;地の文表示
+	PRINTFORMW （激しい調教によって%CALLNAME:MASTER%はかなり消耗してるようだ）
+	;消耗度を1～3増加
+	TFLAG:消耗度 += 1 + RAND:3
+	;体力は負にならない
+	BASE:MASTER:体力 = 0
+;調教対象体力が200未満
+ELSEIF BASE:MASTER:体力 < 200
+	;地の文表示
+	PRINTFORMW （激しい調教によって%CALLNAME:MASTER%は少し消耗してるようだ）
+	;消耗度を1増加
+	TFLAG:消耗度 += 1
+ENDIF
+
+;調教者体力が0以下
+IF BASE:体力 <= 0
+	;地の文表示
+	PRINTFORMW （激しい調教によって%CALLNAME:TARGET%はかなり消耗してるようだ）
+	;消耗度を1～3増加
+	TFLAG:調教者消耗度 += 1 + RAND:3
+	;体力は負にならない
+	BASE:体力 = 0
+;調教者体力が200未満
+ELSEIF BASE:体力 < 200
+	;地の文表示
+	PRINTFORMW （激しい調教によって%CALLNAME:TARGET%は少し消耗してるようだ）
+	;消耗度を1増加
+	TFLAG:調教者消耗度 += 1
+ENDIF
+
+;気力/射精/母乳/尿意/理性/興味/苛立ち/満足/勃起度は負にならない
+FOR LCOUNT, 1, 6
+	SIF BASE:MASTER:LCOUNT < 0
+		BASE:MASTER:LCOUNT = 0
+NEXT
+SIF TCVAR:MASTER:勃起度 < 0
+	TCVAR:MASTER:勃起度 = 0
+FOR LCOUNT, 1, 9
+	SIF BASE:LCOUNT < 0
+		BASE:LCOUNT = 0
+NEXT
+
+
+
+
+;────────────────────────────────────
+;調教対象気力０による抵抗不能の処理
+;────────────────────────────────────
+IF !TFLAG:抵抗不能 && BASE:MASTER:気力 <= 0
+	PRINTFORMW 気を張り過ぎた%CALLNAME:MASTER%は、もう気力が限界のようだ…
+	TFLAG:抵抗不能 = 1
+ENDIF
+
+;────────────────────────────────────
+;体力、気力、理性の自然回復、ゲージの限界突破防止
+;────────────────────────────────────
+;このターンで激しい消耗がなければ体力と気力は少しずつ自然回復
+
+;基礎回復量を設定
+M体力回復 = MAXBASE:MASTER:体力 / 100
+M気力回復 = MAXBASE:MASTER:気力 / (50-(TFLAG:抵抗不能*30))
+T体力回復 = MAXBASE:MASTER:体力 / 100
+T気力回復 = MAXBASE:MASTER:気力 / 50
+
+;回復早い/遅い素質による補正
+IF TALENT:MASTER:回復早い
+	TIMES M体力回復 , 2.00
+	TIMES M気力回復 , 1.20
+ELSEIF TALENT:MASTER:回復遅い
+	TIMES M体力回復 , 0.70
+	TIMES M気力回復 , 0.90
+ENDIF
+IF TALENT:回復早い
+	TIMES T体力回復 , 2.00
+	TIMES T気力回復 , 1.20
+ELSEIF TALENT:回復遅い
+	TIMES T体力回復 , 0.70
+	TIMES T気力回復 , 0.90
+ENDIF
+
+;体力気力回復
+BASE:MASTER:体力 += M体力回復
+BASE:MASTER:気力 += M気力回復
+BASE:体力 += T体力回復
+BASE:気力 += T気力回復
+
+
+;────────────────────────────────────
+;抵抗不能の回復処理
+;────────────────────────────────────
+IF TFLAG:抵抗不能 && BASE:MASTER:気力 >= MAXBASE:MASTER:気力/2
+	PRINTFORMW なすがままだった%CALLNAME:MASTER%は、多少気力を取り戻したようだ…
+	TFLAG:抵抗不能 = 0
+ENDIF
+
+
+;────────────────────────────────────
+;大満足ボーナス
+;────────────────────────────────────
+;満足が上限突破
+IF BASE:満足 >= MAXBASE:満足
+	;地の文表示
+	PRINTL 
+	;大満足口上を呼ぶ
+	RESULT = 0
+	CALL KOJO_EVENT(21)
+	SIF RESULT
+		PRINTL 
+	PRINTFORMW %CALLNAME:TARGET%さま大満足
+	;大満足ボーナス発生
+	CFLAG:満足ボー = 1
+	;満足初期化
+	BASE:満足 = 0
+	;満足のゲージを伸ばして次回のボーナスを取得するにはもっと頑張らなくちゃ
+	MAXBASE:満足 += (7000 - MAXBASE:満足) / 10
+	;大満足ボーナス発生を記録
+	TFLAG:今回で大満足 += 1
+	;新規に捏造@/L
+	TCVAR:今回で大満足 += 1
+;ある程度満足を貯めている場合はターンごとに自然消耗
+ELSEIF BASE:満足 > MAXBASE:満足 / 3
+	;無達成状態では減衰速度が速まる
+	IF SOURCE:MASTER:達成 > 0
+		BASE:満足 -= MAXBASE:満足 / 50
+	ELSE
+		BASE:満足 -= MAXBASE:満足 / 30
+	ENDIF
+	;満足は負にならない
+	SIF BASE:満足 < 0
+		BASE:満足 = 0
+ENDIF
+
+;────────────────────────────────────
+;理性の自然回復、ゲージの限界突破防止
+;────────────────────────────────────
+
+
+;地の文表示(理性描写)
+;低苦痛状態
+IF TFLAG:苦痛による理性低下 == 0 || ABL:MASTER:マゾっ気 > 0
+	;理性が200未満に低下
+	IF BASE:MASTER:理性 < 200 && BASE:MASTER:理性 + DOWNBASE:MASTER:理性 > 200
+		PRINTFORML 快感のあまり%CALLNAME:MASTER%の視界は桃色の靄に霞み、頭の芯は甘い痺れに満たされている。
+	;理性が500未満に低下
+	ELSEIF BASE:MASTER:理性 < 500 && BASE:MASTER:理性 + DOWNBASE:MASTER:理性 > 500
+		PRINTFORML %CALLNAME:TARGET%に与えられる快感が理性を蕩かし、抵抗する気力を奪っていく…
+	ENDIF
+;マゾっ気がなく苦痛
+ELSE
+	;理性が200未満に低下
+	IF BASE:MASTER:理性 < 200 && BASE:MASTER:理性 + DOWNBASE:MASTER:理性 > 200
+		PRINTFORML 激痛のあまり%CALLNAME:MASTER%の思考は完全に麻痺し、目に理性の色は見えない。
+	;理性が500未満に低下
+	ELSEIF BASE:MASTER:理性 < 500 && BASE:MASTER:理性 + DOWNBASE:MASTER:理性 > 500
+		PRINTFORML %CALLNAME:TARGET%の与える激痛が%CALLNAME:MASTER%の理性を削っていく…
+	ENDIF
+ENDIF
+
+;調教対象の理性回復。もし快楽/苦痛による理性低下のフラグがあればまずそれらを解決します。状態異常の場合も回復しません
+;苦痛による理性低下。理性が一気に下がるが一ターンで解消します。つまり痛みの効果は(理性ダメージ)+(1ターン理性回復なし)です
+IF TFLAG:苦痛による理性低下 > 0
+	TFLAG:苦痛による理性低下 = 0
+;快楽による理性低下。自然解消するのは遅いですが、絶頂すると一気に解消します。つまりいったら次のターンから理性回復できます
+ELSEIF TFLAG:快楽による理性低下 > 0
+	;快Ｘがある程度存在すると解消速度減少(0～1)
+	IF CUP:MASTER:快Ｃ + CUP:MASTER:快Ｖ + CUP:MASTER:快Ａ + CUP:MASTER:快Ｂ > 50
+		TFLAG:快楽による理性低下 -= RAND:2
+	;快楽による理性低下解消(1～2)
+	ELSE
+		TFLAG:快楽による理性低下 -= 1 + RAND:2
+	ENDIF
+	;絶頂時完全解消
+	SIF NOWEX:MASTER:Ｃ絶頂 + NOWEX:MASTER:Ｖ絶頂 + NOWEX:MASTER:Ａ絶頂 + NOWEX:MASTER:Ｂ絶頂 > 0
+		TFLAG:快楽による理性低下 = 0
+;上の条件+状態変化時に当てはまらなければ理性回復(60～100)
+ELSEIF TCVAR:MASTER:状態変化 == 0
+	BASE:MASTER:理性 += 50 + (5 + RAND:6) * (2 + RAND:4)
+ENDIF
+
+;調教者の理性は状態異常でなければ自然回復
+SIF TCVAR:状態変化 == 0
+	BASE:理性 += 50 + (5 + RAND:6) * (2 + RAND:4)
+
+;勃起度の自然低下
+;男性器存在時
+IF PENIS(MASTER)
+	;イきそう、性交奉仕中、勃起度増加中、前立腺刺激中でなければ
+	IF !TCVAR:MASTER:イきそう && !TEQUIP:性交奉仕中 && !TCVAR:MASTER:今回の勃起
+		;情欲時低下なし
+		IF TCVAR:状態変化 == 5
+		;疲弊/衰弱/無気力時0.85倍
+		ELSEIF TCVAR:状態変化 == 1 || TCVAR:状態変化 == 2 || TCVAR:状態変化 == 3
+			TIMES TCVAR:MASTER:勃起度, 0.85
+		;その他は0.9倍
+		ELSE
+			TIMES TCVAR:MASTER:勃起度, 0.90
+		ENDIF
+		;要強制勃起時さらに0.9倍
+		SIF TCVAR:MASTER:要強制勃起 == 1
+				TIMES TCVAR:MASTER:勃起度, 0.90
+	ENDIF
+;男性器非存在時は勃起度初期化
+ELSE
+	TCVAR:MASTER:勃起度 = 0
+ENDIF
+
+;調教対象体力/気力/射精/母乳/尿意/理性の上限突破を防止
+FOR LCOUNT, 0, 6
+	SIF BASE:MASTER:LCOUNT > MAXBASE:MASTER:LCOUNT
+		BASE:MASTER:LCOUNT = MAXBASE:MASTER:LCOUNT
+NEXT
+;勃起度の上限突破を防止
+SIF TCVAR:MASTER:勃起度 > 1500
+	TCVAR:MASTER:勃起度 = 1500
+;調教者体力/気力/射精/母乳/尿意/理性/興味/苛立ちの上限突破を防止
+FOR LCOUNT, 0, 8
+	SIF BASE:LCOUNT > MAXBASE:LCOUNT
+		BASE:LCOUNT = MAXBASE:LCOUNT
+NEXT
+
+
+;────────────────────────────────────
+;調教対象の状態変化
+;────────────────────────────────────
+;異常状態中(0=通常/1=疲弊/2=衰弱/3=無気力/4=朦朧/5=情欲/6=怒り/7=退屈/8=鬱屈)
+IF TCVAR:MASTER:状態変化 > 0
+	IF !(--TCVAR:MASTER:状態変化持続)
+		;正常
+		TCVAR:MASTER:状態変化 = 0
+		PRINTFORMW %CALLNAME:MASTER%は[通常]に戻った
+	ENDIF
+	GOTO DECIDE_CONDITION_M
+ENDIF
+
+;消耗度が大きい時
+IF TFLAG:消耗度 > 3 + RAND:5
+	;消耗度が大きければ衰弱、小さければ疲弊
+	IF TFLAG:消耗度 > 5
+		TCVAR:MASTER:状態変化 = 2
+	ELSE
+		TCVAR:MASTER:状態変化 = 1
+	ENDIF
+	TCVAR:MASTER:状態変化持続 = 3
+	GOTO DECIDE_CONDITION_M
+ENDIF
+
+;気力が無く、抑鬱PALAMが高い時
+IF BASE:MASTER:気力 < 0 && (PALAM:MASTER:抑鬱 > 500 + RAND:500 || RAND:3 > 1)
+	;無気力
+	TCVAR:MASTER:状態変化 = 3
+	TCVAR:MASTER:状態変化持続 = 3
+	GOTO DECIDE_CONDITION_M
+ENDIF
+
+;絶頂系が体力系を上回る時
+IF BASE:MASTER:体力 + BASE:MASTER:気力 + BASE:MASTER:理性 - NOWEX:MASTER:Ｃ絶頂 * 100 - NOWEX:MASTER:Ｖ絶頂 * 150 - NOWEX:MASTER:Ａ絶頂 * 120 - NOWEX:MASTER:Ｂ絶頂 * 80 - NOWEX:MASTER:噴乳 * 80 - NOWEX:MASTER:射精 * 150 < 1000
+	;朦朧
+	TCVAR:MASTER:状態変化 = 4
+	TCVAR:MASTER:状態変化持続 = 3
+	GOTO DECIDE_CONDITION_M
+ENDIF
+
+;高欲情で、欲情増加+理性低下が大きい時
+IF (PALAM:MASTER:欲情 > 6000 - MARK:MASTER:快楽刻印 * 200 && RAND:3 > 1) || CUP:MASTER:欲情 + DOWNBASE:MASTER:理性 * 2 + TFLAG:快楽による理性低下 * 100 > 2000
+	;情欲
+	TCVAR:MASTER:状態変化 = 5
+	TCVAR:MASTER:状態変化持続 = 3
+	GOTO DECIDE_CONDITION_M
+ENDIF
+
+;怒り状態変化判定(基準値が負になると発生)
+;LOCAL初期化
+VARSET LOCAL
+;基準値(1000～1200)
+LOCAL = 1000 + RAND:5 * 50
+;受容力補正
+LOCAL += 400 * POWER(2, TALENT:MASTER:慎重 - TALENT:MASTER:短気 + 10) / 1024
+;恭順が大きいときに増加、反抗,不快が大きいときに減少
+LOCAL += CUP:MASTER:恭順 - CUP:MASTER:反抗 * 2 - CUP:MASTER:不快
+;屈服刻印、トラウマによって増加、反抗刻印によって減少
+LOCAL += MARK:屈服刻印 * 10 + MARK:MASTER:トラウマ * 10 - MARK:反抗刻印 * 20
+;基準を満たすと
+IF LOCAL < 0
+	TCVAR:MASTER:状態変化 = 6
+	TCVAR:MASTER:状態変化持続 = 3
+	GOTO DECIDE_CONDITION_M
+ENDIF
+
+;PALAM上昇量が小さい時
+IF CUP:MASTER:快Ｃ + CUP:MASTER:快Ｖ + CUP:MASTER:快Ａ + CUP:MASTER:快Ｂ + CUP:MASTER:欲情 + CUP:MASTER:恐怖 + CUP:MASTER:苦痛 + CUP:MASTER:恥情 + CUP:MASTER:不快 < 500 + BASE:MASTER:理性 + CFLAG:MASTER:調教レベル * (200 - MARK:屈服刻印 * 10) && TFLAG:経過時間 > 15 && RAND:5 > 3
+	;退屈
+	TCVAR:MASTER:状態変化 = 7
+	TCVAR:MASTER:状態変化持続 = 3
+	GOTO DECIDE_CONDITION_M
+ENDIF
+
+;不快+抑鬱PALAMが大きい時
+IF PALAM:MASTER:不快 + PALAM:MASTER:抑鬱 > 1200 + CFLAG:MASTER:調教レベル * 100 - MARK:MASTER:トラウマ * (50 + RAND:50) - TALENT:MASTER:狂気 * 200
+	;鬱屈
+	TCVAR:MASTER:状態変化 = 8
+	TCVAR:MASTER:状態変化持続 = 3
+	GOTO DECIDE_CONDITION_M
+ENDIF
+
+$DECIDE_CONDITION_M
+
+;────────────────────────────────────
+;調教者の状態変化
+;────────────────────────────────────
+;異常状態中
+IF TCVAR:状態変化 > 0
+	IF !(--TCVAR:状態変化持続)
+		;正常
+		TCVAR:状態変化 = 0
+		PRINTFORMW %CALLNAME:TARGET%は[通常]に戻った
+	ENDIF
+		GOTO DECIDE_CONDITION_T
+ENDIF
+
+;消耗度を見る
+IF TFLAG:調教者消耗度 > 3 + RAND:5
+	;消耗度が大きければ衰弱、小さければ疲弊
+	IF TFLAG:調教者消耗度 > 5
+		TCVAR:状態変化 = 2
+	ELSE
+		TCVAR:状態変化 = 1
+	ENDIF
+	TCVAR:状態変化持続 = 3
+	GOTO DECIDE_CONDITION_T
+ENDIF
+
+;気力が無く、苛立ちが小さい時
+IF BASE:気力 < 100 && (BASE:苛立ち < 100 + RAND:100 || RAND:3 > 1)
+	;無気力
+	TCVAR:状態変化 = 3
+	TCVAR:状態変化持続 = 3
+	GOTO DECIDE_CONDITION_T
+ENDIF
+
+;絶頂系が体力系を上回る時
+IF BASE:体力 + BASE:気力 + BASE:理性 - NOWEX:Ｃ絶頂 * 100 - NOWEX:Ｖ絶頂 * 150 - NOWEX:Ａ絶頂 * 120 - NOWEX:Ｂ絶頂 * 80 - NOWEX:噴乳 * 80 - NOWEX:射精 * 150 < 1000
+	;朦朧
+	TCVAR:状態変化 = 4
+	TCVAR:状態変化持続 = 3
+	GOTO DECIDE_CONDITION_T
+ENDIF
+
+;高快ｘ時
+IF PALAM:快Ｃ + PALAM:快Ｖ + PALAM:快Ａ + PALAM:快Ｂ > 12000 && RAND:3 > 1
+	;情欲
+	TCVAR:状態変化 = 5
+	TCVAR:状態変化持続 = 3
+	GOTO DECIDE_CONDITION_T
+ENDIF
+
+;怒り状態変化判定(基準値が負になると発生)
+;LOCAL初期化
+VARSET LOCAL
+;基準値(1000～1200)
+LOCAL = 1000 + RAND:5 * 50
+;受容力補正
+LOCAL += 400 * POWER(2, TALENT:慎重 - TALENT:短気 + 10) / 1024
+;恭順補正
+LOCAL += CUP:MASTER:恭順 * POWER(2, TALENT:心根優しい - TALENT:意地悪 + 10) / 1024
+;屈服補正
+LOCAL += (CUP:MASTER:屈服 + MARK:屈服刻印 * 50) * POWER(2, TALENT:素直 + 10) / 1024
+;反抗補正
+LOCAL -= CUP:MASTER:反抗 * POWER(2, 1 + TALENT:反抗的 - TALENT:臆病 + 10) / 1024
+;苛立ち補正
+LOCAL -= BASE:苛立ち * POWER(2, TALENT:衝動的 - TALENT:自制的 + 10) / 1024
+;お仕置き補正
+LOCAL -= (TFLAG:お仕置きポイント + TFLAG:お仕置きフラグ * 75) * POWER(2, 1 + TALENT:プライド高い - TALENT:プライド低い + 10) / 1024
+;基準を満たすと
+IF LOCAL < 0
+	;怒り
+	TCVAR:状態変化 = 6
+	TCVAR:状態変化持続 = 3
+	GOTO DECIDE_CONDITION_T
+ENDIF
+
+;低興味時
+IF BASE:興味 < 100 + (GET_TRAINLV(TARGET) + 1) * (10 + RAND:5) && RAND:3 > 1
+	;退屈
+	TCVAR:状態変化 = 7
+	TCVAR:状態変化持続 = 3
+	GOTO DECIDE_CONDITION_T
+ENDIF
+
+;苛立ちが大きく、反抗が小さい時
+IF BASE:苛立ち- CUP:MASTER:反抗 * 2 + TFLAG:お仕置きポイント * 2 + TFLAG:お仕置きフラグ * 150 > 500 + CFLAG:調教レベル * 100 + (RAND:5 - TALENT:幼稚 - TALENT:狂気 * 2) * 100
+	;鬱屈
+	TCVAR:状態変化 = 8
+	TCVAR:状態変化持続 = 3
+	GOTO DECIDE_CONDITION_T
+ENDIF
+
+$DECIDE_CONDITION_T
+
+
+;────────────────────────────────────
+;状態変化口上とテキストの表示
+;────────────────────────────────────
+;状態変化口上を呼ぶ
+RESULT = 0
+SIF TCVAR:MASTER:状態変化持続 > 2
+	;ここは呼び出しを切り分けたい感が
+	CALL KOJO_EVENT(22)
+;地の文表示
+SIF RESULT
+	PRINTL 
+;調教対象状態変化時
+SIF TCVAR:MASTER:状態変化 && TCVAR:MASTER:状態変化持続 > 2
+	PRINTFORMW %CALLNAME:MASTER%は[%CONDITION(TCVAR:MASTER:状態変化)%]になった
+	;CALL KOJO_EVENT(22, 1)
+;調教者状態変化時
+SIF TCVAR:状態変化 && TCVAR:状態変化持続 > 2
+	PRINTFORMW %CALLNAME:TARGET%は[%CONDITION(TCVAR:状態変化)%]になった
+	;CALL KOJO_EVENT(22, 0)
+;勃起描写
+;強勃起
+IF TCVAR:MASTER:勃起度 >= 1300 && TCVAR:MASTER:前の勃起度 < 1300
+	IF TCVAR:MASTER:前立腺刺激 > 1
+		PRINTFORML 内側から雄機能を弄ばれ、%CALLNAME:MASTER%の男性器が意思と無関係に反応する…。
+		PRINTFORML 赤黒く充血しそそり立ったペニスを見て、%CALLNAME:TARGET%は舌舐めずりをした…。
+	ELSEIF TCVAR:MASTER:前立腺刺激 == 1
+		PRINTFORML 内側から根元の裏側を擦られ、%CALLNAME:MASTER%の男性器は張り裂けそうに脈打っている…。
+	ELSE
+		PRINTFORML %CALLNAME:MASTER%の男性器は腹に付きそうなほど反り返り、激しく脈打っている…。
+	ENDIF
+;中勃起
+ELSEIF TCVAR:MASTER:勃起度 >= 1000 && TCVAR:MASTER:前の勃起度 < 1000
+	IF TCVAR:MASTER:前立腺刺激
+		PRINTFORML 内側から根元の裏側を擦られ、%CALLNAME:MASTER%の男性器が膨張していく…。
+	ELSE
+		PRINTFORML %CALLNAME:MASTER%の男性器はいまや隆々と頭をもたげている…。
+	ENDIF
+;弱勃起
+ELSEIF TCVAR:MASTER:勃起度 >= 200 && TCVAR:MASTER:前の勃起度 < 200
+	;急速
+	IF TCVAR:MASTER:勃起度 - TCVAR:MASTER:前の勃起度 > 200
+		PRINTFORML %CALLNAME:MASTER%は下半身に急速に血が集まるのを感じた…。
+	;常速
+	ELSEIF TCVAR:MASTER:勃起度 - TCVAR:MASTER:前の勃起度 > 50
+		PRINTFORML %CALLNAME:MASTER%は下半身に血が集まり始めるのを感じた…。
+	;緩速
+	ELSE
+		PRINTFORML %CALLNAME:MASTER%は下半身にゆっくりと血が集まり始めるのを感じた…。
+	ENDIF
+;要強制勃起
+ELSEIF TCVAR:MASTER:要強制勃起 && TCVAR:MASTER:勃起度 <= 200 && TCVAR:MASTER:今回の勃起
+	PRINTFORML 精尽きた%CALLNAME:MASTER%の男性器はぴくりとも反応しない…。
+ENDIF
+;潤滑描写(オトコ以外)
+IF !TALENT:MASTER:オトコ
+	;潤滑充分
+	IF PALAM:MASTER:潤滑 >= 1000 && TCVAR:MASTER:前の潤滑 < 1000
+		IF TEQUIP:ローション
+			PRINTFORML %CALLNAME:MASTER%の泉からはとめどなく愛液が溢れ、もはやローションの意味がない…。
+		ELSE
+			PRINTFORML %CALLNAME:MASTER%の泉からはとめどなく愛液が溢れ、洪水のようになっている…。
+		ENDIF
+	;強潤滑
+	ELSEIF PALAM:MASTER:潤滑 >= 500 && TCVAR:MASTER:前の潤滑 < 500
+		IF TEQUIP:ローション
+			PRINTFORML %CALLNAME:MASTER%の女性器はローションに愛液が混ざってぬるぬるになっている…。
+		ELSEIF MV_PLAYER(1) > 1
+			PRINTFORML %CALLNAME:MASTER%の女性器は異物を歓迎するように濃い愛液を分泌し始めた…。
+		ELSE
+			PRINTFORML %CALLNAME:MASTER%の女性器は蜜を垂らし、挿入を待ち望んでひくついている…。
+		ENDIF
+	;中潤滑
+	ELSEIF PALAM:MASTER:潤滑 >= 250 && TCVAR:MASTER:前の潤滑 < 250
+		IF TEQUIP:ローション == 1
+			PRINTFORML %CALLNAME:MASTER%の女性器は乾きかけのローションに代わり自らも愛液を分泌している…。
+		ELSEIF TEQUIP:ローション
+			PRINTFORML %CALLNAME:MASTER%の女性器はローションだけでなく自らも愛液を分泌している…。
+		ELSEIF MV_PLAYER(1) > 1
+			PRINTFORML %CALLNAME:MASTER%の女性器は膣内の異物に温かいぬめりを吐き出している…。
+		ELSE
+			PRINTFORML %CALLNAME:MASTER%は秘唇から温かい愛液が垂れ落ちるのを感じ、背筋を震わせた…。
+		ENDIF
+	;弱潤滑
+	ELSEIF PALAM:MASTER:潤滑 >= 100 && TCVAR:MASTER:前の潤滑 < 100
+		IF TEQUIP:ローション
+			PRINTFORML %CALLNAME:MASTER%の股間はローションで厭らしく光っている…。
+		ELSEIF MV_PLAYER(1) > 1
+			PRINTFORML %CALLNAME:MASTER%の女性器は汗とは違うぬめりを帯び始めた…。
+		ELSE
+			PRINTFORML %CALLNAME:MASTER%の秘部はしっとりと湿り気を帯び始めた…。
+		ENDIF
+	ENDIF
+ENDIF
+;尿意描写(調教対象におもらし癖素質存在時)
+IF TALENT:MASTER:おもらし癖
+	;強尿意
+	IF BASE:MASTER:尿意 > 7 * MAXBASE:MASTER:尿意 / 8
+		PRINTFORML %CALLNAME:MASTER%は激しく息を荒げ、膝を強く閉じて、膨れ上がる尿意の決壊を辛うじて防いでいる…。
+	;中尿意
+	ELSEIF BASE:MASTER:尿意 > 2 * MAXBASE:MASTER:尿意 / 3
+		PRINTFORML %CALLNAME:MASTER%は頬を紅潮させ、落ち着かなげに腿を擦り合わせて尿意に耐えている…。
+	;弱尿意
+	ELSEIF BASE:MASTER:尿意 > MAXBASE:MASTER:尿意 / 2
+		PRINTFORML %CALLNAME:MASTER%は尿意を感じている…。
+	ENDIF
+ENDIF
+
+
+;────────────────────────────────────
+;薬力の消滅、薬剤のクールダウン
+;────────────────────────────────────
+;ローション
+;薬毒耐性存在時は追加減少(1～2)
+SIF TEQUIP:ローション > 0 && TALENT:MASTER:薬毒耐性
+	TEQUIP:ローション -= 1 + RAND:2
+;1/2の確率で減少(1～2)
+SIF TEQUIP:ローション > 0 && RAND:2
+	TEQUIP:ローション -= 1 + RAND:2
+;下限突破を防止
+SIF TEQUIP:ローション < 0
+	TEQUIP:ローション = 0
+
+;媚薬
+;薬毒耐性存在時は追加減少(2～3)
+SIF TEQUIP:媚薬 > 0 && TALENT:MASTER:薬毒耐性
+	TEQUIP:媚薬 -= 2 + RAND:2
+;1/2の確率で減少(1～2)
+SIF TEQUIP:媚薬 > 0 && RAND:2
+	TEQUIP:媚薬 -= 1 + RAND:2
+;下限突破を防止
+SIF TEQUIP:媚薬 < 0
+	TEQUIP:媚薬 = 0
+
+;薬剤系ヒートは調教中あまりクールダウンせず、調教終了後一気にクールダウンする。
+SIF !RAND:5
+	FLAG:ロシヒート -= 1
+SIF !RAND:5
+	FLAG:媚薬ヒート -= 1
+SIF !RAND:4
+	FLAG:栄養ヒート -= 1
+;治療ヒートは気力体力が十分なときのみ減衰
+SIF BASE:体力 > 1000 && BASE:気力 > 500 && RAND:3
+	FLAG:治療ヒート -= 1
+;薬剤系ヒートの下限突破を防止
+FOR LCOUNT, 20, 25
+	SIF LCOUNT == 22
+		CONTINUE
+	SIF FLAG:LCOUNT < 0
+		FLAG:LCOUNT = 0
+NEXT
+
+
+;────────────────────────────────────
+;ヒート蓄積とクールダウンの処理。このシステムが成功できるかの鍵なんですけど、こりゃまた複雑な構造になりましたね…
+;────────────────────────────────────
+;調教方針のヒート蓄積
+;今回の方針について処理を行う
+
+;押し倒し中は蓄積しない
+IF TEQUIP:押し倒し中 != 1
+	;LOCALにヒート上昇量を確保
+	LOCAL = 0
+	;LOCAL:1に変数ポインタを設定
+	LOCAL:1 = 70 + TFLAG:ターン方針
+	;ヒート値が存在すれば(+4)
+	SIF TFLAG:(LOCAL:1) > 0
+		LOCAL += 4
+	;無条件で(+8)
+	LOCAL += 8
+	;連続実行で(+5)
+	SIF TFLAG:前ターン方針 == TFLAG:ターン方針
+		LOCAL += 5
+	;実際の上昇処理
+	TFLAG:(LOCAL:1) += LOCAL
+ENDIF
+
+;調教方針のクールダウン(ヒート値存在時処理を行う)
+;変数『クール値』に減少量保存
+
+;休憩のクールダウン
+IF TFLAG:休憩方針のヒート > 0
+	;初期値(3)
+	クール値 = 3
+	;前回実行で(-1)
+	SIF TFLAG:前ターン方針 == 1
+		クール値 -= 1
+	;調教者及び調教対象の体力と気力の残量総計を見る(少ないほど大きくクールダウン, +0～3)
+	クール値 += 3 - LIMIT(BASE:体力 + BASE:気力 + BASE:MASTER:体力 + BASE:MASTER:気力 / 500, 0, 3)
+	;消耗度が大きければ大きくクールダウン
+	クール値 += TFLAG:調教者消耗度 / 2
+	クール値 += TFLAG:消耗度 / 3
+	;調教者状態変化によりクールダウン量変動
+	;疲弊(+1)
+	SIF TCVAR:状態変化 == 1
+		クール値 += 1
+	;衰弱(+2)
+	SIF TCVAR:状態変化 == 2
+		クール値 += 2
+	;無気力(+1)
+	SIF TCVAR:状態変化 == 3
+		クール値 += 1
+	;調教者/調教対象の回復早い/遅い素質を見る(回復早ければ-1, 遅ければ+1)
+	SIF TALENT:回復早い
+		クール値 -= 1
+	SIF TALENT:MASTER:回復早い
+		クール値 -= 1
+	SIF TALENT:回復遅い
+		クール値 += 1
+	SIF TALENT:MASTER:回復遅い
+		クール値 += 1
+	;クール値が正ならクールダウン実行
+	SIF クール値 > 0
+		TFLAG:休憩方針のヒート -= クール値
+	;下限突破を防止
+	SIF TFLAG:休憩方針のヒート < 0
+		TFLAG:休憩方針のヒート = 0
+ENDIF
+
+;ソフトのクールダウン
+IF TFLAG:ソフト方針のヒート > 0
+	;初期値(3～4)
+	クール値 = 3 + RAND:2
+	;前回実行で(-1)
+	SIF TFLAG:前ターン方針 == 2
+		クール値 -= 1
+	;体力と気力の残量を見る(少ないほど大きくクールダウン, +0～2)
+	クール値 += 2 - LIMIT(BASE:体力 + BASE:気力 + BASE:MASTER:体力 + BASE:MASTER:気力 / 500, 0, 2)
+	;調教者状態変化によりクールダウン量変動
+	;情欲(+1)
+	SIF TCVAR:状態変化 == 5
+		クール値 += 1
+	;怒り(-2)
+	SIF TCVAR:状態変化 == 6
+		クール値 -= 2
+	;鬱屈(-1)
+	SIF TCVAR:状態変化 == 8
+		クール値 -= 1
+	;調教者素質によりクールダウン量変動
+	SIF TALENT:反抗的
+		クール値 -= 1
+	SIF TALENT:大人しい
+		クール値 += 2
+	SIF TALENT:プライド高い
+		クール値 -= RAND:2
+	SIF TALENT:生意気
+		クール値 -= 1
+	SIF TALENT:プライド低い
+		クール値 += RAND:2
+	SIF TALENT:一線越えない
+		クール値 += 1
+	SIF TALENT:ドＭ
+		クール値 -= RAND:4
+	SIF TALENT:意地悪
+		クール値 -= RAND:2
+	SIF TALENT:心根優しい
+		クール値 += 2
+	SIF TALENT:親しみやすい
+		クール値 += RAND:2
+	;調教者調教レベルが低いと追加クールダウン(+1)
+	SIF CFLAG:調教レベル < 5
+		クール値 += 1
+	;アライメントが正に傾くと追加クールダウン(+1～2)
+	クール値 += LIMIT(CFLAG:アライメント / 25, 0, 2)
+	;クール値が正ならクールダウン実行
+	SIF クール値 > 0
+		TFLAG:ソフト方針のヒート -= クール値
+	;下限突破を防止
+	SIF TFLAG:ソフト方針のヒート < 0
+		TFLAG:ソフト方針のヒート = 0
+ENDIF
+
+;ノーマルのクールダウン
+IF TFLAG:ノーマル方針のヒート > 0
+	;初期値(5)
+	クール値 = 5
+	;前回非実行で(+1～3)
+	SIF TFLAG:前ターン方針 != 3
+		クール値 += 1 + RAND:3
+	;調教者状態変化によりクールダウン量変動
+	;怒り(-1)
+	SIF TCVAR:状態変化 == 6
+		クール値 -= 1
+	;退屈(-3)
+	SIF TCVAR:状態変化 == 7
+		クール値 -= 3
+	;鬱屈(-3)
+	SIF TCVAR:状態変化 == 8
+		クール値 -= 3
+	;苛立ちが小さいとクールダウン抑制(-2～0)
+	クール値 -= 2 - LIMIT(BASE:苛立ち / 200, 0, 2)
+	;調教者素質によりクールダウン量変動
+	SIF TALENT:大人しい
+		クール値 += 1
+	SIF TALENT:一線越えない
+		クール値 += 2
+	SIF TALENT:ドＭ
+		クール値 -= RAND:2
+	SIF TALENT:慎重
+		クール値 += 1
+	SIF TALENT:幼稚
+		クール値 += RAND:3
+	SIF TALENT:魅惑
+		クール値 += RAND:2
+	;調教対象素質によりクールダウン量変動
+	SIF TALENT:MASTER:恋慕
+		クール値 += RAND:3
+	;アライメントが0に近いと追加クールダウン(+1～2)
+	LOCAL = ABS(CFLAG:アライメント)
+	クール値 += 2 - LIMIT(LOCAL / 12, 0, 2)
+	;クール値が正ならクールダウン実行
+	SIF クール値 > 0
+		TFLAG:ノーマル方針のヒート -= クール値
+	;下限突破を防止
+	SIF TFLAG:ノーマル方針のヒート < 0
+		TFLAG:ノーマル方針のヒート = 0
+ENDIF
+
+;ハードのクールダウン
+IF TFLAG:ハード方針のヒート > 0
+	;初期値(3～5)
+	クール値 = 3 + RAND:3
+	;前回実行で(-2)
+	SIF TFLAG:前ターン方針 == 4
+		クール値 -= 2
+	;体力と気力の残量を見る(少ないほどクールダウン抑制, -2～0)
+	クール値 -= 2 - LIMIT(BASE:体力 + BASE:気力 + BASE:MASTER:体力 + BASE:MASTER:気力 / 500, 0, 2)
+	;調教者状態変化によりクールダウン量変動
+	;衰弱(-1)
+	SIF TCVAR:状態変化 == 2
+		クール値 -= 1
+	;無気力(-2)
+	SIF TCVAR:状態変化 == 3
+		クール値 -= 2
+	;退屈(+1)
+	SIF TCVAR:状態変化 == 7
+		クール値 += 1
+	;苛立ちが大きいと追加クールダウン(+0～2)
+	クール値 += LIMIT(BASE:苛立ち / 300, 0, 2)
+	;調教者素質によりクールダウン量変動
+	SIF TALENT:臆病
+		クール値 -= 1
+	SIF TALENT:気丈
+		クール値 += 1
+	SIF TALENT:プライド高い
+		クール値 += RAND:3
+	SIF TALENT:生意気
+		クール値 += 1
+	SIF TALENT:プライド低い
+		クール値 -= RAND:3
+	SIF TALENT:一線越えない
+		クール値 -= 1
+	SIF TALENT:抑圧
+		クール値 -= 1
+	SIF TALENT:解放
+		クール値 += 1
+	SIF TALENT:サド
+		クール値 += 2
+	SIF TALENT:慎重 && CFLAG:MASTER:調教レベル < 6
+		クール値 -= 3 - CFLAG:MASTER:調教レベル / 2
+	SIF TALENT:威圧感
+		クール値 += 1
+	;調教対象素質によりクールダウン量変動
+	SIF TALENT:MASTER:ドＭ
+		クール値 += 1
+	SIF TALENT:MASTER:隷属
+		クール値 += 2
+	;クール値が正ならクールダウン実行
+	SIF クール値 > 0
+		TFLAG:ハード方針のヒート -= クール値
+	;下限突破を防止
+	SIF TFLAG:ハード方針のヒート < 0
+		TFLAG:ハード方針のヒート = 0
+ENDIF
+
+;異常のクールダウン
+IF TFLAG:異常方針のヒート > 0
+	;初期値(0～5)
+	クール値 = RAND:6
+	;前回非実行で(+0～2)
+	SIF TFLAG:前ターン方針 != 5
+		クール値 += RAND:3
+	;調教者状態変化によりクールダウン量変動
+	;朦朧(+1)
+	SIF TCVAR:状態変化 == 4
+		クール値 += 1
+	;鬱屈(+3)
+	SIF TCVAR:状態変化 == 8
+		クール値 += 3
+	;調教者理性が低いと追加クールダウン(+0～3)
+	クール値 += 3 - LIMIT(BASE:理性 / 150, 0, 3)
+	;調教者素質によりクールダウン量変動
+	SIF TALENT:臆病
+		クール値 -= 2
+	SIF TALENT:生意気
+		クール値 += 1
+	SIF TALENT:自制的
+		クール値 -= 2
+	SIF TALENT:衝動的
+		クール値 += 2
+	SIF TALENT:一線越えない
+		クール値 -= 3
+	SIF TALENT:抑圧
+		クール値 -= 1 + RAND:2
+	SIF TALENT:解放
+		クール値 += 1 + RAND:2
+	SIF TALENT:狂気
+		クール値 += 4
+	SIF TALENT:不死
+		クール値 += 1 + RAND:2
+	SIF TALENT:禁断の知識
+		クール値 += 2
+	;調教対象素質によりクールダウン量変動
+	SIF TALENT:MASTER:淫乱
+		クール値 += 1
+	;クール値が正ならクールダウン実行
+	SIF クール値 > 0
+		TFLAG:異常方針のヒート -= クール値
+	;下限突破を防止
+	SIF TFLAG:異常方針のヒート < 0
+		TFLAG:異常方針のヒート = 0
+ENDIF
+
+;調教メニューのヒート蓄積
+;今回のACT分類について処理を行う
+
+;押し倒し中は蓄積しない
+;また、休憩にはメニューヒートが存在しない
+IF TEQUIP:押し倒し中 != 1 && TFLAG:ACT分類 != 9
+	;LOCALにヒート上昇量を確保
+	LOCAL = 0
+	;LOCAL:1に今回のACT分類によって変数ポインタを設定
+	LOCAL:1 = 81 + TFLAG:ACT分類
+	;分類が性交奉仕であれば変数ポインタを調整
+	SIF TFLAG:ACT分類 == 10
+		LOCAL:1 = 350
+	;ヒート値が正なら(+8)
+	SIF TFLAG:(LOCAL:1) > 0
+		LOCAL += 8
+	;無条件で(+8)
+	LOCAL += 8
+	;連続実行で(+8)
+	IF TFLAG:前ACT分類 == TFLAG:ACT分類
+		LOCAL += 8
+	ENDIF
+	;選択可能系列数によって上昇量減少
+	LOCAL = LOCAL * LIMIT(TFLAG:可能なACT系列数 - 1, 0, 4) / 4
+	;実際の上昇処理
+	TFLAG:(LOCAL:1) += LOCAL
+ENDIF
+
+;調教メニューのクールダウン(ヒート値存在時処理を行う)
+;変数『クール値』に減少量保存
+
+;会話のクールダウン
+IF TFLAG:会話のヒート > 0
+	;技能に応じてクール値を設定(4～)
+	クール値 = 4 + (GET_ABL(TARGET, "会話") + 10) / 20
+	;前回実行で(-3)
+	SIF TFLAG:前ACT分類 == 0
+		クール値 -= 3
+	;体力と気力の残量を見る(少ないほど追加クールダウン, +0～2)
+	クール値 += 2 - LIMIT(BASE:体力 + BASE:気力 / 400, 0, 2)
+	;興味が低いとクールダウン抑制(-3～+1)
+	クール値 += LIMIT(BASE:興味 / 200, 0, 4) - 3
+	;調教者素質によりクールダウン量変動
+	SIF TALENT:無関心
+		クール値 -= 2
+	SIF TALENT:好奇心
+		クール値 += 2
+	SIF TALENT:感情乏しい
+		クール値 -= 1
+	SIF TALENT:情緒豊か
+		クール値 += 1
+	SIF TALENT:楽観的
+		クール値 += RAND:2
+	SIF TALENT:悲観的
+		クール値 -= RAND:2
+	SIF TALENT:親しみやすい
+		クール値 += 1
+	SIF TALENT:近寄り難い
+		クール値 -= 1
+	;リアクションによる倍率
+	クール値 = COOL_BYREACT(クール値)
+	;クール値が正ならクールダウン実行
+	SIF クール値 > 0
+		TFLAG:会話のヒート -= クール値
+	;下限突破を防止
+	SIF TFLAG:会話のヒート < 0
+		TFLAG:会話のヒート = 0
+ENDIF
+
+;愛撫のクールダウン
+IF TFLAG:愛撫のヒート > 0
+	;技能に応じてクール値を設定(4～)
+	クール値 = 4 + RAND:3 + (GET_ABL(TARGET, "愛撫") + 10) / 20
+	;前回実行で(-1)
+	SIF TFLAG:前ACT分類 != 1
+		クール値 -= 1
+	;調教者消耗度が高いとクール値減少(-2～0)
+	SIF TFLAG:調教者消耗度 > 0
+		クール値 -= TFLAG:調教者消耗度 > 5 ? 2 # 1
+	;調教者状態変化によりクールダウン量変動
+	;朦朧(+0～1)
+	SIF TCVAR:状態変化 == 4
+		クール値 += RAND:2
+	;怒り(-2)
+	SIF TCVAR:状態変化 == 6
+		クール値 -= 2
+	;興味が低いとクールダウン抑制(-1～+1)
+	クール値 += LIMIT(BASE:興味 / 400, 0, 2) - 1
+	;調教者素質によりクールダウン量変動
+	SIF TALENT:無関心
+		クール値 -= 2
+	SIF TALENT:好奇心
+		クール値 += 2
+	SIF TALENT:感情乏しい
+		クール値 -= 1
+	SIF TALENT:情緒豊か
+		クール値 += 1
+	SIF TALENT:楽観的
+		クール値 += RAND:2
+	SIF TALENT:悲観的
+		クール値 -= RAND:2
+	SIF TALENT:舌使い
+		クール値 += 1
+	SIF TALENT:器用な指先
+		クール値 += 1
+	SIF TALENT:献身的
+		クール値 += 1
+	SIF TALENT:受け身
+		クール値 -= 1
+	;調教者が男嫌いの時、男が調教対象なら(-2)
+	SIF TALENT:男嫌い && TALENT:MASTER:オトコ
+		クール値 -= 2
+	;男嫌い、レズっ気、ＢＬっ気が全て無いとき、調教者・調教対象が同性ならば(-2)
+	SIF !TALENT:男嫌い && ABL:レズっ気 < 1 && ABL:ＢＬっ気 < 1 && TALENT:MASTER:オトコ == TALENT:オトコ
+			クール値 -= 2
+	;リアクションによる倍率
+	クール値 = COOL_BYREACT(クール値)
+	;クール値が正ならクールダウン実行
+	SIF クール値 > 0
+		TFLAG:愛撫のヒート -= クール値
+	;下限突破を防止
+	SIF TFLAG:愛撫のヒート < 0
+		TFLAG:愛撫のヒート = 0
+ENDIF
+
+;道具のクールダウン
+IF TFLAG:道具のヒート > 0
+	;技能に応じてクール値を設定(4～)
+	クール値 = 4 + (GET_ABL(TARGET, "道具") + 10) * 2 / 30
+	;前回実行で(-3)
+	SIF TFLAG:前ACT分類 == 2
+		クール値 -= 3
+	;調教者状態変化によりクールダウン量変動
+	;無気力(-0～1)
+	SIF TCVAR:状態変化 == 3
+		クール値 -= RAND:2
+	;朦朧(-1)
+	SIF TCVAR:状態変化 == 4
+		クール値 -= 1
+	;情欲(-1)
+	SIF TCVAR:状態変化 == 5
+		クール値 -= 1
+	;道具無装着時(+3)
+	IF TEQUIP:バイブ + TEQUIP:アナルバイブ + TEQUIP:アナルビーズ + TEQUIP:浣腸器＋プラグ + TEQUIP:クリキャップ + TEQUIP:オナホール + TEQUIP:ニプルキャップ == 0
+		クール値 += 3
+	;装着時(-1)
+	ELSE
+		クール値 -= 1
+	ENDIF
+	;調教者素質によりクールダウン量変動
+	SIF TALENT:解放
+		クール値 += RAND:2
+	SIF TALENT:抑圧
+		クール値 -= RAND:2
+	SIF TALENT:道具使い
+		クール値 += 2
+	SIF TALENT:献身的
+		クール値 += 1
+	SIF TALENT:受け身
+		クール値 -= 1
+	;リアクションによる倍率
+	クール値 = COOL_BYREACT(クール値)
+	;クール値が正ならクールダウン実行
+	SIF クール値 > 0
+		TFLAG:道具のヒート -= クール値
+	;下限突破を防止
+	SIF TFLAG:道具のヒート < 0
+		TFLAG:道具のヒート = 0
+ENDIF
+
+;性交のクールダウン
+IF TFLAG:性交のヒート > 0
+	;技能に応じてクール値を設定(2～)
+	クール値 = 2 + (GET_ABL(TARGET, "性交") + 10) / 20
+	;前回実行で(-1)
+	SIF TFLAG:前ACT分類 == 3
+		クール値 -= 1
+	;調教者状態変化によりクールダウン量変動
+	;無気力(-0～1)
+	SIF TCVAR:状態変化 == 3
+		クール値 -= RAND:2
+	;情欲(+2)
+	SIF TCVAR:状態変化 == 5
+		クール値 += 2
+	;退屈(-1)
+	SIF TCVAR:状態変化 == 7
+		クール値 -= 1
+	;挿入してる間だけ速いスピードでクールダウンする(+7)
+	SIF TEQUIP:性交中 && TFLAG:ACT分類 != 3
+		クール値 += 7
+	;調教者が男嫌いの時、男が調教対象なら(-3)
+	SIF TALENT:男嫌い && TALENT:MASTER:オトコ
+		クール値 -= 3
+	;男嫌い、レズっ気、ＢＬっ気が全て無いとき、調教者・調教対象が同性ならば(-3)
+	SIF !TALENT:男嫌い && ABL:レズっ気 < 1 && ABL:ＢＬっ気 < 1 && TALENT:MASTER:オトコ == TALENT:オトコ
+			クール値 -= 3
+	;リアクションによる倍率
+	クール値 = COOL_BYREACT(クール値)
+	;クール値が正ならクールダウン実行
+	SIF クール値 > 0
+		TFLAG:性交のヒート -= クール値
+	;下限突破を防止
+	SIF TFLAG:性交のヒート < 0
+		TFLAG:性交のヒート = 0
+ENDIF
+
+;羞恥のクールダウン
+IF TFLAG:羞恥のヒート > 0
+	;技能に応じてクール値を設定(4～)
+	クール値 = 4 + (GET_ABL(TARGET, "羞恥") + 10) / 20
+	;前回実行で(-2)
+	SIF TFLAG:前ACT分類 == 4
+		クール値 -= 2
+	;興味が低いとクールダウン抑制(-3～+1)
+	クール値 += LIMIT(BASE:興味 / 200, 0, 4) - 3
+	;調教者状態変化によりクールダウン量変動
+	;無気力(-2)
+	SIF TCVAR:状態変化 == 3
+		クール値 -= 2
+	;怒り(-2)
+	SIF TCVAR:状態変化 == 6
+		クール値 -= 2
+	;退屈(-1)
+	SIF TCVAR:状態変化 == 7
+		クール値 -= 1
+	;アイマスク装着時は追加クールダウン(+1)
+	SIF TEQUIP:アイマスク
+		クール値 += 1
+	;調教者素質によりクールダウン量変動
+	SIF TALENT:無関心
+		クール値 -= 1
+	SIF TALENT:好奇心
+		クール値 += 1
+	SIF TALENT:目立ちたがり
+		クール値 += 1
+	SIF TALENT:抑圧
+		クール値 -= 2
+	SIF TALENT:解放
+		クール値 -= 2
+	SIF TALENT:恥じらい
+		クール値 -= 2
+	SIF TALENT:恥薄い
+		クール値 += 2
+	SIF TALENT:自慰しやすい
+		クール値 += 1
+	;調教対象素質によりクールダウン量変動
+	SIF TALENT:MASTER:自慰しやすい
+		クール値 += 1
+	;リアクションによる倍率
+	クール値 = COOL_BYREACT(クール値)
+	;クール値が正ならクールダウン実行
+	SIF クール値 > 0
+		TFLAG:羞恥のヒート -= クール値
+	;下限突破を防止
+	SIF TFLAG:羞恥のヒート < 0
+		TFLAG:羞恥のヒート = 0
+ENDIF
+
+;奉仕のクールダウン
+IF TFLAG:奉仕のヒート > 0
+	;技能に応じてクール値を設定(5～)
+	クール値 = 5 + (GET_ABL(TARGET, "奉仕") + 10) / 20
+	;前回実行で(-2)
+	SIF TFLAG:前ACT分類 == 5
+		クール値 -= 2
+	;調教対象気力が低いとクールダウン抑制(-2～0)
+	クール値 -= 2 - LIMIT(BASE:MASTER:気力 / 200, 0, 2)
+	;調教者状態変化によりクールダウン量変動
+	;情欲(+2)
+	SIF TCVAR:状態変化 == 5
+		クール値 += 2
+	;退屈(-2)
+	SIF TCVAR:状態変化 == 7
+		クール値 -= 2
+	;縄、ボールギャグ装着時はクールダウン抑制
+	SIF TEQUIP:縄 || TEQUIP:ボールギャグ
+		クール値 -= 1
+	;調教者素質によりクールダウン量変動
+	SIF TALENT:プライド高い
+		クール値 += 1
+	SIF TALENT:プライド低い
+		クール値 -= 1
+	SIF TALENT:無関心
+		クール値 -= RAND:2
+	SIF TALENT:好奇心
+		クール値 += RAND:2
+	SIF TALENT:目立ちたがり
+		クール値 += 1
+	SIF TALENT:恥じらい
+		クール値 -= 1
+	SIF TALENT:恥薄い
+		クール値 += 1
+	SIF TALENT:献身的
+		クール値 -= 1
+	SIF TALENT:受け身
+		クール値 += 1 + RAND:2
+	SIF TALENT:快感に素直
+		クール値 += 2
+	SIF TALENT:快感の否定
+		クール値 -= 2
+	;調教対象素質によりクールダウン量変動
+	SIF TALENT:MASTER:恋慕
+		クール値 += 1
+	;調教者が男嫌いの時、男が調教対象なら(-1)
+	SIF TALENT:男嫌い && TALENT:MASTER:オトコ
+		クール値 -= 1
+	;男嫌い、レズっ気、ＢＬっ気が全て無いとき、調教者・調教対象が同性ならば(-1)
+	SIF !TALENT:男嫌い && ABL:レズっ気 < 1 && ABL:ＢＬっ気 < 1 && TALENT:MASTER:オトコ == TALENT:オトコ
+			クール値 -= 1
+	;リアクションによる倍率
+	クール値 = COOL_BYREACT(クール値)
+	;クール値が正ならクールダウン実行
+	SIF クール値 > 0
+		TFLAG:奉仕のヒート -= クール値
+	;下限突破を防止
+	SIF TFLAG:奉仕のヒート < 0
+		TFLAG:奉仕のヒート = 0
+ENDIF
+
+;加虐のクールダウン
+IF TFLAG:加虐のヒート > 0
+	;技能に応じてクール値を設定(4～)
+	クール値 = 4 + (GET_ABL(TARGET, "加虐") + 10) / 20
+	;前回実行で(-2)
+	SIF TFLAG:前ACT分類 == 6
+		クール値 -= 2
+	;調教対象体力が低ければ(-1)
+	SIF BASE:MASTER:体力 < 500
+		クール値 -= 1
+	;調教対象興味が低ければ(-1)
+	SIF BASE:MASTER:興味 < 1000
+		クール値 -= 1
+	;苛立ちがかなり強ければ追加クールダウン(+0～2)
+	クール値 += LIMIT(BASE:苛立ち / 200, 2, 4) - 2
+	;調教者状態変化によりクールダウン量変動
+	;衰弱(-1)
+	SIF TCVAR:状態変化 == 2
+		クール値 -= 1
+	;無気力(-2)
+	SIF TCVAR:状態変化 == 3
+		クール値 -= 2
+	;怒り(+2)
+	SIF TCVAR:状態変化 == 6
+		クール値 += 2
+	;鬱屈(+1)
+	SIF TCVAR:状態変化 == 8
+		クール値 += 1
+	;調教者素質によりクールダウン量変動
+	SIF TALENT:プライド高い
+		クール値 += 1
+	SIF TALENT:プライド低い
+		クール値 -= 1
+	SIF TALENT:大人しい
+		クール値 -= 2
+	SIF TALENT:生意気
+		クール値 += 2
+	SIF TALENT:針さばき
+		クール値 += 1
+	SIF TALENT:縛り上手
+		クール値 += 1
+	SIF TALENT:サド
+		クール値 += 2
+	SIF TALENT:意地悪
+		クール値 += 1
+	SIF TALENT:心根優しい
+		クール値 -= 1
+	;調教対象素質によりクールダウン量変動
+	SIF TALENT:MASTER:ドＭ
+		クール値 += 2
+	;リアクションによる倍率
+	クール値 = COOL_BYREACT(クール値)
+	;クール値が正ならクールダウン実行
+	SIF クール値 > 0
+		TFLAG:加虐のヒート -= クール値
+	;下限突破を防止
+	SIF TFLAG:加虐のヒート < 0
+		TFLAG:加虐のヒート = 0
+ENDIF
+
+;異常行為のクールダウン
+IF TFLAG:異常のヒート > 0
+	;技能に応じてクール値を設定(1～)
+	クール値 = 1 + (GET_ABL(TARGET, "使役") + 10) * 2 / 30
+	;前回非実行で(+0～3)
+	SIF TFLAG:前ACT分類 != 7
+		クール値 += RAND:4
+	;体力と気力の残量を見る(少ないほどクールダウン抑制, -2～0)
+	クール値 -= 2 - LIMIT(BASE:体力 + BASE:気力 / 600, 0, 2)
+	;満足が大きければクールダウン抑制(-2～0)
+	クール値 -= LIMIT(BASE:満足 / 300, 0, 2)
+	;調教者状態変化によりクールダウン量変動
+	;衰弱(-3)
+	SIF TCVAR:状態変化 == 2
+		クール値 -= 3
+	;無気力(-1)
+	SIF TCVAR:状態変化 == 3
+		クール値 -= 1
+	;朦朧(+2)
+	SIF TCVAR:状態変化 == 4
+		クール値 += 2
+	;鬱屈(+4)
+	SIF TCVAR:状態変化 == 8
+		クール値 += 4
+	;調教者素質によりクールダウン量変動
+	SIF TALENT:臆病
+		クール値 -= 2
+	SIF TALENT:気丈
+		クール値 += RAND:2
+	SIF TALENT:自制的
+		クール値 -= 1
+	SIF TALENT:衝動的
+		クール値 += 1
+	SIF TALENT:抑圧
+		クール値 -= 2
+	SIF TALENT:解放
+		クール値 += RAND:3
+	SIF TALENT:幼稚
+		クール値 += 1
+	SIF TALENT:狂気
+		クール値 += 3
+	SIF TALENT:不死
+		クール値 += RAND:2
+	SIF TALENT:禁断の知識
+		クール値 += 1
+	;リアクションによる倍率
+	クール値 = COOL_BYREACT(クール値)
+	;クール値が正ならクールダウン実行
+	SIF クール値 > 0
+		TFLAG:異常のヒート -= クール値
+	;下限突破を防止
+	SIF TFLAG:異常のヒート < 0
+		TFLAG:異常のヒート = 0
+ENDIF
+
+;使役のクールダウン
+IF TFLAG:使役のヒート > 0
+	;技能に応じてクール値を設定(1～)
+	クール値 = 1 + RAND:2 + (GET_ABL(TARGET, "使役") + 10) * 2 / 30
+	;前回実行で(-1)
+	SIF TFLAG:前ACT分類 == 8
+		クール値 -= 1
+	;体力と気力の残量を見る(少ないほどクールダウン抑制, -4～0)
+	クール値 -= 4 - LIMIT(BASE:MASTER:体力 + BASE:MASTER:気力 / 300, 0, 4)
+	;興味が小さければ追加クールダウン(+0～2)
+	クール値 += 2 - LIMIT(BASE:興味 / 200, 0, 2)
+	;調教者状態変化によりクールダウン量変動
+	;情欲(-1)
+	SIF TCVAR:状態変化 == 5
+		クール値 -= 1
+	;退屈(+3)
+	SIF TCVAR:状態変化 == 7
+		クール値 += 3
+	;鬱屈(+1)
+	SIF TCVAR:状態変化 == 8
+		クール値 += 1
+	;調教者素質によりクールダウン量変動
+	SIF TALENT:無関心
+		クール値 += 1
+	SIF TALENT:好奇心
+		クール値 -= 1
+	SIF TALENT:一線越えない
+		クール値 -= 2
+	SIF TALENT:幼稚
+		クール値 += 1
+	SIF TALENT:狂気
+		クール値 += 2
+	SIF TALENT:禁断の知識
+		クール値 += 3
+	;リアクションによる倍率
+	クール値 = COOL_BYREACT(クール値)
+	;クール値が正ならクールダウン実行
+	SIF クール値 > 0
+		TFLAG:使役のヒート -= クール値
+	;下限突破を防止
+	SIF TFLAG:使役のヒート < 0
+		TFLAG:使役のヒート = 0
+ENDIF
+
+;性交(奉仕)のクールダウン
+IF TFLAG:性奉のヒート > 0
+	;初期値を設定(2)
+	クール値 = 2
+	;前回実行で(-1)
+	SIF TFLAG:前ACT分類 == 10
+		クール値 -= 1
+	;調教者状態変化によりクールダウン量変動
+	;無気力(+0～1)
+	SIF TCVAR:状態変化 == 3
+		クール値 += RAND:2
+	;情欲(-3)
+	SIF TCVAR:状態変化 == 5
+		クール値 -= 3
+	;退屈(+1)
+	SIF TCVAR:状態変化 == 7
+		クール値 += 1
+	;挿入してる間だけ速いスピードでクールダウンする(+7)
+	SIF TEQUIP:性交奉仕中 && TFLAG:ACT分類 != 10
+		クール値 += 7
+	;調教者が男嫌いの時、男が調教対象なら(+3)
+	SIF TALENT:男嫌い && TALENT:MASTER:オトコ
+		クール値 += 3
+	;調教者素質によりクールダウン量変動
+	SIF TALENT:恋慕
+		クール値 -= 1
+	;今日の方針が子作りなら(+5)
+	SIF TFLAG:今日の方針 == 7
+		クール値 += 5
+	;リアクションによる倍率
+	クール値 = COOL_BYREACT(クール値)
+	;クール値が正ならクールダウン実行
+	SIF クール値 > 0
+		TFLAG:性奉のヒート -= クール値
+	;下限突破を防止
+	SIF TFLAG:性奉のヒート < 0
+		TFLAG:性奉のヒート = 0
+ENDIF
+
+
+;────────────────────────────────────
+;性交系同一体位抑制処理
+;PLAYER_ACTM系から移動@これみ
+;────────────────────────────────────
+;性交系
+FOR LCOUNT, 0, 5
+	;該当体位なら+100
+	IF TFLAG:前ACT == LCOUNT + 30
+		TFLAG:(356 + LCOUNT) += 100
+	;それ以外なら2/3
+	ELSE
+		TFLAG:(356 + LCOUNT) = TFLAG:(356 + LCOUNT) * 2 / 3
+	ENDIF
+NEXT
+
+;性交奉仕
+LOCAL = 95, 96, 103, 97, 98
+FOR LCOUNT, 0, 5
+	;該当体位なら+100
+	IF TFLAG:前ACT == LOCAL:LCOUNT
+		TFLAG:(351 + LCOUNT) += 100
+	;それ以外なら2/3
+	ELSE
+		TFLAG:(351 + LCOUNT) = TFLAG:(351 + LCOUNT) * 2 / 3
+	ENDIF
+NEXT
+
+;────────────────────────────────────
+;イかせる、焦らす
+;────────────────────────────────────
+;汎用連続行動フラグ(ACT分類予約、行動予約が既にある場合無視)
+IF TFLAG:連続行動 && TFLAG:ACT分類予約 == -1 && TCVAR:行動予約 == -1
+	;ACT分類、ACTを予約する
+	TFLAG:ACT分類予約 = TFLAG:ACT分類
+	TCVAR:行動予約 = TFLAG:ACT
+ENDIF
+;連続行動フラグ解除
+TFLAG:連続行動 = 0
+
+;Ｃ絶頂時
+IF NOWEX:MASTER:射精 || NOWEX:MASTER:Ｃ絶頂
+	;イきそう・焦らしのリセット
+	TCVAR:MASTER:イきそう = 0
+	TCVAR:MASTER:焦らし度 = 0
+ENDIF
+SIF NOWEX:Ｃ絶頂
+	TCVAR:TARGET:イきそう = 0
+	
+;調教対象に男性器が存在しない時にＣ絶頂
+IF !PENIS(MASTER) && NOWEX:MASTER:Ｃ絶頂
+	;焦らしのリセット
+	TCVAR:MASTER:焦らし度 = 0
+ENDIF
+;お仕置き時、焦らしのリセット
+SIF TFLAG:お仕置きフラグ
+	TCVAR:MASTER:焦らし度 = 0
+
+;────────────────────────────────────
+;ACT補正値減少、減衰処理
+;────────────────────────────────────
+CFLAG:(400 + TFLAG:ACT) /= 2
+
+;────────────────────────────────────
+;データベースの登録、ターンのリセット
+;────────────────────────────────────
+;データベース登録
+CALL DATABASE_INPUT
+
+;全CHARA体位の保存
+FOR LCOUNT, 0, CHARANUM
+	FOR LCOUNT:1, 1, 11
+		TEQUIP:LCOUNT:(110 + LCOUNT:1) = TEQUIP:LCOUNT:(100 + LCOUNT:1)
+	NEXT
+NEXT
+
+;TEQUIPの保存
+;性交
+TFLAG:前ターン性交 = TEQUIP:性交中
+TFLAG:前ターン性交奉仕 = TEQUIP:性交奉仕中
+;顔面騎乗
+TFLAG:前ターン顔面騎乗 = TEQUIP:顔面騎乗
+TFLAG:前ターンＡ顔面騎乗 = TEQUIP:顔面騎乗アナル
+
+;我慢フラグ
+;我慢中は
+IF TCVAR:MASTER:我慢
+	;絶頂で我慢リセット
+	IF NOWEX:MASTER:Ｃ絶頂 || NOWEX:MASTER:Ｖ絶頂 || NOWEX:MASTER:Ａ絶頂 || NOWEX:MASTER:Ｂ絶頂
+		TCVAR:MASTER:我慢 = 0
+	;そうでなければカウントを-1
+	ELSE
+		TCVAR:MASTER:我慢 -= 1
+	ENDIF
+ENDIF
+
+;────────────────────────────────────
+;射精後のターン数加算について by /L
+;────────────────────────────────────
+;2014/11/08時点ではTFLAG:射精後経過ターンとTFLAGとTCVARが混在してちょっと判り難い状態
+;とは言え、いきなりTFLAG:射精後経過ターン等を削除してしまう訳にもいかないと考えるので
+;403xx series辺りまではこのままということで。あと腸内射精後経過ターンとか個人的趣味()で追加しました
+;-------------------------------------------------
+;━━━━━━━━━━━━━━━━━━━━━━━━
+;調教対象射精後のターン数加算
+;━━━━━━━━━━━━━━━━━━━━━━━━
+;TFLAG:射精後経過ターンは403xx seriesで抹消予定@/L
+SIF TFLAG:射精後経過ターン
+	TFLAG:射精後経過ターン += 1
+
+SIF TCVAR:MASTER:射精後経過ターン参照
+	TCVAR:MASTER:射精後経過ターン += 1
+
+;━━━━━━━━━━━━━━━━━━━━━━━━
+;調教対象膣内射精後のターン数加算
+;━━━━━━━━━━━━━━━━━━━━━━━━
+;TFLAG:膣内射精後経過ターンは403xx seriesで抹消予定@/L
+SIF TFLAG:膣内射精後経過ターン
+	TFLAG:膣内射精後経過ターン += 1
+
+SIF TCVAR:MASTER:膣内射精後経過ターン参照
+	TCVAR:MASTER:膣内射精後経過ターン += 1
+
+;━━━━━━━━━━━━━━━━━━━━━━━━
+;調教対象腸内射精後のターン数加算
+;━━━━━━━━━━━━━━━━━━━━━━━━
+SIF TCVAR:MASTER:腸内射精後経過ターン参照
+	TCVAR:MASTER:腸内射精後経過ターン += 1
+
+;━━━━━━━━━━━━━━━━━━━━━━━━
+;調教者射精後のターン数加算
+;━━━━━━━━━━━━━━━━━━━━━━━━
+SIF TCVAR:射精後経過ターン参照
+	TCVAR:射精後経過ターン += 1
+
+;━━━━━━━━━━━━━━━━━━━━━━━━
+;調教者膣内射精後のターン数加算
+;━━━━━━━━━━━━━━━━━━━━━━━━
+SIF TCVAR:膣内射精後経過ターン参照
+	TCVAR:膣内射精後経過ターン += 1
+
+;━━━━━━━━━━━━━━━━━━━━━━━━
+;調教者腸内射精後のターン数加算
+;━━━━━━━━━━━━━━━━━━━━━━━━
+SIF TCVAR:腸内射精後経過ターン参照
+	TCVAR:腸内射精後経過ターン += 1
+
+;調教ターン数加算
+TFLAG:調教時間 ++
+
+;失禁フラグリセット
+TFLAG:失禁 = 0
+
+;助手連続交合フラグ加算
+SIF TFLAG:助手に挿入中 || TFLAG:助手が挿入中
+	TFLAG:助手連続交合 = 1
+
+;今回のコマンドを「前回のコマンド」とする
+PREVCOM = SELECTCOM
+TFLAG:前REACT分類 = TFLAG:REACT分類
+TFLAG:前ターン方針 = TFLAG:ターン方針
+TFLAG:前ACT分類 = TFLAG:ACT分類
+TFLAG:前ACT = TFLAG:ACT
+TFLAG:助手の前行動 = TFLAG:助手の方針
+
+;潤滑の保存
+TCVAR:MASTER:前の潤滑 = PALAM:MASTER:潤滑
+
+;調教者行動済みのフラグをリセット
+TFLAG:調教者行動済 = 0
+
+;実行可能反応の数をリセット
+TFLAG:可能なCOM数 = 0
+
+;行動パターンをリセット
+TFLAG:ACT派生 = 0
+
+;調教対象の反応による影響をリセット
+CALL SET_COMGRO("なし")
+
+;好感度/経験値上昇量をリセット
+TFLAG:好感度アップ = 0
+TFLAG:経験値アップ = 0
+
+;仰向け状態の再設定
+IF TFLAG:仰向け > 0
+	IF TEQUIP:押し倒し中 || TEQUIP:顔面騎乗 || TEQUIP:顔面騎乗アナル
+		TFLAG:仰向け = 1
+	ELSE
+		TFLAG:仰向け = 0
+	ENDIF
+ENDIF
+
+;SP行動のリセット
+TFLAG:ＳＰ行動 = 0
+
+;汎用連続行動フラグのリセット
+TFLAG:連続行動 = 0
+
+;勃起計算のリセット
+TCVAR:MASTER:今回の勃起 = 0
+TCVAR:MASTER:前立腺刺激 = 0
+
+;印象のリセット
+CALL SET_COMIMP("影響なし")
+
+;助手プレイ時のTEQUIPをリセット
+TFLAG:Ｐ挿入中 = 0
+TFLAG:Ｐ使用中 = 0
+TFLAG:Ａ使用中 = 0
+TFLAG:口使用中 = 0
+TFLAG:胸使用中 = 0
+TFLAG:Ｖ使用中 = 0
+TFLAG:足使用中 = 0
+TFLAG:手使用中 = 0
+
+;追加行動フラグのリセット
+TFLAG:強制脱衣 = 0
+TFLAG:自主脱衣 = 0
+TFLAG:媚薬等使用 = 0
+TFLAG:追加行動 = 0
+
+;口上発生フラグ等のリセット
+TFLAG:追加行動口上 = 0
+TFLAG:追加行動地の文スキップ = 0
+TFLAG:媚薬等使用口上 = 0
+TFLAG:媚薬等使用地の文スキップ = 0
+
+;調教指令の記録
+TSTR:前調教指令 = %TSTR:調教指令%
+
+;絶頂の記録
+TCVAR:MASTER:前回ターンＣ絶頂 = TCVAR:MASTER:Ｃ絶頂
+TCVAR:MASTER:前回ターンＶ絶頂 = TCVAR:MASTER:Ｖ絶頂
+TCVAR:MASTER:前回ターンＡ絶頂 = TCVAR:MASTER:Ａ絶頂
+TCVAR:MASTER:前回ターンＢ絶頂 = TCVAR:MASTER:Ｂ絶頂
+TCVAR:MASTER:前回ターン潮吹き = TCVAR:MASTER:潮吹き
+TCVAR:MASTER:前回ターン空射精 = TCVAR:MASTER:空射精
+TCVAR:MASTER:前回ターン噴乳   = TCVAR:MASTER:噴乳
+TCVAR:MASTER:前回ターン射精   = TCVAR:MASTER:射精
+TCVAR:MASTER:前回ターン放尿   = TCVAR:MASTER:放尿
+
+TCVAR:前回ターンＣ絶頂        = TCVAR:Ｃ絶頂
+TCVAR:前回ターンＶ絶頂        = TCVAR:Ｖ絶頂
+TCVAR:前回ターンＡ絶頂        = TCVAR:Ａ絶頂
+TCVAR:前回ターンＢ絶頂        = TCVAR:Ｂ絶頂
+TCVAR:前回ターン潮吹き        = TCVAR:潮吹き
+TCVAR:前回ターン空射精        = TCVAR:空射精
+TCVAR:前回ターン噴乳          = TCVAR:噴乳
+TCVAR:前回ターン射精          = TCVAR:射精
+TCVAR:前回ターン放尿          = TCVAR:放尿
+
+;射精の記録
+TCVAR:MASTER:前回射精 = NOWEX:MASTER:射精
+TCVAR:前回射精 = NOWEX:射精
+
+;絶頂系TCVARのリセット
+FOR LCOUNT, 0, CHARANUM
+	VARSET TCVAR:LCOUNT:0, 0, 70, 80
+NEXT
+
+;────────────────────────────────────
+;パラメータの上昇＆表示（DOWNもここで）
+;────────────────────────────────────
+;-----------------------------------------
+;PALAM補正値変動処理
+;CUPがあったものは増加、なかったものは減衰する
+;-----------------------------------------
+;快Ｘ/ｘ補正値上昇(快Ｘ/ｘ上昇時、補正値+10)
+FOR LCOUNT, 0, 4
+	SIF CUP:MASTER:LCOUNT
+		CFLAG:MASTER:(30 + LCOUNT) += 10
+	SIF CUP:LCOUNT
+		CFLAG:(30 + LCOUNT) += 10
+NEXT
+	
+;快Ｘ/ｘ補正値減衰(50超過時、1T毎-1)
+FOR LCOUNT, 0, CHARANUM
+	FOR LCOUNT:1, 30, 34
+		SIF CFLAG:LCOUNT:(LCOUNT:1) > 50
+			CFLAG:LCOUNT:(LCOUNT:1) -= 1
+	NEXT
+NEXT
+
+;-----------------------------------------
+;PALAM自然減衰処理
+;CUPがなかったものは減衰する
+;-----------------------------------------
+;快感の自然減衰
+;合計0の場合は5%づつ減衰(いきそうな場合、快Ｃは除外)
+;快感系PALAMはいずれかの増加があったときは減衰しない
+
+;調教対象の快感減衰(快Ｘ上昇総計が0, 5%減衰)
+IF !MAX(CUP:MASTER:快Ｃ, CUP:MASTER:快Ｖ, CUP:MASTER:快Ａ, CUP:MASTER:快Ｂ)
+	;イきそうな場合快Ｃを除外
+	SIF TCVAR:MASTER:イきそう == 0
+		CDOWN:MASTER:快Ｃ += PALAM:MASTER:快Ｃ * 5 / 100
+	CDOWN:MASTER:快Ｖ += PALAM:MASTER:快Ｖ * 5 / 100
+	CDOWN:MASTER:快Ａ += PALAM:MASTER:快Ａ * 5 / 100
+	CDOWN:MASTER:快Ｂ += PALAM:MASTER:快Ｂ * 5 / 100
+ENDIF
+;調教者の快感減衰(快ｘ上昇総計が0, 5%減衰)
+IF !MAX(CUP:快Ｃ, CUP:快Ｖ, CUP:快Ａ, CUP:快Ｂ)
+	;イきそうな場合快Ｃを除外
+	SIF TCVAR:TARGET:イきそう == 0
+		CDOWN:快Ｃ += PALAM:快Ｃ * 5 / 100
+	CDOWN:快Ｖ += PALAM:快Ｖ * 5 / 100
+	CDOWN:快Ａ += PALAM:快Ａ * 5 / 100
+	CDOWN:快Ｂ += PALAM:快Ｂ * 5 / 100
+ENDIF
+
+;イきそうの判定
+;快Ｃ上昇0時は半減
+IF !CUP:MASTER:快Ｃ
+	TCVAR:MASTER:イきそう /= 2
+;それ以外では1.2倍
+ELSE
+	TIMES TCVAR:MASTER:イきそう , 1.20
+ENDIF
+
+;快ｃ上昇0時は半減
+IF !CUP:快Ｃ
+	TCVAR:TARGET:イきそう /= 2
+;それ以外では1.2倍
+ELSE
+	TIMES TCVAR:TARGET:イきそう , 1.20
+ENDIF
+
+TCVAR:MASTER:イきそう（止め） = TCVAR:MASTER:イきそう < ABL:MASTER:Ｃ感覚 * 2 ? 1 # 0
+TCVAR:TARGET:イきそう（止め） = TCVAR:TARGET:イきそう < ABL:TARGET:Ｃ感覚 * 2 ? 1 # 0
+
+;ローション非使用時は潤滑減衰(5%)
+CDOWN:MASTER:潤滑 += TEQUIP:ローション ? 0 # PALAM:MASTER:潤滑 * 5 / 100
+
+;Ｘ絶頂時
+IF MAX(NOWEX:MASTER:Ｃ絶頂, NOWEX:MASTER:Ｖ絶頂, NOWEX:MASTER:Ａ絶頂, NOWEX:MASTER:Ｂ絶頂)
+	;欲情の30～60%減衰(欲情が大きいほど減衰)
+	CDOWN:MASTER:欲情 += PALAM:MASTER:欲情 * LIMIT(PALAM:MASTER:欲情, 4000, 8000) * 3 / 40000
+;快Ｘ上昇総計が小さい時
+ELSEIF CUP:MASTER:快Ｃ + CUP:MASTER:快Ｖ + CUP:MASTER:快Ａ + CUP:MASTER:快Ｂ < 20
+	;欲情の0～10%減衰(欲情が大きいほど減衰)
+	CDOWN:MASTER:欲情 += PALAM:MASTER:欲情 * LIMIT(PALAM:MASTER:欲情, 0, 6000) / 60000
+ENDIF
+
+;屈服は上昇0時5%減衰
+CDOWN:MASTER:屈服 += CUP:MASTER:屈服 ? 0 # PALAM:MASTER:屈服 * 5 / 100
+;恐怖は上昇0時1/12減衰
+CDOWN:MASTER:恐怖 += CUP:MASTER:恐怖 ? 0 # PALAM:MASTER:恐怖 / 12
+;さらに恐怖は上昇50未満で20%減衰追加
+CDOWN:MASTER:恐怖 += CUP:MASTER:恐怖 >= 50 ? 0 # PALAM:MASTER:恐怖 * 20 / 100
+;反抗は上昇0時1/18減衰
+CDOWN:MASTER:反抗 += CUP:MASTER:反抗 ? 0 # PALAM:MASTER:反抗 / 18
+;苦痛は上昇0時10%減衰
+CDOWN:MASTER:苦痛 += CUP:MASTER:苦痛 ? 0 # PALAM:MASTER:苦痛 * 10 / 100
+;恥情は上昇0時10%減衰
+CDOWN:MASTER:恥情 += CUP:MASTER:恥情 ? 0 # PALAM:MASTER:恥情 * 10 / 100
+;不快は上昇0時1/12減衰
+CDOWN:MASTER:不快 += CUP:MASTER:不快 ? 0 # PALAM:MASTER:不快 / 12
+;抑鬱は上昇0時5%減衰(ACTが脅すのときは減衰しない)
+CDOWN:MASTER:抑鬱 += CUP:MASTER:抑鬱 && !IS_NOWACTNAME("厳しく脅す") ? 0 # PALAM:MASTER:抑鬱 * 5 / 100
+;さらに抑鬱は慰めるで従った場合20%減衰
+CDOWN:MASTER:抑鬱 += IS_NOWACTNAME("優しく慰める") && TFLAG:REACT分類 < 6 ? 0 # PALAM:MASTER:抑鬱 * 20 / 100
+
+;地の文表示
+PRINTL 　
+IF FLAG:PALAMアニメ == 2
+	UPCHECK
+ELSE
+	CALL UPCHECK_REV
+ENDIF
+
+;CUP,CDOWN,SOURCEをリセット
+FOR LCOUNT, 0, 50
+	CVARSET CUP, LCOUNT
+	CVARSET CDOWN, LCOUNT
+	CVARSET SOURCE, LCOUNT
+NEXT
+WAIT
+
+;全PALAMについて調査
+FOR LCOUNT, 0, 50
+	;PALAMが限界を突破した場合
+	IF PALAM:MASTER:LCOUNT > 9999
+		;超過量を確認し、PALAMを上限に設定
+		LOCAL = PALAM:MASTER:LCOUNT - 9999
+		PALAM:MASTER:LCOUNT = 9999
+		;快Ｘ以外の時、異常経験が少なければ
+		IF LCOUNT > 4 && LOCAL > EXP:MASTER:異常経験 * 50
+			;異常経験加算
+			EXP:MASTER:異常経験 += 1
+			;地の文表示
+			PRINTL （パラメーター限界突破により）異常経験+1
+		ENDIF
+	ENDIF
+	;下限突破を防止
+	SIF PALAM:MASTER:LCOUNT < 0
+		PALAM:MASTER:LCOUNT = 0
+NEXT
+
+;パラメーター変動を終了
+TFLAG:パラメーター変動 = 0
+
+;────────────────────────────────────
+;調教終了の判定
+;────────────────────────────────────
+
+;リセットされる箇所がないのでここで初期化
+FLAG:日常制御 = 0
+
+;一回休み
+IF TFLAG:一回休み == 1
+	;調教後フラグに『一回休みによる終了』を渡す
+	FLAG:日常制御 = 3
+	;地の文表示
+	PRINTL 
+	;調教終了
+	BEGIN AFTERTRAIN
+;通常の調教(11カウント以降)
+ELSEIF TFLAG:経過時間 > 10
+	;調教継続判断
+	CALL EST_T_TRA_END()
+	継続基準値 = RESULT
+	
+	;調教継続基準値を生成する
+	継続基準値 += TFLAG:経過時間 / 10
+	継続基準値 += TFLAG:調教者消耗度 / 2
+	継続基準値 += TFLAG:消耗度 / 3
+	
+	;経過時間によって補正
+	;30未満なら基準値減少(-3～0)
+	IF TFLAG:経過時間 < 30
+		継続基準値 -= 3 - (TFLAG:経過時間 / 10)
+	;100未満なら基準値増加(100に近づくほど増加速度上昇, +0～23)
+	ELSEIF TFLAG:経過時間 < 100
+		継続基準値 += (TFLAG:経過時間 - 30) * (TFLAG:経過時間 / 2) / 150
+	;100以上なら基準値増加(+23～)
+	ELSE
+		継続基準値 += (TFLAG:経過時間 / 10) + 13
+	ENDIF
+	
+	;興味によって補正(低いほど基準値増加, -5～10)
+	継続基準値 += 10 - LIMIT(BASE:興味 / 40, 0, 15)
+	
+	;調教者状態によって補正
+	;無気力(+3)
+	SIF TCVAR:状態変化 == 3
+		継続基準値 += 3
+	;朦朧(+1)
+	SIF TCVAR:状態変化 == 4
+		継続基準値 += 1
+	;情欲(-2)
+	SIF TCVAR:状態変化 == 5
+		継続基準値 -= 2
+	;怒り(-5)
+	SIF TCVAR:状態変化 == 6
+		継続基準値 -= 5
+	;退屈(+5)
+	SIF TCVAR:状態変化 == 7
+		継続基準値 += 5
+	
+	;今回の調教で大満足ボーナスを取得した場合基準値上昇(+5)
+	SIF TFLAG:今回で大満足 > 0
+		継続基準値 += 5
+	
+	;基準値は最低1
+	継続基準値 = MAX(継続基準値, 1)
+	;B = TFLAG:今日の方針 == 3 ? 5 # 0
+	
+	;基準値が調教者調教レベルによる値を上回ると
+	IF RAND:継続基準値 > 10 + (GET_TRAINLV(TARGET) / 20) + 5
+		;精力0の場合、調教後フラグに『精力0時終了』を渡す
+		IF BASE:MASTER:射精 <= 0
+			FLAG:日常制御 = 2
+		;その他の場合、調教後フラグに『通常の終了』を渡す
+		ELSE
+			FLAG:日常制御 = 1
+		ENDIF
+		;地の文、口上表示
+		PRINTL
+		CALL KOJO_EVENT(13)
+		CALL VOIDLINE_IF(RESULT)
+		;調教終了
+		BEGIN AFTERTRAIN
+	;消耗度過剰時
+	;SANDBOX限定処理 体力0で即失神
+	ELSEIF (TFLAG:消耗度 > 5 + TALENT:MASTER:小柄 - TALENT:MASTER:長身 + TALENT:MASTER:精力絶倫 - TALENT:MASTER:精力薄弱 + CFLAG:MASTER:調教レベル / 3 + RAND:5) || (BASE:MASTER:体力 == 0 && FLAG:モード == 1)
+		;調教者体力+気力は十分
+		IF BASE:MASTER:体力 + BASE:MASTER:気力 > 600
+			;地の文、口上表示
+			PRINTFORML 調教が激しすぎて%CALLNAME:MASTER%は疲れが溜まっているようだ、%CALLNAME:TARGET%は調教を切り上げた
+			PRINTL
+			CALL KOJO_EVENT(13, 1)
+		;調教者体力+気力が不足
+		ELSE
+			;地の文、口上表示
+			PRINTFORML 調教が激しすぎて%CALLNAME:MASTER%は失神した
+			CALL MARK_CHECK_GET("失神")	;【屈服:56】失神 新仕様に変更@revkoishi(14/05/26)
+			PRINTL 
+			CALL KOJO_EVENT(13, 2)
+		ENDIF
+		;個別に処理していたのを統合。EVENT13_1はたぶんバグっていたはず@/L
+		;RESULT値が0以上なら空行
+		CALL VOIDLINE_IF(RESULT)
+		;調教後フラグに『失神による終了』を渡す
+		FLAG:日常制御 = 4
+		;調教終了
+		BEGIN AFTERTRAIN
+	ENDIF
+ENDIF
+
+;────────────────────────────────────
+;絶頂や時間経過等によるTEQUIPの解除
+;────────────────────────────────────
+;※BEGINの解決はその時点で実行できる全てのコードの処理が終わった後で初めて行われます
+;※TEQUIP解除はこのタイミングでないと、調教終了口上から体位の参照等が出来ません
+;※基本的には全部のTEQUIP解除はギリギリまで引っ張った方が便利かもしれませんが…
+;※各所を整合するのも面倒なのでとりあえず必要と思われる分だけ。残りは近いうちに
+
+;調教者射精による性交解除
+TEQUIP:性交中 = NOWEX:射精 ? 0 # TEQUIP:性交中
+;調教対象射精(継続なし)による性交奉仕解除
+TEQUIP:性交奉仕中 = NOWEX:MASTER:射精 && !TFLAG:抜かず ? 0 # TEQUIP:性交奉仕中
+;調教者がペニスバンド使用時、各種絶頂による性交解除
+TEQUIP:性交中 = TEQUIP:調教者ペニスバンド && (NOWEX:Ｃ絶頂 || NOWEX:Ｖ絶頂) ? 0 # TEQUIP:性交中
+;調教対象がペニスバンド使用時、各種絶頂による性交解除
+TEQUIP:性交奉仕中 = TEQUIP:ペニスバンド && (NOWEX:MASTER:Ｃ絶頂 || NOWEX:MASTER:Ｖ絶頂) && !TFLAG:抜かず ? 0 # TEQUIP:性交奉仕中
+
+;非性交奉仕時、抜かずを解除
+TFLAG:抜かず = !TEQUIP:性交奉仕中 ? 0 # TFLAG:抜かず
+;調教対象射精(継続なし)によるC愛撫解除
+IF TEQUIP:調教対象Ｃ使用 && NOWEX:MASTER:射精
+	SELECTCASE TEQUIP:調教対象Ｃ使用
+		;手淫時
+		CASE 1
+			;空射精時
+			IF NOWEX:MASTER:射精 == 1
+				TEQUIP:調教対象Ｃ使用 = 0
+				TEQUIP:接触指 = 0
+			;1/2の確率で終了
+			ELSEIF RAND:2
+				TEQUIP:調教対象Ｃ使用 = 0
+				TEQUIP:接触指 = 0
+				PRINTFORMW %CALLNAME:TARGET%は手に付着する%CALLNAME:MASTER%の精液を美味しそうに舐めとっている…
+			;継続
+			ELSE
+				PRINTFORML %CALLNAME:TARGET%はペニス全体に精液を塗り広げ、
+				PRINTFORMW ゆっくりとした手淫で%CALLNAME:MASTER%に次の精液を催促している…
+			ENDIF
+		;フェラチオ時
+		CASE 2
+			;空射精時
+			IF NOWEX:MASTER:射精 == 1
+				TEQUIP:調教対象Ｃ使用 = 0
+				TEQUIP:接触口 = 0
+			;1/2の確率で終了
+			ELSEIF RAND:2
+				TEQUIP:調教対象Ｃ使用 = 0
+				TEQUIP:接触口 = 0
+				PRINTFORML %CALLNAME:TARGET%は唇をしぼめてゆっくりとペニスから口を離すと
+				PRINTFORMW %CALLNAME:MASTER%に口内の精液をみせつけてから喉を鳴らして飲み込んだ…
+			;継続
+			ELSE
+				PRINTFORML %CALLNAME:TARGET%は口内に放たれた精液を飲み込むと
+				PRINTFORMW 亀頭に口付けし尿道内の精液を吸い上げている…
+			ENDIF
+	ENDSELECT
+;女の子調教対象Ｃ絶頂によるＣ愛撫解除
+ELSEIF TEQUIP:調教対象Ｃ使用 && NOWEX:MASTER:Ｃ絶頂 && !PENIS(MASTER)
+	SELECTCASE TEQUIP:調教対象Ｃ使用
+		;愛撫時
+		CASE 1
+			;ペニスバンド手淫
+			IF TEQUIP:ペニスバンド
+				;1/2の確率で終了
+				IF RAND:2
+					TEQUIP:調教対象Ｃ使用 = 0
+					TEQUIP:接触指 = 0
+					PRINTFORMW %CALLNAME:TARGET%は本物のペニスのように跳ねる%CALLNAME:MASTER%の張型から手を離した…
+				;継続
+				ELSE
+					PRINTFORML %CALLNAME:TARGET%は絶頂で締め付けられる膣内をペニスバンドでほぐし、
+					PRINTFORMW ゆっくりとした前後運動で%CALLNAME:MASTER%に絶頂の余韻を与えている…
+				ENDIF
+			;愛撫
+			ELSE
+				;1/2の確率で終了
+				IF RAND:2
+					TEQUIP:調教対象Ｃ使用 = 0
+					TEQUIP:接触指 = 0
+					PRINTFORMW %CALLNAME:TARGET%は手に付着する%CALLNAME:MASTER%の愛液を美味しそうに舐めとっている…
+				;継続
+				ELSE
+					PRINTFORML %CALLNAME:TARGET%はヴァギナ全体に愛液を塗り広げ、
+					PRINTFORMW ゆっくりとした愛撫で%CALLNAME:MASTER%に絶頂の余韻を与えている…
+				ENDIF
+			ENDIF
+		;クンニ時
+		CASE 2
+			;1/2の確率で終了
+			IF RAND:2
+				TEQUIP:調教対象Ｃ使用 = 0
+				TEQUIP:接触口 = 0
+				PRINTFORML %CALLNAME:TARGET%はキスをするようにゆっくりとクリトリスを舐めしゃぶり
+				PRINTFORMW 名残惜しそうにようやく口を離した…
+			;継続
+			ELSE
+				PRINTFORML %CALLNAME:TARGET%はクリトリスを吸いながらちろちろと舌先で舐め続け
+				PRINTFORMW 強制的に%CALLNAME:MASTER%に深い絶頂感を送り込もうとしている…
+			ENDIF
+	ENDSELECT
+ENDIF
+;調教対象絶頂による調教者自慰解除
+SIF NOWEX:MASTER:Ｃ絶頂 || NOWEX:MASTER:Ｖ絶頂 || NOWEX:MASTER:Ａ絶頂 || NOWEX:MASTER:Ｂ絶頂 || NOWEX:MASTER:射精
+	CLEARBIT TEQUIP:自慰中, 0
+;調教者絶頂による調教者自慰解除
+SIF NOWEX:Ｃ絶頂 || NOWEX:Ｖ絶頂 || NOWEX:Ａ絶頂 || NOWEX:Ｂ絶頂
+	CLEARBIT TEQUIP:自慰中, 1
+IF FLAG:オートモード表示設定 == 1 && FLAG:オートモード > 0
+	SKIPDISP 0
+	PRINTFORM [{TFLAG:経過時間,3}] %NOWACTNAME(), 24, LEFT%%TRAINNAME:SELECTCOM,24,LEFT%
+	CALL PRINT_COLORBAR(BASE:MASTER:体力, MAXBASE:MASTER:体力, 16, UNICODE(0x2584), UNICODE(0x2584), 0xC07070, 0x502020)
+	PRINT 　
+	CALL PRINT_COLORBAR(BASE:MASTER:気力, MAXBASE:MASTER:気力, 16, UNICODE(0x2584), UNICODE(0x2584), 0x70C070, 0x205020)
+	PRINTL 
+	SKIPDISP 1
+ENDIF
+[SKIPSTART]
+口上側を対応させる必要があるので当面の間はコメントアウト
+v1.020若しくは1.010用パッチ対応予定。余裕ないんですよね、今ｗ(2015/01/09)
+;NOWEXのリセット
+FOR LCOUNT, 0, CHARANUM
+	VARSET NOWEX:LCOUNT:0
+NEXT
+[SKIPEND]
+CALL SHOW_AUTOMODE_UPCHECK
+
+@SHOW_AUTOMODE_UPCHECK, ARG
+#DIM ABL_M, 100
+#DIM ABL_T, 100
+#DIM MARK_T, 10
+#DIM 性交有無, 1
+#LOCALSIZE 2
+SIF FLAG:オートモード表示設定 != 1
+	RETURN 0
+SIF FLAG:オートモード <= 0
+	RETURN 0
+IF ARG
+	FOR LOCAL, 0, 100
+		ABL_M:LOCAL = ABL:MASTER:LOCAL
+	NEXT
+	FOR LOCAL, 0, 100
+		ABL_T:LOCAL = ABL:TARGET:LOCAL
+	NEXT
+	FOR LOCAL, 0, 10
+		MARK_T:LOCAL = MARK:TARGET:LOCAL
+	NEXT
+	性交有無 = EXP:TARGET:性交経験 == CSVEXP(NO:TARGET, GETNUM(EXP, "性交経験"), 0) ? 1 # 0
+ELSE
+	SKIPDISP 0
+	SETCOLOR 0xC07070
+	FOR LOCAL, 0, 100
+		SIF ABL_M:LOCAL != ABL:MASTER:LOCAL
+			PRINTFORML %CALLNAME:MASTER%の[%ABLNAME:LOCAL%]がLv{ABL:MASTER:LOCAL}に上昇
+		ABL_M:LOCAL = ABL:MASTER:LOCAL
+	NEXT
+	FOR LOCAL, 0, 100
+		SIF ABL_T:LOCAL != ABL:TARGET:LOCAL
+			PRINTFORML %CALLNAME:TARGET%の[%ABLNAME:LOCAL%]がLv{ABL:TARGET:LOCAL}に上昇
+		ABL_T:LOCAL = ABL:TARGET:LOCAL
+	NEXT
+	FOR LOCAL, 0, 10
+		SIF MARK_T:LOCAL != MARK:TARGET:LOCAL
+			PRINTFORML %CALLNAME:TARGET%による[%MARKNAME:LOCAL%]がLv{MARK:TARGET:LOCAL}に上昇
+		MARK_T:LOCAL = MARK:TARGET:LOCAL
+	NEXT
+	IF 性交有無 && EXP:TARGET:性交経験 != CSVEXP(NO:TARGET, GETNUM(EXP, "性交経験"), 0)
+		性交有無 = 0
+		PRINTFORML 初性交発生！
+	ENDIF
+	RESETCOLOR
+	SKIPDISP 1
+ENDIF
+
+
+;────────────────────────────────────
+;クール値の計算
+;────────────────────────────────────
+;リアクション分類によるクール値倍率の処理
+;原則、好意的な反応をしていればヒート値が溜まりにくい。
+;ご主人様がサドかったり欲求不満だと天邪鬼な対応になるようにしてもいいかも？
+;暫定的なものなので要調整か。REACT分類を使ってもよいか？
+@COOL_BYREACT(ARG)
+#FUNCTION
+SELECTCASE TFLAG:REACT印象
+	;好印象大
+	CASE 1, 5
+		TIMES ARG, 2.00
+	;好印象小
+	CASE 2
+		TIMES ARG, 1.50
+	;悪印象小
+	CASE 3
+		TIMES ARG, 0.75
+	;悪印象大
+	CASE 4, 6
+		TIMES ARG, 0.50
+ENDSELECT
+RETURNF ARG

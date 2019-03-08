@@ -1,0 +1,536 @@
+﻿;------------------------------------------------------------------------
+;EDIT	001		kap			2011/10/14		STRの番号をずらしたのに対応 
+;											行動予約をTCVARに変更
+;EDIT	002		KOremi		2011/11/09		脱衣実行処理の分離 
+;EDIT	003		KOremi		2014/05/20		調教中止判定をアニメーション処理から出す
+;											また、初回のみ判定するよう修正 
+;EDIT	004		revkoishi	2014/05/28		無駄にボタン化するのを回避
+;------------------------------------------------------------------------
+;────────────────────────────────────
+;メイン調教画面の表示、調教者行動を呼び出し、そしてCOMABLE前の必要な処理
+;────────────────────────────────────
+@SHOW_STATUS
+#DIM LINE
+#DIM PREV_BASE_M, 9
+#DIM PREV_BASE_T, 9
+#DIM NOW_BASE_M, 9
+#DIM NOW_BASE_T, 9
+#DIM PREV_B_M
+#DIM PREV_B_T
+#DIM NOW_B_M
+#DIM NOW_B_T
+#DIM 時間
+時間 = 6
+;助手１をメイン助手としておく
+ASSI = ASSI:1
+IF IS_POLICY("今日", "野外")
+	TEQUIP:野外プレイ = 1
+	TFLAG:今日の方針 = 0
+ENDIF
+
+DRAWLINE
+;-----------EDIT 004 START--------------;無駄にボタン化するのを回避@revkoishi(14/05/28)
+PRINTPLAINFORM {DAY + 1}日目(%GET_TIME()%)　経過時間[{TFLAG:経過時間}]　
+SIF TALENT:MASTER:読心能力 > 1
+	PRINTPLAINFORM /　お仕置き\@ TFLAG:お仕置きフラグ ? モード # ポイント[{TFLAG:お仕置きポイント}]\@
+PRINTL 
+;-----------EDIT 004 END  --------------
+FOR LOCAL, 0, 9
+	NOW_BASE_M:LOCAL = BASE:MASTER:LOCAL
+	NOW_BASE_T:LOCAL = BASE:TARGET:LOCAL
+NEXT
+NOW_B_M = TCVAR:MASTER:勃起度
+NOW_B_T = TCVAR:TARGET:勃起度
+REDRAW 0
+LINE = LINECOUNT
+FOR LOCAL:1, TFLAG:経過時間 ? 0 # 時間, 時間 + 1
+	CLEARLINE LINECOUNT - LINE
+	SIF MESSKIP() || FLAG:PALAMアニメ == 2
+		LOCAL:1 = 時間
+	IF LOCAL:1 == 時間
+		FOR LOCAL, 0 ,9
+			BASE:MASTER:LOCAL = NOW_BASE_M:LOCAL
+			BASE:TARGET:LOCAL = NOW_BASE_T:LOCAL
+		NEXT
+		TCVAR:MASTER:勃起度 = NOW_B_M 
+		TCVAR:TARGET:勃起度 = NOW_B_T
+	ELSE
+		FOR LOCAL, 0, 9
+			BASE:MASTER:LOCAL = (NOW_BASE_M:LOCAL * LOCAL:1 + PREV_BASE_M:LOCAL * (時間 - LOCAL:1)) / 時間
+			BASE:TARGET:LOCAL = (NOW_BASE_T:LOCAL * LOCAL:1 + PREV_BASE_T:LOCAL * (時間 - LOCAL:1)) / 時間
+		NEXT
+		TCVAR:MASTER:勃起度 = (NOW_B_M * LOCAL:1 + PREV_B_M * (時間 - LOCAL:1)) / 時間
+		TCVAR:TARGET:勃起度 = (NOW_B_T * LOCAL:1 + PREV_B_T * (時間 - LOCAL:1)) / 時間
+	ENDIF
+	CALL INFO_GAUGE_TRAINER
+	;CALL INFO_GAUGE_TENTACLE
+	DRAWLINE
+
+	;服装の表示
+	CALL SHOW_EQUIP_3
+	;修正前の姿勢を表示
+	CALL POSE_PRINT
+	;使用中の道具を表示
+	CALL SHOW_EQUIP_1
+	;状況の表示
+	CALL SHOW_EQUIP_2
+	DRAWLINE
+	TWAIT 100, 1
+NEXT
+FOR LOCAL, 0, 9
+	PREV_BASE_M:LOCAL = BASE:MASTER:LOCAL
+	PREV_BASE_T:LOCAL = BASE:TARGET:LOCAL
+NEXT
+;-----------EDIT 003 START--------------
+;-----------EDIT 001 START--------------
+;調教中止の判定自体がACTを決定したあとに
+;そのあとで内容を全部潰すとかやってたので独立させる
+;---------------------------------------
+;調教中止の判定
+;---------------------------------------
+SIF TFLAG:経過時間 == 0
+	CALL TRAIN_CANCEL
+;-----------EDIT 001 END  --------------
+;-----------EDIT 003 END  --------------
+PREV_B_M = TCVAR:MASTER:勃起度
+PREV_B_T = TCVAR:TARGET:勃起度
+REDRAW 1
+;-----------EDIT 001 START--------------
+;助手関数に引数を設けつつ、TCVARにフラグを移して処理を簡易化し
+;また、メッセージの表示タイミング及び口上の表示タイミングを
+;すべてのコマンド決定後に変更
+;---------------------------------------
+;調教者行動の表示
+IF TFLAG:調教者行動済++ == 0 && !TFLAG:一回休み
+	;調教者の行動を選択します。
+	CALL PLAYER_ACT
+	;-----------EDIT 001 START--------------
+	;現在ACT名の取得を関数を通させるように
+	;---------------------------------------
+	TSTR:調教指令 = %NOWACTNAME()%
+	;-----------EDIT 001 END  --------------
+	;行動前判定
+	CALL BEFORE_ACT
+	;各調教アクションの累積値
+	CFLAG:TARGET:(2000 + TFLAG:ACT) += 1
+	CFLAG:MASTER:(2000 + TFLAG:ACT) += 1
+	;選択された行動によってMASTERの体勢と使用中の体の部位を記録します。
+	CALL MASTER_POSE
+	CALL PLAYER_ACT_EXTRA_LATER
+	;前回の行動を表示して今回の行動を決定
+	IF STRLENS(TSTR:前調教指令) || (STRLENS(TSTR:調教指令) && FLAG:デバッグ)
+		IF FLAG:デバッグ
+			SIF STRLENS(TSTR:前調教指令)
+				PRINTFORML 前回の調教指令：(%MENU(TFLAG:前ACT分類)%系)＜%TSTR:前調教指令%＞
+			PRINTFORML 今回の調教指令：(%MENU(TFLAG:ACT分類)%系)＜%TSTR:調教指令%＞
+		ELSE
+			PRINTFORML 前回の調教指令：＜%TSTR:前調教指令%＞
+		ENDIF
+		DRAWLINE
+	ENDIF
+	CALL EQUIP_2USE
+	CALL SP_CHECK
+	;選択された行動が派生する場合、そのフラグを立てます
+	CALL TRAIN_VARIATION
+	IF TFLAG:ＳＰ行動 < 200
+		;PALAM,勃起度などの計算
+		CALL ACTION_APPLY
+	ELSE
+		CALL SP_ACTION
+	ENDIF
+	SIF TFLAG:強制脱衣 > 0
+		CALL KYOUSEI_DATUI
+	SIF TFLAG:自主脱衣 > 0
+		CALL JISHU_DATUI
+	;接触情報の取得、地の文表示
+	CALL TOUCH_SUCCESSION
+	;----------------------------------------
+	;助手の行動決定
+	;----------------------------------------
+	LOCAL = 1
+	WHILE ASSI:LOCAL > 0
+		;助手行動の決定
+		IF TCVAR:ASSI:行動予約 >= 0
+			TCVAR:(ASSI:LOCAL):助手ACT = TCVAR:ASSI:行動予約
+			TCVAR:ASSI:行動予約 = -1
+		ELSE
+			CALL ASSI_ACT, ASSI:LOCAL
+		ENDIF
+		;MASTERの体勢の情報を上書き
+		CALL MASTER_POSE_ASSI, ASSI:LOCAL
+		CALL ASSI_ACT_APPLY, ASSI:LOCAL
+		;派生情報の取得
+		CALL ASSI_TRAIN_VARIATION, ASSI:LOCAL, TCVAR:(ASSI:LOCAL):助手ACT
+		;回数カウントの追加
+		IF TCVAR:(ASSI:LOCAL):助手方針 >= 0 && GET_ASSIMENUNAME(TCVAR:(ASSI:LOCAL):助手方針) != "コンビネーション"
+			CFLAG:(ASSI:LOCAL):(2200 + TCVAR:(ASSI:LOCAL):助手ACT) += 1
+			CFLAG:MASTER:(2200 + TCVAR:(ASSI:LOCAL):助手ACT) += 1
+		ENDIF
+		LOCAL++
+	WEND
+	;強制脱衣の成功判定
+	SIF TFLAG:強制脱衣 > 0
+		CALL KYOUSEI_DATUI_CHECK
+	;----------------------------------------------
+	;メッセージ表示
+	;----------------------------------------------
+	;-----------EDIT 002 START--------------
+	;脱衣実行処理と地の文、口上表示処理を分離
+	;---------------------------------------
+	;強制・自主脱衣の実行、また地の文表示とその口上
+	SIF TFLAG:自主脱衣 || TFLAG:強制脱衣
+		CALL DATUI_PROCESS
+	;-----------EDIT 002 END  --------------
+	;姿勢の変更の地の文とその口上
+	CALL POSE_CHANGE
+	;ACTの地の文
+	CALL TRAIN_MESSAGE
+	;調教者アクションの表示とその口上
+	CALL KOJO_ACT
+	;追加コマンドのメッセージ
+	CALL PLAYER_ACT_EXTRA_MESSAGE
+	;----------------------------------
+	;助手のテキスト表示
+	;----------------------------------
+	LOCAL = 1
+	WHILE ASSI:LOCAL > 0
+		ALIGNMENT RIGHT
+		;口上用に互換処理
+		ASSI = ASSI:LOCAL
+		TFLAG:助手ACT = TCVAR:(ASSI:LOCAL):助手ACT
+		TFLAG:助手ACT派生 = TCVAR:(ASSI:LOCAL):助手ACT派生
+		CALL ASSI_TRAIN_MESSAGE, ASSI:LOCAL
+		LOCAL++
+		ALIGNMENT LEFT
+	WEND
+	ASSI = ASSI:1
+	;媚薬・ローション使用とその口上
+	SIF TFLAG:媚薬等使用
+		CALL USE_MESSAGE
+	CALL EQUIP_CHECK
+	CALL CLOTHES_CHECK
+	DRAWLINE
+	;ここでリアクション派生をリセットしておく
+	TFLAG:REACT派生 = 0
+ELSE
+	SIF STRLENS(TSTR:前調教指令)
+		PRINTFORML 前回の調教指令＜%TSTR:2%＞
+	PRINTFORML 今回の調教指令＜%TSTR:1%＞
+	DRAWLINE
+ENDIF
+;-----------EDIT 001 END  --------------
+SIF FLAG:デバッグ
+	CALL SHOW_TOUCH
+;COMABLE処理
+CALL COMABLE(-1)
+IF FLAG:オートモード > 0
+	CALL AUTO_MODE
+	LOCAL = RESULT
+	DOTRAIN LOCAL
+ENDIF
+@AUTO_MODE, ARG
+#DIMS AUTO, 100
+;ARGが真の時、あるいはAUTOが空っぽの時、AUTOを更新する
+IF AUTO == "" || ARG
+	VARSET AUTO
+	SPLIT GLOBALS:@"オートモード登録{FLAG:選択セット}", "_", RESULTS
+	SPLIT RESULTS:1, "/", AUTO
+	SIF ARG
+		RETURN 0
+ENDIF
+FOR LOCAL, 0, 100
+	SIF GETNUM(TRAINNAME,AUTO:LOCAL) == -1
+		CONTINUE
+	CALL COMABLE(GETNUM(TRAINNAME,AUTO:LOCAL))
+	SIF !RESULT
+		CONTINUE
+	RETURN GETNUM(TRAINNAME,AUTO:LOCAL)
+	BREAK
+NEXT
+RETURN GETNUM(TRAINNAME, "なすがまま")
+;────────────────────────────────────
+;行動前判定（EVETRAINより移動）
+;2011/10/14		休憩による終了を切り離して別関数にする
+;────────────────────────────────────
+@BEFORE_ACT
+;調教者行動前口上
+CALL BEFORE_ACT_MESSAGE
+CALL KOJO_EVENT(12)
+IF RESULT
+	DRAWLINE
+ELSE
+	WAIT
+ENDIF
+;────────────────────────────────────
+;行動前判定（EVETRAINより移動）
+;2011/10/14		BEFORE_ACTから切り出して独立した関数に変更
+;────────────────────────────────────
+@TRAIN_CANCEL
+IF IS_POLICY("今日", "休憩")
+	;調教者行動前口上・ご褒美による中止
+	CALL KOJO_EVENT(12, 3)
+	IF RESULT < 2
+		SIF RESULT
+			PRINTL 
+		PRINTFORML %CALLNAME:TARGET%は今日の調教を中止し、
+		PRINTFORML %CALLNAME:MASTER%とまったりとした時間を過ごした…
+	ENDIF
+	CALL _BEFORE_ACT_SUB1
+ELSEIF CFLAG:消耗 > 5
+	;調教者行動前口上・調教者の疲労による中止
+	CALL KOJO_EVENT(12, 1)
+	IF RESULT < 2
+		SIF RESULT
+			PRINTL 
+		PRINTFORML 調教の時間が来たが、入ってきた%CALLNAME:TARGET%はなにやら疲れている様子で、
+		PRINTFORML 今回は休みだと言って出ていった…
+	ENDIF
+	CALL _BEFORE_ACT_SUB1
+;SANDBOX限定処理 体力不足で調教中止
+ELSEIF CFLAG:MASTER:消耗 > 5 || (FLAG:モード == 1 && BASE:MASTER:体力 * 100 / MAXBASE:MASTER:体力 < 30)
+	;調教者行動前口上・調教対象の疲労による中止
+	CALL KOJO_EVENT(12, 2)
+	IF RESULT < 2
+		SIF RESULT
+			PRINTL 
+		PRINTFORML 調教の時間が来たが、%CALLNAME:TARGET%は酷い様子の%CALLNAME:MASTER%を見てしばらく考えると、
+		PRINTFORML 今回は休んでいいと言って出ていった…
+	ENDIF
+	CALL _BEFORE_ACT_SUB1
+ENDIF
+
+@_BEFORE_ACT_SUB1
+DRAWLINE
+CFLAG:TARGET:消耗 = 0
+CFLAG:MASTER:消耗 = 0
+TFLAG:調教者行動済 = 1
+TFLAG:ターン方針 = -1
+TFLAG:ACT分類 = -1
+TFLAG:ACT = -1
+TFLAG:一回休み = 1
+
+
+;────────────────────────────────────
+;汚れ表示
+;────────────────────────────────────
+@STAIN_INFO
+CALL _STAIN_INFO_SUB1(MASTER)
+CALL _STAIN_INFO_SUB1(TARGET)
+CALL _STAIN_INFO_SUB1(ASSI:1)
+CALL _STAIN_INFO_SUB1(ASSI:2)
+CALL _STAIN_INFO_SUB1(ASSI:3)
+WAIT
+
+@_STAIN_INFO_SUB1(ARG)
+#LOCALSSIZE 20
+SIF ARG < 0
+	RETURN 0
+SIF !STRLENS(LOCALS)
+	SPLIT "口/手/Ｐ/Ｖ/Ａ/Ｂ/足/Ｖ/Ｐ/精/Ａ/乳/血/粘液", "/", LOCALS
+FOR LOCAL, 0, 7
+	;ペニスが無い場合、Ｐは処理しない。オトコの場合、ＶとＢは処理しない
+	SIF (LOCAL == 2 && !PENIS(ARG)) || ((LOCAL == 3 || LOCAL == 5) && TALENT:ARG:オトコ)
+		CONTINUE
+	PRINTFORM %CALLNAME:ARG%の%LOCALS:LOCAL%：
+	FOR LOCAL:1, 0, 7
+		PRINTFORM \@ GETBIT(STAIN:ARG:LOCAL, LOCAL:1) ? <%LOCALS:(7 + LOCAL:1)%> # \@
+	NEXT
+	PRINTL 
+NEXT
+
+
+;────────────────────────────────────
+;状況の表示
+;────────────────────────────────────
+@SHOW_EQUIP_2
+SIF TFLAG:仰向け
+	PRINT  [仰向]
+SIF TEQUIP:押し倒し中
+	PRINT  [押倒]
+SIF TEQUIP:顔面騎乗 || TEQUIP:顔面騎乗アナル
+	PRINT  [顔面騎乗]
+SIF TEQUIP:野外プレイ
+	PRINT  [野外]
+SIF TEQUIP:大鏡
+	PRINT  [大鏡]
+SIF TCVAR:MASTER:焦らし度 > 1
+	PRINT  [焦らし]
+SIF TEQUIP:自慰中 == 1
+	PRINTFORM  [%CALLNAME:MASTER%自慰中]
+SIF TEQUIP:自慰中 == 2
+	PRINTFORM  [%CALLNAME:TARGET%自慰中]
+SIF TEQUIP:ペニスバンド
+	PRINTFORM  [%CALLNAME:MASTER%ペニスバンド装着]
+SIF TEQUIP:調教者ペニスバンド
+	PRINTFORM  [%CALLNAME:TARGET%ペニスバンド装着]
+SIF TEQUIP:自慰中 == 3
+	PRINT  [二人自慰中]
+SIF TEQUIP:性交中
+	PRINTFORM  [%CALLNAME:TARGET%挿入中]
+SIF TEQUIP:性交奉仕中
+	PRINTFORM  [%CALLNAME:MASTER%挿入中]
+SIF TEQUIP:触手調教中
+	PRINT  [触手] 
+SIF !LINEISEMPTY()
+	PRINTL 
+
+
+@EQUIP_2USE
+SIF TFLAG:抵抗不能
+	PRINTFORML 気力を使い果たし、%CALLNAME:MASTER%は%CALLNAME:TARGET%に身を任せきっている…
+SIF TEQUIP:顔面騎乗
+	PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の顔面にまたがり陰唇をこすりつけている…
+SIF TEQUIP:顔面騎乗アナル
+	PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の顔面にまたがりアヌスへの奉仕を強要している…
+IF TEQUIP:野外プレイ
+	PRINTDATAL
+		DATA あたりに人の気配はないようだ…
+		DATA 近くで誰かの足音が聞こえた…
+		DATA 背中から人の視線を感じる…
+	ENDDATA
+ENDIF
+SIF TEQUIP:大鏡
+	PRINTFORML 目の前の鏡には%CALLNAME:TARGET%と%CALLNAME:MASTER%の痴態が写っている…
+SIF TCVAR:MASTER:焦らし度 > 1
+	PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%に焦らされて喘いでいる…
+SIF TEQUIP:自慰中 == 1
+	PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%が自慰する姿を目を細めて眺めている…
+SIF TEQUIP:自慰中 == 2
+	PRINTFORML %CALLNAME:TARGET%\@ TEQUIP:アイマスク ? の指と愛液が奏でる淫らな水音が、視界を奪われた%CALLNAME:MASTER%の耳元に届く # は%CALLNAME:MASTER%に自らの痴態を見せ付けている \@…
+SIF TEQUIP:自慰中 == 3
+	PRINTFORML %CALLNAME:MASTER%と%CALLNAME:TARGET%は互い\@ TEQUIP:アイマスク ? に向き合い # の痴態を見つめ \@ながら自慰をしている…
+SIF TEQUIP:押し倒し中
+	PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%に押し倒されて身動きが取れない…
+SIF TEQUIP:性交中
+	PRINTFORML %CALLNAME:TARGET%の\@ TEQUIP:調教者ペニスバンド ? 作り物の # \@ペニスは根元まで%CALLNAME:MASTER%に挿入されている…
+IF TEQUIP:性交奉仕中
+	IF TCVAR:MASTER:膣内射精後経過ターン == 1 || TCVAR:MASTER:腸内射精後経過ターン == 1
+		PRINTFORML %CALLNAME:TARGET%の\@ TEQUIP:性交奉仕中 == 6 ? 腸内 # 膣内 \@はイったばかりの%CALLNAME:MASTER%のペニスから
+		PRINTFORML 再び精液を搾り出そうとしている…
+	ELSE
+		PRINTFORML %CALLNAME:TARGET%の\@ TEQUIP:性交奉仕中 == 6 ? アヌス # 性器 \@は\@ TEQUIP:ペニスバンド ? 玩具の男性器 # %CALLNAME:MASTER%のペニス \@を根元までくわえ込んでいる…
+	ENDIF
+ENDIF
+SIF TEQUIP:触手調教中
+	PRINTFORML %CALLNAME:MASTER%は蠢く触手に絡めとられている…
+SELECTCASE TEQUIP:調教対象Ｃ使用
+	CASE 1
+		IF PENIS(MASTER) || TEQUIP:ペニスバンド
+			PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の\@ TEQUIP:ペニスバンド ? 張り型 # ペニス \@を握りゆっくりと上下させている…
+		ELSE
+			PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%のクリトリスに指を這わせゆっくりと刺激し続けている…
+		ENDIF
+	CASE 2
+		PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の\@ PENIS(MASTER) ? 亀頭 # 秘唇 \@に舌を這わせている…
+ENDSELECT
+SIF TCVAR:MASTER:イきそう
+	PRINTFORML %CALLNAME:MASTER%はイきそうだ…
+SIF TCVAR:TARGET:イきそう
+	PRINTFORML %CALLNAME:TARGET%はイきそうだ…
+SIF TEQUIP:押し倒し中 || TEQUIP:顔面騎乗 || TEQUIP:顔面騎乗アナル || TEQUIP:野外プレイ || TEQUIP:大鏡 || TCVAR:MASTER:焦らし度 > 1 || TEQUIP:自慰中 || TEQUIP:性交中 || TEQUIP:性交奉仕中 || TEQUIP:触手調教中 || TCVAR:MASTER:イきそう || TCVAR:TARGET:イきそう
+	DRAWLINE
+
+@POSE_PRINT(ARG)
+#LOCALSSIZE 1
+LOCALS = 現在の姿勢：
+
+;調教対象
+SELECTCASE TCVAR:MASTER:姿勢
+	CASE 1
+		LOCALS += @"[%CALLNAME:MASTER%：仰向け]"
+	CASE 2
+		LOCALS += @"[%CALLNAME:MASTER%：座っている]"
+	CASE 3
+		LOCALS += @"[%CALLNAME:MASTER%：四つん這い]"
+	CASE 4
+		LOCALS += @"[%CALLNAME:MASTER%：直立]"
+	CASE 10
+		LOCALS += @"[%CALLNAME:MASTER%：膝立ち]"
+	CASEELSE
+		LOCALS += @"[%CALLNAME:MASTER%：楽にしている]"
+ENDSELECT
+;主人
+SELECTCASE TCVAR:MASTER:位置上下
+	CASE 1
+		LOCALS += @"[%CALLNAME%：%CALLNAME:MASTER%の上]"
+	CASE 2
+		LOCALS += @"[%CALLNAME%：%CALLNAME:MASTER%の下]"
+	CASEELSE
+		SELECTCASE TCVAR:MASTER:位置前後
+			CASE 1
+				LOCALS += @"[%CALLNAME%：%CALLNAME:MASTER%の正面]"
+			CASE 2
+				LOCALS += @"[%CALLNAME%：%CALLNAME:MASTER%の背後]"
+			CASE 3
+				LOCALS += @"[%CALLNAME%：%CALLNAME:MASTER%に背を向けている]"
+			CASEELSE
+				LOCALS += @"[%CALLNAME%：%CALLNAME:MASTER%を観察]"
+		ENDSELECT
+ENDSELECT
+IF ARG
+	CALL FADEIN(4, LOCALS)
+ELSE
+	PRINTSL LOCALS
+ENDIF
+
+;────────────────────────────────────
+;使用中の道具を表示
+;────────────────────────────────────
+@SHOW_EQUIP_1
+IF TEQUIP:ローション || TEQUIP:媚薬 || TEQUIP:利尿剤 || TEQUIP:鈴蘭の毒 || TEQUIP:バイブ || TEQUIP:アナルバイブ || TEQUIP:アナルビーズ || TEQUIP:浣腸器＋プラグ || TEQUIP:クリキャップ || TEQUIP:オナホール || TEQUIP:ニプルキャップ || TEQUIP:縄 || TEQUIP:アイマスク || TEQUIP:ボールギャグ || TEQUIP:三角木馬
+	PRINT 使用中　
+	SIF TEQUIP:ローション
+		PRINTFORM [ローション(%EFFECT(TEQUIP:ローション, 1)%)]
+	SIF TEQUIP:媚薬
+		PRINTFORM [媚薬(%EFFECT(TEQUIP:媚薬)%)]
+	SIF TEQUIP:利尿剤
+		PRINTFORM [利尿剤(%EFFECT(TEQUIP:利尿剤)%)]
+	SIF TEQUIP:鈴蘭の毒
+		PRINTFORM [鈴蘭の毒(%EFFECT(TEQUIP:鈴蘭の毒)%)]
+	SIF TEQUIP:バイブ
+		PRINTFORM [\@ TEQUIP:バイブ > 1 ? 特注 # \@バイブ]
+	SIF TEQUIP:アナルバイブ
+		PRINTFORM [\@ TEQUIP:アナルバイブ > 1 ? 特注 # \@アナルバイブ]
+	SIF TEQUIP:アナルビーズ
+		PRINT [アナルビーズ]
+	SIF TEQUIP:浣腸器＋プラグ
+		PRINT [浣腸＋アナルプラグ]
+	SIF TEQUIP:クリキャップ
+		PRINTFORM [\@ TEQUIP:クリキャップ > 1 ? 特注 # \@クリキャップ]
+	SIF TEQUIP:オナホール
+		PRINTFORM [\@ TEQUIP:オナホール > 1 ? 特注 # \@オナホール]
+	SIF TEQUIP:ニプルキャップ
+		PRINTFORM [\@ TEQUIP:ニプルキャップ > 1 ? 特注 # \@ニプルキャップ]
+	SIF TEQUIP:縄
+		PRINT [縄で緊縛]
+	SIF TEQUIP:アイマスク
+		PRINT [アイマスク]
+	SIF TEQUIP:ボールギャグ
+		PRINT [ボールギャグ]
+	SIF TEQUIP:三角木馬
+		PRINT [三角木馬乗馬中]
+	;ココより↑にTEQUIPに登録したものを書き込む
+	PRINTL 
+ENDIF
+
+
+;────────────────────────────────────
+;服装の表示
+;引数1なら調教者、2なら調教対象だけ表示。省略なら両方
+;────────────────────────────────────
+@SHOW_EQUIP_3(ARG)
+IF ARG == 1 || !ARG
+	PRINTFORM %CALLNAME:TARGET%の衣装：
+	PRINTFORM \@ TEQUIP:全身上着 ? [%DRESS(TARGET)%] # \@\@ TEQUIP:上半身上着 ? [%OUTER_T(TARGET)%] # \@\@ TEQUIP:下半身上着 ? [%OUTER_B(TARGET)%] # \@\@ TEQUIP:上半身下着 ? [%INNER_T(TARGET)%] # \@
+	PRINTFORML \@ TEQUIP:下半身下着 ? [%INNER_B(TARGET)%] # \@\@ TEQUIP:靴下 ? [%SOCKS(TARGET)%] # \@\@ TEQUIP:アクセサリ ? [%GLOVES(TARGET)%] # \@\@ TEQUIP:コスプレ ? [%COSPLAY(TARGET)%] # \@
+ENDIF
+IF ARG == 2 || !ARG
+	PRINTFORM %CALLNAME:MASTER%の衣装：
+	PRINTFORM \@ TEQUIP:MASTER:全身上着 ? [%DRESS(MASTER)%] # \@\@ TEQUIP:MASTER:上半身上着 ? [%OUTER_T(MASTER)%] # \@\@ TEQUIP:MASTER:下半身上着 ? [%OUTER_B(MASTER)%] # \@\@ TEQUIP:MASTER:上半身下着 ? [%INNER_T(MASTER)%] # \@
+	PRINTFORML \@ TEQUIP:MASTER:下半身下着 ? [%INNER_B(MASTER)%] # \@\@ TEQUIP:MASTER:靴下 ? [%SOCKS(MASTER)%] # \@\@ TEQUIP:MASTER:アクセサリ ? [%GLOVES(MASTER)%] # \@\@ TEQUIP:MASTER:コスプレ ? [%COSPLAY(MASTER)%] # \@
+ENDIF
+
+;────────────────────────────────────
+;行動前
+;────────────────────────────────────
+@BEFORE_ACT_MESSAGE

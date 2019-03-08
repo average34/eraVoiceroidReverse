@@ -1,0 +1,637 @@
+﻿;==================================================
+;
+;	汎用関数置き場＠参照編
+;		参照に用い、特定の数値や名称などを返すもの
+;		あるいは、状況に応じた接頭語などを返すもの
+;
+;		口上向けのものもあったりなかったり。
+;
+;==================================================
+
+;==================================================
+;
+;	衣装関連の参照
+;
+;==================================================
+
+;-------------------------------------------------
+;関数名:CLOTHES
+;概　要:服装名取得関数(総合)
+;引　数:ARG:0…指定部位
+;　　　:ARG:1…キャラ登録番号(MASTERかTARGET)
+;　　　:ARG:2…省略可。真の場合、短縮名を返す
+;　　　:ARG:3…省略可。真の場合、上下上着判定時着ていなければ全身上着の名前を返す
+;戻り値:服装名(文字列)
+;備　考:式中関数
+;キャラ登録番号から、指定部位服装の名前を返す
+;-------------------------------------------------
+@CLOTHES(ARG:0, ARG:1, ARG:2 = 0, ARG:3 = 0)
+#FUNCTIONS
+SELECTCASE ARG:0
+	;特殊装飾品
+	CASE 0
+		RETURNF GLOVES(ARG:1, ARG:2)
+	;靴下
+	CASE 1
+		RETURNF SOCKS(ARG:1, ARG:2)
+	;下半身下着
+	CASE 2
+		RETURNF INNER_B(ARG:1, ARG:2)
+	;上半身下着
+	CASE 3
+		RETURNF INNER_T(ARG:1, ARG:2)
+	;下半身上着
+	CASE 4
+		RETURNF OUTER_B(ARG:1, ARG:2, ARG:3)
+	;上半身上着
+	CASE 5
+		RETURNF OUTER_T(ARG:1, ARG:2, ARG:3)
+	;全身上着
+	CASE 6
+		RETURNF DRESS(ARG:1, ARG:2)
+	;カスタム衣装
+	CASE 9
+		RETURNF COSPLAY(ARG:1, ARG:2)
+ENDSELECT
+
+;-------------------------------------------------
+;関数名:COSPLAY
+;概　要:服装名取得関数(カスタム衣装)
+;引　数:ARG:0…キャラ登録番号(MASTERかTARGET)
+;　　　:ARG:1…省略可。真の場合、短縮名を返す
+;戻り値:服装名(文字列)
+;備　考:式中関数
+;キャラ登録番号から、カスタム衣装の名前を返す
+;-------------------------------------------------
+@COSPLAY(ARG:0, ARG:1)
+#FUNCTIONS
+SELECTCASE EQUIP:ARG:コスプレ
+	CASE 1
+		RETURNF "ボンデージ"
+	CASE 2
+		RETURNF "和服"
+	CASE 3
+		RETURNF "メイド服"
+	CASE 4
+		RETURNF "チャイナ服"
+	CASE 5
+		RETURNF "セーラー服"
+	CASE 6
+		RETURNF "スク水"
+	CASE 7
+		RETURNF "バニースーツ"
+	CASE 8
+		RETURNF "体操服"
+ENDSELECT
+
+;-------------------------------------------------
+;関数名:GLOVES
+;概　要:服装名取得関数(特殊)
+;引　数:ARG:0…キャラ登録番号(MASTERかTARGET)
+;　　　:ARG:1…省略可。真の場合、短縮名を返す
+;戻り値:服装名(文字列)
+;備　考:式中関数
+;キャラ登録番号から、特殊装飾品の名前を返す
+;-------------------------------------------------
+@GLOVES(ARG:0, ARG:1)
+#FUNCTIONS
+SELECTCASE EQUIP:ARG:アクセサリ
+	;手袋
+	CASE 1
+		RETURNF "手袋"
+	;袖
+	CASE 2
+		RETURNF "袖"
+	;羽衣
+	CASE 3
+		RETURNF "羽衣"
+ENDSELECT
+
+;-------------------------------------------------
+;関数名:SOCKS
+;概　要:服装名取得関数(靴下)
+;引　数:ARG:0…キャラ登録番号(MASTERかTARGET)
+;　　　:ARG:1…省略可。真の場合、短縮名を返す
+;戻り値:服装名(文字列)
+;備　考:式中関数
+;キャラ登録番号から、靴下の名前を返す
+;-------------------------------------------------
+@SOCKS(ARG:0, ARG:1)
+#FUNCTIONS
+SELECTCASE EQUIP:ARG:靴下
+	;ソックス
+	CASE 1
+		RETURNF  \@ ARG:1 ? 靴下 # ソックス \@
+	;ニーソックス
+	CASE 2
+		RETURNF  \@ ARG:1 ? ニーソ # ニーソックス \@
+	;ガーターストッキング
+	CASE 3
+		RETURNF  \@ ARG:1 ? ガーター # ガーターストッキング \@
+	;足袋
+	CASE 4
+		RETURNF "足袋"
+ENDSELECT
+
+;-------------------------------------------------
+;関数名:INNER_B
+;概　要:服装名取得関数(下半身下着)
+;引　数:ARG:0…キャラ登録番号(MASTERかTARGET)
+;　　　:ARG:1…省略可。真の場合、短縮名を返す
+;戻り値:服装名(文字列)
+;備　考:式中関数
+;キャラ登録番号から、下半身下着の名前を返す
+;-------------------------------------------------
+@INNER_B(ARG:0, ARG:1)
+#FUNCTIONS
+SELECTCASE EQUIP:ARG:下半身下着
+	;ドロワーズ
+	CASE 1
+		RETURNF \@ ARG:1 ? ドロワ # ドロワーズ \@
+	;パンティ
+	CASE 2
+		RETURNF \@ ARG:1 ? パンツ # パンティ \@
+	;トランクス
+	CASE 3
+		RETURNF "トランクス"
+	;パンティストッキング
+	CASE 4
+		RETURNF \@ ARG:1 ? パンスト # パンティストッキング \@
+	;褌
+	CASE 5
+		RETURNF "褌"
+ENDSELECT
+
+;-------------------------------------------------
+;関数名:INNER_T
+;概　要:服装名取得関数(上半身下着)
+;引　数:ARG:0…キャラ登録番号(MASTERかTARGET)
+;　　　:ARG:1…省略可。真の場合、短縮名を返す
+;戻り値:服装名(文字列)
+;備　考:式中関数
+;キャラ登録番号から、上半身下着の名前を返す
+;-------------------------------------------------
+@INNER_T(ARG:0, ARG:1)
+#FUNCTIONS
+SELECTCASE EQUIP:ARG:上半身下着
+	;ブラジャー
+	CASE 1
+		RETURNF \@ ARG:1 ? ブラ # ブラジャー \@
+	;キャミソール
+	CASE 2
+		RETURNF \@ ARG:1 ? キャミ # キャミソール \@
+	;さらし
+	CASE 3
+		RETURNF "さらし"
+	;Ｔシャツ
+	CASE 4
+		RETURNF "Ｔシャツ"
+ENDSELECT
+
+;-------------------------------------------------
+;関数名:OUTER_B
+;概　要:服装名取得関数(下半身上着)
+;引　数:ARG:0…キャラ登録番号(MASTERかTARGET)
+;　　　:ARG:1…省略可。真の場合、短縮名を返す
+;      :ARG:2…省略可。真の場合、着ていなければ全身上着の名前を返す
+;戻り値:服装名(文字列)
+;備　考:式中関数
+;キャラ登録番号から、上半身下着の名前を返す
+;-------------------------------------------------
+@OUTER_B(ARG:0, ARG:1, ARG:2)
+#FUNCTIONS
+SELECTCASE EQUIP:ARG:下半身上着
+	;スカート
+	CASE 1
+		RETURNF "スカート"
+	;キュロット
+	CASE 2
+		RETURNF "キュロット"
+	;ズボン
+	CASE 3
+		RETURNF "ズボン"
+	;袴
+	CASE 4
+		RETURNF "袴"
+	;無し
+	CASE 0
+		RETURNF \@ ARG:2 ? %DRESS(ARG:0, ARG:1)% # \@
+ENDSELECT
+
+;-------------------------------------------------
+;関数名:OUTER_T
+;概　要:服装名取得関数(上半身上着)
+;引　数:ARG:0…キャラ登録番号(MASTERかTARGET)
+;　　　:ARG:1…省略可。真の場合、短縮名を返す
+;      :ARG:2…省略可。真の場合、着ていなければ全身上着の名前を返す
+;戻り値:服装名(文字列)
+;備　考:式中関数
+;キャラ登録番号から、上半身上着の名前を返す
+;-------------------------------------------------
+@OUTER_T(ARG:0, ARG:1, ARG:2)
+#FUNCTIONS
+SELECTCASE EQUIP:ARG:上半身上着
+	;上着
+	CASE 1
+		RETURNF "上着"
+	;無し
+	CASE 0
+		RETURNF \@ ARG:2 ? %DRESS(ARG:0, ARG:1)% # \@
+ENDSELECT
+
+;-------------------------------------------------
+;関数名:DRESS
+;概　要:服装名取得関数(全身上着)
+;引　数:ARG:0…キャラ登録番号(MASTERかTARGET)
+;　　　:ARG:1…省略可。真の場合、短縮名を返す
+;戻り値:服装名(文字列)
+;備　考:式中関数
+;キャラ登録番号から、全身上着の名前を返す
+;-------------------------------------------------
+@DRESS(ARG:0, ARG:1)
+#FUNCTIONS
+SELECTCASE EQUIP:ARG:全身上着
+	;和服
+	CASE 1
+		RETURNF "和服"
+	;導師服
+	CASE 2
+		RETURNF "導師服"
+	;ワンピース
+	CASE 3
+		RETURNF  \@ ARG:1 ? ワンピ # ワンピース \@
+ENDSELECT
+
+;-------------------------------------------------
+;妨害服装関数@CLOTHESTYPE
+;式中で使用する関数です。強度と言っても破くわけではなく、どれくらい行為の邪魔になるかを指します。
+;引数1が0なら下半身下着
+;戻り値	1=履いたままＶ性交できる				(パンティ/コスプレ)
+;		2=履いてると挿入しにくい			(ドロワーズ/トランクス/パンスト/褌)
+;			・パンツずらしって毛を巻き込んで痛いんですよね。擦れるし
+;			・あと、パンティでもあなるは無理です。そりゃそうだけど
+;引数が1なら下半身上着
+;戻り値	1=股部分がなく、ほぼ邪魔にならない	(スカート/ワンピース/和服/導師服/コスプレ)
+;		2=邪魔になる						(ズボン/キュロット)
+;			・ま、普通に考えてスカートでも邪魔なんですけど。
+;			・ヤマメちゃんのワンピくらいしか見かけないけど、タイトスカートどうしようね
+;引数が2なら上半身下着
+;戻り値	1=柔らかく弄りやすい				(キャミソール/Ｔシャツ/コスプレ)
+;		2=弄りにくい						(ブラジャー/さらし)
+;			・キャミごしにくりくりするのってちょおきもちいいです
+;引数が3なら上半身上着
+;戻り値	1=裾から手が入る					(上着/和服/コスプレ)
+;		2=手が入らない						(導師服/ワンピース)
+;			・上着は前が開けられず袖がせまいものもあるが、裾をまくればだいたいいけると判断
+;いずれも、戻り値0だと着ていないことを表す
+;引数0は0だとTARGET、1ならMASTER
+;
+
+;↓コスプレは未実装ですが処理は残していますｂｙぱ。
+
+;コスプレは意見の分かれるところだと思いますが…
+;わざわざ弄りにくい服着せてから弄るというのは、個人的にはいささか合理性に欠く気がしたので…
+;(合理性で割り切れない面があるのは重々承知の上ですが)
+;きっと弄りやすいカスタム衣装なんだということにします。特にボンデージは。
+;異論は受け付けます。
+;-------------------------------------------------
+@CLOTHESTYPE(ARG, ARG:1)
+#FUNCTION
+;引数が正常でない場合は-1を返す
+SIF ARG < 0 || 1 < ARG || ARG:1 < 0 || 3 < ARG:1
+	RETURNF -1
+SELECTCASE ARG:1
+	;下半身下着
+	CASE 0
+		RETURNF LOWERUNDER(ARG)
+	;下半身上着
+	CASE 1
+		RETURNF LOWERJACKET(ARG)
+	;上半身下着
+	CASE 2
+		RETURNF UPPERUNDER(ARG)
+	;上半身上着
+	CASE 3
+		RETURNF UPPERJACKET(ARG)
+ENDSELECT
+
+;-------------------------------------------------
+;下半身下着関数@LOWERUNDER
+;戻り値	0=はいてない
+;		1=履いたままＶ性交できる				(パンティ/コスプレ)
+;		2=履いてると挿入しにくい			(ドロワーズ/トランクス/パンスト/褌)
+;引数は0だとTARGET、1ならMASTER
+;-------------------------------------------------
+@LOWERUNDER(ARG)
+#FUNCTION
+#LOCALSIZE 1
+LOCAL = ARG ? MASTER # TARGET
+;引数が正常でない場合は-1を返す
+SIF ARG < 0 || 1 < ARG
+	RETURNF -1
+;コスプレ
+SELECTCASE TEQUIP:LOCAL:コスプレ
+	;ボンデージ
+	CASE 1
+		RETURNF 0
+	;その他
+	CASE IS != 0
+		RETURNF 1
+ENDSELECT
+;パンティのみ1で返す
+SIF TEQUIP:LOCAL:下半身下着 == 2
+	RETURNF 1
+;他を着ていれば2、なければ0
+RETURNF TEQUIP:LOCAL:下半身下着 ? 2 # 0
+
+;-------------------------------------------------
+;上半身下着関数@UPPERUNDER
+;戻り値	0=はいてない
+;		1=柔らかく弄りやすい				(キャミソール/Ｔシャツ/コスプレ)
+;		2=弄りにくい						(ブラジャー)
+;引数は0だとTARGET、1ならMASTER
+;-------------------------------------------------
+@UPPERUNDER(ARG)
+#FUNCTION
+#LOCALSIZE 1
+LOCAL = ARG ? MASTER # TARGET
+;引数が正常でない場合は-1を返す
+SIF ARG < 0 || 1 < ARG
+	RETURNF -1
+;コスプレ
+SELECTCASE TEQUIP:LOCAL:コスプレ
+	;ボンデージ
+	CASE 1
+		RETURNF 0
+	;その他
+	CASE IS != 0
+		RETURNF 1
+ENDSELECT
+;キャミとＴシャツは1で返す
+SIF TEQUIP:LOCAL:上半身下着 == 2 || TEQUIP:LOCAL:上半身下着 == 4
+	RETURNF 1
+;上半身下着
+RETURNF TEQUIP:LOCAL:上半身下着 ? 2 # 0
+
+;-------------------------------------------------
+;下半身上着関数@LOWERJACKET
+;戻り値	0=はいてない
+;		1=股部分がなく、ほぼ邪魔にならない	(スカート/ワンピース/和服/導師服)
+;		2=邪魔になる						(ズボン、袴)
+;引数は0だとTARGET、1ならMASTER
+;-------------------------------------------------
+@LOWERJACKET(ARG)
+#FUNCTION
+#LOCALSIZE 1
+LOCAL = ARG ? MASTER # TARGET
+;引数が正常でない場合は-1を返す
+SIF ARG < 0 || 1 < ARG
+	RETURNF -1
+;コスプレ
+SELECTCASE TEQUIP:LOCAL:コスプレ
+	;ボンデージ
+	CASE 1
+		RETURNF 0
+	;その他
+	CASE IS != 0
+		RETURNF 1
+ENDSELECT
+;ズボンと袴は2で返す
+SIF TEQUIP:LOCAL:下半身上着 == 3 || TEQUIP:LOCAL:下半身上着 == 4
+	RETURNF 2
+;他の下半身上着
+SIF TEQUIP:LOCAL:下半身上着
+	RETURNF 1
+;全身上着
+SIF TEQUIP:LOCAL:全身上着
+	RETURNF 1
+;着ていない
+RETURNF 0
+
+;-------------------------------------------------
+;上半身上着関数@UPPERJACKET
+;戻り値	0=はいてない
+;		1=裾などから手が入る				(上着/和服/コスプレ)
+;		2=手が入らない						(ワンピース/導師服)
+;引数は0だとTARGET、1ならMASTER
+;-------------------------------------------------
+@UPPERJACKET(ARG)
+#FUNCTION
+#LOCALSIZE 1
+LOCAL = ARG ? MASTER # TARGET
+;引数が正常でない場合は-1を返す
+SIF ARG < 0 || 1 < ARG
+	RETURNF -1
+;コスプレ
+SELECTCASE TEQUIP:LOCAL:コスプレ
+	;ボンデージ
+	CASE 1
+		RETURNF 0
+	;その他
+	CASE IS != 0
+		RETURNF 1
+ENDSELECT
+;和服のみ1で返す
+SIF TEQUIP:LOCAL:全身上着 == 1
+	RETURNF 1
+;他の全身上着
+SIF TEQUIP:LOCAL:全身上着
+	RETURNF 2
+;上半身上着
+RETURNF TEQUIP:LOCAL:上半身上着 ? 1 # 0
+
+;-------------------------------------------------
+;下半身服装判定関数@PANTSCHECK
+;式中で使用する関数です。下半身の服装が現在どうなっているか判定します
+;「着ているか」ではなく「愛撫の妨げになるか」を返すので、たとえばスカートは履いててもスルーされます
+;戻り値は0なら触り放題、1なら下着、2なら上着、3なら両方が邪魔をします。
+;引数は0だとTARGET、1ならMASTER。引数1を正にすると妨げなくても判定に入れます
+;-------------------------------------------------
+@PANTSCHECK(ARG, ARG:1)
+#FUNCTION
+#LOCALSIZE 1
+;引数が正常でない場合は-1を返す
+SIF ARG < 0 || 1 < ARG
+	RETURNF -1
+ARG:1 = ARG:1 ? 1 # 0
+LOCAL = 0
+LOCAL |= LOWERUNDER(ARG) >= (2 - ARG:1) ? 1 # 0
+LOCAL |= LOWERJACKET(ARG) >= (2 - ARG:1) ? 2 # 0
+RETURNF LOCAL
+
+;-------------------------------------------------
+;上半身服装判定関数@BRACHECK
+;式中で使用する関数です。上半身の服装が現在どうなっているか判定します
+;やっぱり邪魔にならないものはスルーされます
+;戻り値は0なら触り放題、1なら下着、2なら上着、3なら両方が邪魔をします。
+;引数は0だとTARGET、1ならMASTER。引数1を正にすると妨げなくても判定に入れます
+;-------------------------------------------------
+@BRACHECK(ARG, ARG:1)
+#FUNCTION
+#LOCALSIZE 1
+;引数が正常でない場合は-1を返す
+SIF ARG < 0 || 1 < ARG
+	RETURNF -1
+LOCAL = 0
+LOCAL |= UPPERUNDER(ARG) >= (2 - ARG:1) ? 1 # 0
+LOCAL |= UPPERJACKET(ARG) >= (2 - ARG:1) ? 2 # 0
+RETURNF LOCAL
+
+;-------------------------------------------------
+;全裸判定関数@ZENRACHECK
+;式中で使用する関数です。脱衣アクション口上でのみ使用します
+;この脱衣で全裸になるかどうかを判定し、なる場合のみ1を返します。
+;引数は0だとTARGET、1ならMASTER
+;-------------------------------------------------
+@ZENRACHECK(ARG)
+#FUNCTION
+#LOCALSIZE 1
+LOCAL = ARG ? MASTER # TARGET
+;引数が正常でない場合は0を返す
+SIF ARG < 0 || 1 < ARG || (!ARG && ISSWAP())
+	RETURNF 0
+;脱衣失敗
+SIF ARG && TFLAG:強制脱衣 < 0
+	RETURNF 0
+SELECTCASE ARG ? TFLAG:強制脱衣 # TFLAG:自主脱衣
+	;上半身上着
+	CASE 1
+		RETURNF !(TEQUIP:LOCAL:アクセサリ || TEQUIP:LOCAL:靴下 || TEQUIP:LOCAL:下半身下着 || TEQUIP:LOCAL:上半身下着 || TEQUIP:LOCAL:下半身上着)
+	;下半身上着
+	CASE 2
+		RETURNF !(TEQUIP:LOCAL:アクセサリ || TEQUIP:LOCAL:靴下 || TEQUIP:LOCAL:下半身下着 || TEQUIP:LOCAL:上半身下着 || TEQUIP:LOCAL:上半身上着)
+	;上＋下上着
+	CASE 3
+		RETURNF !(TEQUIP:LOCAL:アクセサリ || TEQUIP:LOCAL:靴下 || TEQUIP:LOCAL:下半身下着 || TEQUIP:LOCAL:上半身下着)
+	;上半身全部
+	CASE 4
+		RETURNF !(TEQUIP:LOCAL:アクセサリ || TEQUIP:LOCAL:靴下 || TEQUIP:LOCAL:下半身下着 || TEQUIP:LOCAL:下半身上着)
+	;下半身全部
+	CASE 5
+		RETURNF !(TEQUIP:LOCAL:アクセサリ || TEQUIP:LOCAL:靴下 || TEQUIP:LOCAL:上半身下着 || TEQUIP:LOCAL:上半身上着)
+	;アクセサリー
+	CASE 6
+		RETURNF !(TEQUIP:LOCAL:下半身下着 || TEQUIP:LOCAL:上半身下着 || TEQUIP:LOCAL:下半身上着 || TEQUIP:LOCAL:上半身上着 || TEQUIP:LOCAL:全身上着)
+	;アクセサリ－まで
+	CASE 7
+		RETURNF TEQUIP:LOCAL:アクセサリ !| TEQUIP:LOCAL:靴下
+	;全裸まで
+	CASE 8
+		RETURNF 1
+	;下着だけ
+	CASE 9
+		RETURNF !(TEQUIP:LOCAL:アクセサリ || TEQUIP:LOCAL:靴下 || TEQUIP:LOCAL:下半身上着 || TEQUIP:LOCAL:上半身上着 || TEQUIP:LOCAL:全身上着)
+ENDSELECT
+RETURNF 0
+
+;-------------------------------------------------
+;胸見せ判定関数@B_DATUICHECK
+;式中で使用する関数です。脱衣アクション口上でのみ使用します
+;この脱衣で胸を見せるかどうかを判定し、ブラまで見せる場合は2、おっぱいうｐの場合は3を返します
+;最初から胸が見えている場合は1になります
+;引数は0だとTARGET、1ならMASTER
+;-------------------------------------------------
+@B_DATUICHECK(ARG)
+#FUNCTION
+#LOCALSIZE 1
+LOCAL = ARG ? MASTER # TARGET
+
+;引数が正常でない場合は0を返す
+SIF ARG < 0 || 1 < ARG || (!ARG && ISSWAP())
+	RETURNF 0
+;脱衣失敗
+SIF ARG && TFLAG:強制脱衣 < 0
+	RETURNF 0
+
+;最初から胸が見えている場合
+SIF !(TEQUIP:LOCAL:上半身下着 || TEQUIP:LOCAL:上半身上着 || TEQUIP:LOCAL:全身上着) || (TEQUIP:着衣露出 & (ARG ? 8 # 2))
+	RETURNF 1
+SELECTCASE ARG ? TFLAG:強制脱衣 # TFLAG:自主脱衣
+	;上半身上着
+	CASE 1
+		RETURNF TEQUIP:LOCAL:上半身下着 ? 2 # 3
+	;上＋下上着(上半身上着/全身上着を既に脱いでいる場合は露出済みなのでスルー)
+	CASE 3
+		SIF TEQUIP:LOCAL:上半身上着 || TEQUIP:LOCAL:全身上着
+			RETURNF TEQUIP:LOCAL:上半身下着 ? 2 # 3
+	;上半身全部/アクセサリ－まで/全裸まで
+	CASE 4, 7, 8
+		RETURNF 3
+	;下着だけ(上半身上着/全身上着を既に脱いでいる場合のみおっぱいうｐ)
+	CASE 9
+		SIF TEQUIP:LOCAL:上半身上着 !| TEQUIP:LOCAL:全身上着
+			RETURNF 3
+ENDSELECT
+RETURNF 0
+
+;-------------------------------------------------
+;性器見せ判定関数@P_DATUICHECK
+;式中で使用する関数です。脱衣アクション口上でのみ使用します
+;この脱衣でパンツ・性器を見せるかどうかを判定し、ぱんつまで見せる場合は2、性器まで見せる場合は3を返します
+;最初から性器が見えている場合は1になります
+;引数は0だとTARGET、1ならMASTER
+;-------------------------------------------------
+@P_DATUICHECK(ARG)
+#FUNCTION
+#LOCALSIZE 1
+LOCAL = ARG ? MASTER # TARGET
+;引数が正常でない場合は0を返す
+SIF ARG < 0 || 1 < ARG || (!ARG && ISSWAP())
+	RETURNF 0
+;脱衣失敗
+SIF ARG && TFLAG:強制脱衣 < 0
+	RETURNF 0
+;最初から性器が見えている場合
+SIF !(TEQUIP:LOCAL:下半身下着 || TEQUIP:LOCAL:下半身上着 || TEQUIP:LOCAL:全身上着) || (TEQUIP:着衣露出 & (ARG ? 4 # 1))
+	RETURNF 1
+SELECTCASE ARG ? TFLAG:強制脱衣 # TFLAG:自主脱衣
+	;下半身上着
+	CASE 2
+		RETURNF TEQUIP:LOCAL:下半身下着 ? 2 # 3
+	;上＋下上着(下半身上着/全身上着を既に脱いでいる場合は露出済みなのでスルー)
+	CASE 3
+		SIF TEQUIP:LOCAL:下半身上着 || TEQUIP:LOCAL:全身上着
+			RETURNF TEQUIP:LOCAL:下半身下着 ? 2 # 3
+	;下半身全部/アクセサリ－まで/全裸まで
+	CASE 5, 7, 8
+		RETURNF 3
+	;下着だけ(下半身上着/全身上着を既に脱いでいる場合のみ性器うｐ)
+	CASE 9
+		SIF TEQUIP:LOCAL:下半身上着 !| TEQUIP:LOCAL:全身上着
+			RETURNF 3
+ENDSELECT
+RETURNF 0
+
+;-------------------------------------------------
+;関数名:CLOTHE_SAVE
+;概　要:脱衣用、服装保存・取得関数
+;引　数:ARG:0…キャラ登録番号(MASTERかTARGET。省略したり妙な数値が入るとTARGET)
+;　　　:ARG:1…省略=-1にすると現在の服装を保存。数値を入れると保存した服装と現在の服装の差異を返す。
+;戻り値:違っている＝脱ぎ着していれば正。一応、脱いだら1、着ていると2で返す。
+;備　考:式中関数
+;保存しておいた服装と現在の服装の差異を返す。MASTERとTARGETにしか対応していない
+;-------------------------------------------------
+@CLOTHE_SAVE(ARG:0, ARG:1 = -1)
+#FUNCTION
+#LOCALSIZE 21
+#DIM LCOUNT, 1
+IF ARG != MASTER
+	ARG = TARGET
+	LOCAL:20 = 10
+ELSE
+	ARG = MASTER
+	LOCAL:20 = 0
+ENDIF
+
+;SAVE
+IF ARG:1 < 0
+	FOR LCOUNT, 0, 10
+		LOCAL:(LCOUNT+LOCAL:20) = TEQUIP:ARG:LCOUNT
+	NEXT
+	RETURNF 0
+;LOAD
+ELSEIF LOCAL:(ARG:1+LOCAL:20) == TEQUIP:ARG:(ARG:1)
+	RETURNF 0
+ELSE
+	RETURNF TEQUIP:ARG:(ARG:1) ? 2 # 1
+ENDIF

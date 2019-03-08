@@ -1,0 +1,138 @@
+﻿;特殊能力行動の試作案です。はっきり言えばかなり手抜きですが、このやり方は調教者思考ルーチンへの負担が一番少ないです
+;────────────────────────────────────
+;調教者の特殊能力のチェック。特定の調教者と行動の組み合わせによって特殊能力行動に変化します
+;────────────────────────────────────
+@SP_CHECK
+IF NO:TARGET == 1
+	;針＝＞パスウェイジョンニードル
+	IF IS_NOWACTNAME("針") && CFLAG:調教レベル > 0
+		TFLAG:ＳＰ行動 = 200
+	;縄で緊縛＝＞八方鬼縛陣
+	ELSEIF IS_NOWACTNAME("縄") && ABL:技巧 > 2
+		TFLAG:ＳＰ行動 = 201
+	ENDIF
+ELSEIF NO:TARGET == 28
+	;不気味な微笑み＝＞狂気の瞳
+	IF IS_NOWACTNAME("不気味に笑う") && ABL:異常 > 1
+		TFLAG:ＳＰ行動 = 202
+	;このキャラクターの新しい特殊能力を作りたい時はこのように拡張してください
+	;ELSEIF TFLAG:ACT == XX && CFLAG:調教レベル > X && ABL:X > X && ...
+	;	TFLAG:ＳＰ行動 = 2XX
+	ENDIF
+;新しいキャラクターの特殊能力を作りたい時はこちらから拡張してください
+;ELSEIF NO:TARGET == XX
+ENDIF
+
+
+;────────────────────────────────────
+;調教者の特殊能力行動の実行。（）の中にベースとなる調教指令からの変更点を説明
+;────────────────────────────────────
+@SP_ACTION
+;────────────────────────────────────
+;パスウェイジョンニードル（痛み補正、調教時間短縮）
+;────────────────────────────────────
+IF TFLAG:ＳＰ行動 == 200
+	SOURCE:MASTER:痛み = 320 * (TALENT:サド + 2) + (ABL:技巧 + 1) * (ABL:加虐 + 2) * (2 + TALENT:針さばき * 3) + (ABL:技巧 * 2 + CFLAG:調教レベル) * (TALENT:サド + TALENT:針さばき * 2 + 1) * (12 + TALENT:サド)
+	SIF TALENT:心根優しい
+		TIMES SOURCE:MASTER:痛み , 0.80
+	SOURCE:MASTER:逸脱 = 200 + SOURCE:MASTER:痛み / 2 - CFLAG:MASTER:調教レベル * 30 - ABL:MASTER:マゾっ気 * 60 - ABL:MASTER:苦痛中毒 * 200
+	SIF SOURCE:MASTER:逸脱 < 0
+		SOURCE:MASTER:逸脱 = 0
+	SOURCE:MASTER:中毒充足 = ABL:MASTER:マゾっ気 * (ABL:MASTER:苦痛中毒 - 1) * (ABL:MASTER:苦痛中毒 + 1) * SOURCE:MASTER:痛み / 100
+	SIF SOURCE:MASTER:中毒充足 < 0
+		SOURCE:MASTER:中毒充足 = 0
+	SOURCE:MASTER:トラウマ = SOURCE:MASTER:痛み / 2 - SOURCE:MASTER:中毒充足
+	SIF SOURCE:MASTER:トラウマ < 0
+		SOURCE:MASTER:トラウマ = 0
+	SIF CFLAG:MASTER:トラウマ == 62
+		TIMES SOURCE:MASTER:トラウマ , 1.50
+	;出血
+	IF TALENT:MASTER:オトコ || TALENT:MASTER:ふたなり
+		STAIN:MASTER:ペニス |= 32
+	ELSE
+		STAIN:MASTER:ヴァギナ |= 32
+	ENDIF
+	STAIN:MASTER:胸 |= 32
+	SIF TEQUIP:自慰中
+		TEQUIP:自慰中 = 0
+	SIF TEQUIP:性交中
+		TEQUIP:性交中 = 0
+	TFLAG:経過時間 += 1
+;────────────────────────────────────
+;八方鬼縛陣（拘束補正、調教時間短縮）
+;────────────────────────────────────
+ELSEIF TFLAG:ＳＰ行動 == 201
+	IF TEQUIP:縄 == 0
+		SOURCE:MASTER:拘束 = 120 + (MARK:反抗刻印 + CFLAG:調教レベル * 2 + 1) * (ABL:技巧 * 2 + 1) * 5 * (TALENT:縛り上手 * 3 + 2)
+		SOURCE:MASTER:中毒充足 = ABL:MASTER:マゾっ気 * (ABL:MASTER:拘束中毒 - 1) * (ABL:MASTER:拘束中毒 + 1) * SOURCE:MASTER:拘束 / 100
+		;装備番号は変わらないが、INFO.ERBとUSERCOM.ERBで表示するメッセージを設定できます
+		TEQUIP:縄 = 1 + SOURCE:MASTER:拘束 / 500
+	ELSE
+		TEQUIP:縄 = 0
+	ENDIF
+	SIF TEQUIP:自慰中
+		TEQUIP:自慰中 = 0
+	SIF TEQUIP:性交中
+		TEQUIP:性交中 = 0
+	TFLAG:経過時間 += 1
+;────────────────────────────────────
+;狂気の瞳（ランダムパラメータ上昇、逸脱に補正）
+;────────────────────────────────────
+ELSEIF TFLAG:ＳＰ行動 == 202
+	SIF RAND:6 > 2
+		TFLAG:強制脱衣 = 6
+	SIF RAND:6 > 2
+		TFLAG:自主脱衣 = 6
+	A = RAND:14
+	B = RAND:14
+	SIF B == A
+		B += 1 + RAND:3
+	SIF B > 13
+		B -= 13
+	PALAM:MASTER:A += 500 + RAND:500
+	PALAM:MASTER:B += 300 + RAND:300
+	SOURCE:MASTER:逸脱 = (3 + RAND:5) * (CFLAG:調教レベル + 3) * 50
+	SOURCE:MASTER:トラウマ = 250 + RAND:5 * 100
+	SIF CFLAG:MASTER:トラウマ == 9
+		TIMES SOURCE:MASTER:トラウマ , 1.50
+	SIF TEQUIP:自慰中 == 2
+		TEQUIP:自慰中 = 0
+	SIF TEQUIP:自慰中 == 3
+		TEQUIP:自慰中 = 1
+	SIF TEQUIP:性交中
+		TEQUIP:性交中 = 0
+	TFLAG:経過時間 += 1
+	TFLAG:既出の話題 |= 32
+ENDIF
+@SP_TRAIN_MESSAGE
+;パスウェイジョンニードル
+IF TFLAG:ＳＰ行動 == 200
+	IF PENIS(MASTER)
+		PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の体に
+		PRINTFORML 慣れた手つきで退魔の針を突きたてた…
+	ELSE
+		PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の乳首やクリトリスに
+		PRINTFORML 慣れた手つきで退魔の針を突きたてた…
+	ENDIF
+;八方鬼縛陣
+ELSEIF TFLAG:ＳＰ行動 == 201
+	;解除
+	IF TFLAG:ACT派生 == 1
+		PRINTFORML %CALLNAME:TARGET%の不思議な力によって、
+		PRINTFORML %CALLNAME:MASTER%を拘束してる御札は一瞬で%CALLNAME:TARGET%の手に戻った…
+	;通常
+	ELSE
+		PRINTFORML %CALLNAME:TARGET%は御札を使って結界を張ると
+		PRINTFORML 念を送って%CALLNAME:MASTER%の身体の自由を奪った…
+	ENDIF
+ELSEIF TFLAG:ＳＰ行動 == 202
+	;PRINTL ＜シックスナイン＞
+	IF TSTR:前調教指令 == "シックスナイン"
+		PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の顔にまたがったまま
+		PRINTFORML ペニスを咥えて離さない…
+	ELSE
+		PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の顔にまたがって押し倒すと
+		PRINTFORML 無防備になった股間に舌を這わせ始めた…
+	ENDIF
+ENDIF
+

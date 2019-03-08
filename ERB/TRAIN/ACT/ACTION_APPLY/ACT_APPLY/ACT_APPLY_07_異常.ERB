@@ -1,0 +1,378 @@
+﻿;────────────────────────────────────
+;070,フィストファック（Ｈ/Ａ）[罰]（快Ｖ、接触、痛み、逸脱、中毒充足、トラウマ）
+;────────────────────────────────────
+@ACTION_APPLY_70
+;下半身全部強制脱衣
+TFLAG:強制脱衣 = 5
+;必要ならばローションを使用
+CALL LOTION_USE
+;愛撫補正値、マゾっ気に応じて快ＶSOURCE増加
+SOURCE:MASTER:快Ｖ = 200 + ACT_FROM(TARGET, 2) * (ABL:MASTER:マゾっ気 + 5) / 5
+;接触SOURCE増加
+SOURCE:MASTER:接触 = 300
+;Ｖ経験/Ｖ拡張経験が少ないほど快ＶSOURCEが減衰し、痛み、逸脱SOURCEが増加する
+;痛みSOURCEは体格差によっても増減する
+IF EXP:MASTER:Ｖ経験 < 20 || EXP:MASTER:Ｖ拡張経験 < 1
+	TIMES SOURCE:MASTER:快Ｖ , 0.10
+	SOURCE:MASTER:痛み = 3000 + TALENT:MASTER:小柄 * 500 - TALENT:MASTER:長身 * 500 - TALENT:小柄 * 250 + TALENT:長身 * 250
+	SOURCE:MASTER:逸脱 = 2500
+ELSEIF EXP:MASTER:Ｖ経験 < 25 || EXP:MASTER:Ｖ拡張経験 < 2
+	TIMES SOURCE:MASTER:快Ｖ , 0.25
+	SOURCE:MASTER:痛み = 2500 + TALENT:MASTER:小柄 * 400 - TALENT:MASTER:長身 * 400 - TALENT:小柄 * 200 + TALENT:長身 * 200
+	SOURCE:MASTER:逸脱 = 2000
+ELSEIF EXP:MASTER:Ｖ経験 < 30 || EXP:MASTER:Ｖ拡張経験 < 4
+	TIMES SOURCE:MASTER:快Ｖ , 0.45
+	SOURCE:MASTER:痛み = 1800 + TALENT:MASTER:小柄 * 300 - TALENT:MASTER:長身 * 300 - TALENT:小柄 * 150 + TALENT:長身 * 150
+	SOURCE:MASTER:逸脱 = 1200
+ELSEIF EXP:MASTER:Ｖ拡張経験 < 6
+	TIMES SOURCE:MASTER:快Ｖ , 0.70
+	SOURCE:MASTER:痛み = 1000 + TALENT:MASTER:小柄 * 200 - TALENT:MASTER:長身 * 200 - TALENT:小柄 * 100 + TALENT:長身 * 100
+	SOURCE:MASTER:逸脱 = 500
+ELSE
+	SOURCE:MASTER:痛み = 500 + TALENT:MASTER:小柄 * 100 - TALENT:MASTER:長身 * 100 - TALENT:小柄 * 50 + TALENT:長身 * 50
+	SOURCE:MASTER:逸脱 = 150
+ENDIF
+;潤滑不足時、快ＶSOURCEに減少補正、痛みSOURCE増加
+CALL SHORTAGE_LUBRICATION("2000/M快Ｖ,T,40/M痛み,A,1500")
+;快ＶSOURCEに応じて中毒充足SOURCE増加、逸脱SOURCEによって減少
+SOURCE:MASTER:中毒充足 = SOURCE:MASTER:快Ｖ - SOURCE:MASTER:逸脱
+;中毒充足SOURCEが負の値をとらないよう調整
+SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 < 0 ? 0 # SOURCE:MASTER:中毒充足
+;痛み、逸脱SOURCEに応じて中毒充足SOURCE増加
+SOURCE:MASTER:トラウマ = SOURCE:MASTER:痛み + SOURCE:MASTER:逸脱
+;中毒充足SOURCEが正であればトラウマSOURCE抹消
+SOURCE:MASTER:トラウマ = SOURCE:MASTER:中毒充足 > 0 ? 0 # SOURCE:MASTER:トラウマ
+;トラウマ(刻印)の元がこの調教だった場合、トラウマSOURCEを1.5倍にする
+SIF CFLAG:MASTER:トラウマ == 70
+	TIMES SOURCE:MASTER:トラウマ , 1.50
+;顔面騎乗系解除
+CALL FACESITTING_SET(0)
+;調教者、調教対象自慰を中断
+TEQUIP:自慰中 = 0
+;調教者マゾっ気に応じて勃起度上昇
+TCVAR:MASTER:今回の勃起 += 50 + (GET_ABL(MASTER, "マゾっ気") - 20) * 4
+TFLAG:経過時間 += 4
+
+@ACTION_APPLY2_70
+;MASTERが処女なら、処女喪失が起こる
+TCVAR:MASTER:処女喪失 = TALENT:MASTER:処女
+
+;────────────────────────────────────
+;071,アナルフィスト（Ｈ/Ａ）[罰]（快Ａ、接触、痛み、逸脱、中毒充足、トラウマ）
+;────────────────────────────────────
+@ACTION_APPLY_71
+;下半身全部強制脱衣
+TFLAG:強制脱衣 = 5
+;必要ならばローションを使用
+CALL LOTION_USE
+;愛撫補正値、マゾっ気に応じて快ＡSOURCE増加
+SOURCE:MASTER:快Ａ = 200 + ACT_FROM(TARGET, 3) * (ABL:MASTER:マゾっ気 + 5) / 5
+;接触SOURCE増加
+SOURCE:MASTER:接触 = 300
+;Ａ経験/Ａ拡張経験が少ないほど快ＡSOURCEが減衰し、痛み、逸脱SOURCEが増加する
+;痛みSOURCEは体格差によっても増減する
+IF EXP:MASTER:Ａ経験 < 20 || EXP:MASTER:Ａ拡張経験 < 1
+	TIMES SOURCE:MASTER:快Ａ , 0.10
+	SOURCE:MASTER:痛み = 4000 + TALENT:MASTER:小柄 * 700 - TALENT:MASTER:長身 * 700 - TALENT:小柄 * 500 + TALENT:長身 * 500
+	SOURCE:MASTER:逸脱 = 5000
+ELSEIF EXP:MASTER:Ａ経験 < 25 || EXP:MASTER:Ａ拡張経験 < 2
+	TIMES SOURCE:MASTER:快Ａ , 0.20
+	SOURCE:MASTER:痛み = 3000 + TALENT:MASTER:小柄 * 600 - TALENT:MASTER:長身 * 600 - TALENT:小柄 * 420 + TALENT:長身 * 420
+	SOURCE:MASTER:逸脱 = 4000
+ELSEIF EXP:MASTER:Ａ経験 < 30 || EXP:MASTER:Ａ拡張経験 < 4
+	TIMES SOURCE:MASTER:快Ａ , 0.35
+	SOURCE:MASTER:痛み = 2000 + TALENT:MASTER:小柄 * 500 - TALENT:MASTER:長身 * 500 - TALENT:小柄 * 350 + TALENT:長身 * 350
+	SOURCE:MASTER:逸脱 = 3000
+ELSEIF EXP:MASTER:Ａ拡張経験 < 6
+	TIMES SOURCE:MASTER:快Ａ , 0.60
+	SOURCE:MASTER:痛み = 1000 + TALENT:MASTER:小柄 * 380 - TALENT:MASTER:長身 * 380 - TALENT:小柄 * 280 + TALENT:長身 * 280
+	SOURCE:MASTER:逸脱 = 2000
+ELSE
+	SOURCE:MASTER:痛み = 500 + TALENT:MASTER:小柄 * 250 - TALENT:MASTER:長身 * 250 - TALENT:小柄 * 200 + TALENT:長身 * 200
+	SOURCE:MASTER:逸脱 = 1000
+ENDIF
+;潤滑不足時、快ＡSOURCEに減少補正、痛みSOURCE増加
+CALL SHORTAGE_LUBRICATION("2000/M快Ａ,T,40/M痛み,A,1500")
+;快ＡSOURCEに応じて中毒充足SOURCE増加、逸脱SOURCEによって減少
+SOURCE:MASTER:中毒充足 = SOURCE:MASTER:快Ａ - SOURCE:MASTER:逸脱
+;中毒充足SOURCEが負の値をとらないよう調整
+SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 < 0 ? 0 # SOURCE:MASTER:中毒充足
+;痛み、逸脱SOURCEに応じて中毒充足SOURCE増加
+SOURCE:MASTER:トラウマ = SOURCE:MASTER:痛み + SOURCE:MASTER:逸脱
+;中毒充足SOURCEが正であればトラウマSOURCE抹消
+SOURCE:MASTER:トラウマ = SOURCE:MASTER:中毒充足 > 0 ? 0 # SOURCE:MASTER:トラウマ
+;トラウマ(刻印)の元がこの調教だった場合、トラウマSOURCEを1.5倍にする
+SIF CFLAG:MASTER:トラウマ == 71
+	TIMES SOURCE:MASTER:トラウマ , 1.50
+;顔面騎乗系解除
+CALL FACESITTING_SET(0)
+;調教者、調教対象自慰を中断
+TEQUIP:自慰中 = 0
+;調教者マゾっ気に応じて勃起度上昇
+TCVAR:MASTER:今回の勃起 += 50 + (GET_ABL(MASTER, "マゾっ気") - 20) * 4
+TFLAG:経過時間 += 4
+
+;────────────────────────────────────
+;072,両穴フィスト（Ａ）[罰]（快Ｖ、快Ａ、接触、痛み、逸脱、中毒充足、トラウマ）
+;────────────────────────────────────
+@ACTION_APPLY_72
+;下半身全部強制脱衣
+TFLAG:強制脱衣 = 5
+;必要ならばローションを使用
+CALL LOTION_USE
+;愛撫補正値、マゾっ気に応じて快Ｖ、快ＡSOURCE増加
+SOURCE:MASTER:快Ｖ = 200 + ACT_FROM(TARGET, 2) * (ABL:MASTER:マゾっ気 + 5) / 5
+SOURCE:MASTER:快Ａ = 200 + ACT_FROM(TARGET, 3) * (ABL:MASTER:マゾっ気 + 5) / 5
+;接触SOURCE増加
+SOURCE:MASTER:接触 = 500
+;Ｖ経験/Ｖ拡張経験が少ないほど快ＶSOURCEが減衰し、痛み、逸脱SOURCEが増加する
+;痛みSOURCEは体格差によっても増減する
+IF EXP:MASTER:Ｖ経験 < 20 || EXP:MASTER:Ｖ拡張経験 < 1
+	TIMES SOURCE:MASTER:快Ｖ , 0.10
+	SOURCE:MASTER:痛み = 3000 + TALENT:MASTER:小柄 * 500 - TALENT:MASTER:長身 * 500 - TALENT:小柄 * 250 + TALENT:長身 * 250
+	SOURCE:MASTER:逸脱 = 2500
+ELSEIF EXP:MASTER:Ｖ経験 < 25 || EXP:MASTER:Ｖ拡張経験 < 2
+	TIMES SOURCE:MASTER:快Ｖ , 0.25
+	SOURCE:MASTER:痛み = 2500 + TALENT:MASTER:小柄 * 400 - TALENT:MASTER:長身 * 400 - TALENT:小柄 * 200 + TALENT:長身 * 200
+	SOURCE:MASTER:逸脱 = 2000
+ELSEIF EXP:MASTER:Ｖ経験 < 30 || EXP:MASTER:Ｖ拡張経験 < 4
+	TIMES SOURCE:MASTER:快Ｖ , 0.45
+	SOURCE:MASTER:痛み = 1800 + TALENT:MASTER:小柄 * 300 - TALENT:MASTER:長身 * 300 - TALENT:小柄 * 150 + TALENT:長身 * 150
+	SOURCE:MASTER:逸脱 = 1200
+ELSEIF EXP:MASTER:Ｖ拡張経験 < 6
+	TIMES SOURCE:MASTER:快Ｖ , 0.70
+	SOURCE:MASTER:痛み = 1000 + TALENT:MASTER:小柄 * 200 - TALENT:MASTER:長身 * 200 - TALENT:小柄 * 100 + TALENT:長身 * 100
+	SOURCE:MASTER:逸脱 = 500
+ELSE
+	SOURCE:MASTER:痛み = 500 + TALENT:MASTER:小柄 * 100 - TALENT:MASTER:長身 * 100 - TALENT:小柄 * 50 + TALENT:長身 * 50
+	SOURCE:MASTER:逸脱 = 150
+ENDIF
+;Ａ経験/Ａ拡張経験が少ないほど快ＡSOURCEが減衰し、痛み、逸脱SOURCEが増加する
+;痛みSOURCEは体格差によっても増減する
+IF EXP:MASTER:Ａ経験 < 20 || EXP:MASTER:Ａ拡張経験 < 1
+	TIMES SOURCE:MASTER:快Ａ , 0.10
+	SOURCE:MASTER:痛み += 4000 + TALENT:MASTER:小柄 * 700 - TALENT:MASTER:長身 * 700 - TALENT:小柄 * 500 + TALENT:長身 * 500
+	SOURCE:MASTER:逸脱 += 5000
+ELSEIF EXP:MASTER:Ａ経験 < 25 || EXP:MASTER:Ａ拡張経験 < 2
+	TIMES SOURCE:MASTER:快Ａ , 0.20
+	SOURCE:MASTER:痛み += 3000 + TALENT:MASTER:小柄 * 600 - TALENT:MASTER:長身 * 600 - TALENT:小柄 * 420 + TALENT:長身 * 420
+	SOURCE:MASTER:逸脱 += 4000
+ELSEIF EXP:MASTER:Ａ経験 < 30 || EXP:MASTER:Ａ拡張経験 < 4
+	TIMES SOURCE:MASTER:快Ａ , 0.35
+	SOURCE:MASTER:痛み += 2000 + TALENT:MASTER:小柄 * 500 - TALENT:MASTER:長身 * 500 - TALENT:小柄 * 350 + TALENT:長身 * 350
+	SOURCE:MASTER:逸脱 += 3000
+ELSEIF EXP:MASTER:Ａ拡張経験 < 6
+	TIMES SOURCE:MASTER:快Ａ , 0.60
+	SOURCE:MASTER:痛み += 1000 + TALENT:MASTER:小柄 * 380 - TALENT:MASTER:長身 * 380 - TALENT:小柄 * 280 + TALENT:長身 * 280
+	SOURCE:MASTER:逸脱 += 2000
+ELSE
+	SOURCE:MASTER:痛み += 500 + TALENT:MASTER:小柄 * 250 - TALENT:MASTER:長身 * 250 - TALENT:小柄 * 200 + TALENT:長身 * 200
+	SOURCE:MASTER:逸脱 += 1000
+ENDIF
+;潤滑不足時、快Ｖ、快ＡSOURCEに減少補正、痛みSOURCE増加
+CALL SHORTAGE_LUBRICATION("2000/M快Ｖ,T,40/M快Ａ,T,40/M痛み,A,3000")
+;快Ｖ、快ＡSOURCEに応じて中毒充足SOURCE増加、逸脱SOURCEによって減少
+SOURCE:MASTER:中毒充足 = SOURCE:MASTER:快Ｖ + SOURCE:MASTER:快Ａ - SOURCE:MASTER:逸脱
+;中毒充足SOURCEが負の値をとらないよう調整
+SOURCE:MASTER:中毒充足 = SOURCE:MASTER:中毒充足 < 0 ? 0 # SOURCE:MASTER:中毒充足
+;痛み、逸脱SOURCEに応じて中毒充足SOURCE増加
+SOURCE:MASTER:トラウマ = SOURCE:MASTER:痛み + SOURCE:MASTER:逸脱
+;中毒充足SOURCEが正であればトラウマSOURCE抹消
+SOURCE:MASTER:トラウマ = SOURCE:MASTER:中毒充足 > 0 ? 0 # SOURCE:MASTER:トラウマ
+;トラウマ(刻印)の元がフィスト系だった場合、トラウマSOURCEを1.5倍にする
+SIF CFLAG:MASTER:トラウマ == 70 || CFLAG:MASTER:トラウマ == 71 || CFLAG:MASTER:トラウマ == 72
+	TIMES SOURCE:MASTER:トラウマ , 1.50
+;顔面騎乗系解除
+CALL FACESITTING_SET(0)
+;調教者、調教対象自慰を中断
+TEQUIP:自慰中 = 0
+;調教者マゾっ気に応じて勃起度上昇
+TCVAR:MASTER:今回の勃起 += 50 + (GET_ABL(MASTER, "マゾっ気") - 30) * 6
+TFLAG:経過時間 += 4
+
+@ACTION_APPLY2_72
+;MASTERが処女なら、処女喪失が起こる
+TCVAR:MASTER:処女喪失 = TALENT:MASTER:処女
+
+;────────────────────────────────────
+;073,放置プレイ（Ｈ/Ａ）[罰]（露出、逸脱）
+;────────────────────────────────────
+@ACTION_APPLY_73
+;必要ならば媚薬を使用
+CALL LOVEPOTION_USE
+;異常、羞恥、調教レベルに応じて露出SOURCE増加
+SOURCE:MASTER:露出 = 100 + (GET_ABL(TARGET, "異常") + 50) * (GET_ABL(TARGET, "羞恥") + 10) * GET_TRAINLV(TARGET) / 100
+;露出SOURCEに応じて逸脱SOURCE増加、調教対象調教レベル、露出癖によって減少
+SOURCE:MASTER:逸脱 = 500 + SOURCE:MASTER:露出 - CFLAG:MASTER:調教レベル * 80 - GET_ABL(MASTER, "露出癖") * 16
+;逸脱SOURCEが負の値をとらないよう調整
+SOURCE:MASTER:逸脱 = SOURCE:MASTER:逸脱 < 0 ? 0 # SOURCE:MASTER:逸脱
+;顔面騎乗系解除
+CALL FACESITTING_SET(0)
+TFLAG:経過時間 += 2
+
+;────────────────────────────────────
+;074,公衆肉便器プレイ
+;────────────────────────────────────
+;リアクション前（Ａ）[罰]（情愛逆、拘束、露出、逸脱、トラウマ）
+;許しを乞うことでキャンセルできますので、ここでは調教者が帰った後の処理を行いません
+@ACTION_APPLY_74
+;半々の確率でアクセサリ－まで、全裸まで強制脱衣
+TFLAG:強制脱衣 = 7 + RAND:2
+;必要ならば媚薬を使用
+CALL LOVEPOTION_USE
+;調教対象恋慕素質に応じて情愛SOURCE増加、調教対象淫乱、隷属素質、調教レベルによって減少
+SOURCE:MASTER:情愛 -= 1500 + TALENT:MASTER:恋慕 * 500 - TALENT:MASTER:淫乱 * 750 - TALENT:MASTER:隷属 * 250 - CFLAG:MASTER:調教レベル * 100
+;情愛SOURCEが負の値をとらないよう調整
+SOURCE:MASTER:情愛 = SOURCE:MASTER:情愛 < 0 ? 0 # SOURCE:MASTER:情愛
+;反抗刻印、調教者技巧、縛り上手素質に応じて拘束SOURCE増加
+SOURCE:MASTER:拘束 = 150 + (MARK:反抗刻印 + 1) * (GET_ABL(TARGET, "技巧") + 10) * (TALENT:縛り上手 + 1)
+;異常、羞恥、拘束SOURCEに応じて露出SOURCE増加
+SOURCE:MASTER:露出 = 500 + (GET_ABL(TARGET, "異常") + 50) * (GET_ABL(TARGET, "羞恥") + 10) * SOURCE:MASTER:拘束 / 10000
+;露出SOURCEに応じて逸脱SOURCE増加、調教対象調教レベル、露出癖、欲望、淫乱素質によって減少
+SOURCE:MASTER:逸脱 = 5000 + SOURCE:MASTER:露出 - CFLAG:MASTER:調教レベル * 100 - GET_ABL(MASTER, "露出癖") * 30 - GET_ABL(MASTER, "欲望") * 20 - TALENT:MASTER:淫乱 * 2000
+;逸脱SOURCEが負の値をとらないよう調整
+SOURCE:MASTER:逸脱 = SOURCE:MASTER:逸脱 < 0 ? 0 # SOURCE:MASTER:逸脱
+;逸脱SOURCEをそのままトラウマSOURCEとする
+SOURCE:MASTER:トラウマ = SOURCE:MASTER:逸脱
+;トラウマ(刻印)の元がこの調教だった場合
+IF CFLAG:MASTER:トラウマ == 74
+	;トラウマ(刻印)に応じてトラウマSOURCEを増加
+	SOURCE:MASTER:トラウマ += 1000 + MARK:トラウマ * 100
+	;トラウマSOURCEを1.5倍にする
+	TIMES SOURCE:MASTER:トラウマ , 1.50
+ENDIF
+;装着系を一括解除
+TEQUIP:バイブ = 0
+TEQUIP:アナルバイブ = 0
+TEQUIP:アナルビーズ = 0
+TEQUIP:浣腸器＋プラグ = 0
+TEQUIP:クリキャップ = 0
+TEQUIP:オナホール = 0
+TEQUIP:ニプルキャップ = 0
+;顔面騎乗系解除
+CALL FACESITTING_SET(0)
+;調教者、調教対象自慰を中断
+TEQUIP:自慰中 = 0
+TFLAG:経過時間 += 60
+
+;リアクション後（快Ｃ、快Ｖ、快Ａ、快Ｂ、情愛逆、痛み、拘束、露出、不潔、逸脱、中毒充足、トラウマ）
+@ACTION_APPLY2_74
+;REACT分類が許しを乞うだった場合キャンセル
+IF IS_COMGRONAME("許しを乞う")
+	;情愛SOURCEを0以上まで加算
+	;拘束、露出、逸脱、トラウマSOURCEは減衰
+	SOURCE:MASTER:情愛 = MAX(SOURCE:MASTER:情愛, 0)
+	SOURCE:MASTER:拘束 /= 3
+	SOURCE:MASTER:露出 /= 2
+	SOURCE:MASTER:逸脱 /= 4
+	SOURCE:MASTER:トラウマ /= 4
+	;ACT派生に拘束を解いて一緒に調教部屋へ帰った(哀願)をセット
+	TFLAG:ACT派生 = 1
+;その他の場合実行
+ELSE
+	;2/3の確率で発見される
+	IF RAND:3
+		;快Ｃ、快Ｖ、快Ａ、快Ｂ、痛み、拘束、不潔SOURCE増加
+		;(オトコであれば快Ｖ、快Ｂは発生しない)
+		SOURCE:MASTER:快Ｃ += 2000 + (RAND:100 + 1) * 10
+		SOURCE:MASTER:快Ｖ += TALENT:MASTER:オトコ ? 0 # 3000 + (RAND:30 + 1) * 50
+		SOURCE:MASTER:快Ａ += 2500 + (RAND:100 + 1) * 10
+		SOURCE:MASTER:快Ｂ += TALENT:MASTER:オトコ ? 0 # 2000 + (RAND:100 + 1) * 10
+		SOURCE:MASTER:痛み += 1000 + (RAND:150 + 1) * 15 + (ABL:MASTER:Ａ感覚 < 2 ? SOURCE:MASTER:快Ａ / 3 # 0)
+		SOURCE:MASTER:拘束 += 500 + (RAND:20 + 1) * 20
+		SOURCE:MASTER:不潔 += 1500 + (RAND:10 + 1) * 50
+		;全身に精液汚れ追加
+		;(ペニス、ヴァギナは存在時のみ)
+		STAIN:MASTER:口 |= 4
+		STAIN:MASTER:手 |= 4
+		STAIN:MASTER:ペニス |= (TALENT:MASTER:ふたなり || TALENT:MASTER:オトコ) ? 4 # 0
+		STAIN:MASTER:ヴァギナ |= TALENT:MASTER:オトコ ? 0 # 4
+		STAIN:MASTER:アナル |= 4
+		STAIN:MASTER:胸 |= 4
+		STAIN:MASTER:足 |= 4
+		;淫乱の場合
+		IF TALENT:MASTER:淫乱
+			;中毒充足SOURCE増加
+			SOURCE:MASTER:中毒充足 += 500 + (RAND:20 + 1) * 25
+			;ACT派生にまだ物足りない様子(興奮)をセット
+			TFLAG:ACT派生 = 3
+		ELSE
+			;情愛SOURCE減少、逸脱、トラウマSOURCE増加
+			SOURCE:MASTER:情愛 -= 1000 + (RAND:6 + 1) * 50
+			SOURCE:MASTER:逸脱 += 2500 + (RAND:6 + 1) * 500
+			SOURCE:MASTER:トラウマ += 2000 + (RAND:6 + 1) * 500
+			;ACT派生に心も体もボロボロ(陵辱)をセット
+			TFLAG:ACT派生 = 2
+		ENDIF
+		;MASTERが処女なら、処女喪失が起こる
+		TCVAR:MASTER:処女喪失 = TALENT:MASTER:処女
+		;童貞は…どうするか悩んだけど、喪失させておく
+		TCVAR:MASTER:童貞喪失 = TALENT:MASTER:童貞
+	;発見されなかった
+	ELSE
+		;逸脱、トラウマSOURCE減衰
+		SOURCE:MASTER:逸脱 /= 2
+		SOURCE:MASTER:トラウマ /= 2
+		;ACT派生に最後まで人は来なかった(無事)をセット
+		TFLAG:ACT派生 = 0
+	ENDIF
+ENDIF
+
+;────────────────────────────────────
+;075,ペニスバンド装着（Ｎ/Ｈ）[罰]（トラウマ）
+;────────────────────────────────────
+@ACTION_APPLY_75
+;トラウマ(刻印)に応じてトラウマSOURCE増加
+SOURCE:MASTER:トラウマ = 100 + MARK:MASTER:トラウマ * 50
+;トラウマ(刻印)の元がこの調教だった場合トラウマSOURCE1.5倍
+SIF CFLAG:MASTER:トラウマ == 7
+	TIMES SOURCE:MASTER:トラウマ , 1.50
+;脱衣の処理
+;着衣プレイ好き素質があり、下半身上着に妨害されない場合
+;調教レベル、解放素質に応じて成功率上昇し、下着だけ強制脱衣
+IF TALENT:着衣プレイ好き && (GET_TRAINLV(TARGET) + TALENT:解放 * 3 > 2 + RAND:3) && CLOTHESTYPE(0, 1) == 1
+	TFLAG:自主脱衣 = 9
+ELSE
+	;下半身全部自主脱衣
+	TFLAG:自主脱衣 = 5
+ENDIF
+;調教者欲望、調教レベル、道具使い素質、技巧、道具強化に応じて快ｖSOURCE増加
+SOURCE:快Ｖ = 150 + GET_ABL(TARGET, "欲望") * (GET_TRAINLV(TARGET) + 1) * 5 / 10 + (TALENT:道具使い + 1) * GET_ABL(TARGET, "技巧") * (ITEM:9 + 1) * 3
+;調教対象調教レベルと欲望を見て、どちらかが低ければSOURCE:快Ｖ軽減
+IF CFLAG:MASTER:調教レベル < 1 || ABL:MASTER:欲望 < 1
+	TIMES SOURCE:快Ｖ, 0.10
+ELSEIF CFLAG:MASTER:調教レベル < 3 || ABL:MASTER:欲望 < 2
+	TIMES SOURCE:快Ｖ, 0.25
+ELSEIF CFLAG:MASTER:調教レベル < 5 || ABL:MASTER:欲望 < 3
+	TIMES SOURCE:快Ｖ, 0.40
+ELSEIF CFLAG:MASTER:調教レベル < 8 || ABL:MASTER:欲望 < 4
+	TIMES SOURCE:快Ｖ, 0.60
+ELSEIF CFLAG:MASTER:調教レベル < 11 || ABL:MASTER:欲望 < 5
+	TIMES SOURCE:快Ｖ, 0.85
+ENDIF
+;SOURCE:快Ｖの1/5だけ調教者欲情が増加
+CUP:MASTER:欲情 += SOURCE:快Ｖ / 5
+;SOURCE:快Ｖに応じて逸脱SOURCE増加、調教対象露出癖、調教レベルによって減少
+SOURCE:MASTER:逸脱 = SOURCE:快Ｖ - GET_ABL(MASTER, "露出癖") * 2 - CFLAG:MASTER:調教レベル * 5
+;逸脱SOURCEが負の値をとらないよう調整
+SOURCE:MASTER:逸脱 = SOURCE:MASTER:逸脱 < 0 ? 0 # SOURCE:MASTER:逸脱
+;顔面騎乗系解除
+CALL FACESITTING_SET(0)
+;調教者欲望に応じて勃起度上昇
+TCVAR:MASTER:今回の勃起 += 100 + GET_ABL(TARGET, "欲望")
+
+;ペニスバンドを装備
+IF TFLAG:ACT派生 == 0
+	TEQUIP:調教者ペニスバンド = 1+ITEM:9
+;解除
+ELSE
+	TEQUIP:調教者ペニスバンド = 0
+ENDIF
+
+;調教者自慰を中断
+TEQUIP:自慰中 &= ~2
+TFLAG:経過時間 += 2
+
+@ACTION_APPLY2_75
+;TARGETが処女なら、処女喪失が起こる
+TCVAR:処女喪失 = TALENT:処女

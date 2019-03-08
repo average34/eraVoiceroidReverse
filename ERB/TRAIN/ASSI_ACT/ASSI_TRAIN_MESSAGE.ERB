@@ -1,0 +1,169 @@
+﻿@ASSI_TRAIN_VARIATION, ARG, ARG:1
+TCVAR:ARG:助手ACT派生 = 0
+SELECTCASE GET_ASSIACTNAME(ARG:1)
+	;愛撫→手淫
+	CASE "手で愛撫"
+		SIF PENIS(MASTER)
+			TCVAR:ARG:助手ACT派生 = 1
+	;クンニ→フェラ
+	CASE "口で愛撫"
+		SIF PENIS(MASTER)
+			TCVAR:ARG:助手ACT派生 = 1
+	;貝あわせ→素股
+	CASE "素股"
+		SIF PENIS(MASTER)
+			TCVAR:ARG:助手ACT派生 = 1
+	;ローター, オナホール
+	CASE "Ｃ道具"
+		SIF PENIS(MASTER) && ITEM:オナホール > 0
+			TCVAR:ARG:助手ACT派生 = 1
+	;連続交合
+	CASE "逆レイプ"
+		SIF TFLAG:助手連続交合 == 1
+			TCVAR:ARG:助手ACT派生 = 1
+	;胸愛撫
+	CASE "胸愛撫"
+		SIF TALENT:MASTER:オトコ
+			TCVAR:ARG:助手ACT派生 = 1
+	;乳首舐め→乳首甘噛み		とりあえず枠だけ設ける。条件はどうしようか@/L
+	;CASE "乳首舐め"
+	;	SIF 0
+	;		TCVAR:ARG:助手ACT派生 = 1
+ENDSELECT
+
+
+;助手行動が決まったらここから行動のメッセージを呼び出します。
+@ASSI_TRAIN_MESSAGE, ARG
+SELECTCASE NOWASSIACTNAME(ARG)
+	;愛撫→手淫
+	CASE "手で愛撫"
+		IF TFLAG:助手ACT派生 == 1
+			PRINTFORML %CALLNAME:ARG%は%PENIS_DESCRIPTION()%%CALLNAME:MASTER%の男性器を愛撫しはじめた…
+		ELSE
+			PRINTFORML %CALLNAME:ARG%は%CALLNAME:MASTER%の体を愛撫しはじめた…
+		ENDIF
+	;クンニ→フェラ
+	CASE "口で愛撫"
+		IF TFLAG:助手ACT派生 == 1
+			PRINTFORML %CALLNAME:ARG%は%PENIS_DESCRIPTION()%%CALLNAME:MASTER%の男性器を口で愛撫しはじめた…
+		ELSE
+			PRINTFORML %CALLNAME:ARG%は%CALLNAME:MASTER%の秘唇を口で愛撫しはじめた…
+		ENDIF
+	;貝あわせ→素股
+	CASE "素股"
+		IF TFLAG:助手ACT派生 == 1
+			PRINTFORML %CALLNAME:ARG%は%PENIS_DESCRIPTION()%%CALLNAME:MASTER%の男性器を自分の股間に合わせ擦り始めた…
+		ELSE
+			PRINTFORML %CALLNAME:ARG%は二人の性器を重ねて擦り始めた…
+		ENDIF
+	;パイズリ
+	CASE "パイズリする"
+		PRINTFORML %CALLNAME:ARG%は%PENIS_DESCRIPTION()%%CALLNAME:MASTER%の男性器を自分の胸で挟んで擦り始めた…
+	;足コキ
+	CASE "足コキする"
+		PRINTFORML %CALLNAME:ARG%は%PENIS_DESCRIPTION()%%CALLNAME:MASTER%の男性器を自分の足で擦り始めた…
+	;ローター, オナホール
+	CASE "Ｃ道具"
+		IF TFLAG:助手ACT派生 == 1
+			PRINTFORML %CALLNAME:ARG%は%CALLNAME:MASTER%の男性器にオナホールをかぶせ上下させた…
+		ELSE
+			PRINTFORML %CALLNAME:ARG%は%CALLNAME:MASTER%の秘唇に震えるローターを押し付けた…
+		ENDIF
+	;逆レイプ
+	CASE "逆レイプ"
+		IF TFLAG:助手ACT派生 == 1
+			PRINTFORML %CALLNAME:ARG%は%CALLNAME:MASTER%の上で喘いでいる…
+		ELSE
+			PRINTFORML %CALLNAME:ARG%は%CALLNAME:MASTER%のペニスを強引に、ヴァギナの奥まで咥えこみ腰を振った…
+		ENDIF
+	;アナル愛撫
+	CASE "アナル愛撫"
+		PRINTFORML %CALLNAME:ARG%は%CALLNAME:MASTER%のアナルを愛撫しはじめた…
+	;アナル舐め
+	CASE "アナル舐め"
+		PRINTFORML %CALLNAME:ARG%は%CALLNAME:MASTER%のアヌスを丁寧に舐めはじめた…
+	;アナルローター
+	CASE "アナルローター"
+		PRINTFORML %CALLNAME:ARG%は%CALLNAME:MASTER%のアナルに震えるローターを押し付けた…
+	;アナルバイブ
+	CASE "アナルバイブ"
+		PRINTFORML %CALLNAME:ARG%は%CALLNAME:MASTER%にアナルバイブを抜き差しした…
+	;アナルセックス
+	CASE "アナルセックス"
+	PRINTFORML %CALLNAME:ARG%は%CALLNAME:MASTER%のアナルに挿入し腰を振った…
+	;胸愛撫
+	CASE "胸愛撫"
+		IF TFLAG:助手ACT派生 == 1
+			PRINTFORML %CALLNAME:ARG%は%CALLNAME:MASTER%の乳首を指でいじり出した…
+		ELSE
+			PRINTFORML %CALLNAME:ARG%は%CALLNAME:MASTER%の胸を愛撫しはじめた…
+		ENDIF
+	;乳首舐め
+	CASE "乳首舐め"
+		IF TFLAG:助手ACT派生 == 1
+			PRINTFORML %CALLNAME:ARG%は%CALLNAME:MASTER%の乳首を甘噛みしてきた…
+		ELSE
+			PRINTFORML %CALLNAME:ARG%は%CALLNAME:MASTER%の乳首を吸い始めた…
+		ENDIF
+	;乳首ローター
+	CASE "乳首ローター"
+		PRINTFORML %CALLNAME:ARG%は%CALLNAME:MASTER%の乳首に震えるローターを押し付けた…
+	;指挿入
+	CASE "指挿入"
+		PRINTFORML %CALLNAME:ARG%は%CALLNAME:MASTER%の秘唇に指を挿入し、中をかき回した…
+	;バイブ
+	CASE "バイブ"
+		PRINTFORML %CALLNAME:ARG%は%CALLNAME:MASTER%にバイブを挿入し抜き差しした…
+	;性交
+	CASE "性交"
+		PRINTFORML %CALLNAME:ARG%は%CALLNAME:MASTER%の秘唇を貫き腰を振った…
+	;キス
+	CASE "キス"
+		PRINTFORML %CALLNAME:ARG%は%CALLNAME:MASTER%の顔に近づき唇に唇を重ねた…
+	;顔面騎乗
+	CASE "顔面騎乗"
+		IF TEQUIP:性交奉仕中 == 3
+			PRINTFORML %CALLNAME:ARG%は%CALLNAME:MASTER%の顔面にまたがり陰唇を擦りつけながら%CALLNAME:TARGET%と舌を絡めあった…
+		ELSE
+			PRINTFORML %CALLNAME:ARG%は%CALLNAME:MASTER%の顔面にまたがり陰唇を擦りつけた…
+		ENDIF
+	;足を舐めさせる
+	CASE "足を舐めさせる"
+		PRINTFORML %CALLNAME:ARG%は%CALLNAME:MASTER%に自分の足を舐めろと命令した…
+	;自慰見せつけ
+	CASE "自慰見せつけ"
+		PRINTFORML %CALLNAME:ARG%は%CALLNAME:MASTER%に見せ付けるように、目の前で自慰を始めた…
+	;罵倒
+	CASE "罵倒"
+		PRINTFORML %CALLNAME:ARG%は挑発するかのように%CALLNAME:MASTER%の痴態を声に出した…
+	;写真撮影
+	CASE "写真撮影"
+		PRINTFORM %CALLNAME:ARG%はカメラを構えて、%CALLNAME:MASTER%の
+		IF PALAM:MASTER:快Ｃ + PALAM:MASTER:快Ｖ + PALAM:MASTER:快Ａ + PALAM:MASTER:快Ｂ + PALAM:MASTER:欲情 > 1500
+			PRINT 乱れる
+		ELSEIF PALAM:MASTER:恐怖 + PALAM:MASTER:苦痛 + PALAM:MASTER:不快 + PALAM:MASTER:抑鬱 > 1000
+			PRINT 惨めな
+		ELSEIF !(TEQUIP:MASTER:下半身上着 || TEQUIP:MASTER:上半身上着 || TEQUIP:MASTER:全身上着)
+			PRINT はしたない
+		ENDIF
+		PRINTL 姿をばっちり記録した…
+	;調教者とキス
+	CASE "調教者とキス"
+		PRINTFORML %CALLNAME:ARG%は%CALLNAME:MASTER%に見せ付けるように%CALLNAME:TARGET%と舌を絡めだした…
+	;痴態を見つめる
+	CASE "痴態を見つめる"
+		PRINTFORML %CALLNAME:ARG%は%CALLNAME:MASTER%の痴態を見つめている…
+	;頭を踏みつける
+	CASE "頭を踏みつける"
+		PRINTFORML %CALLNAME:ARG%は%CALLNAME:MASTER%の頭を踏みつけた…
+	;------------------------------
+	;SPアクション
+	;------------------------------
+	CASE "新聞の記事にする"
+		PRINTFORML %CALLNAME:ARG%はカメラで%CALLNAME:MASTER%の姿を撮って、
+		PRINTFORML それをネタに記事を書き始めた...
+ENDSELECT
+WAIT
+RESULT = 0
+CALL KOJO_ACT_ASSI
+RETURN RESULT

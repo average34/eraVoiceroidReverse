@@ -1,0 +1,433 @@
+﻿;-------------------------------------------------------------------------------
+;
+;	TAGSPLIT 関数群
+;
+;===============================================================================
+;	文字列にタグを持たせる＆取得・解釈する
+;-------------------------------------------------------------------------------
+;	用途が製作時と乖離してきたんでコメント例文整理
+;
+;-------------------------------------------------------------------------------
+;	■AUTO_SPLITの流用でいけるかと思ったけど結局新造
+;	■発想元は偉大なるeraMegatenとIRC非匿名口上chから
+;	■勿論ライセンスフリー
+;===============================================================================
+
+
+;-------------------------------------------------------------------------------
+;	TAGSPLIT_TAGEND
+;-------------------------------------------------------------------------------
+;	0の例  = "<色_0xFFC0C0><フォント_ＭＳ ゴシック>,いろは"
+;	1の例  = "ロングソード,<攻撃力_12><価格_100><斬撃属性>"
+;
+;	つまり本文が先かタグが先かを指定しているよ
+;	用途と相談しながら使いやすい方で使ってね
+;===============================================================================
+@TAGSPLIT_TAGEND()
+#FUNCTION
+; サンプル用 動的に変更させるのは+激しく非推奨+
+;	RETURNF FLAG:0
+;  ★★★★★★★★★★★★★★★どちらか選択★★★★★★★★★★★★★★★★
+;	RETURNF 0
+	RETURNF 1
+;  ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+
+
+;-------------------------------------------------------------------------------
+;	TAGSPLIT_ONE
+;-------------------------------------------------------------------------------
+;	例：LOCALS = <HOGE_100><HAGE>,いろは
+;		PRINTFORM %TAGSPLIT_ONE(LOCALS,"HOGE")%
+;		→  "100"
+;		PRINTFORM %TAGSPLIT_ONE(LOCALS,"HAGE")%
+;		→  "HAGE"
+;-------------------------------------------------------------------------------
+;	いわゆるAUTO_SPLITに最も近い
+;	返すのはプロパティが数値だろうがなんだろうが文字列
+;===============================================================================
+@TAGSPLIT_ONE(ARGS, ARGS:1 = "")
+#FUNCTIONS
+#LOCALSIZE 1
+LOCAL = TAGSPLIT_SETLOG(ARGS,ARGS:1)
+; ARGS:1が空白の場合は 文章部分(タグのない部分)を返す
+IF ARGS:1 == ""
+	RETURNF TAGSPLIT_TAGBLOCS:LOCAL
+; ARGS:1が見つかった場合はプロパティ値なしならタグのラベルを返し、プロパティ値があるなら値を返す
+ELSEIF LOCAL != -1
+	; 例：上の例でいう<HOGE_100>を探した→"100"が返り、<HAGE>を探した→"HAGE"が返る
+	RETURNF \@ TAGSPLIT_TAGPROPS:1 != "" ? %TAGSPLIT_TAGPROPS:1% # %TAGSPLIT_TAGPROPS:0% \@
+ENDIF
+; 見つからなかったら何も返さない
+RETURNF
+
+;-------------------------------------------------------------------------------
+;	TAGSPLIT_INT
+;-------------------------------------------------------------------------------
+;	例：LOCALS = <HOGE_100><HAGE_あいう>,いろは
+;		LOCAL  = TAGSPLIT_INT(LOCALS,"HOGE")
+;		→  100
+;-------------------------------------------------------------------------------
+;	TAGSPLIT_ONEの返り値が数値版
+;	数値で返せるならなら数値で返し、数値で返せないなら 1 で返し、見つからないと 0 を返す
+;	プロパティに "0" が入っていると見つからなかった扱いになるが、その動作を前提に
+;	システムを組むのは+激しく非推奨+
+;	例：<ほげ_0><はげ_1>  ←ほげタグそのものが見つからなかった扱い
+;===============================================================================
+@TAGSPLIT_INT(ARGS, ARGS:1)
+#FUNCTION
+#LOCALSSIZE 1
+; TAGSPLIT_ONEに丸投げ、返り値文字列を次の行からTOINTかける
+LOCALS = %TAGSPLIT_ONE(ARGS,ARGS:1)%
+; 見つかった場合は数値で返せるならなら数値で返し、数値で返せないなら「存在しているBOOLEAN」ということで 1 を返す  
+SIF LOCALS != "" && LOCALS != "0"
+	RETURNF ISNUMERIC(LOCALS) ? TOINT(LOCALS) # 1
+; 見つからなかったら何も返さない…はずだけど0が返る仕様
+; ※プロパティ"0"の場合は見つからない扱いと返り値が同じ
+RETURNF 0
+
+;-------------------------------------------------------------------------------
+;	TAGSPLIT_ADD
+;-------------------------------------------------------------------------------
+;	例：LOCALS = <HOGE_100><HAGE_あいう>,いろは
+;		LOCALS = %TAGSPLIT_ADD(LOCALS,"<HAGE_かきく>")%
+;		LOCALS = %TAGSPLIT_ADD(LOCALS,"HIGE","5")%
+;		LOCALS = %TAGSPLIT_ADD(LOCALS,,"にほへ")%
+;		→  "<HOGE_100><HAGE_かきく><HIGE_5>,にほへ"
+;
+;		LOCALS = %TAGSPLIT_ADD(LOCALS,,)%	←引数両方なし(第二引数なしで本文指定、第三引数なしで空白置き換え)
+;		→  ""								←タグごと消える
+;-------------------------------------------------------------------------------
+;	TAGSPLIT仕様のタグを置換したり追加したりする関数
+;	指定のタグが無い場合は追加、ある場合は同タグ内でプロパティ値の変更をする
+;	プロパティの記法は二種類あり、直接書いてもいいし、(HAGEの例)
+;	タグ名のみ記入してARGS:2を使ってもよい(HIGEの例)。
+;	なんか後者のほうがわかりやすいかも
+;
+;	・第二引数を省略して、第三引数は入力した場合本文を置き換える
+;
+;	・第二引数と第三引数両方省略したときはタグごと消して空文字列にする
+;	  主に配列処理用で、上みたいな例の場合は直接消せばいいんじゃないかな
+;===============================================================================
+@TAGSPLIT_ADD(ARGS,ARGS:1,ARGS:2)
+#FUNCTIONS
+#LOCALSIZE 1
+#LOCALSSIZE 1
+LOCAL = TAGSPLIT_SETLOG(ARGS,ARGS:1)
+; 上でいうTAGSPLIT_ADD(LOCALS,"<HAGE_かきく>")の例
+IF STRFIND(ARGS:1,"<") != -1 && STRFIND(ARGS:1,">") != -1 && ARGS:2 == ""
+	LOCALS = %REPLACE(ARGS:1,">","")%
+; 上でいうTAGSPLIT_ADD(LOCALS,"HIGE","5")の例
+ELSEIF ARGS:1 != ""
+	LOCALS = %"<" + ARGS:1%
+	SIF ARGS:2 != ""
+		LOCALS += "_" + ARGS:2
+ENDIF
+
+; 指定のタグが見つからない
+IF ARGS:1 != "" && LOCAL == -1
+	; タグ前の場合は本文を一つ隣のブロックにARRAYSHIFTして空いたところに挿入
+	IF TAGSPLIT_TAGEND() == 0
+		ARRAYSHIFT TAGSPLIT_TAGBLOCS, 1, LOCALS, TAGSPLIT_TAGNUM-1
+	; タグ後の場合は最後に追加
+	ELSEIF TAGSPLIT_TAGEND() == 1
+		TAGSPLIT_TAGBLOCS:(TAGSPLIT_TAGNUM) = %LOCALS%
+	ENDIF
+	TAGSPLIT_TAGNUM += 1
+; 指定のタグが見つかったらそこを置き換え
+ELSEIF ARGS:1 != "" && LOCAL != -1
+	TAGSPLIT_TAGBLOCS:LOCAL = %LOCALS%
+; タグの指定なし→本文の置き換え
+ELSEIF ARGS:1 == ""
+	TAGSPLIT_TAGBLOCS:LOCAL = %ARGS:2%
+	; 本文置き換えが消去司令だったらタグごと消え去る
+	SIF ARGS:2 == ""
+		VARSET TAGSPLIT_TAGBLOCS
+ENDIF
+; 合成
+IF ARGS != ""
+	RETURNF TAGSPLIT_UNITE()
+ELSE
+	RETURNF
+ENDIF
+
+
+;-------------------------------------------------------------------------------
+;	TAGSPLIT_ADDINT
+;-------------------------------------------------------------------------------
+;	TAGSPLIT_ADDの第三引数数値版
+;	その他は全く一緒
+;===============================================================================
+@TAGSPLIT_ADDINT(ARGS,ARGS:1,ARG = 0)
+#FUNCTIONS
+RETURNF TAGSPLIT_ADD(ARGS,ARGS:1,TOSTR(ARG))
+
+
+;-------------------------------------------------------------------------------
+;	TAGSPLIT_DEL
+;-------------------------------------------------------------------------------
+;	例：LOCALS = <HOGE_100><HAGE_あいう>,いろは
+;		LOCALS = %TAGSPLIT_DEL(LOCALS,"HAGE")%
+;		→  "<HOGE_100>,いろは"
+;-------------------------------------------------------------------------------
+;	TAGSPLIT仕様のタグを削除する関数
+;	指定のタグが無い場合は何もしない
+;===============================================================================
+@TAGSPLIT_DEL(ARGS,ARGS:1)
+#FUNCTIONS
+#LOCALSIZE 1
+LOCAL = TAGSPLIT_SETLOG(ARGS,ARGS:1)
+SIF LOCAL == -1
+	RETURNF ARGS
+
+; その部分のブロックを消して積み上げるだけ
+TAGSPLIT_TAGBLOCS:LOCAL =
+; 合成してRETURNF
+RETURNF TAGSPLIT_UNITE()
+
+
+;-------------------------------------------------------------------------------
+;	TAGSPLIT_NUM
+;-------------------------------------------------------------------------------
+;	例：LOCALS = <HOGE_0xFFC0C0><HAGE>,いろは
+;		PRINTFORM {TAGSPLIT_NUM(LOCALS,"HAGE")}
+;		→  1
+;		PRINTFORM {TAGSPLIT_NUM(LOCALS,"HOGE")}
+;		→  0
+;-------------------------------------------------------------------------------
+;	そのタグが何番目にあるの？というのを返す
+;===============================================================================
+@TAGSPLIT_NUM(ARGS,ARGS:1)
+#FUNCTION
+#LOCALSIZE 1
+LOCAL = TAGSPLIT_SETLOG(ARGS,ARGS:1)
+IF LOCAL == -1
+	RETURNF LOCAL
+ELSE
+	RETURNF (TAGSPLIT_TAGEND() == 0) ? LOCAL # LOCAL - 1 
+ENDIF
+
+
+;-------------------------------------------------------------------------------
+;	TAGSPLIT_LABEL
+;-------------------------------------------------------------------------------
+;	例：LOCALS = <色_0xFFC0C0><ひみつ>,いろは
+;		PRINTFORM %TAGSPLIT_LABEL(LOCALS,0)%
+;		→  色
+;		PRINTFORM %TAGSPLIT_LABEL(LOCALS,1)%
+;		→  ひみつ
+;-------------------------------------------------------------------------------
+;	x番目はなんてタグ？というのを返す
+;===============================================================================
+@TAGSPLIT_LABEL(ARGS,ARG)
+#FUNCTIONS
+#LOCALSIZE 1
+#LOCALSSIZE 1
+CALLF TAGSPLIT_SETLOG(ARGS)
+LOCAL = ARG + TAGSPLIT_TAGEND()
+SPLIT ( REPLACE(TAGSPLIT_TAGBLOCS:LOCAL,"<","") ), "_", LOCALS, LOCAL
+RETURNF LOCALS
+
+
+;-------------------------------------------------------------------------------
+;	TAGSPLIT_MERGE
+;-------------------------------------------------------------------------------
+;	例：LOCALS:0 = <A_100><B_100>,いろは
+;		LOCALS:1 = <A_100><C_50><D_20>,いろは
+;		PRINTFORM %TAGSPLIT_MERGE(LOCALS:0,LOCALS:1)%
+;		→  <A_200><B_100><C_50><D_20>,いろは
+;-------------------------------------------------------------------------------
+;	引数1と引数2をマージさせる  
+;	タグ内部が両方とも数値の場合は加算、そうでないなら文字列加算
+;	引数2の本文は現状無視される
+;
+;	引数3に文字列指定で、文字列加算される際に区切り文字を挟んで加算される
+;===============================================================================
+@TAGSPLIT_MERGE(ARGS,ARGS:1,ARGS:2 ="")
+#FUNCTIONS
+#DIM LCOUNT,1
+#DIM RINUM,1
+#DIM RILABEL, 1
+#DIMS RITEMPS, 100
+#DIM LFNUM,1
+#DIM LFLABEL,1
+#LOCALSSIZE 3
+VARSET RITEMPS
+; ARGS:1を分割して退避場所に保護
+RILABEL = TAGSPLIT_SETLOG(ARGS:1)	;本文位置
+RINUM = TAGSPLIT_TAGNUM				;分割数
+ARRAYCOPY "TAGSPLIT_TAGBLOCS", "RITEMPS"
+; ARGS:0を分割
+LFLABEL = TAGSPLIT_SETLOG(ARGS)
+FOR LCOUNT, 0, RINUM
+	IF LCOUNT == RILABEL		; 本文
+		; コメントアウト外すと本文も加算になります
+		; CALLF TAGSPLIT_ADD( , ,TAGSPLIT_TAGBLOCS:LFLABEL + ARGS:2 + RITEMPS:RILABEL)
+	ELSE
+		VARSET LOCALS
+		RITEMPS:LCOUNT = %REPLACE(RITEMPS:LCOUNT,"<","")%
+		SPLIT RITEMPS:LCOUNT, "_", LOCALS
+		LOCALS:2 = %TAGSPLIT_ONE(,LOCALS)%
+		;ARGS:0に同じタグがある && ともに数値での返り値が可能
+		IF LOCALS:2 != "" && ( ISNUMERIC(LOCALS:2) && ISNUMERIC(LOCALS:1) )
+			CALLF TAGSPLIT_ADDINT( , LOCALS, TAGSPLIT_INT(,LOCALS) + TOINT(LOCALS:1) )
+		;ARGS:0に同じタグがある && 文字列混じってる
+		ELSEIF LOCALS:2 != ""
+			CALLF TAGSPLIT_ADD( , LOCALS, LOCALS:2 + ARGS:2 + LOCALS:1 )
+		ELSE
+			CALLF TAGSPLIT_ADD( , LOCALS, LOCALS:1)
+		ENDIF
+	ENDIF
+NEXT
+RETURNF TAGSPLIT_UNITE()
+
+
+;===============================================================================
+;	以下内部処理
+;===============================================================================
+
+;-------------------------------------------------------------------------------
+;	TAGSPLIT_SETLOG
+;-------------------------------------------------------------------------------
+;	内部処理
+;	いわゆる共通的な処理と必要なSPLITをみーんなここでやっちゃう
+;	状況によってやる必要の無い処理を細かく分岐で避けてたら当初のに比べてやたら長くなった件
+;===============================================================================
+;	TAGSPLIT_TAGEND() ==  ( タグ前 = 0/タグ後ろ = 1 )
+@TAGSPLIT_SETLOG(ARGS,ARGS:1,MODE=0)
+#FUNCTION
+#DIM LCOUNT,1
+#DIM MODE,1
+#LOCALSIZE 3
+#LOCALSSIZE 3
+VARSET LOCAL
+LOCAL:1 = RESULT
+; ARGS空白で再利用するようにしてみる
+IF ARGS != "" || TAGSPLIT_STR == ""
+	TAGSPLIT_TAG =
+	TAGSPLIT_STR =
+	VARSET TAGSPLIT_TAGBLOCS
+	; ARGS がある == 本文は当然あるので +1
+	TAGSPLIT_TAGNUM = 1
+	; ARGSの","を数えて分岐 (タグが存在するかを見る)
+	SELECTCASE STRCOUNT(ARGS,",")
+		CASE 0	; 0 = タグが存在せず本文しか無い
+			TAGSPLIT_STR = %ARGS%
+			TAGSPLIT_TAGBLOCS:0 = %ARGS%
+
+		CASE 1	; 1 = 正常、本文とタグの両方が存在する
+			VARSET LOCALS
+			; ARGSを「本文とタグ群」にSPLITし、TAGSPLIT_TAGにタグを、TAGSPLIT_STRに本文を代入
+			; 例：引数1 = "<HOGE_10><HAGE_20>,本文"  →  TAGSPLIT_NOWFORMS:(0～1) = "<HOGE_10><HAGE_20", "本文",
+			SPLIT ARGS, ",", LOCALS			
+			IF TAGSPLIT_TAGEND() == 0		; タグ前置
+				TAGSPLIT_TAG = %LOCALS:0%
+				TAGSPLIT_STR = %LOCALS:1%
+			ELSEIF TAGSPLIT_TAGEND() == 1	; タグ後置
+				TAGSPLIT_TAG = %LOCALS:1%
+				TAGSPLIT_STR = %LOCALS:0%
+			ENDIF
+
+			; レイヤシステム用例外処理  "タグ群"のみを逃がす必要が有るためここでおわり  こういうのわりと大嫌い
+			SIF ARGS:1 == "＠タグ群"
+				GOTO FROM_LAYER_SYSTEM
+
+			; "タグ群"をタグごとにSPLIT		例：タグ群= "<HOGE_10><HAGE_20>"  →  TAGSPLIT_NOWBLOCS:(0～19) = "<HOGE_10", "<HAGE_20"
+			SPLIT TAGSPLIT_TAG, ">", TAGSPLIT_TAGBLOCS						
+			; タグ数を本文の1にSPLIT分割数をプラス
+			TAGSPLIT_TAGNUM += RESULT - 1
+			
+			; タグ前置は本文を最後に配置						例：TAGSPLIT_NOWBLOCS:(0～19) = "<HOGE_10", "<HAGE_20", "本文"
+			IF TAGSPLIT_TAGEND() == 0
+				TAGSPLIT_TAGBLOCS:(TAGSPLIT_TAGNUM-1) = %TAGSPLIT_STR%
+			; タグ後置は本文を0に、タグを1以降にずらして配置	例：TAGSPLIT_NOWBLOCS:(0～19) = "本文", "<HOGE_10", "<HAGE_20"
+			ELSEIF TAGSPLIT_TAGEND() == 1
+				ARRAYSHIFT TAGSPLIT_TAGBLOCS, 1, TAGSPLIT_STR, 0
+			ENDIF
+
+			; ----     ここまでで本文とタグの全要素がTAGSPLIT_TAGBLOCS配列に入っているはず    ---- ;
+
+		CASEELSE	; "," の数が0でも1でもない場合はエラー
+			THROW %ARGS%が不正です "," の数を確認してください {LOCAL:2}
+	ENDSELECT
+ENDIF
+
+; 探すタグがない場合本文の場所を返す
+IF ARGS:1 == ""
+	RESULT = LOCAL:1
+	; 本文しか無い or タグ後置は0番目
+	IF TAGSPLIT_TAGNUM == 1 ||  TAGSPLIT_TAGEND() == 1
+		RETURNF 0
+	; タグ前置は最後の配列が本文
+	ELSEIF TAGSPLIT_TAGEND() == 0
+		RETURNF TAGSPLIT_TAGNUM - 1
+	ENDIF
+; 探すタグがある
+ELSEIF ARGS:1 != ""
+	VARSET TAGSPLIT_NOWPROPS
+	; 探すタグをタグと中身にSPLIT									;	例：引数2 = "<HOGE_10>"  →  TAGSPLIT_NOWPROPS:(0～1) = "<HOGE", "10"
+	SPLIT ( REPLACE(ARGS:1,">","") ), "_", TAGSPLIT_NOWPROPS
+	; 本文しか無いのにタグを探してる→サーチするまでもなくあるはずがない(速度短縮効果)
+	IF TAGSPLIT_TAGNUM == 1
+		RESULT = LOCAL:1
+		RETURNF -1
+	ENDIF
+	; 分割配列の本文を除いた部分から引数1のSタグ要素を探す			;	例：(本文), "<HOGE_10", "<HAGE_20", (本文)から "<HOGE" を探す
+	LOCAL = FINDELEMENT( TAGSPLIT_TAGBLOCS, TAGSPLIT_NOWPROPS:0, TAGSPLIT_TAGEND(), ( TAGSPLIT_TAGEND() == 0 ? TAGSPLIT_TAGNUM -1 # TAGSPLIT_TAGNUM ) )
+	; 見つかった場合は見つかったものをタグとプロパティにSPLIT		;	例：TAGSPLIT_TAGBLOCS:1 = "<HOGE_10"  →  TAGSPLIT_TAGPROPS:(0～1) = "HOGE", "10"
+	IF LOCAL != -1
+		VARSET TAGSPLIT_TAGPROPS
+		SPLIT REPLACE(TAGSPLIT_TAGBLOCS:(LOCAL),"<",""), "_", TAGSPLIT_TAGPROPS	
+	ENDIF
+ENDIF
+RESULT = LOCAL:1
+RETURNF LOCAL
+
+
+$FROM_LAYER_SYSTEM
+; SPLITで失った","を補完して戻る
+TAGSPLIT_TAG = \@ TAGSPLIT_TAGEND() == 0 ? %TAGSPLIT_TAG + ","% # %"," + TAGSPLIT_TAG% \@
+RESULT = LOCAL:1
+RETURNF -2
+
+
+
+;-------------------------------------------------------------------------------
+;	TAGSPLIT_UNITE
+;-------------------------------------------------------------------------------
+;	内部処理
+;	TAGSPLIT_TAGBLOCSを積み上げるだけ
+;===============================================================================
+@TAGSPLIT_UNITE(ARG = 0)
+#FUNCTIONS
+#DIM LCOUNT,1
+#LOCALSIZE 1
+#LOCALSSIZE 1
+LOCALS = 
+LOCAL = -1
+FOR LCOUNT, 0, VARSIZE("TAGSPLIT_TAGBLOCS")				; 最大要素数の検索
+	SIF TAGSPLIT_TAGBLOCS:LCOUNT != ""
+		LOCAL = LCOUNT
+NEXT
+SIF LOCAL == -1											; 全空白なら何もしない(まとめる必要なし)
+	RETURNF
+FOR LCOUNT, 0, LOCAL + 1
+	IF TAGSPLIT_TAGBLOCS:LCOUNT != ""
+		; タグ前本文後の場合は最後に","つけて本文
+		IF TAGSPLIT_TAGEND() == 0 && (LCOUNT == LOCAL)
+			LOCALS += "," + TAGSPLIT_TAGBLOCS:LCOUNT
+		; 本文前タグ後の場合は最初の本文語尾に","をつける
+		ELSEIF TAGSPLIT_TAGEND() == 1 && (LCOUNT == 0)
+			LOCALS += TAGSPLIT_TAGBLOCS:LCOUNT + ","
+		; どちらでもない場合はタグなのでタグとじ">"をつける
+		ELSE
+			LOCALS += TAGSPLIT_TAGBLOCS:LCOUNT + ">"
+		ENDIF
+	ENDIF
+	SIF LCOUNT == LOCAL									; 上で探した最大要素数まできたらおわり
+		BREAK
+NEXT
+; 引数アリで再分割してログに収めておく(再利用は実際どんなもんか)
+SIF ARG
+	CALLF TAGSPLIT_SETLOG(LOCALS)
+RETURNF LOCALS
+

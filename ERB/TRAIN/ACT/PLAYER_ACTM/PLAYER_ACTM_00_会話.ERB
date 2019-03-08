@@ -1,0 +1,870 @@
+﻿;────────────────────────────────────
+;会話 (気分0/好意1/知識2/慰め3/脅す4/衣装5/合意6/仕置き7/怒鳴る8/嗤う9/罵倒66)
+;────────────────────────────────────
+@ACT_M0(ARG = 0)
+;1以上なら判定を行わない
+#DIM LCOUNT, 1
+
+;関数初期化
+CALL ACT_M_INIT(0)
+
+;処理開始
+
+LOCALS = ACT_ACTM0
+
+CALL CHA_CRI_VAR, "基準値"
+CALLFORM %LOCALS%_REFERENCE
+
+CALL CHA_CRI_VAR, @"ターン方針(%POLICY("今")%)"
+CALLFORM %LOCALS%_MENU
+
+CALL CHA_CRI_VAR, "調教者の素質"
+CALLFORM %LOCALS%_TALENT_T
+
+CALL CHA_CRI_VAR, "調教対象の素質"
+CALLFORM %LOCALS%_TALENT_M
+
+CALL CHA_CRI_VAR, "調教者の性別意識"
+CALLFORM %LOCALS%_GENDER_T
+
+CALL CHA_CRI_VAR, "調教対象の能力"
+CALLFORM %LOCALS%_ABL_M
+
+CALL CHA_CRI_VAR, "調教対象の快感"
+CALLFORM %LOCALS%_PLEASURE_M
+
+CALL CHA_CRI_VAR, "調教対象の反抗"
+CALLFORM %LOCALS%_RESISTANCE_M
+
+CALL CHA_CRI_VAR, "調教対象の恥情"
+CALLFORM %LOCALS%_SHYNESS_M
+
+CALL CHA_CRI_VAR, "調教対象の恐怖"
+CALLFORM %LOCALS%_FEAR_M
+
+CALL CHA_CRI_VAR, "調教対象の抑鬱"
+CALLFORM %LOCALS%_DEPRESSION_M
+
+CALL CHA_CRI_VAR, "調教対象の反発刻印"
+CALLFORM %LOCALS%_RESISTMARK_M
+
+CALL CHA_CRI_VAR, "調教対象の反発刻印"
+CALLFORM %LOCALS%_SEXUALINFO_M
+
+CALL CHA_CRI_VAR, "調教者の罪悪感"
+CALLFORM %LOCALS%_SIN_T
+
+CALL CHA_CRI_VAR, "調教者のALI"
+CALLFORM %LOCALS%_ALI_T
+
+CALL CHA_CRI_VAR, "調教者の理性"
+CALLFORM %LOCALS%_REASON_T
+
+CALL CHA_CRI_VAR, "調教者の興味"
+CALLFORM %LOCALS%_INTEREST_T
+
+CALL CHA_CRI_VAR, "調教者の苛立ち"
+CALLFORM %LOCALS%_IRRITATION_T
+
+CALL CHA_CRI_VAR, "調教者の満足"
+CALLFORM %LOCALS%_SATISFACTION_T
+
+CALL CHA_CRI_VAR, @"調教者の状態(%CONDITION(TCVAR:状態変化)%)"
+CALLFORM %LOCALS%_CONDITION_T
+
+CALL CHA_CRI_VAR, "装着道具"
+CALLFORM %LOCALS%_TOOLS
+
+CALL CHA_CRI_VAR, "媚薬"
+CALLFORM %LOCALS%_DRAG
+
+CALL CHA_CRI_VAR, "縄"
+CALLFORM %LOCALS%_ROPE
+
+CALL CHA_CRI_VAR, "アイマスク"
+CALLFORM %LOCALS%_EYEMASK
+
+CALL CHA_CRI_VAR, "ボールギャグ"
+CALLFORM %LOCALS%_GAG
+
+CALL CHA_CRI_VAR, "三角木馬"
+CALLFORM %LOCALS%_HORSE
+
+CALL CHA_CRI_VAR, "野外プレイ"
+CALLFORM %LOCALS%_OUT
+
+CALL CHA_CRI_VAR, "調教対象自慰中"
+CALLFORM %LOCALS%_MASTURBATION_M
+
+CALL CHA_CRI_VAR, "調教者自慰中"
+CALLFORM %LOCALS%_MASTURBATION_T
+
+CALL CHA_CRI_VAR, "挿入補正"
+CALLFORM %LOCALS%_INSERT
+
+CALL CHA_CRI_VAR, "調教対象の服装"
+CALLFORM %LOCALS%_CLOTH_M
+
+CALL CHA_CRI_VAR, "許しを乞う"
+CALLFORM %LOCALS%_PLEASE_HELP
+
+CALL CHA_CRI_VAR, "既出の話題"
+CALLFORM %LOCALS%_ALREADY_TALKED
+
+CALL CHA_CRI_VAR, "お仕置き"
+CALLFORM %LOCALS%_OSHIOKI
+
+CALL CHA_CRI_VAR, "連続行動補正"
+CALLFORM %LOCALS%_PREV
+
+CALL CHA_CRI_VAR, "口上補正値"
+CALL ACT_ACTM_KOJO_CORRECTION_T, 0
+
+CALL CHA_CRI_VAR, "ACT補正値"
+CALLFORM %LOCALS%_CORRECTION(ARG)
+
+
+;ARGが1以上なら処理中断
+SIF ARG
+	RETURN RESULT
+
+CALL CHA_CRI_VAR, "実行判定"
+CALLFORM %LOCALS%_ABLE
+
+;────────────────────────────────────
+;最終判定
+;────────────────────────────────────
+CALL DEF_CRI_VAR("最大前者")
+LOCAL = GET_CRI_VAR("決定")
+IF LOCAL == -1
+	SIF FLAG:デバッグ
+		PRINTL (会話ACT分類に実行可能なACTが存在しません)
+	TFLAG:ACT = -1
+	CALL ACT_MENU_RESULT(2, "会話")
+ELSE
+	TFLAG:ACT = GET_ACTNUM(RESULTS)
+ENDIF
+CALL ANA_CRI_VAR()
+
+;-------------------------------------------------------------------------
+;基準値
+;-------------------------------------------------------------------------
+@ACT_ACTM0_REFERENCE
+
+;要らないかもと思ったので試しに無効化@これみ
+[SKIPSTART]
+CALL ADD_CRI_VAR("今の気分を聞く", 10)
+CALL ADD_CRI_VAR("自分への気持ちを聞く", 10)
+CALL ADD_CRI_VAR("性についての話をする", 10)
+CALL ADD_CRI_VAR("優しく慰める", 10)
+CALL ADD_CRI_VAR("厳しく脅す", 10)
+CALL ADD_CRI_VAR("衣装の変更を要求する", 0)
+CALL ADD_CRI_VAR("合意を求める", 10)
+CALL ADD_CRI_VAR("お仕置きと宣言する", 10)
+CALL ADD_CRI_VAR("怒鳴る", 10)
+CALL ADD_CRI_VAR("不気味に笑う", 10)
+CALL ADD_CRI_VAR("罵倒", 0)
+[SKIPEND]
+
+SIF TFLAG:ACT分類 == 4
+	CALL ADD_CRI_VAR("罵倒", 10)
+
+;-------------------------------------------------------------------------
+;調教方針(1=休憩/2=ソフト/3=ノーマル/4=ハード/5=異常)
+;-------------------------------------------------------------------------
+@ACT_ACTM0_MENU
+
+SELECTCASE TFLAG:ターン方針
+	CASE 2
+		SIF !TFLAG:お仕置きフラグ
+			CALL ADD_CRI_VAR("優しく慰める", 3)
+	CASE 3
+		CALL ADD_CRI_VAR("今の気分を聞く", 2)
+		SIF !TFLAG:お仕置きフラグ
+			CALL ADD_CRI_VAR("自分への気持ちを聞く", 1)
+	CASE 4
+		CALL ADD_CRI_VAR("罵倒", 10)
+		SIF !TFLAG:お仕置きフラグ
+			CALL ADD_CRI_VAR("厳しく脅す", 3)
+ENDSELECT
+
+;-------------------------------------------------------------------------
+;調教者の素質を参照
+;-------------------------------------------------------------------------
+@ACT_ACTM0_TALENT_T
+;調教者が大人しい/生意気
+IF TALENT:大人しい
+	CALL ADD_CRI_VAR("優しく慰める", , 1)
+	CALL ADD_CRI_VAR("怒鳴る", -4, 2)
+ELSEIF TALENT:生意気
+	CALL ADD_CRI_VAR("優しく慰める", , -2)
+	CALL ADD_CRI_VAR("怒鳴る", 1, 1)
+ENDIF
+
+;調教者がプライド高い/低い
+IF TALENT:プライド高い
+	CALL ADD_CRI_VAR("自分への気持ちを聞く", , -2)
+	CALL ADD_CRI_VAR("優しく慰める", , -4)
+	CALL ADD_CRI_VAR("衣装の変更を要求する", 2)
+	CALL ADD_CRI_VAR("罵倒", , 2)
+ELSEIF TALENT:プライド低い
+	CALL ADD_CRI_VAR("自分への気持ちを聞く", , 2)
+	CALL ADD_CRI_VAR("優しく慰める", , 4)
+	CALL ADD_CRI_VAR("不気味に笑う", -4)
+ENDIF
+
+;調教者が自制的/衝動的
+IF TALENT:自制的
+	CALL ADD_CRI_VAR("怒鳴る", -5)
+ELSEIF TALENT:衝動的
+	CALL ADD_CRI_VAR("怒鳴る", 4, 2)
+ENDIF
+
+;調教者が無関心/好奇心
+IF TALENT:無関心
+	CALL ADD_CRI_VAR("今の気分を聞く", -5)
+	CALL ADD_CRI_VAR("自分への気持ちを聞く", -5)
+	CALL ADD_CRI_VAR("性についての話をする", -5)
+ELSEIF TALENT:好奇心
+	CALL ADD_CRI_VAR("今の気分を聞く", 5)
+	CALL ADD_CRI_VAR("自分への気持ちを聞く", 5)
+	CALL ADD_CRI_VAR("性についての話をする", 5)
+ENDIF
+
+;調教者が感情乏しい/情緒豊か
+IF TALENT:感情乏しい
+	CALL ADD_CRI_VAR("優しく慰める", -3, 4)
+	CALL ADD_CRI_VAR("厳しく脅す", -4, 2)
+	CALL ADD_CRI_VAR("怒鳴る", -6)
+ELSEIF TALENT:情緒豊か
+	CALL ADD_CRI_VAR("優しく慰める", 4)
+	CALL ADD_CRI_VAR("厳しく脅す", 3, 2)
+	CALL ADD_CRI_VAR("怒鳴る", 3, 4)
+	CALL ADD_CRI_VAR("不気味に笑う", , 4)
+ENDIF
+
+;調教者が楽観的/悲観的
+IF TALENT:楽観的
+	CALL ADD_CRI_VAR("自分への気持ちを聞く", 3)
+	CALL ADD_CRI_VAR("衣装の変更を要求する", , 2)
+	CALL ADD_CRI_VAR("合意を求める", 5)
+ELSEIF TALENT:悲観的
+	CALL ADD_CRI_VAR("自分への気持ちを聞く", -2, 2)
+	CALL ADD_CRI_VAR("衣装の変更を要求する", , -2)
+	CALL ADD_CRI_VAR("合意を求める", , -6)
+ENDIF
+
+;調教者が一線越えない
+IF TALENT:一線越えない
+	CALL ADD_CRI_VAR("自分への気持ちを聞く", -3)
+	CALL ADD_CRI_VAR("合意を求める", -5)
+	CALL ADD_CRI_VAR("不気味に笑う", -5)
+ENDIF
+
+;調教者が目立ちたがり
+IF TALENT:目立ちたがり
+	CALL ADD_CRI_VAR("自分への気持ちを聞く", , 7)
+	CALL ADD_CRI_VAR("性についての話をする", 1, 5)
+	CALL ADD_CRI_VAR("厳しく脅す", , 6)
+	CALL ADD_CRI_VAR("お仕置きと宣言する", 3)
+	CALL ADD_CRI_VAR("怒鳴る", , 4)
+	CALL ADD_CRI_VAR("不気味に笑う", , 4)
+ENDIF
+
+;調教者が貞操観念/貞操無頓着
+IF TALENT:貞操観念
+	CALL ADD_CRI_VAR("合意を求める", 7)
+ELSEIF TALENT:貞操無頓着
+	CALL ADD_CRI_VAR("合意を求める", -7)
+ENDIF
+
+;調教者が抑圧/解放
+IF TALENT:抑圧
+	CALL ADD_CRI_VAR("性についての話をする", -10)
+	CALL ADD_CRI_VAR("合意を求める", -5)
+ELSEIF TALENT:解放
+	CALL ADD_CRI_VAR("性についての話をする", , 10)
+	CALL ADD_CRI_VAR("合意を求める", , 5)
+ENDIF
+
+;調教者が恥じらい/恥薄い
+IF TALENT:恥じらい
+	CALL ADD_CRI_VAR("衣装の変更を要求する", -5)
+	CALL ADD_CRI_VAR("合意を求める", -5)
+ELSEIF TALENT:恥薄い
+	CALL ADD_CRI_VAR("衣装の変更を要求する", 5)
+	CALL ADD_CRI_VAR("合意を求める", 5)
+ENDIF
+
+;調教者が習得早い/習得遅い
+IF TALENT:習得早い
+	CALL ADD_CRI_VAR("性についての話をする", 5)
+ELSEIF TALENT:習得遅い
+	CALL ADD_CRI_VAR("性についての話をする", -5)
+ENDIF
+
+;調教者が献身的
+SIF TALENT:献身的
+	CALL ADD_CRI_VAR("優しく慰める", 5)
+
+;調教者が倒錯的
+IF TALENT:倒錯的
+	CALL ADD_CRI_VAR("厳しく脅す", , 4)
+	CALL ADD_CRI_VAR("お仕置きと宣言する", 4)
+	CALL ADD_CRI_VAR("罵倒", , 4)
+ENDIF
+
+;調教者がサド
+IF TALENT:サド
+	CALL ADD_CRI_VAR("優しく慰める", -3)
+	CALL ADD_CRI_VAR("厳しく脅す", 5)
+	CALL ADD_CRI_VAR("お仕置きと宣言する", 7)
+	CALL ADD_CRI_VAR("罵倒", 7)
+ENDIF
+
+;調教者が慎重/短気
+IF TALENT:慎重
+	CALL ADD_CRI_VAR("合意を求める", , -5)
+	CALL ADD_CRI_VAR("お仕置きと宣言する", -3)
+	CALL ADD_CRI_VAR("怒鳴る", -5)
+ELSEIF TALENT:短気
+	CALL ADD_CRI_VAR("合意を求める", , 5)
+	CALL ADD_CRI_VAR("怒鳴る", 5)
+ENDIF
+
+;調教者が意地悪/心根優しい
+IF TALENT:意地悪
+	CALL ADD_CRI_VAR("優しく慰める", -5)
+	CALL ADD_CRI_VAR("厳しく脅す", , 6)
+	CALL ADD_CRI_VAR("お仕置きと宣言する", 5)
+	CALL ADD_CRI_VAR("不気味に笑う", 5)
+	CALL ADD_CRI_VAR("罵倒", 5)
+ELSEIF TALENT:心根優しい
+	CALL ADD_CRI_VAR("優しく慰める", 5)
+	CALL ADD_CRI_VAR("厳しく脅す", -5)
+	CALL ADD_CRI_VAR("お仕置きと宣言する", -5)
+ENDIF
+
+;調教者が幼稚
+IF TALENT:幼稚
+	CALL ADD_CRI_VAR("性についての話をする", -5)
+	CALL ADD_CRI_VAR("合意を求める", -3)
+	CALL ADD_CRI_VAR("怒鳴る", , 7)
+	CALL ADD_CRI_VAR("不気味に笑う", , 4)
+ENDIF
+
+;調教者が狂気
+IF TALENT:狂気
+	CALL ADD_CRI_VAR("怒鳴る", , 6)
+	CALL ADD_CRI_VAR("不気味に笑う", 1, 8)
+ENDIF
+
+;調教者が威圧感
+SIF TALENT:威圧感
+	CALL ADD_CRI_VAR("厳しく脅す", , 5)
+
+;調教者が魅惑
+SIF TALENT:魅惑
+	CALL ADD_CRI_VAR("自分への気持ちを聞く", , 5)
+
+;調教者が親しみやすい/近寄り難い
+IF TALENT:親しみやすい
+	CALL ADD_CRI_VAR("今の気分を聞く", 3)
+	CALL ADD_CRI_VAR("自分への気持ちを聞く", 3)
+	CALL ADD_CRI_VAR("優しく慰める", 3)
+ELSEIF TALENT:近寄り難い
+	CALL ADD_CRI_VAR("今の気分を聞く", -3)
+	CALL ADD_CRI_VAR("自分への気持ちを聞く", -3)
+	CALL ADD_CRI_VAR("優しく慰める", -3)
+ENDIF
+
+;調教者が空気を読む程度の能力
+SIF TALENT:読心能力
+	CALL ADD_CRI_VAR("今の気分を聞く", -5)
+
+;調教者が思考を読む程度の能力…って、どう見てもさとり様です。本当に(ry
+;口上側が対応すればむしろ+補正した方がより面白くなるかもしれない
+SIF NO:TARGET == 61
+	CALL ADD_CRI_VAR("今の気分を聞く", -10)
+
+;-------------------------------------------------------------------------
+;調教対象の素質を参照
+;-------------------------------------------------------------------------
+@ACT_ACTM0_TALENT_M
+
+;調教対象が臆病
+SIF TALENT:MASTER:臆病
+	CALL ADD_CRI_VAR("優しく慰める", , 5)
+
+;調教対象が気丈
+SIF TALENT:MASTER:気丈
+	CALL ADD_CRI_VAR("厳しく脅す", , 5)
+
+;調教対象が感情乏しい/情緒豊か
+IF TALENT:MASTER:感情乏しい
+	CALL ADD_CRI_VAR("今の気分を聞く", , 4)
+	CALL ADD_CRI_VAR("自分への気持ちを聞く", , 2)
+ELSEIF TALENT:MASTER:情緒豊か
+	CALL ADD_CRI_VAR("今の気分を聞く", , -4)
+	CALL ADD_CRI_VAR("自分への気持ちを聞く", , -2)
+ENDIF
+
+;調教対象が楽観的/悲観的
+IF TALENT:MASTER:楽観的
+	CALL ADD_CRI_VAR("優しく慰める", , -4)
+	CALL ADD_CRI_VAR("厳しく脅す", , 2)
+ELSEIF TALENT:MASTER:悲観的
+	CALL ADD_CRI_VAR("優しく慰める", , 2)
+	CALL ADD_CRI_VAR("厳しく脅す", , -4)
+ENDIF
+
+;-------------------------------------------------------------------------
+;調教者の性別の好みを参照
+;-------------------------------------------------------------------------
+@ACT_ACTM0_GENDER_T
+;調教者が両刀
+IF TALENT:両刀
+	CALL ADD_CRI_VAR("自分への気持ちを聞く", , (TALENT:オトコ == TALENT:MASTER:オトコ) ? 2 # 0)
+ELSE
+	CALL ADD_CRI_VAR("自分への気持ちを聞く", (TALENT:オトコ == TALENT:MASTER:オトコ) ? -6 # 0)
+ENDIF
+
+;調教者が男嫌いかつ、調教対象がオトコ
+IF TALENT:男嫌い && TALENT:MASTER:オトコ
+	CALL ADD_CRI_VAR("自分への気持ちを聞く", -5)
+	CALL ADD_CRI_VAR("優しく慰める", -3)
+	CALL ADD_CRI_VAR("合意を求める", -5)
+ENDIF
+;-------------------------------------------------------------------------
+;調教対象の能力を参照
+;-------------------------------------------------------------------------
+@ACT_ACTM0_ABL_M
+
+;調教対象の従順が[0→0, 5→-5]を加算(-5～0)
+CALL ADD_CRI_VAR("厳しく脅す", LINE_CALC(ABL:MASTER:従順, "0→0,5→-5,LIMIT/-5～0"))
+
+;調教対象の欲望が[0→0, 5→5]を加算(0～7)
+CALL ADD_CRI_VAR("自分への気持ちを聞く", LINE_CALC(ABL:MASTER:従順, "0→0,5→5,LIMIT/0～7"))
+
+;調教対象の露出癖が[0→0, 5→0～5]を加算(0～5)
+CALL ADD_CRI_VAR("自分への気持ちを聞く", , LINE_CALC(ABL:MASTER:従順, "0→0,5→5,LIMIT/0～5"))
+
+;────────────────────────────────────
+;ゲージや状態による変動
+;────────────────────────────────────
+;-------------------------------------
+;調教対象の快感
+;-------------------------------------
+@ACT_ACTM0_PLEASURE_M
+
+;快感と好意。快ＣＶＡＢが高いときに自分が好きか聞く…そういう手口か
+;調教対象の快X合計が[0→0, 6000→3, 12000→4, 18000→5, 24000→6, 30000→7]を加算(0～7)
+LOCAL = GET_REVISION_SQRT(PALAM:MASTER:快Ｃ + PALAM:MASTER:快Ｖ + PALAM:MASTER:快Ａ + PALAM:MASTER:快Ｂ, 30000, 7)
+CALL ADD_CRI_VAR("自分への気持ちを聞く", LIMIT(LOCAL, 0, 7))
+
+;-------------------------------------
+;調教対象の反抗
+;-------------------------------------
+@ACT_ACTM0_RESISTANCE_M
+
+;調教対象の反抗が[1500→0, 3000→1, 4500→3, 6000→5, 7500→7]を加算(0～7)
+CALL ADD_CRI_VAR("厳しく脅す", LINE_CALC(PALAM:MASTER:反抗, "3000→1,7500→7,LIMIT/0～7"))
+CALL ADD_CRI_VAR("お仕置きと宣言する", LINE_CALC(PALAM:MASTER:反抗, "3000→1,7500→7,LIMIT/0～7"))
+;調教対象の反抗が[1500→0, 3000→0～2, 4500→0～4, 6000→0～6, 7500→0～8]を加算(0～8)
+CALL ADD_CRI_VAR("怒鳴る", , LINE_CALC(PALAM:MASTER:反抗, "3000→2,7500→8,LIMIT/0～8"))
+
+;-------------------------------------
+;調教対象の恥情
+;-------------------------------------
+@ACT_ACTM0_SHYNESS_M
+
+;調教対象の恥情が[2000→0, 3000→2, 4000→4, 5000→6, 6000→8, 7000→10]を加算(0～11)
+CALL ADD_CRI_VAR("今の気分を聞く", , LINE_CALC(PALAM:MASTER:恥情, "2000→0,7000→10,LIMIT/0～11"))
+
+;-------------------------------------
+;調教対象の恐怖
+;-------------------------------------
+@ACT_ACTM0_FEAR_M
+
+;調教対象の恐怖が[0→0, 2500→1, 5000→2, 7500→3]を加算(0～3)
+;(調教者の心根優しい場合は倍)
+CALL ADD_CRI_VAR("優しく慰める", LINE_CALC(PALAM:MASTER:恥情, "0→0,7500→3,LIMIT/0～3") * (TALENT:心根優しい + 1))
+
+;-------------------------------------
+;調教対象の抑鬱
+;-------------------------------------
+@ACT_ACTM0_DEPRESSION_M
+
+;調教対象の抑鬱が[0→0, 2500→1, 5000→2, 7500→3]を加算(0～3)
+;(調教者の心根優しい場合は倍)
+CALL ADD_CRI_VAR("優しく慰める", LINE_CALC(PALAM:MASTER:抑鬱, "0→0,7500→3,LIMIT/0～3") * (TALENT:心根優しい + 1))
+
+;-------------------------------------
+;調教対象の反発刻印
+;-------------------------------------
+@ACT_ACTM0_RESISTMARK_M
+
+;調教対象の反発刻印が[0→0, 2→0～1, 4→1～4, 6→2～7, 8→3～10, 10→4～13]を加算(0～13)
+CALL ADD_CRI_VAR("厳しく脅す", LINE_CALC(MARK:反抗刻印, "2→0,10→4,LIMIT/0～4"), LINE_CALC(MARK:反抗刻印, "2→1,10→9,LIMIT/0～9"))
+
+;-------------------------------------
+;調教対象の性知識
+;-------------------------------------
+@ACT_ACTM0_SEXUALINFO_M
+
+;調教対象の性知識が[10→2～5, 15→1～3, 20→0～1, 25→0, 30→-5, 35→-10]を加算(-10～6)
+CALL ADD_CRI_VAR("性についての話をする", LINE_CALC(EXP:MASTER:性知識, "10→2,20→0,25→0,35→-10,LIMIT/-10～2"), LINE_CALC(EXP:MASTER:性知識, "10→3,25→0,LIMIT/0～4"))
+
+;-------------------------------------
+;調教者の罪悪感
+;-------------------------------------
+@ACT_ACTM0_SIN_T
+
+;調教者の罪悪感が[20→0, 40→1, 60→2, 80→3]を加算(0～3)
+CALL ADD_CRI_VAR("優しく慰める", LINE_CALC(CFLAG:罪悪感, "20→0,80→3,LIMIT/0～3"))
+;調教者の罪悪感が[0→0, 20→-1, 40→-2, 60→-3, 80→-4, 100→-5]を加算(-5～0)
+CALL ADD_CRI_VAR("厳しく脅す", LINE_CALC(CFLAG:罪悪感, "0→0,100→-5,LIMIT/-5～0"))
+CALL ADD_CRI_VAR("お仕置きと宣言する", LINE_CALC(CFLAG:罪悪感, "0→0,100→-5,LIMIT/-5～0"))
+
+;-------------------------------------
+;調教者のALI
+;-------------------------------------
+@ACT_ACTM0_ALI_T
+
+;調教者のALIが[-50→-6～-3, 0→0, 50→3～6]を加算(-6～6)
+CALL ADD_CRI_VAR("優しく慰める", LINE_CALC(CFLAG:アライメント, "-50→-3,0→0,50→3,LIMIT/-3～3"), LINE_CALC(CFLAG:アライメント, "-50→-3,0→0,50→3,LIMIT/-3～3"))
+;調教者のALIが[-50→3～6, 0→0, 50→-6～-3]を加算(-6～6)
+CALL ADD_CRI_VAR("厳しく脅す", LINE_CALC(CFLAG:アライメント, "-50→3,0→0,50→-3,LIMIT/-3～3"), LINE_CALC(CFLAG:アライメント, "-50→3,0→0,50→-3,LIMIT/-3～3"))
+;調教者のALIが[-20→0, 0→3, 20→0]を加算(0～3)
+CALL ADD_CRI_VAR("今の気分を聞く", LINE_CALC(CFLAG:アライメント, "-20→0,0→3,20→0,LIMIT/0～3"))
+;調教者のALIが[-10→0, 0→2, 10→0]を加算(0～2)
+CALL ADD_CRI_VAR("今の気分を聞く", LINE_CALC(CFLAG:アライメント, "-10→0,0→2,10→0,LIMIT/0～2"))
+
+;-------------------------------------
+;調教者の理性
+;-------------------------------------
+@ACT_ACTM0_REASON_T
+
+;調教者の理性が[0→4～8, 250→2～4, 500→0, 750→-2, 1000→-4]を加算(-4～8)
+CALL ADD_CRI_VAR("怒鳴る", LINE_CALC(BASE:理性, "0→4,1000→-4,LIMIT/-4～4"), LINE_CALC(BASE:理性, "0→4,500→0,LIMIT/0～4"))
+;調教者の理性が[0→0～8, 250→0～4, 500→0, 750→-4～0]を加算(-4～8)
+CALL ADD_CRI_VAR("不気味に笑う", , LINE_CALC(BASE:理性, "0→8,750→-4,LIMIT/-4～8"))
+
+;-------------------------------------
+;調教者の興味
+;-------------------------------------
+@ACT_ACTM0_INTEREST_T
+
+;調教者の興味が[100→-5, 200→-4, 300→-3, 400→-2, 500→-1, 600→0]を加算(-5～0)
+CALL ADD_CRI_VAR("今の気分を聞く", LINE_CALC(BASE:興味, "100→-5,600→0,LIMIT/-5～0"))
+CALL ADD_CRI_VAR("自分への気持ちを聞く", LINE_CALC(BASE:興味, "100→-5,600→0,LIMIT/-5～0"))
+
+;-------------------------------------
+;調教者の苛立ち
+;-------------------------------------
+@ACT_ACTM0_IRRITATION_T
+
+;調教者の苛立ちが[0→0, 200→1～2, 400→2～4, 600→3～6, 800→4～8, 1000→5～10]を加算(0～10)
+CALL ADD_CRI_VAR("怒鳴る", LINE_CALC(BASE:苛立ち, "0→0,1000→5,LIMIT/0～5"), LINE_CALC(BASE:苛立ち, "0→0,1000→5,LIMIT/0～5"))
+;調教者の苛立ちが[0→0, 200→1, 400→2, 600→3, 800→4, 1000→5]を加算(0～6)
+CALL ADD_CRI_VAR("お仕置きと宣言する", LINE_CALC(BASE:苛立ち, "0→0,1000→5,LIMIT/0～6"))
+
+;-------------------------------------
+;調教者の満足
+;-------------------------------------
+@ACT_ACTM0_SATISFACTION_T
+
+;調教者の満足が[0→0, 1000→-3]を加算(-3～0)
+CALL ADD_CRI_VAR("お仕置きと宣言する", LINE_CALC(BASE:満足, "0→0,1000→-3,LIMIT/-3～0"))
+CALL ADD_CRI_VAR("罵倒", LINE_CALC(BASE:満足, "0→0,1000→-3,LIMIT/-3～0"))
+;調教者の満足が[0→0, 1000→-5]を加算(-5～0)
+CALL ADD_CRI_VAR("厳しく脅す", LINE_CALC(BASE:満足, "0→0,1000→-5,LIMIT/-5～0"))
+CALL ADD_CRI_VAR("怒鳴る", LINE_CALC(BASE:満足, "0→0,1000→-5,LIMIT/-5～0"))
+
+;-------------------------------------
+;調教者の状態(0=通常/1=疲弊/2=衰弱/3=無気力/4=朦朧/5=情欲/6=怒り/7=退屈/8=鬱屈)
+;-------------------------------------
+@ACT_ACTM0_CONDITION_T
+SELECTCASE GET_CONDITION(TARGET)
+	;CASE "疲弊"
+	;CASE "衰弱"
+	CASE "無気力"
+		CALL ADD_CRI_VAR("怒鳴る", -5)
+	CASE "朦朧"
+		CALL ADD_CRI_VAR("優しく慰める", , -4)
+		CALL ADD_CRI_VAR("厳しく脅す", , -4)
+		CALL ADD_CRI_VAR("怒鳴る", , -4)
+	CASE "情欲"
+		CALL ADD_CRI_VAR("性についての話をする", 5)
+		CALL ADD_CRI_VAR("合意を求める", 6)
+	CASE "怒り"
+		CALL ADD_CRI_VAR("自分への気持ちを聞く", -3)
+		CALL ADD_CRI_VAR("性についての話をする", -3)
+		CALL ADD_CRI_VAR("優しく慰める", -5)
+		CALL ADD_CRI_VAR("厳しく脅す", , 2)
+		CALL ADD_CRI_VAR("お仕置きと宣言する", 3)
+		CALL ADD_CRI_VAR("怒鳴る", 5)
+		CALL ADD_CRI_VAR("罵倒", 3)
+	CASE "退屈"
+		CALL ADD_CRI_VAR("怒鳴る", , 4)
+		CALL ADD_CRI_VAR("不気味に笑う", 6)
+		CALL ADD_CRI_VAR("罵倒", , 4)
+	CASE "鬱屈"
+		CALL ADD_CRI_VAR("怒鳴る", , 4)
+		CALL ADD_CRI_VAR("不気味に笑う", 6)
+		CALL ADD_CRI_VAR("罵倒", , 4)
+ENDSELECT
+
+;────────────────────────────────────
+;前回の行動や状況による変動
+;────────────────────────────────────
+;-------------------------------------
+;装着道具類(バイブ,アナルバイブ,アナルビーズ,浣腸＋アナルプラグ,クリキャップ,オナホール,ニプルキャップ)
+;-------------------------------------
+@ACT_ACTM0_TOOLS
+
+LOCAL = TEQUIP:バイブ + TEQUIP:アナルバイブ + TEQUIP:アナルビーズ + (TEQUIP:浣腸器＋プラグ * 3) + TEQUIP:クリキャップ + TEQUIP:オナホール + TEQUIP:ニプルキャップ
+;装着道具類による補正値が[0→0, 2→1, 4→2, 6→3, 8→4, 10→5]を加算(0～6)
+CALL ADD_CRI_VAR("今の気分を聞く", LINE_CALC(LOCAL, "0→0,10→5,LIMIT/0～6"))
+
+;-------------------------------------
+;媚薬
+;-------------------------------------
+@ACT_ACTM0_DRAG
+
+IF TEQUIP:媚薬
+	CALL ADD_CRI_VAR("今の気分を聞く", TEQUIP:媚薬 / 2)
+	CALL ADD_CRI_VAR("自分への気持ちを聞く", TEQUIP:媚薬)
+ENDIF
+
+;-------------------------------------
+;ＳＭ系道具(縄,アイマスク,ボールギャグ,三角木馬)
+;-------------------------------------
+@ACT_ACTM0_ROPE
+IF TEQUIP:縄
+	CALL ADD_CRI_VAR("今の気分を聞く", 1)
+	CALL ADD_CRI_VAR("厳しく脅す", 2)
+ENDIF
+
+@ACT_ACTM0_EYEMASK
+IF TEQUIP:アイマスク
+	CALL ADD_CRI_VAR("今の気分を聞く", 3)
+	CALL ADD_CRI_VAR("厳しく脅す", 2)
+ENDIF
+
+@ACT_ACTM0_GAG
+IF TEQUIP:ボールギャグ
+	CALL ADD_CRI_VAR("今の気分を聞く", -5)
+	CALL ADD_CRI_VAR("自分への気持ちを聞く", -10)
+	CALL ADD_CRI_VAR("合意を求める", -10)
+ENDIF
+
+@ACT_ACTM0_HORSE
+IF TEQUIP:三角木馬
+	CALL ADD_CRI_VAR("今の気分を聞く", (TALENT:サド || TALENT:意地悪) ? 3 # 0)
+	CALL ADD_CRI_VAR("優しく慰める", -5)
+	CALL ADD_CRI_VAR("厳しく脅す", 3)
+	CALL ADD_CRI_VAR("不気味に笑う", 5)
+ENDIF
+
+;-------------------------------------
+;野外プレイ中
+;-------------------------------------
+@ACT_ACTM0_OUT
+IF TEQUIP:野外プレイ
+	CALL ADD_CRI_VAR("今の気分を聞く", 3)
+	CALL ADD_CRI_VAR("厳しく脅す", , 4)
+ENDIF
+
+;-------------------------------------
+;調教対象が自慰中
+;-------------------------------------
+@ACT_ACTM0_MASTURBATION_M
+IF GETBIT(TEQUIP:自慰中, 0)
+	CALL ADD_CRI_VAR("今の気分を聞く", (TALENT:サド || TALENT:意地悪) ? 8 # 2)
+	CALL ADD_CRI_VAR("衣装の変更を要求する", -5)
+ENDIF
+
+;-------------------------------------
+;調教者が自慰中
+;-------------------------------------
+@ACT_ACTM0_MASTURBATION_T
+IF GETBIT(TEQUIP:自慰中, 1)
+	CALL ADD_CRI_VAR("自分への気持ちを聞く", (TALENT:倒錯的 || TALENT:狂気) ? 5 # 0)
+	CALL ADD_CRI_VAR("優しく慰める", -3)
+	CALL ADD_CRI_VAR("厳しく脅す", -3)
+	CALL ADD_CRI_VAR("お仕置きと宣言する", -5)
+	CALL ADD_CRI_VAR("怒鳴る", -5)
+	CALL ADD_CRI_VAR("不気味に笑う", -5)
+ENDIF
+
+;-------------------------------------
+;調教者挿入中
+;-------------------------------------
+@ACT_ACTM0_INSERT
+IF TEQUIP:性交中
+	CALL ADD_CRI_VAR("今の気分を聞く", (TALENT:サド || TALENT:意地悪) ? 5 # 0)
+	CALL ADD_CRI_VAR("お仕置きと宣言する", -5)
+	CALL ADD_CRI_VAR("不気味に笑う", -5)
+ENDIF
+
+;-------------------------------------
+;衣装関連、まだまだ調整する必要があります…
+;会話系は妨害度ではなく、着ているかでの判断
+;-------------------------------------
+;調教対象の服装
+;-------------------------------------
+@ACT_ACTM0_CLOTH_M
+;上着
+;調教対象が上下両方の上着を着ているとき
+IF CLOTHESTYPE(1, 1) && CLOTHESTYPE(1, 3)
+	CALL ADD_CRI_VAR("衣装の変更を要求する", 12)
+	;調教者が抑圧/解放
+	IF TALENT:抑圧
+		CALL ADD_CRI_VAR("衣装の変更を要求する", -4)
+	ELSEIF TALENT:解放
+		CALL ADD_CRI_VAR("衣装の変更を要求する", 4)
+	ENDIF
+;調教対象が上下どちらかの上着を着ているとき
+ELSEIF CLOTHESTYPE(1, 1) || CLOTHESTYPE(1, 3)
+	CALL ADD_CRI_VAR("衣装の変更を要求する", 10)
+	;調教者が抑圧/解放
+	IF TALENT:抑圧
+		CALL ADD_CRI_VAR("衣装の変更を要求する", -3)
+	ELSEIF TALENT:解放
+		CALL ADD_CRI_VAR("衣装の変更を要求する", 3)
+	ENDIF
+ENDIF
+
+;下着
+;調教対象が上下両方の下着を着ているとき
+IF CLOTHESTYPE(1, 0) && CLOTHESTYPE(1, 2)
+	CALL ADD_CRI_VAR("衣装の変更を要求する", 8)
+	;調教者が抑圧/解放
+	IF TALENT:抑圧
+		CALL ADD_CRI_VAR("衣装の変更を要求する", -4)
+	ELSEIF TALENT:解放
+		CALL ADD_CRI_VAR("衣装の変更を要求する", 4)
+	ENDIF
+;調教対象が上下どちらかの下着を着ているとき
+ELSEIF CLOTHESTYPE(1, 0) || CLOTHESTYPE(1, 2)
+	CALL ADD_CRI_VAR("衣装の変更を要求する", 6)
+	;調教者が抑圧/解放
+	IF TALENT:抑圧
+		CALL ADD_CRI_VAR("衣装の変更を要求する", -3)
+	ELSEIF TALENT:解放
+		CALL ADD_CRI_VAR("衣装の変更を要求する", 3)
+	ENDIF
+ENDIF
+
+;調教対象がいずれかの上着/下着類を着ているとき
+IF CLOTHESTYPE(1, 1) || CLOTHESTYPE(1, 3) || CLOTHESTYPE(1, 0) || CLOTHESTYPE(1, 2)
+	CALL ADD_CRI_VAR("衣装の変更を要求する", 2, 4)
+	;調教者が一線越えない
+	SIF TALENT:一線越えない
+		CALL ADD_CRI_VAR("衣装の変更を要求する", -5)
+	;調教者が倒錯的
+	SIF TALENT:倒錯的
+		CALL ADD_CRI_VAR("衣装の変更を要求する", -3, 4)
+	;調教者が両刀でなく、かつ調教対象が同性
+	SIF !TALENT:両刀 && !(TALENT:オトコ ^^ TALENT:MASTER:オトコ)
+		CALL ADD_CRI_VAR("衣装の変更を要求する", -3)
+	;調教者が男嫌いかつ、調教対象がオトコ
+	SIF TALENT:男嫌い && TALENT:MASTER:オトコ
+		CALL ADD_CRI_VAR("衣装の変更を要求する", -5)
+ENDIF
+
+;調教対象がコスプレ中。飽きるまで衣装変更しないように
+IF TEQUIP:MASTER:コスプレ
+	;調教者の興味
+	SELECTCASE BASE:興味
+		CASE IS > 750
+			CALL ADD_CRI_VAR("衣装の変更を要求する", 0)
+		CASE IS > 500
+			CALL ADD_CRI_VAR("衣装の変更を要求する", -10)
+		CASE IS > 250
+			CALL ADD_CRI_VAR("衣装の変更を要求する", -5)
+		CASEELSE
+			CALL ADD_CRI_VAR("衣装の変更を要求する", 5)
+	ENDSELECT
+ENDIF
+
+;-------------------------------------
+;許しを乞ったかつ、調教者の状態が鬱屈以外
+;-------------------------------------
+@ACT_ACTM0_PLEASE_HELP
+
+IF IS_NOWCOMNAME("許しを乞う") && TCVAR:状態変化 < 8
+	CALL ADD_CRI_VAR("厳しく脅す", -5)
+	CALL ADD_CRI_VAR("怒鳴る", -5)
+	CALL ADD_CRI_VAR("罵倒", -5)
+ENDIF
+
+;-------------------------------------
+;そんな話はもう終わったフラグ(1=好意,2=知識,4=慰め,8=脅す,16=合意,32=嗤う,64=罵倒)
+;-------------------------------------
+@ACT_ACTM0_ALREADY_TALKED
+
+LOCAL = LIMIT(ABL:会話 / 2 - 5, -5, 0)
+SIF TFLAG:既出の話題 & 1
+	CALL ADD_CRI_VAR("自分への気持ちを聞く", LOCAL)
+SIF TFLAG:既出の話題 & 2
+	CALL ADD_CRI_VAR("性についての話をする", LOCAL)
+SIF TFLAG:既出の話題 & 4
+	CALL ADD_CRI_VAR("優しく慰める", LOCAL)
+SIF TFLAG:既出の話題 & 8
+	CALL ADD_CRI_VAR("厳しく脅す", LOCAL)
+SIF TFLAG:既出の話題 & 16
+	CALL ADD_CRI_VAR("合意を求める", LOCAL)
+SIF TFLAG:既出の話題 & 32
+	CALL ADD_CRI_VAR("不気味に笑う", LOCAL)
+SIF TFLAG:既出の話題 & 64
+	CALL ADD_CRI_VAR("罵倒", LOCAL)
+
+;-------------------------------------
+;お仕置きモード
+;-------------------------------------
+@ACT_ACTM0_OSHIOKI
+
+IF TFLAG:お仕置きフラグ
+	CALL ADD_CRI_VAR("お仕置きと宣言する", 8, 5)
+	CALL ADD_CRI_VAR("不気味に笑う", , 7)
+	CALL ADD_CRI_VAR("罵倒", 6, 7)
+ENDIF
+
+;────────────────────────────────────
+;同じ行動連続実行の確率をダウンします
+;────────────────────────────────────
+@ACT_ACTM0_PREV
+
+SELECTCASE TFLAG:前ACT
+	CASE 0 TO 9, 66
+		CALL ADD_CRI_VAR(GET_ACTNAME(TFLAG:前ACT), -3 * TFLAG:同一行動ボーナス, -4 * TFLAG:同一行動ボーナス)
+ENDSELECT
+
+;────────────────────────────────────
+;補正値計算
+;────────────────────────────────────
+@ACT_ACTM0_CORRECTION(ARG)
+#DIM LCOUNT
+
+;ARGが0以外なら補正値を計算し、以後の処理を行わない
+IF ARG
+	;66に関してはここで計算しない
+	FOR LCOUNT, 0, 10
+		CALL ACT_M_RES_CALC(LCOUNT, GET_CRI_VAR(GET_ACTNAME(LCOUNT) + "累計"))
+	NEXT
+ELSE
+	;補正値を判定値に加算する
+	CALL ACT_ACTM_CORRECTION(0)
+ENDIF
+
+;────────────────────────────────────
+;実行不可能の判定
+;────────────────────────────────────
+@ACT_ACTM0_ABLE
+#DIM LCOUNT
+
+;不可能判定
+CALL ACT_ACTM_ABLE(0)
+

@@ -1,0 +1,616 @@
+﻿
+;※調教者のABLUP処理は存在しないパラメータがあるためところどころ妥協している
+
+;────────────────────────────────────
+;能力上昇処理
+;────────────────────────────────────
+;-------------------------------------------------
+;従順ABL
+;-------------------------------------------------
+@ABLUP_0M
+#DIM 屈服難易度
+#DIM 屈服EXP
+#DIM 屈服補正
+#DIM 屈服達成
+#DIM 恐怖難易度
+#DIM 恐怖EXP
+#DIM 恐怖補正
+#DIM 恐怖達成
+
+;従順、屈服ルート
+;屈服難易度設定
+屈服難易度 = POWER(2, ABL:MASTER:従順) * (100 - TALENT:MASTER:プライド低い * 20 + TALENT:MASTER:プライド高い * 20)
+;屈服EXP取得
+屈服EXP = EXP:MASTER:屈服経験
+;屈服刻印が不足しているとEXP補正を減らす(1Lvにつき1/2)
+LOCAL = (MARK:屈服刻印 >= 10) ? 0 # (ABL:MASTER:従順 * 2 - 1 - MARK:屈服刻印)
+屈服補正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+;屈服達成判定
+LOCAL = CUP:MASTER:屈服 + CUP:MASTER:恭順
+屈服達成 = (LOCAL / 2 + 屈服EXP * 20 / 屈服補正) > (屈服難易度 * ABLUP_DIFFICULTY(0))
+
+;恐怖ルート
+;恐怖難易度設定
+恐怖難易度 = POWER(2, ABL:MASTER:従順) * (100 - TALENT:MASTER:臆病 * 20 + TALENT:MASTER:気丈 * 20)
+;恐怖EXP取得
+恐怖EXP = EXP:MASTER:恐怖経験
+;トラウマが不足しているとEXP補正を減らす(1Lvにつき1/2)
+LOCAL = (MARK:トラウマ >= 10) ? 0 # (ABL:MASTER:従順 * 2 - 1 - MARK:トラウマ)
+恐怖補正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+;恐怖達成判定
+恐怖達成 = (CUP:MASTER:恐怖 + 恐怖EXP * 20 / 恐怖補正) > (恐怖難易度 * ABLUP_DIFFICULTY(0))
+
+;屈服系・恐怖系で条件を満たせばABLUP
+SIF 屈服達成 || 恐怖達成
+	CALL ABLUP_RISE(MASTER, 0)
+
+
+;-------------------------------------------------
+;欲望ABL
+;-------------------------------------------------
+@ABLUP_1M
+CALL ABLUP_1(MASTER)
+@ABLUP_1T
+CALL ABLUP_1(TARGET)
+
+@ABLUP_1(ARG)
+#DIM 欲望難易度
+#DIM 欲望EXP
+#DIM 欲望補正
+
+;欲望難易度設定
+欲望難易度 = POWER(2, ABL:ARG:欲望) * (100 - TALENT:ARG:快感に素直 * 20 + TALENT:ARG:快感の否定 * 20)
+;欲望EXP取得(高度なEXPほど補正値が大きい)
+欲望EXP = EXP:ARG:Ｃ経験 + EXP:ARG:Ｂ経験 + EXP:ARG:性知識
+欲望EXP += EXP:ARG:Ｖ経験 * 2 + EXP:ARG:Ａ経験 * 2 + EXP:ARG:絶頂経験 * 2 + EXP:ARG:射精経験 * 2
+欲望EXP += EXP:ARG:自慰経験 * 3 + EXP:ARG:噴乳経験 * 4 + EXP:ARG:異常経験 * 4 + EXP:ARG:Ｖ拡張経験 * 5 + EXP:ARG:Ａ拡張経験 * 5
+;調教対象
+IF ARG == MASTER
+	;快楽刻印が不足しているとEXP補正を減らす(1Lvにつき1/2)
+	LOCAL = (MARK:快楽刻印 >= 10) ? 0 # (ABL:ARG:欲望 * 2 - 1 - MARK:快楽刻印)
+;調教者(妥協)
+ELSE
+	;調教レベルが不足しているとEXP補正を減らす(1Lvにつき1/2)
+	LOCAL = (CFLAG:MASTER:調教レベル >= 10) ? 0 # (ABL:ARG:欲望 * 2 - 1 - CFLAG:MASTER:調教レベル)
+ENDIF
+欲望補正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+
+;欲望達成判定
+;調教対象
+IF ARG == MASTER
+	SIF (CUP:ARG:欲情 + 欲望EXP * 10 / 欲望補正) > (欲望難易度 * ABLUP_DIFFICULTY(1))
+		CALL ABLUP_RISE(MASTER, 1)
+;調教者(妥協)
+ELSE
+	SIF (CUP:ARG:快Ｃ + CUP:ARG:快Ｖ + CUP:ARG:快Ａ + CUP:ARG:快Ｂ + 欲望EXP * 10 / 欲望補正) > (欲望難易度 * ABLUP_DIFFICULTY(1))
+		CALL ABLUP_RISE(TARGET, 1)
+ENDIF
+
+
+;-------------------------------------------------
+;技巧ABL
+;-------------------------------------------------
+@ABLUP_2M
+CALL ABLUP_2(MASTER)
+@ABLUP_2T
+CALL ABLUP_2(TARGET)
+
+@ABLUP_2(ARG)
+#DIM 技巧難易度
+#DIM 技巧EXP
+#DIM 技巧補正
+#DIM 相手
+
+;奉仕相手を代入
+IF ARG == MASTER
+	相手 = TARGET
+ELSE
+	相手 = MASTER
+ENDIF
+
+;技巧難易度設定
+技巧難易度 = POWER(2, ABL:ARG:技巧) * (100 - TALENT:ARG:習得早い * 20 + TALENT:ARG:習得遅い * 20)
+;技巧EXP取得
+技巧EXP = EXP:ARG:性知識 + EXP:ARG:口淫経験 * 2 + EXP:ARG:手淫経験 * 2 + EXP:ARG:性交経験 * 2 + EXP:ARG:イかせ経験 * 4
+;調教レベルが不足しているとEXP補正を減らす(1Lvにつき1/2)
+LOCAL = (CFLAG:ARG:調教レベル >= 10) ? 0 # (ABL:ARG:技巧 * 2 - 1 - CFLAG:ARG:調教レベル)
+技巧補正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+
+;技巧達成判定
+LOCAL = CUP:相手:快Ｃ + CUP:相手:快Ｖ + CUP:相手:快Ａ + CUP:相手:快Ｂ
+SIF (LOCAL / 3 + 技巧EXP * 10 / 技巧補正) > (技巧難易度 * ABLUP_DIFFICULTY(2))
+	CALL ABLUP_RISE(ARG, 2)
+
+
+;-------------------------------------------------
+;Ｘ感覚ABL
+;-------------------------------------------------
+@ABLUP_3M
+CALL ABLUP_SENSITIVITY(MASTER, 3)
+@ABLUP_4M
+CALL ABLUP_SENSITIVITY(MASTER, 4)
+@ABLUP_5M
+CALL ABLUP_SENSITIVITY(MASTER, 5)
+@ABLUP_6M
+CALL ABLUP_SENSITIVITY(MASTER, 6)
+@ABLUP_3T
+CALL ABLUP_SENSITIVITY(TARGET, 3)
+@ABLUP_4T
+CALL ABLUP_SENSITIVITY(TARGET, 4)
+@ABLUP_5T
+CALL ABLUP_SENSITIVITY(TARGET, 5)
+@ABLUP_6T
+CALL ABLUP_SENSITIVITY(TARGET, 6)
+
+@ABLUP_SENSITIVITY(対象, ARG)
+#DIM 部位
+#DIM 感覚難易度
+#DIM 感覚EXP
+#DIM 感覚補正
+#DIM 対象
+
+部位 = ARG - 3
+SPLIT "Ｃ/Ｖ/Ａ/Ｂ", "/", LOCALS
+
+;感覚難易度設定
+感覚難易度 = POWER(2, ABL:対象:@"%LOCALS:部位%感覚") * (100 - TALENT:対象:@"%LOCALS:部位%敏感" * 20 + TALENT:対象:@"%LOCALS:部位%鈍感" * 20)
+;感覚EXP取得
+感覚EXP = EXP:対象:@"%LOCALS:部位%経験" * 2 + EXP:対象:絶頂経験
+SIF LOCALS:部位 == "Ｃ"
+	感覚EXP += EXP:対象:絶頂経験
+SIF LOCALS:部位 == "Ｖ"
+	感覚EXP += EXP:対象:Ｖ拡張経験 * 4 + EXP:対象:性交経験 * 2
+SIF LOCALS:部位 == "Ａ"
+	感覚EXP += EXP:対象:Ａ拡張経験 * 4 + EXP:対象:性交経験 + EXP:対象:異常経験
+SIF LOCALS:部位 == "Ｂ"
+	感覚EXP += EXP:対象:噴乳経験 * 3
+;調教対象
+IF ARG == MASTER
+	;快楽刻印が不足しているとEXP補正を減らす(1Lvにつき1/2)
+	LOCAL = (MARK:快楽刻印 >= 10) ? 0 # (ABL:対象:@"%LOCALS:部位%感覚" * 2 - 1 - MARK:快楽刻印)
+;調教者(妥協)
+ELSE
+	;欲望ABLが不足しているとEXP補正を減らす(1Lvにつき1/2)
+	LOCAL = (ABL:対象:欲望 >= 10) ? 0 # (ABL:対象:@"%LOCALS:部位%感覚" * 2 - 1 - ABL:対象:欲望)
+ENDIF
+感覚補正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+
+;感覚達成判定
+SIF (CUP:対象:@"快%LOCALS:部位%" + 感覚EXP * 10 / 感覚補正) > (感覚難易度 * ABLUP_DIFFICULTY(ARG) * 4)
+	CALL ABLUP_RISE(対象, ARG)
+
+
+;-------------------------------------------------
+;奉仕精神ABL
+;-------------------------------------------------
+@ABLUP_7M
+CALL ABLUP_7(MASTER)
+@ABLUP_7T
+CALL ABLUP_7(TARGET)
+
+@ABLUP_7(ARG)
+#DIM 奉仕精神難易度
+#DIM 奉仕精神EXP
+#DIM 奉仕精神補正
+
+;奉仕精神難易度設定
+奉仕精神難易度 = POWER(2, ABL:ARG:奉仕精神) * (100 - TALENT:ARG:献身的 * 20 + TALENT:ARG:受け身 * 20)
+;奉仕精神EXP取得
+奉仕精神EXP = EXP:ARG:口淫経験 + EXP:ARG:手淫経験 + EXP:ARG:奉仕快楽経験 * 4
+;調教レベルが不足しているとEXP補正を減らす(1Lvにつき1/2)
+LOCAL = (CFLAG:ARG:調教レベル >= 10) ? 0 # (ABL:ARG:奉仕精神 * 2 - 1 - CFLAG:ARG:調教レベル)
+奉仕精神補正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+
+;奉仕精神達成判定
+;調教対象
+IF ARG == MASTER
+	SIF (CUP:ARG:恭順 + 奉仕精神EXP * 10 / 奉仕精神補正) > (奉仕精神難易度 * ABLUP_DIFFICULTY(7))
+		CALL ABLUP_RISE(MASTER, 7)
+;調教者(妥協)
+ELSE
+	SIF (SOURCE:MASTER:達成 / 3 + 奉仕精神EXP * 10 / 奉仕精神補正) > (奉仕精神難易度 * ABLUP_DIFFICULTY(7))
+		CALL ABLUP_RISE(TARGET, 7)
+ENDIF
+
+
+;-------------------------------------------------
+;露出癖ABL
+;-------------------------------------------------
+@ABLUP_8M
+CALL ABLUP_8(MASTER)
+@ABLUP_8T
+;TARGETには露出癖ABL上昇がない(妥協)
+
+@ABLUP_8(ARG)
+#DIM 露出癖難易度
+#DIM 露出癖EXP
+
+;露出癖難易度設定
+露出癖難易度 = POWER(2, ABL:ARG:露出癖) * (100 - TALENT:ARG:解放 * 20 + TALENT:ARG:抑圧 * 20)
+;露出癖EXP取得
+露出癖EXP = EXP:ARG:露出経験 * 3 + EXP:ARG:絶頂経験
+
+;露出癖達成判定
+SIF (CUP:ARG:恥情 + 露出癖EXP * 10) > (露出癖難易度 * ABLUP_DIFFICULTY(8))
+	CALL ABLUP_RISE(ARG, 8)
+
+
+;-------------------------------------------------
+;レズっ気ABL
+;-------------------------------------------------
+@ABLUP_9M
+CALL ABLUP_9(MASTER)
+@ABLUP_9T
+CALL ABLUP_9(TARGET)
+
+@ABLUP_9(ARG)
+#DIM レズっ気難易度
+#DIM レズっ気EXP
+
+;レズっ気難易度設定
+レズっ気難易度 = POWER(2, ABL:ARG:レズっ気) * (100 - TALENT:ARG:両刀 * 20)
+;レズっ気EXP取得
+レズっ気EXP = EXP:ARG:レズ経験
+
+;レズっ気達成判定
+SIF (SOURCE:ARG:情愛 + SOURCE:ARG:悦楽 + レズっ気EXP * 20) > (レズっ気難易度 * ABLUP_DIFFICULTY(9))
+	CALL ABLUP_RISE(ARG, 9)
+
+
+;-------------------------------------------------
+;ＢＬっ気ABL
+;-------------------------------------------------
+@ABLUP_10M
+CALL ABLUP_10(MASTER)
+@ABLUP_10T
+CALL ABLUP_10(TARGET)
+
+@ABLUP_10(ARG)
+#DIM ＢＬっ気難易度
+#DIM ＢＬっ気EXP
+
+;ＢＬっ気難易度設定
+ＢＬっ気難易度 = POWER(2, ABL:ARG:ＢＬっ気) * (100 - TALENT:ARG:両刀 * 20)
+;ＢＬっ気EXP取得
+ＢＬっ気EXP = EXP:ARG:ＢＬ経験
+
+;ＢＬっ気達成判定
+SIF (SOURCE:ARG:情愛 + SOURCE:ARG:悦楽 + ＢＬっ気EXP * 20) > (ＢＬっ気難易度 * ABLUP_DIFFICULTY(10))
+	CALL ABLUP_RISE(ARG, 10)
+
+
+;-------------------------------------------------
+;マゾっ気ABL
+;-------------------------------------------------
+@ABLUP_11M
+#DIM マゾっ気難易度
+#DIM マゾっ気EXP
+
+;マゾっ気難易度設定
+マゾっ気難易度 = POWER(2, ABL:MASTER:マゾっ気) * (100 - TALENT:MASTER:倒錯的 * 20)
+;マゾっ気EXP取得
+マゾっ気EXP = EXP:MASTER:苦痛快楽経験 * 4 + EXP:MASTER:緊縛経験 * 2 + EXP:MASTER:異常経験
+
+;マゾっ気達成判定
+SIF (CUP:MASTER:苦痛 + CUP:MASTER:不快 - CUP:MASTER:抑鬱 + マゾっ気EXP * 5) > (マゾっ気難易度 * ABLUP_DIFFICULTY(11))
+	CALL ABLUP_RISE(MASTER, 11)
+
+
+;-------------------------------------------------
+;自慰中毒ABL
+;-------------------------------------------------
+@ABLUP_12M
+#DIM 自慰中毒難易度
+#DIM 自慰中毒EXP
+#DIM 自慰中毒補正
+
+;自慰中毒難易度設定
+自慰中毒難易度 = POWER(2, ABL:MASTER:自慰中毒) * (100 - TALENT:MASTER:自慰しやすい * 20)
+;自慰中毒EXP取得
+自慰中毒EXP = EXP:MASTER:自慰経験 + EXP:MASTER:調教自慰経験
+;調教レベルが不足しているとEXP補正を減らす(1Lvにつき1/2)
+LOCAL = ((ABL:MASTER:欲望 + ABL:MASTER:露出癖) >= 20) ? 0 # (ABL:MASTER:自慰中毒 * 2 - 1 - (ABL:MASTER:欲望 + ABL:MASTER:露出癖))
+自慰中毒補正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+
+;自慰中毒達成判定
+SIF (CUP:MASTER:快Ｃ + CUP:MASTER:快Ｖ + CUP:MASTER:快Ａ + CUP:MASTER:快Ｂ + 自慰中毒EXP * 10 / 自慰中毒補正) > (自慰中毒難易度 * ABLUP_DIFFICULTY(12))
+	CALL ABLUP_RISE(MASTER, 12)
+
+
+;-------------------------------------------------
+;精液中毒ABL
+;-------------------------------------------------
+@ABLUP_13M
+CALL ABLUP_13(MASTER)
+@ABLUP_13T
+CALL ABLUP_13(TARGET)
+
+@ABLUP_13(ARG)
+#DIM 精液中毒難易度
+#DIM 精液中毒EXP
+#DIM 精液中毒補正
+
+;精液中毒難易度設定
+精液中毒難易度 = POWER(2, ABL:ARG:精液中毒) * 100
+;精液中毒EXP取得
+精液中毒EXP = EXP:ARG:精液経験
+;欲望ABLが不足しているとEXP補正を減らす(1Lvにつき1/2)
+LOCAL = (ABL:ARG:欲望 >= 10) ? 0 # (ABL:ARG:精液中毒 - 1 - ABL:ARG:欲望)
+精液中毒補正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+
+;精液中毒達成判定
+SIF (精液中毒EXP * 40 / 精液中毒補正) > (精液中毒難易度 * ABLUP_DIFFICULTY(13))
+	CALL ABLUP_RISE(ARG, 13)
+
+
+;-------------------------------------------------
+;レズ中毒ABL
+;-------------------------------------------------
+@ABLUP_14M
+CALL ABLUP_14(MASTER)
+@ABLUP_14T
+CALL ABLUP_14(TARGET)
+
+@ABLUP_14(ARG)
+#DIM レズ中毒難易度
+#DIM レズ中毒EXP
+#DIM レズ中毒補正
+
+;レズ中毒難易度設定
+レズ中毒難易度 = POWER(2, ABL:ARG:レズ中毒) * (100 - TALENT:ARG:両刀 * 20)
+;レズ中毒EXP取得
+レズ中毒EXP = EXP:ARG:レズ経験
+;調教レベルが不足しているとEXP補正を減らす(1Lvにつき1/2)
+LOCAL = (ABL:ARG:レズっ気 >= 10) ? 0 # (ABL:ARG:レズ中毒 - 1 - ABL:ARG:レズっ気)
+レズ中毒補正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+
+;レズ中毒達成判定
+;調教対象
+IF ARG == MASTER
+	SIF (CFLAG:M好意 / 2 + レズ中毒EXP * 20 / レズ中毒補正) > (レズ中毒難易度 * ABLUP_DIFFICULTY(14))
+		CALL ABLUP_RISE(MASTER, 14)
+;調教者
+ELSE
+	SIF (CFLAG:好意 / 2 + レズ中毒EXP * 20 / レズ中毒補正) > (レズ中毒難易度 * ABLUP_DIFFICULTY(14))
+		CALL ABLUP_RISE(TARGET, 14)
+ENDIF
+
+
+;-------------------------------------------------
+;苦痛中毒ABL
+;-------------------------------------------------
+@ABLUP_15M
+#DIM 苦痛中毒難易度
+#DIM 苦痛中毒EXP
+#DIM 苦痛中毒補正
+
+;苦痛中毒難易度設定
+苦痛中毒難易度 = POWER(2, ABL:MASTER:苦痛中毒) * (100 - TALENT:MASTER:ドＭ * 20)
+;苦痛中毒EXP取得
+苦痛中毒EXP = EXP:MASTER:苦痛快楽経験 * 2 + EXP:MASTER:異常経験
+;調教レベルが不足しているとEXP補正を減らす(1Lvにつき1/2)
+LOCAL = ((ABL:MASTER:欲望 + ABL:MASTER:マゾっ気) >= 20) ? 0 # (ABL:MASTER:苦痛中毒 * 2 - 1 - (ABL:MASTER:欲望 + ABL:MASTER:マゾっ気))
+苦痛中毒補正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+
+;苦痛中毒達成判定
+SIF (CUP:MASTER:苦痛 + 苦痛中毒EXP * 10 / 苦痛中毒補正) > (苦痛中毒難易度 * ABLUP_DIFFICULTY(15))
+	CALL ABLUP_RISE(MASTER, 15)
+
+
+;-------------------------------------------------
+;拘束中毒ABL
+;-------------------------------------------------
+@ABLUP_16M
+#DIM 拘束中毒難易度
+#DIM 拘束中毒EXP
+#DIM 拘束中毒補正
+
+;拘束中毒難易度設定
+拘束中毒難易度 = POWER(2, ABL:MASTER:拘束中毒) * (100 - TALENT:MASTER:ドＭ * 20)
+;拘束中毒EXP取得
+拘束中毒EXP = EXP:MASTER:緊縛経験 * 2 + EXP:MASTER:異常経験
+;調教レベルが不足しているとEXP補正を減らす(1Lvにつき1/2)
+LOCAL = ((ABL:MASTER:従順 + ABL:MASTER:マゾっ気) >= 20) ? 0 # (ABL:MASTER:拘束中毒 * 2 - 1 - (ABL:MASTER:従順 + ABL:MASTER:マゾっ気))
+拘束中毒補正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+
+;拘束中毒達成判定
+SIF (CUP:MASTER:不快 + 拘束中毒EXP * 10 / 拘束中毒補正) > (拘束中毒難易度 * ABLUP_DIFFICULTY(16))
+	CALL ABLUP_RISE(MASTER, 16)
+
+
+;────────────────────────────────────
+;調教能力の上昇
+;────────────────────────────────────
+;-------------------------------------------------
+;会話ABL
+;-------------------------------------------------
+@ABLUP_20T
+#DIM 会話難易度
+#DIM 会話EXP
+#DIM 会話補正
+
+;会話難易度設定
+会話難易度 = POWER(2, ABL:会話) * (100 - TALENT:習得早い * 20 + TALENT:習得遅い * 20)
+;会話EXP取得
+会話EXP = EXP:会話経験
+;調教レベルが不足しているとEXP補正を減らす(1Lvにつき1/2)
+LOCAL = (CFLAG:調教レベル >= 20) ? 0 # (ABL:会話 * 2 - 1 - CFLAG:調教レベル)
+会話補正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+
+;会話達成判定
+LOCAL = CUP:MASTER:屈服 + CUP:MASTER:恭順 * 2 + CUP:MASTER:恐怖 - CUP:MASTER:反抗
+SIF (LOCAL / 2 + 会話EXP * 20 / 会話補正) > (会話難易度 * ABLUP_DIFFICULTY(20))
+	CALL ABLUP_RISE(TARGET, 20)
+
+
+;-------------------------------------------------
+;愛撫ABL
+;-------------------------------------------------
+@ABLUP_21T
+#DIM 愛撫難易度
+#DIM 愛撫EXP
+#DIM 愛撫補正
+
+;愛撫難易度設定
+愛撫難易度 = POWER(2, ABL:愛撫) * (100 - TALENT:習得早い * 20 + TALENT:習得遅い * 20)
+;愛撫EXP取得
+愛撫EXP = EXP:手淫経験
+;調教レベルが不足しているとEXP補正を減らす(1Lvにつき1/2)
+LOCAL = (CFLAG:調教レベル >= 20) ? 0 # (ABL:愛撫 * 2 - 1 - CFLAG:調教レベル)
+愛撫補正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+
+;愛撫達成判定
+LOCAL = CUP:MASTER:快Ｃ + CUP:MASTER:快Ｖ + CUP:MASTER:快Ａ + CUP:MASTER:快Ｂ - CUP:MASTER:抑鬱
+SIF (LOCAL / 3 + 愛撫EXP * 20 / 愛撫補正) > (愛撫難易度 * ABLUP_DIFFICULTY(21))
+	CALL ABLUP_RISE(TARGET, 21)
+
+
+;-------------------------------------------------
+;道具ABL
+;-------------------------------------------------
+@ABLUP_22T
+#DIM 道具難易度
+#DIM 道具EXP
+#DIM 道具補正
+
+;道具難易度設定
+道具難易度 = POWER(2, ABL:道具) * (100 - TALENT:習得早い * 20 + TALENT:習得遅い * 20)
+;道具EXP取得
+道具EXP = EXP:道具使用経験
+;調教レベルが不足しているとEXP補正を減らす(1Lvにつき1/2)
+LOCAL = (CFLAG:調教レベル >= 20) ? 0 # (ABL:道具 * 2 - 1 - CFLAG:調教レベル)
+道具補正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+
+;道具達成判定
+SIF (CUP:MASTER:快Ｃ + CUP:MASTER:快Ｖ + CUP:MASTER:快Ａ + CUP:MASTER:快Ｂ - CUP:MASTER:不快 + 道具EXP * 20 / 道具補正) > (道具難易度 * ABLUP_DIFFICULTY(22))
+	CALL ABLUP_RISE(TARGET, 22)
+
+
+;-------------------------------------------------
+;性交ABL
+;-------------------------------------------------
+@ABLUP_23T
+#DIM 性交難易度
+#DIM 性交EXP
+#DIM 性交補正
+
+;性交難易度設定
+性交難易度 = POWER(2, ABL:性交) * (100 - TALENT:習得早い * 20 + TALENT:習得遅い * 20)
+;性交EXP取得
+性交EXP = EXP:性交経験
+;調教レベルが不足しているとEXP補正を減らす(1Lvにつき1/2)
+LOCAL = (CFLAG:調教レベル >= 20) ? 0 # (ABL:性交 * 2 - 1 - CFLAG:調教レベル)
+性交補正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+
+;性交達成判定
+LOCAL = CUP:MASTER:快Ｃ + CUP:MASTER:快Ｖ + CUP:MASTER:快Ａ + CUP:MASTER:欲情 + CUP:MASTER:恭順 - CUP:MASTER:恐怖 - CUP:MASTER:抑鬱
+SIF (LOCAL / 3 + 性交EXP * 20 / 性交補正) > (性交難易度 * ABLUP_DIFFICULTY(23))
+	CALL ABLUP_RISE(TARGET, 23)
+
+
+;-------------------------------------------------
+;羞恥ABL
+;『恥ずかしがらせる能力』
+;-------------------------------------------------
+@ABLUP_24T
+#DIM 羞恥難易度
+#DIM 羞恥EXP
+#DIM 羞恥補正
+
+;羞恥難易度設定
+羞恥難易度 = POWER(2, ABL:羞恥) * (100 - TALENT:習得早い * 20 + TALENT:習得遅い * 20)
+;羞恥EXP取得
+羞恥EXP = EXP:MASTER:露出経験 + EXP:MASTER:恥辱快楽経験 * 2
+;調教レベルが不足しているとEXP補正を減らす(1Lvにつき1/2)
+LOCAL = (CFLAG:調教レベル >= 20) ? 0 # (ABL:羞恥 * 2 - 1 - CFLAG:調教レベル)
+羞恥補正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+
+;羞恥達成判定
+SIF (CUP:MASTER:欲情 + CUP:MASTER:恥情 - CUP:MASTER:抑鬱 + 羞恥EXP * 20 / 羞恥補正) > (羞恥難易度 * ABLUP_DIFFICULTY(24))
+	CALL ABLUP_RISE(TARGET, 24)
+
+
+;-------------------------------------------------
+;奉仕ABL
+;『奉仕させる能力』
+;-------------------------------------------------
+@ABLUP_25T
+#DIM 奉仕難易度
+#DIM 奉仕EXP
+#DIM 奉仕補正
+
+;奉仕難易度設定
+奉仕難易度 = POWER(2, ABL:奉仕) * (100 - TALENT:習得早い * 20 + TALENT:習得遅い * 20)
+;奉仕EXP取得
+奉仕EXP = EXP:MASTER:口淫経験 + EXP:MASTER:手淫経験 + EXP:MASTER:奉仕快楽経験 * 2 + EXP:MASTER:イかせ経験 * 3 + EXP:MASTER:愛情経験 * 4
+;調教レベルが不足しているとEXP補正を減らす(1Lvにつき1/2)
+LOCAL = (CFLAG:調教レベル >= 20) ? 0 # (ABL:奉仕 * 2 - 1 - CFLAG:調教レベル)
+奉仕補正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+
+;奉仕達成判定
+SIF (CUP:MASTER:屈服 + CUP:MASTER:恭順 - CUP:MASTER:反抗 + 奉仕EXP * 10 / 奉仕補正) > (奉仕難易度 * ABLUP_DIFFICULTY(25))
+	CALL ABLUP_RISE(TARGET, 25)
+
+
+;-------------------------------------------------
+;加虐ABL
+;-------------------------------------------------
+@ABLUP_26T
+#DIM 加虐難易度
+#DIM 加虐EXP
+#DIM 加虐補正
+
+;加虐難易度設定
+加虐難易度 = POWER(2, ABL:加虐) * (100 - TALENT:習得早い * 20 + TALENT:習得遅い * 20)
+;加虐EXP取得
+加虐EXP = EXP:MASTER:緊縛経験 + EXP:MASTER:苦痛快楽経験 * 2 + EXP:MASTER:Ｖ拡張経験 * 4 + EXP:MASTER:Ａ拡張経験 * 4
+;調教レベルが不足しているとEXP補正を減らす(1Lvにつき1/2)
+LOCAL = (CFLAG:調教レベル >= 20) ? 0 # (ABL:加虐 * 2 - 1 - CFLAG:調教レベル)
+加虐補正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+
+;加虐達成判定
+SIF (CUP:MASTER:苦痛 + CUP:MASTER:不快 - CUP:MASTER:反抗 + 加虐EXP * 10 / 加虐補正) > (加虐難易度 * ABLUP_DIFFICULTY(26))
+	CALL ABLUP_RISE(TARGET, 26)
+
+
+;-------------------------------------------------
+;異常ABL
+;-------------------------------------------------
+@ABLUP_27T
+#DIM 異常難易度
+#DIM 異常EXP
+#DIM 異常補正
+
+;異常難易度設定
+異常難易度 = POWER(2, ABL:異常) * (100 - TALENT:習得早い * 20 + TALENT:習得遅い * 20)
+;異常EXP取得
+異常EXP = EXP:MASTER:異常経験
+;調教レベルが不足しているとEXP補正を減らす(1Lvにつき1/2)
+LOCAL = (CFLAG:調教レベル >= 20) ? 0 # (ABL:異常 * 2 - 1 - CFLAG:調教レベル)
+異常補正 = POWER(2, LOCAL < 0 ? 0 # LOCAL)
+
+;異常達成判定
+SIF (SOURCE:MASTER:逸脱 + 異常EXP * 20 / 異常補正) > (異常難易度 * ABLUP_DIFFICULTY(27))
+	CALL ABLUP_RISE(TARGET, 27)
+
+
+;-------------------------------------------------
+;使役ABL
+;-------------------------------------------------
+@ABLUP_28T
+;使役ABLは上昇しない(暫定)
+
+
+@ABLUP_RISE(対象, ARG)
+#DIM 対象
+ABL:対象:ARG++
+IF 対象 == MASTER
+	CALL KOJO_EVENT(23, ARG)
+ELSEIF 対象 == TARGET
+	CALL KOJO_EVENT(24, ARG)
+ENDIF
+PRINTFORMW %CALLNAME:対象%の%ABLNAME:ARG%\@ 20 <= ARG && ARG <= 29 ? スキル # \@が\@ ABL:対象:ARG > 9 ? {ABL:対象:ARG} # %TOFULL(TOSTR(ABL:対象:ARG))% \@になった
+
+@ABLUP_DIFFICULTY(ARG)
+#FUNCTION
+RETURNF 6

@@ -1,0 +1,928 @@
+﻿;────────────────────────────────────
+;バイブなど付けっぱなしアイテムのチェック
+;ここではCOM選択前の加算処理を行う
+;────────────────────────────────────
+@EQUIP_CHECK
+;インフレ仕様
+;ABLとGET_ABL()との対応、だいたい元値の10倍程度、100を超えない値
+;	ABL	A
+;	0	0
+;	1	16.67
+;	2	28.57
+;	3	37.5
+;	4	44.44
+;	5	50
+;	6	54.55
+;	7	58.33
+;	8	61.54
+;	9	64.29
+;	10	66.67
+
+;────────────────────────────────────
+;ローション（潤滑追加）
+;────────────────────────────────────
+IF TEQUIP:ローション
+	IF PALAM:MASTER:潤滑 < 500
+		CUP:MASTER:潤滑 += 200
+	ELSEIF PALAM:MASTER:潤滑 < 1200
+		CUP:MASTER:潤滑 += 100
+	ELSEIF PALAM:MASTER:潤滑 < 2500
+		CUP:MASTER:潤滑 += 50
+	ELSE
+		CUP:MASTER:潤滑 += 10
+	ENDIF
+ENDIF
+
+;────────────────────────────────────
+;媚薬（欲情追加、理性）
+;────────────────────────────────────
+IF TEQUIP:媚薬
+	IF PALAM:MASTER:欲情 < 1000
+		CUP:MASTER:欲情 += 500
+		DOWNBASE:MASTER:理性 += 25
+	ELSEIF PALAM:MASTER:欲情 < 2000
+		CUP:MASTER:欲情 += 250
+		DOWNBASE:MASTER:理性 += 50
+	ELSEIF PALAM:MASTER:欲情 < 3000
+		CUP:MASTER:欲情 += 150
+		DOWNBASE:MASTER:理性 += 100
+	ELSE
+		CUP:MASTER:欲情 += 50
+		TCVAR:MASTER:今回の勃起 += 200
+	ENDIF
+ENDIF
+
+;────────────────────────────────────
+;バイブ装着中（快Ｖ、中毒充足、トラウマ）
+;────────────────────────────────────
+IF TEQUIP:バイブ && !IS_NOWACTNAME("バイブ")
+	A = 100 * (2 + ITEM:9 + TALENT:道具使い) / 2
+	SOURCE:MASTER:快Ｖ += A
+	SIF ABL:MASTER:Ｖ感覚 > 2
+		SOURCE:MASTER:中毒充足 += GET_ABL(MASTER, "Ｖ感覚") * (GET_ABL(MASTER, "Ｖ感覚") - 20) * (ITEM:9 + 1) / 10 + A / 5
+	SIF CFLAG:MASTER:トラウマ == 21
+		SOURCE:MASTER:トラウマ += 20 + GET_ABL(TARGET, "道具") + ITEM:9 * 100 + (TALENT:道具使い + 1) * GET_ABL(TARGET, "技巧") * GET_ABL(TARGET, "道具") / 20
+	TCVAR:MASTER:前立腺刺激 += 1
+	
+	;装備時に破れるんだから念のためだけど。
+	;MASTERが処女なら、処女喪失が起こる
+	TCVAR:MASTER:処女喪失 = TALENT:MASTER:処女
+ENDIF
+
+;────────────────────────────────────
+;アナルバイブ装着中（快Ａ、逸脱、中毒充足）
+;────────────────────────────────────
+IF TEQUIP:アナルバイブ && !IS_NOWACTNAME("アナルバイブ")
+	A = 100 * (2 + ITEM:9 + TALENT:道具使い) / 2
+	SOURCE:MASTER:快Ａ += A
+	;経験不足
+	IF EXP:MASTER:Ａ経験 < 1
+		SOURCE:MASTER:逸脱 += 1500
+	ELSEIF EXP:MASTER:Ａ経験 < 6
+		SOURCE:MASTER:逸脱 += 800 - EXP:MASTER:Ａ経験 * 100
+	ELSEIF EXP:MASTER:Ａ経験 < 11
+		SOURCE:MASTER:逸脱 += 200 - EXP:MASTER:Ａ経験 * 15
+	ELSEIF EXP:MASTER:Ａ経験 < 21
+		SOURCE:MASTER:逸脱 += 40 - EXP:MASTER:Ａ経験 * 2
+	ENDIF
+	SIF ABL:MASTER:Ａ感覚 > 2
+		SOURCE:MASTER:中毒充足 += (GET_ABL(MASTER, "Ａ感覚") + 1) * (GET_ABL(MASTER, "Ａ感覚") - 20) * (ITEM:9 + 1) / 4 + A / 5
+	SIF TALENT:MASTER:オトコ
+		TCVAR:MASTER:前立腺刺激 += 1
+ENDIF
+
+;────────────────────────────────────
+;アナルビーズ装着中（快Ａ、逸脱、中毒充足）
+;────────────────────────────────────
+IF TEQUIP:アナルビーズ && !IS_NOWACTNAME("アナルビーズ")
+	A = 30 * (2 + ITEM:9 + TALENT:道具使い + TEQUIP:アナルビーズ) / 3
+	SOURCE:MASTER:快Ａ += A
+	;経験不足
+	IF EXP:MASTER:Ａ経験 < 1
+		SOURCE:MASTER:逸脱 += 500
+	ELSEIF EXP:MASTER:Ａ経験 < 6
+		SOURCE:MASTER:逸脱 += 300 - EXP:MASTER:Ａ経験 * 20
+	ELSEIF EXP:MASTER:Ａ経験 < 11
+		SOURCE:MASTER:逸脱 += 90 - EXP:MASTER:Ａ経験 * 6
+	ELSEIF EXP:MASTER:Ａ経験 < 21
+		SOURCE:MASTER:逸脱 += 20 - EXP:MASTER:Ａ経験 * 2
+	ENDIF
+	SIF ABL:MASTER:Ａ感覚 > 2
+		SOURCE:MASTER:中毒充足 += (GET_ABL(MASTER, "Ａ感覚") + 10) * (GET_ABL(MASTER, "Ａ感覚") - 20) / 4 + A / 5
+ENDIF
+
+;────────────────────────────────────
+;浣腸＋アナルプラグ装着中
+;────────────────────────────────────
+IF TEQUIP:浣腸器＋プラグ && !IS_NOWACTNAME("浣腸セット")
+	A = 20 * (CFLAG:MASTER:調教レベル + 1) + (GET_ABL(MASTER, "技巧") - 30) * GET_ABL(MASTER, "マゾっ気") * (TALENT:道具使い + TALENT:MASTER:ドＭ + TEQUIP:浣腸器＋プラグ) * 30 / 100
+	SIF A < 0
+		A = 0
+	B = 200 + TEQUIP:浣腸器＋プラグ * 100
+	SOURCE:MASTER:快Ａ += A
+	SOURCE:MASTER:痛み += B
+	SOURCE:MASTER:拘束 += 50 + TEQUIP:浣腸器＋プラグ * 100
+	C = A / 2 + B / 2 - CFLAG:MASTER:調教レベル * 20 - GET_ABL(MASTER, "マゾっ気") * 10
+	SIF C < 0
+		C = 0
+	SOURCE:MASTER:逸脱 += C
+	SIF ABL:MASTER:マゾっ気 > 3
+		SOURCE:MASTER:中毒充足 += (GET_ABL(MASTER, "マゾっ気") - 30) * GET_ABL(MASTER, "Ａ感覚") * 25 * A / 10000
+
+ENDIF
+
+
+
+;クリキャップ・オナホール非電動化の為コメントアウト
+
+[SKIPSTART]
+
+;────────────────────────────────────
+;クリキャップ装着中（快Ｃ、中毒充足）
+;────────────────────────────────────
+IF TEQUIP:クリキャップ && !IS_NOWACTNAME("Ｃ愛撫道具")
+	A = 100 * (2 + ITEM:9 + TALENT:道具使い) / 2
+	SOURCE:MASTER:快Ｃ += A
+	SIF ABL:MASTER:Ｃ感覚 > 1
+		SOURCE:MASTER:中毒充足 += GET_ABL(MASTER, "Ｃ感覚") * (GET_ABL(MASTER, "Ｃ感覚") - 10) * (ITEM:9 + 1) / 5 + A / 5
+ENDIF
+
+;────────────────────────────────────
+;オナホール装着中（快Ｃ、中毒充足）
+;────────────────────────────────────
+IF TEQUIP:オナホール && !IS_NOWACTNAME("Ｃ愛撫道具")
+	A = 150 * (2 + ITEM:9 + TALENT:道具使い) / 2
+	SOURCE:MASTER:快Ｃ += A
+	SIF ABL:MASTER:Ｃ感覚 > 1
+		SOURCE:MASTER:中毒充足 += GET_ABL(MASTER, "Ｃ感覚") * (GET_ABL(MASTER, "Ｃ感覚") - 10) * (ITEM:9 + 1) / 5 + A / 5
+	TCVAR:MASTER:今回の勃起 += 100
+ENDIF
+
+
+[SKIPEND]
+
+
+;────────────────────────────────────
+;ニプルキャップ装着中（快Ｂ、中毒充足）
+;────────────────────────────────────
+IF TEQUIP:ニプルキャップ && !IS_NOWACTNAME("ニプルキャップ")
+	A = 100 * (2 + ITEM:9 + TALENT:道具使い) / 2
+	SOURCE:MASTER:快Ｂ += A
+	SIF ABL:MASTER:Ｂ感覚 > 2
+		SOURCE:MASTER:中毒充足 += (GET_ABL(MASTER, "Ｂ感覚") - 10) * (GET_ABL(MASTER, "Ｂ感覚") - 20) * (ITEM:9 + 1) * 35 / 100 + A / 5
+	TCVAR:MASTER:今回の勃起 += 30
+ENDIF
+
+;────────────────────────────────────
+;縄で緊縛中（拘束、中毒充足）
+;────────────────────────────────────
+IF TEQUIP:縄
+	A = 200 + (GET_ABL(MASTER, "Ｃ感覚") / 10 + GET_TRAINLV(TARGET)) * (GET_ABL(TARGET, "技巧") + 10) * (TALENT:縛り上手 * 3 + 2) / 2
+	SOURCE:MASTER:拘束 += A
+	SOURCE:MASTER:中毒充足 += GET_ABL(MASTER, "マゾっ気") * (GET_ABL(MASTER, "拘束中毒") - 10) * (GET_ABL(MASTER, "拘束中毒") + 10) * A / 100000
+	TCVAR:MASTER:今回の勃起 += (GET_ABL(MASTER, "マゾっ気") - 20) * 3
+ENDIF
+
+;────────────────────────────────────
+;アイマスク装着中（拘束、中毒充足、トラウマ）
+;────────────────────────────────────
+IF TEQUIP:アイマスク && !IS_NOWACTNAME("アイマスク")
+	A = 100 + (GET_ABL(TARGET, "加虐") / 10 + GET_TRAINLV(TARGET)) * (GET_ABL(TARGET, "技巧") + 10) * (TALENT:縛り上手 + 2) / 2
+	B = 0
+	SOURCE:MASTER:拘束 += A
+	SIF ABL:MASTER:拘束中毒 > 1
+		B = GET_ABL(MASTER, "マゾっ気") * (GET_ABL(MASTER, "拘束中毒") - 10) * (GET_ABL(MASTER, "拘束中毒") + 10) * A / 100000
+	SOURCE:MASTER:中毒充足 += B
+	C = A / 2 - B
+	SIF C > 0
+		SOURCE:MASTER:トラウマ += C
+	SIF CFLAG:MASTER:トラウマ == 64
+		TIMES SOURCE:MASTER:トラウマ , 1.50
+	TCVAR:MASTER:今回の勃起 += (GET_ABL(MASTER, "マゾっ気") - 20) * 2
+ENDIF
+
+;────────────────────────────────────
+;ボールギャグ装着中（拘束、中毒充足、トラウマ）
+;────────────────────────────────────
+IF TEQUIP:ボールギャグ && !IS_NOWACTNAME("ボールギャグ")
+	A = 350 + (GET_ABL(TARGET, "加虐") / 10 + GET_TRAINLV(TARGET)) * 10 * (TALENT:縛り上手 + 1)
+	B = 0
+	SOURCE:MASTER:拘束 += A
+	SIF ABL:MASTER:拘束中毒 > 1
+		B = GET_ABL(MASTER, "マゾっ気") * (GET_ABL(MASTER, "拘束中毒") - 10) * (GET_ABL(MASTER, "拘束中毒") + 10) * A / 100000
+	SOURCE:MASTER:中毒充足 += B
+	C = A / 2 - B
+	SIF C > 0
+		SOURCE:MASTER:トラウマ += C
+	SIF CFLAG:MASTER:トラウマ == 65
+		TIMES SOURCE:MASTER:トラウマ , 1.50
+	TCVAR:MASTER:今回の勃起 += (GET_ABL(MASTER, "マゾっ気") - 20)
+ENDIF
+
+;────────────────────────────────────
+;三角木馬乗馬中（快Ｖ、情愛逆、痛み、拘束、逸脱、中毒充足、トラウマ）
+;────────────────────────────────────
+IF TEQUIP:三角木馬
+	A = 0
+	B = 1000 + GET_ABL(TARGET, "加虐") * GET_ABL(TARGET, "技巧") / 2 + GET_TRAINLV(TARGET) * (TALENT:サド * 3 + 2) * 20
+	C = 50 + (MARK:反抗刻印 + 1) * (GET_ABL(TARGET, "技巧") + 10) 
+	D = 1800 + B / 2 - CFLAG:MASTER:調教レベル * 50 - GET_ABL(MASTER, "マゾっ気") * 20 - GET_ABL(MASTER, "苦痛中毒") * 60
+	E = 0
+	F = 0
+	G = 0
+	SIF ABL:MASTER:マゾっ気 > 3
+		A = (GET_ABL(MASTER, "マゾっ気") - 30) * GET_ABL(MASTER, "苦痛中毒") * (TALENT:MASTER:ドＭ + 2) / 2
+	SOURCE:MASTER:快Ｖ += A
+	SOURCE:MASTER:痛み += B
+	SOURCE:MASTER:拘束 += C
+	SIF D < 0
+		D = 0
+	SOURCE:MASTER:逸脱 += D
+	SIF ABL:MASTER:苦痛中毒 > 3
+		E = GET_ABL(MASTER, "マゾっ気") * (GET_ABL(MASTER, "苦痛中毒") - 30) * (GET_ABL(MASTER, "苦痛中毒") + 10) * B / 80000
+	SOURCE:MASTER:中毒充足 += E
+	F = B / 2 + C / 5 - E
+	SOURCE:MASTER:トラウマ += F
+	SIF CFLAG:MASTER:トラウマ == 67
+		TIMES SOURCE:MASTER:トラウマ , 1.50
+	G = E - B - D - F
+	SIF G < 0
+		SOURCE:MASTER:情愛 += G
+	TCVAR:MASTER:今回の勃起 += (GET_ABL(MASTER, "マゾっ気") - 20) * 5
+	;装備時に破れるんだから念のためだけど。
+	;MASTERが処女なら、処女喪失が起こる
+	TCVAR:MASTER:処女喪失 = TALENT:MASTER:処女
+ENDIF
+;────────────────────────────────────
+;顔面騎乗中（快Ｃ、中毒充足）
+;────────────────────────────────────
+IF TEQUIP:顔面騎乗
+	SOURCE:MASTER:不潔 += 100
+	SOURCE:快Ｃ += 150 +ACT_TO(TARGET, 1) * GET_ABL(MASTER, "従順") * ( 3 + TALENT:MASTER:舌使い + TALENT:MASTER:猫舌) / 500
+ENDIF
+;────────────────────────────────────
+;顔面騎乗アナル（快Ｃ、中毒充足）
+;────────────────────────────────────
+IF TEQUIP:顔面騎乗アナル
+	SOURCE:MASTER:不潔 += 300
+	SOURCE:快Ａ += 150 +ACT_TO(TARGET, 3) * GET_ABL(MASTER, "従順") * ( 3 + TALENT:MASTER:舌使い + TALENT:MASTER:猫舌) / 500
+ENDIF
+;────────────────────────────────────
+;野外プレイ中（拘束、露出、逸脱、トラウマ）
+;────────────────────────────────────
+IF TEQUIP:野外プレイ && !IS_NOWACTNAME("野外プレイ")
+	SOURCE:MASTER:拘束 += 50 + MARK:反抗刻印 * 15
+	SOURCE:MASTER:露出 += 300
+	SIF TEQUIP:自慰中 != 2
+		SOURCE:MASTER:露出 += TEQUIP:自慰中 * 200
+	A = 150 + SOURCE:MASTER:拘束 - GET_ABL(MASTER, "露出癖") * 3 - CFLAG:MASTER:調教レベル * 10
+	B = TALENT:MASTER:臆病 * 150 - TALENT:MASTER:無関心 * 50 + TALENT:MASTER:抑圧 * 150 - TALENT:MASTER:解放 * 50 + TALENT:MASTER:恥じらい * 250 - TALENT:MASTER:恥薄い * 150
+	IF A > 0
+		SOURCE:MASTER:逸脱 += A
+		B += A
+	ENDIF
+	SIF B > 0
+		SOURCE:MASTER:トラウマ += B
+	SIF CFLAG:MASTER:トラウマ == 44
+		TIMES SOURCE:MASTER:トラウマ , 1.50
+		TCVAR:MASTER:今回の勃起 += GET_ABL(MASTER, "露出癖") * 5
+ENDIF
+
+;────────────────────────────────────
+;羞恥プレイ中（露出）
+;────────────────────────────────────
+IF TEQUIP:大鏡 && !IS_NOWACTNAME("羞恥プレイ")
+	SOURCE:MASTER:露出 += 200
+	SIF TEQUIP:自慰中 != 2
+		SOURCE:MASTER:露出 += TEQUIP:自慰中 * 150
+		TCVAR:MASTER:今回の勃起 += GET_ABL(MASTER, "露出癖") * 3
+ENDIF
+
+;────────────────────────────────────
+;調教対象が自慰中（快Ｃ、快Ｖ、快Ａ、快Ｂ、性行動、露出、逸脱、中毒充足）
+;────────────────────────────────────
+;このターンで自慰の命令を出した場合は拒否される可能性があるので処理を後回しします
+IF (TEQUIP:自慰中 == 1 || TEQUIP:自慰中 == 3) && !IS_NOWACTNAME("自慰")
+	A = 20 + GET_ABL(MASTER, "欲望") * (GET_ABL(MASTER, "技巧") + 10) * CFLAG:MASTER:調教レベル / 50 + GET_ABL(MASTER, "技巧") * 25 * (TALENT:MASTER:器用な指先 + 1) / 10
+	B = 0
+	C = 0
+	D = 0
+	E = A
+	;バイブ使用
+	IF TEQUIP:バイブ
+		B = 50 + GET_ABL(MASTER, "欲望") * (CFLAG:MASTER:調教レベル + 1) / 2 + (TALENT:MASTER:道具使い + 1) * GET_ABL(MASTER, "技巧") * (ITEM:9 + 1) * 3
+		SOURCE:MASTER:快Ｖ += B
+		TIMES A , 0.80
+		;ふたなりはＶ刺激で強制勃起
+		IF TALENT:MASTER:ふたなり
+			IF !TCVAR:MASTER:要強制勃起
+				TCVAR:MASTER:今回の勃起 += 300
+			ELSE
+				TCVAR:MASTER:勃起度 += 200
+			ENDIF
+		ENDIF
+	ENDIF
+	;アナルバイブ使用
+	IF TEQUIP:アナルバイブ && ABL:MASTER:Ａ感覚 > 1
+		C = (GET_ABL(MASTER, "欲望") + 10) * (CFLAG:MASTER:調教レベル + 1) * 6 / 10 + (TALENT:MASTER:道具使い + 1) * GET_ABL(MASTER, "技巧") * (ITEM:9 + 1) * 25 / 10
+		SOURCE:MASTER:快Ａ += C
+		TIMES E , 0.60
+		;オトコはＡ刺激で強制勃起
+		IF TALENT:MASTER:オトコ
+			IF !TCVAR:MASTER:要強制勃起
+				TCVAR:MASTER:今回の勃起 += 300
+			ELSE
+				TCVAR:MASTER:勃起度 += 200
+			ENDIF
+		ENDIF
+	ENDIF
+	SOURCE:MASTER:快Ｃ += A
+	SIF TALENT:MASTER:オトコ == 0
+		SOURCE:MASTER:快Ｂ += E
+	SOURCE:MASTER:性行動 += 50 + GET_ABL(MASTER, "技巧") * 2 + CFLAG:MASTER:調教レベル * 10 + TEQUIP:バイブ * 50 + TEQUIP:アナルバイブ * 50
+	D = 150 + GET_TRAINLV(TARGET) * 10 + TEQUIP:野外プレイ * 200 + TEQUIP:大鏡 * 150 + A / 2 + B / 3 + C / 3 + E / 2
+	SOURCE:MASTER:露出 += D
+	SOURCE:MASTER:逸脱 += D / 2 - GET_ABL(MASTER, "露出癖") * 2 - CFLAG:MASTER:調教レベル * 10
+	SOURCE:MASTER:中毒充足 += (A + E + B + C + D) * (50 + GET_ABL(MASTER, "自慰中毒")) / 500
+	TCVAR:MASTER:今回の勃起 += 100
+ENDIF
+
+;────────────────────────────────────
+;調教者が自慰中（逸脱、欲情追加、快ｃ、快ｖ、快ｂ）
+;────────────────────────────────────
+IF TEQUIP:自慰中 > 1 && !IS_NOWACTNAME("自慰みせつけ")
+	A = 50 + GET_ABL(TARGET, "欲望") * GET_ABL(TARGET, "技巧") * GET_TRAINLV(TARGET) / 50 + GET_ABL(MASTER, "技巧") * 25 * (TALENT:MASTER:器用な指先 + 1) / 10
+	B = A
+	C = 0
+	;バイブ使用
+	IF ITEM:ローター && TALENT:処女 == 0 && TALENT:オトコ == 0
+		C = 50 + GET_ABL(TARGET, "欲望") * (GET_TRAINLV(TARGET) + 1) / 2 + (TALENT:道具使い + 1) * GET_ABL(TARGET, "技巧") * (ITEM:9 + 1) * 3
+		TIMES A , 0.80
+	ENDIF
+	D = A + B + C
+	SOURCE:快Ｃ += A
+	SOURCE:快Ｖ += C
+	SIF TALENT:オトコ == 0
+		SOURCE:快Ｂ += B
+	;調教レベルと欲望を見る
+	IF CFLAG:MASTER:調教レベル < 1 || ABL:MASTER:欲望 < 1
+		TIMES D , 0.10
+	ELSEIF CFLAG:MASTER:調教レベル < 3 || ABL:MASTER:欲望 < 2
+		TIMES D , 0.25
+	ELSEIF CFLAG:MASTER:調教レベル < 5 || ABL:MASTER:欲望 < 3
+		TIMES D , 0.40
+	ELSEIF CFLAG:MASTER:調教レベル < 8 || ABL:MASTER:欲望 < 4
+		TIMES D , 0.60
+	ELSEIF CFLAG:MASTER:調教レベル < 11 || ABL:MASTER:欲望 < 5
+		TIMES D , 0.85
+	ENDIF
+	CUP:MASTER:欲情 += D / 5
+	;逸脱の計算、調教のプログレスに応じて軽減
+	D -= GET_ABL(MASTER, "露出癖") * 15 / 10 - CFLAG:MASTER:調教レベル * 5
+	SIF D > 0
+		SOURCE:MASTER:逸脱 += D
+	TCVAR:MASTER:今回の勃起 += 50
+ENDIF
+
+;────────────────────────────────────
+;調教者挿入中（快Ｃ、快Ｖ、快Ａ、接触、情愛、性行動、痛み、露出、逸脱、中毒充足、トラウマ、快ｃ、快ｖ）
+;────────────────────────────────────
+;このターンの行動も性交ならACT_APPLY.ERBで処理します。会話や胸愛撫など挿入しながら行う行動だけここを見ます
+IF TEQUIP:性交中 && TFLAG:ACT分類 != 3
+	A = 0
+	B = 0
+	C = 0
+	IF TEQUIP:性交中 == 1
+		A = (300 +ACT_FROM(TARGET, 5) * 3 / 2) / 2
+		B = (200 +ACT_TO(TARGET, 5) * 3 / 2) / 2
+		;潤滑不足
+		IF PALAM:MASTER:潤滑 < 100 && TEQUIP:ローション < 3
+			TIMES A , 0.60
+			TIMES B , 0.80
+			C += 500
+		ELSEIF PALAM:MASTER:潤滑 < 250 && TEQUIP:ローション < 2
+			TIMES A , 0.75
+			TIMES B , 0.90
+			C += 200
+		ELSEIF PALAM:MASTER:潤滑 < 500 && TEQUIP:ローション < 1
+			TIMES A , 0.90
+			TIMES B , 0.95
+			C += 100
+		ENDIF
+		;経験不足
+		IF EXP:MASTER:Ｖ経験 < 2
+			TIMES A , 0.30
+			C += 1000
+			SOURCE:MASTER:逸脱 += 1000
+		ELSEIF EXP:MASTER:Ｖ経験 < 6 && EXP:MASTER:性交経験 < 5
+			TIMES A , 0.80
+			C += 150
+			SOURCE:MASTER:逸脱 += 250
+		ELSEIF EXP:MASTER:Ｖ経験 < 11 && EXP:MASTER:性交経験 < 9
+			TIMES A , 0.95
+			C += 50
+			SOURCE:MASTER:逸脱 += 50
+		ENDIF
+		SOURCE:MASTER:快Ｖ += A
+		SOURCE:快Ｃ += B
+		SOURCE:MASTER:接触 += 250 + GET_TRAINLV(TARGET) * 10
+		SOURCE:MASTER:性行動 += 100 + GET_TRAINLV(TARGET) * 2
+		SOURCE:MASTER:痛み += C
+		IF CFLAG:MASTER:トラウマ == 30
+			SOURCE:MASTER:トラウマ += SOURCE:MASTER:接触
+			TIMES SOURCE:MASTER:トラウマ , 1.50
+		ENDIF
+		SOURCE:MASTER:情愛 += A / 5 - SOURCE:MASTER:トラウマ - C
+		SIF SOURCE:MASTER:情愛 > 0 && ABL:MASTER:Ｖ感覚 > 2
+			SOURCE:MASTER:中毒充足 += GET_ABL(MASTER, "Ｖ感覚") * (GET_ABL(MASTER, "Ｖ感覚") - 20) * SOURCE:MASTER:情愛 / 100 + A / 5
+		SOURCE:MASTER:情愛 += SOURCE:MASTER:中毒充足 / 5
+	ELSEIF TEQUIP:性交中 == 2
+		A = (300 +ACT_FROM(TARGET, 5) * 3 / 2) / 2
+		B = (300 +ACT_TO(TARGET, 5)) / 2
+		;潤滑不足
+		IF PALAM:MASTER:潤滑 < 100 && TEQUIP:ローション < 3
+			TIMES A , 0.50
+			TIMES B , 0.60
+			C += 750
+		ELSEIF PALAM:MASTER:潤滑 < 250 && TEQUIP:ローション < 2
+			TIMES A , 0.70
+			TIMES B , 0.80
+			C += 400
+		ELSEIF PALAM:MASTER:潤滑 < 500 && TEQUIP:ローション < 1
+			TIMES A , 0.85
+			TIMES B , 0.95
+			C += 150
+		ENDIF
+		;経験不足
+		IF EXP:MASTER:Ｖ経験 < 2
+			TIMES A , 0.30
+			C += 1200
+			SOURCE:MASTER:逸脱 += 1500
+		ELSEIF EXP:MASTER:Ｖ経験 < 6 && EXP:MASTER:性交経験 < 5
+			TIMES A , 0.70
+			C += 350
+			SOURCE:MASTER:逸脱 += 750
+		ELSEIF EXP:MASTER:Ｖ経験 < 11 && EXP:MASTER:性交経験 < 9
+			TIMES A , 0.90
+			C += 90
+			SOURCE:MASTER:逸脱 += 250
+		ENDIF
+		SOURCE:MASTER:快Ｖ += A
+		SOURCE:快Ｃ += B
+		SOURCE:MASTER:接触 += 200 + GET_TRAINLV(TARGET) * 10
+		SOURCE:MASTER:性行動 += 90 + GET_TRAINLV(TARGET) * 2
+		SOURCE:MASTER:痛み += C
+		IF CFLAG:MASTER:トラウマ == 31
+			SOURCE:MASTER:トラウマ += SOURCE:MASTER:接触
+			TIMES SOURCE:MASTER:トラウマ , 1.50
+		ENDIF
+		SOURCE:MASTER:情愛 += A / 7 - SOURCE:MASTER:トラウマ
+		SIF SOURCE:MASTER:情愛 > 0 && ABL:MASTER:Ｖ感覚 > 2
+			SOURCE:MASTER:中毒充足 += GET_ABL(MASTER, "Ｖ感覚") * (GET_ABL(MASTER, "Ｖ感覚") - 20) * SOURCE:MASTER:情愛 / 100 + A / 5
+		SOURCE:MASTER:情愛 += SOURCE:MASTER:中毒充足 / 7
+	ELSEIF TEQUIP:性交中 == 3
+		A = (100 +ACT_FROM(TARGET, 5) * 2) / 2
+		B = (100 +ACT_TO(TARGET, 5) * 2) / 2
+		;潤滑不足
+		IF PALAM:MASTER:潤滑 < 100 && TEQUIP:ローション < 3
+			TIMES A , 0.60
+			TIMES B , 0.65
+			C += 500
+		ELSEIF PALAM:MASTER:潤滑 < 250 && TEQUIP:ローション < 2
+			TIMES A , 0.80
+			TIMES B , 0.80
+			C += 200
+		ELSEIF PALAM:MASTER:潤滑 < 500 && TEQUIP:ローション < 1
+			TIMES A , 0.95
+			TIMES B , 0.90
+			C += 50
+		ENDIF
+		;経験不足
+		IF EXP:MASTER:Ｖ経験 < 2
+			TIMES A , 0.35
+			C += 700
+			SOURCE:MASTER:逸脱 += 1200
+		ELSEIF EXP:MASTER:Ｖ経験 < 6 && EXP:MASTER:性交経験 < 5
+			TIMES A , 0.75
+			C += 200
+			SOURCE:MASTER:逸脱 += 700
+		ELSEIF EXP:MASTER:Ｖ経験 < 11 && EXP:MASTER:性交経験 < 9
+			TIMES A , 0.95
+			C += 30
+			SOURCE:MASTER:逸脱 += 150
+		ENDIF
+		SOURCE:MASTER:快Ｖ += A
+		SOURCE:快Ｃ += B
+		SOURCE:MASTER:接触 += 200 + CFLAG:MASTER:調教レベル * 10
+		SOURCE:MASTER:性行動 += 90 + CFLAG:MASTER:調教レベル * 2
+		SOURCE:MASTER:痛み += C
+		IF CFLAG:MASTER:トラウマ == 32
+			SOURCE:MASTER:トラウマ += SOURCE:MASTER:接触
+			TIMES SOURCE:MASTER:トラウマ , 1.50
+		ENDIF
+		SOURCE:MASTER:情愛 += A / 5 - SOURCE:MASTER:トラウマ - C
+		SIF SOURCE:MASTER:情愛 > 0 && ABL:MASTER:Ｖ感覚 > 2
+			SOURCE:MASTER:中毒充足 += GET_ABL(MASTER, "Ｖ感覚") * (GET_ABL(MASTER, "Ｖ感覚") - 20) * SOURCE:MASTER:情愛 / 100 + A / 5
+		SOURCE:MASTER:情愛 += SOURCE:MASTER:中毒充足 / 7 + SOURCE:MASTER:性行動 / 5
+	ELSEIF TEQUIP:性交中 == 4
+		A = (100 +ACT_FROM(TARGET, 5)) / 2
+		B = (100 +ACT_TO(TARGET, 5) * 2 / 3) / 2
+		;潤滑不足
+		IF PALAM:MASTER:潤滑 < 100 && TEQUIP:ローション < 3
+			TIMES A , 0.60
+			TIMES B , 0.60
+			C += 500
+		ELSEIF PALAM:MASTER:潤滑 < 250 && TEQUIP:ローション < 2
+			TIMES A , 0.75
+			TIMES B , 0.75
+			C += 200
+		ELSEIF PALAM:MASTER:潤滑 < 500 && TEQUIP:ローション < 1
+			TIMES A , 0.90
+			TIMES B , 0.90
+			C += 100
+		ENDIF
+		;経験不足
+		IF EXP:MASTER:Ｖ経験 < 2
+			TIMES A , 0.30
+			C += 1200
+			SOURCE:MASTER:逸脱 += 1200
+		ELSEIF EXP:MASTER:Ｖ経験 < 6 && EXP:MASTER:性交経験 < 5
+			TIMES A , 0.80
+			C += 250
+			SOURCE:MASTER:逸脱 += 350
+		ELSEIF EXP:MASTER:Ｖ経験 < 11 && EXP:MASTER:性交経験 < 9
+			TIMES A , 0.95
+			C += 50
+			SOURCE:MASTER:逸脱 += 100
+		ENDIF
+		SOURCE:MASTER:快Ｖ += A
+		SOURCE:快Ｃ += B
+		SOURCE:MASTER:接触 += 400 + GET_TRAINLV(TARGET) * 8 + CFLAG:MASTER:調教レベル * 8
+		SOURCE:MASTER:性行動 += 130 + GET_TRAINLV(TARGET) * 2 + CFLAG:MASTER:調教レベル * 2
+		SOURCE:MASTER:痛み += C
+		IF CFLAG:MASTER:トラウマ == 33
+			SOURCE:MASTER:トラウマ += SOURCE:MASTER:接触
+			TIMES SOURCE:MASTER:トラウマ , 1.50
+		ENDIF
+		SOURCE:MASTER:情愛 += A / 4 - SOURCE:MASTER:トラウマ - C * 2
+		SIF SOURCE:MASTER:情愛 > 0 && ABL:MASTER:Ｖ感覚 > 2
+			SOURCE:MASTER:中毒充足 += GET_ABL(MASTER, "Ｖ感覚") * (GET_ABL(MASTER, "Ｖ感覚") - 20) * SOURCE:MASTER:情愛 / 100 + A / 5
+		SOURCE:MASTER:情愛 += SOURCE:MASTER:中毒充足 / 5
+	ELSEIF TEQUIP:性交中 == 5
+		A = (50 +ACT_FROM(TARGET, 5)) / 2
+		B = (150 +ACT_TO(TARGET, 5) / 2) / 2
+		;潤滑不足
+		IF PALAM:MASTER:潤滑 < 100 && TEQUIP:ローション < 3
+			TIMES A , 0.50
+			TIMES B , 0.55
+			C += 750
+		ELSEIF PALAM:MASTER:潤滑 < 250 && TEQUIP:ローション < 2
+			TIMES A , 0.70
+			TIMES B , 0.75
+			C += 400
+		ELSEIF PALAM:MASTER:潤滑 < 500 && TEQUIP:ローション < 1
+			TIMES A , 0.85
+			TIMES B , 0.90
+			C += 150
+		ENDIF
+		;経験不足
+		IF EXP:MASTER:Ｖ経験 < 2
+			TIMES A , 0.30
+			C += 1250
+			SOURCE:MASTER:逸脱 += 1600
+		ELSEIF EXP:MASTER:Ｖ経験 < 6 && EXP:MASTER:性交経験 < 5
+			TIMES A , 0.70
+			C += 380
+			SOURCE:MASTER:逸脱 += 800
+		ELSEIF EXP:MASTER:Ｖ経験 < 11 && EXP:MASTER:性交経験 < 9
+			TIMES A , 0.90
+			C += 100
+			SOURCE:MASTER:逸脱 += 350
+		ENDIF
+		SOURCE:MASTER:快Ｖ += A
+		SOURCE:快Ｃ += B
+		SOURCE:MASTER:接触 += 500 + GET_TRAINLV(TARGET) * 10
+		SOURCE:MASTER:性行動 += 150 + GET_TRAINLV(TARGET) * 2
+		SOURCE:MASTER:痛み += C
+		;乱れ牡丹の処理
+		SIF TEQUIP:大鏡
+			SOURCE:MASTER:露出 += 200 + A / 5
+		IF CFLAG:MASTER:トラウマ == 34
+			SOURCE:MASTER:トラウマ += SOURCE:MASTER:接触
+			TIMES SOURCE:MASTER:トラウマ , 1.50
+		ENDIF
+		SOURCE:MASTER:情愛 += A / 7 - SOURCE:MASTER:トラウマ
+		SIF SOURCE:MASTER:情愛 > 0 && ABL:MASTER:Ｖ感覚 > 2
+			SOURCE:MASTER:中毒充足 += GET_ABL(MASTER, "Ｖ感覚") * (GET_ABL(MASTER, "Ｖ感覚") - 20) * SOURCE:MASTER:情愛 / 100 + A / 5
+		SOURCE:MASTER:情愛 += SOURCE:MASTER:中毒充足 / 7
+	ELSEIF TEQUIP:性交中 == 6
+		A = (300 +ACT_FROM(TARGET, 6) * 2) / 2
+		B = (500 +ACT_TO(TARGET, 6) * 2) / 2
+		;潤滑不足
+		IF PALAM:MASTER:潤滑 < 100 && TEQUIP:ローション < 3
+			TIMES A , 0.40
+			TIMES B , 0.30
+			C += 1500
+		ELSEIF PALAM:MASTER:潤滑 < 250 && TEQUIP:ローション < 2
+			TIMES A , 0.65
+			TIMES B , 0.55
+			C += 900
+		ELSEIF PALAM:MASTER:潤滑 < 500 && TEQUIP:ローション < 1
+			TIMES A , 0.80
+			TIMES B , 0.75
+			C += 250
+		ENDIF
+		;経験不足
+		IF EXP:MASTER:Ａ経験 < 2
+			TIMES A , 0.40
+			C += 1500
+			SOURCE:MASTER:逸脱 += 2500
+			SOURCE:MASTER:トラウマ += 1000
+		ELSEIF EXP:MASTER:Ａ経験 < 6 && EXP:MASTER:性交経験 < 11
+			TIMES A , 0.55
+			C += 1000
+			SOURCE:MASTER:逸脱 += 1500
+			SOURCE:MASTER:トラウマ += 500
+		ELSEIF EXP:MASTER:Ａ経験 < 13 && EXP:MASTER:性交経験 < 21
+			TIMES A , 0.70
+			C += 600
+			SOURCE:MASTER:逸脱 += 500
+			SOURCE:MASTER:トラウマ += 100
+		ELSEIF EXP:MASTER:Ａ経験 < 26 && EXP:MASTER:性交経験 < 31
+			TIMES A , 0.85
+			C += 200
+			SOURCE:MASTER:逸脱 += 150
+		ENDIF
+		SOURCE:MASTER:快Ａ += A
+		SOURCE:快Ｃ += B
+		SOURCE:MASTER:接触 += 200 + GET_TRAINLV(TARGET) * 10
+		SOURCE:MASTER:性行動 += 40 + GET_TRAINLV(TARGET) * 2
+		SOURCE:MASTER:痛み += C
+		IF CFLAG:MASTER:トラウマ == 35
+			SOURCE:MASTER:トラウマ += SOURCE:MASTER:接触 + SOURCE:MASTER:逸脱
+			TIMES SOURCE:MASTER:トラウマ , 1.50
+		ENDIF
+		SOURCE:MASTER:情愛 += A / 5 - C / 5 - SOURCE:MASTER:トラウマ / 5
+		SIF SOURCE:MASTER:情愛 > 0 && ABL:MASTER:Ａ感覚 > 4
+			SOURCE:MASTER:中毒充足 += (GET_ABL(MASTER, "Ａ感覚") + 10) * (GET_ABL(MASTER, "Ａ感覚") - 30) * SOURCE:MASTER:情愛 / 100 + A / 5
+		SOURCE:MASTER:情愛 += SOURCE:MASTER:中毒充足 / 5
+	ENDIF
+TFLAG:Ｖ使用中 = 2
+
+ENDIF
+;────────────────────────────────────
+;調教対象挿入中（快Ｃ、快Ｖ、快Ａ、接触、情愛、性行動、痛み、露出、逸脱、中毒充足、トラウマ、快ｃ、快ｖ）
+;────────────────────────────────────
+;このターンの行動も性交ならACT_APPLY.ERBで処理します。会話や胸愛撫など挿入しながら行う行動だけここを見ます
+IF TEQUIP:性交奉仕中 && TFLAG:ACT分類 != 10
+	A = 0
+	B = 0
+	C = 0
+	IF TEQUIP:性交奉仕中 == 1
+		A = 100 +ACT_FROM(TARGET, 7) * 3 / 2
+		B = 300 +ACT_TO(TARGET, 7) * 3 / 2
+		;潤滑不足
+		IF PALAM:MASTER:潤滑 < 100 && TEQUIP:ローション < 3
+			TIMES A , 0.60
+			TIMES B , 0.80
+			C += 500
+		ELSEIF PALAM:MASTER:潤滑 < 250 && TEQUIP:ローション < 2
+			TIMES A , 0.75
+			TIMES B , 0.90
+			C += 200
+		ELSEIF PALAM:MASTER:潤滑 < 500 && TEQUIP:ローション < 1
+			TIMES A , 0.90
+			TIMES B , 0.95
+			C += 100
+		ENDIF
+		SOURCE:MASTER:快Ｃ += B
+		SOURCE:快Ｖ += A
+		SOURCE:MASTER:接触 += 250 + GET_TRAINLV(TARGET) * 10
+		SOURCE:MASTER:性行動 += 100 + GET_TRAINLV(TARGET) * 2
+		SOURCE:MASTER:情愛 += B / 5 - SOURCE:MASTER:トラウマ - C
+		SIF SOURCE:MASTER:情愛 > 0 && ABL:MASTER:Ｃ感覚 > 2
+			SOURCE:MASTER:中毒充足 += GET_ABL(MASTER, "Ｃ感覚") * (GET_ABL(MASTER, "Ｃ感覚") - 20) * SOURCE:MASTER:情愛 / 100 + B / 5
+		SOURCE:MASTER:情愛 += SOURCE:MASTER:中毒充足 / 5
+	ELSEIF TEQUIP:性交奉仕中 == 2
+		A = 300 +ACT_FROM(TARGET, 7)
+		B = 300 +ACT_TO(TARGET, 7) * 3 / 2
+		;潤滑不足
+		IF PALAM:MASTER:潤滑 < 100 && TEQUIP:ローション < 3
+			TIMES A , 0.60
+			TIMES B , 0.80
+			C += 500
+		ELSEIF PALAM:MASTER:潤滑 < 250 && TEQUIP:ローション < 2
+			TIMES A , 0.75
+			TIMES B , 0.90
+			C += 200
+		ELSEIF PALAM:MASTER:潤滑 < 500 && TEQUIP:ローション < 1
+			TIMES A , 0.90
+			TIMES B , 0.95
+			C += 100
+		ENDIF
+		SOURCE:MASTER:快Ｃ += B
+		SOURCE:快Ｖ += A
+		SOURCE:MASTER:接触 += 200 + GET_TRAINLV(TARGET) * 10
+		SOURCE:MASTER:性行動 += 90 + GET_TRAINLV(TARGET) * 2
+		SOURCE:MASTER:情愛 += B / 7 - SOURCE:MASTER:トラウマ - C
+		SIF SOURCE:MASTER:情愛 > 0 && ABL:MASTER:Ｃ感覚 > 2
+			SOURCE:MASTER:中毒充足 += GET_ABL(MASTER, "Ｃ感覚") * (GET_ABL(MASTER, "Ｃ感覚") - 20) * SOURCE:MASTER:情愛 / 100 + B / 5
+		SOURCE:MASTER:情愛 += SOURCE:MASTER:中毒充足 / 7
+	ELSEIF TEQUIP:性交奉仕中 == 3
+		A = 300 + 2 *ACT_FROM(TARGET, 7)
+		B = 100 +ACT_TO(TARGET, 7) * 2
+		;潤滑不足
+		IF PALAM:MASTER:潤滑 < 100 && TEQUIP:ローション < 3
+			TIMES A , 0.70
+			TIMES B , 0.80
+			C += 500
+		ELSEIF PALAM:MASTER:潤滑 < 250 && TEQUIP:ローション < 2
+			TIMES A , 0.80
+			TIMES B , 0.90
+			C += 200
+		ELSEIF PALAM:MASTER:潤滑 < 500 && TEQUIP:ローション < 1
+			TIMES A , 0.90
+			TIMES B , 0.95
+			C += 100
+		ENDIF
+		SOURCE:MASTER:快Ｃ += B
+		SOURCE:快Ｖ += A
+		SOURCE:MASTER:接触 += 200 + GET_TRAINLV(TARGET) * 10
+		SOURCE:MASTER:性行動 += 40 + GET_TRAINLV(TARGET) * 2
+		SOURCE:MASTER:情愛 += B / 5 - SOURCE:MASTER:トラウマ - C
+		SIF SOURCE:MASTER:情愛 > 0 && ABL:MASTER:Ｃ感覚 > 2
+			SOURCE:MASTER:中毒充足 += GET_ABL(MASTER, "Ｃ感覚") * (GET_ABL(MASTER, "Ｃ感覚") - 20) * SOURCE:MASTER:情愛 / 100 + B / 5
+		SOURCE:MASTER:情愛 += SOURCE:MASTER:中毒充足 / 5
+	ELSEIF TEQUIP:性交奉仕中 == 4
+		A = 300 +ACT_FROM(TARGET, 7)
+		B = 50 +ACT_TO(TARGET, 4) / 2
+		;潤滑不足
+		IF PALAM:MASTER:潤滑 < 100 && TEQUIP:ローション < 3
+			TIMES A , 0.60
+			TIMES B , 0.65
+			C += 500
+		ELSEIF PALAM:MASTER:潤滑 < 250 && TEQUIP:ローション < 2
+			TIMES A , 0.80
+			TIMES B , 0.80
+			C += 200
+		ELSEIF PALAM:MASTER:潤滑 < 500 && TEQUIP:ローション < 1
+			TIMES A , 0.90
+			TIMES B , 0.95
+			C += 100
+		ENDIF
+		SOURCE:MASTER:快Ｃ += B
+		SOURCE:快Ｖ += A
+		SOURCE:MASTER:接触 += 200 + GET_TRAINLV(TARGET) * 10
+		SOURCE:MASTER:性行動 += 40 + GET_TRAINLV(TARGET) * 2
+		SOURCE:MASTER:情愛 += B / 5 - SOURCE:MASTER:トラウマ - C
+		SIF SOURCE:MASTER:情愛 > 0 && ABL:MASTER:Ｃ感覚 > 2
+			SOURCE:MASTER:中毒充足 += GET_ABL(MASTER, "Ｃ感覚") * (GET_ABL(MASTER, "Ｃ感覚") - 20) * SOURCE:MASTER:情愛 / 100 + B / 5
+		SOURCE:MASTER:情愛 += SOURCE:MASTER:中毒充足 / 5
+	ELSEIF TEQUIP:性交奉仕中 == 5
+		A = 100 +ACT_FROM(TARGET, 7)
+		B = 50 +ACT_TO(TARGET, 1)
+		;潤滑不足
+		IF PALAM:MASTER:潤滑 < 100 && TEQUIP:ローション < 3
+			TIMES A , 0.50
+			TIMES B , 0.55
+			C += 500
+		ELSEIF PALAM:MASTER:潤滑 < 250 && TEQUIP:ローション < 2
+			TIMES A , 0.70
+			TIMES B , 0.75
+			C += 200
+		ELSEIF PALAM:MASTER:潤滑 < 500 && TEQUIP:ローション < 1
+			TIMES A , 0.85
+			TIMES B , 0.90
+			C += 100
+		ENDIF
+		SOURCE:MASTER:快Ｃ += B
+		SOURCE:快Ｖ += A
+		SOURCE:MASTER:接触 += 200 + GET_TRAINLV(TARGET) * 10
+		SOURCE:MASTER:性行動 += 40 + GET_TRAINLV(TARGET) * 2
+		;乱れ牡丹の処理
+		SIF TEQUIP:大鏡
+			SOURCE:MASTER:露出 += 200 + A / 5
+		SOURCE:MASTER:情愛 += B / 7 - SOURCE:MASTER:トラウマ - C
+		SIF SOURCE:MASTER:情愛 > 0 && ABL:MASTER:Ｃ感覚 > 2
+			SOURCE:MASTER:中毒充足 += GET_ABL(MASTER, "Ｃ感覚") * (GET_ABL(MASTER, "Ｃ感覚") - 20) * SOURCE:MASTER:情愛 / 100 + B / 5
+		SOURCE:MASTER:情愛 += SOURCE:MASTER:中毒充足 / 7
+	ELSEIF TEQUIP:性交奉仕中 == 6
+		A = 500 +ACT_FROM(TARGET, 8) * 2
+		B = 300 +ACT_TO(TARGET, 8) * 2
+		;潤滑不足
+		IF PALAM:MASTER:潤滑 < 100 && TEQUIP:ローション < 3
+			TIMES A , 0.30
+			TIMES B , 0.40
+			C += 1500
+		ELSEIF PALAM:MASTER:潤滑 < 250 && TEQUIP:ローション < 2
+			TIMES A , 0.55
+			TIMES B , 0.65
+			C += 900
+		ELSEIF PALAM:MASTER:潤滑 < 500 && TEQUIP:ローション < 1
+			TIMES A , 0.75
+			TIMES B , 0.80
+			C += 250
+		ENDIF
+		SOURCE:快Ａ += A
+		SOURCE:MASTER:快Ｃ += B
+		SOURCE:MASTER:接触 += 200 + GET_TRAINLV(TARGET) * 10
+		SOURCE:MASTER:性行動 += 40 + GET_TRAINLV(TARGET) * 2
+		SOURCE:MASTER:情愛 += A / 5 - C / 5 - SOURCE:MASTER:トラウマ / 5
+		SIF SOURCE:MASTER:情愛 > 0 && ABL:MASTER:Ａ感覚 > 4
+			SOURCE:MASTER:中毒充足 += (GET_ABL(MASTER, "Ａ感覚") + 10) * (GET_ABL(MASTER, "Ａ感覚") - 30) * SOURCE:MASTER:情愛 / 100 + A / 5
+		SOURCE:MASTER:情愛 += SOURCE:MASTER:中毒充足 / 5
+	ENDIF
+ENDIF
+IF TEQUIP:性交中 == 6
+	SIF TALENT:MASTER:オトコ
+		TCVAR:MASTER:前立腺刺激 += 1
+ELSEIF TEQUIP:性交中
+		TCVAR:MASTER:前立腺刺激 += 1
+ENDIF
+SIF TEQUIP:性交中 || TEQUIP:性交奉仕中
+	PALAM:MASTER:潤滑 += 50
+	
+;────────────────────────────────────
+;触手調教中（未実装）
+;────────────────────────────────────
+
+;────────────────────────────────────
+;C愛撫中（暫定）
+;────────────────────────────────────
+IF TEQUIP:調教対象Ｃ使用
+	SOURCE:MASTER:快Ｃ += 40 +ACT_FROM(TARGET, 1) * (2 + TALENT:器用な指先) / 10
+	SOURCE:MASTER:接触 += 50 + GET_TRAINLV(TARGET) * 3
+	SOURCE:MASTER:性行動 += 30 + SOURCE:MASTER:快Ｃ / 20
+	SOURCE:MASTER:情愛 += SOURCE:MASTER:接触 / 4 + GET_ABL(TARGET, "奉仕精神") * 3
+	TCVAR:MASTER:今回の勃起 += 20 + (GET_ABL(TARGET, "技巧") + GET_ABL(TARGET, "愛撫") + TALENT:器用な指先 * 50) / 2
+ENDIF
+
+
+;────────────────────────────────────
+;バイブなど付けっぱなしアイテムのチェック２
+;快SOURCE計算直前に呼ぶので乗算の処理はこちらで
+;────────────────────────────────────
+@EQUIP_CHECK2
+
+;────────────────────────────────────
+;媚薬（快ＣＶＡＢ）
+;────────────────────────────────────
+IF TEQUIP:媚薬
+	IF TALENT:調合知識
+		TIMES SOURCE:MASTER:快Ｃ , 1.30
+		TIMES SOURCE:MASTER:快Ｖ , 1.30
+		TIMES SOURCE:MASTER:快Ａ , 1.30
+		TIMES SOURCE:MASTER:快Ｂ , 1.30
+	ELSE
+		TIMES SOURCE:MASTER:快Ｃ , 1.15
+		TIMES SOURCE:MASTER:快Ｖ , 1.15
+		TIMES SOURCE:MASTER:快Ａ , 1.15
+		TIMES SOURCE:MASTER:快Ｂ , 1.15
+	ENDIF
+ENDIF
+
+;クリキャップ・オナホール装備中は快Ｃがアップする
+;ただし愛撫者の技巧・愛撫スキルが上がるほど差は小さくなる（道具スキルで相殺する）
+IF TEQUIP:クリキャップ || TEQUIP:オナホール
+	;愛撫者を代入
+	SELECTCASE MC_PLAYER()
+		CASE 1
+			LOCAL = MASTER
+		CASE 2
+			LOCAL = TARGET
+		CASE 4
+			LOCAL = ASSI:1
+		CASE 8
+			LOCAL = ASSI:2
+		CASE 16
+			LOCAL = ASSI:3
+		CASEELSE
+			LOCAL = -1
+	ENDSELECT
+	IF LOCAL >= 0
+		SOURCE:MASTER:快Ｃ *= 100+((MAX(50/MAX(ABL:LOCAL:技巧+ABL:LOCAL:愛撫-(ABL:LOCAL:道具*2), 1), 5)*(ITEM:カスタム道具+1)))
+	ELSE
+		SOURCE:MASTER:快Ｃ *= 100+(30*(ITEM:カスタム道具+1))
+	ENDIF
+	SOURCE:MASTER:快Ｃ /= 100
+ENDIF
+
+;ペニスバンド装備中は快Ｃが快Ｖに変換
+;変換率…快Ｃを20％にし、残りの値にＶ感覚+1/Ｃ感覚+1を掛けて２で割って快Ｖに加算する
+IF TEQUIP:ペニスバンド
+	SOURCE:MASTER:快Ｖ += (SOURCE:MASTER:快Ｃ*8*(((ABL:MASTER:Ｖ感覚+1)*100)/(ABL:MASTER:Ｃ感覚+1)))/2000
+	TIMES SOURCE:MASTER:快Ｃ, 0.20
+	IF ITEM:カスタム道具
+		TIMES SOURCE:MASTER:快Ｃ, 1.20
+		TIMES SOURCE:MASTER:快Ｖ, 1.20
+	ENDIF
+ENDIF
+IF TEQUIP:調教者ペニスバンド
+	SOURCE:快Ｖ += (SOURCE:快Ｃ*8*(((ABL:Ｖ感覚+1)*100)/(ABL:Ｃ感覚+1)))/2000
+	TIMES SOURCE:快Ｃ, 0.20
+	IF ITEM:カスタム道具
+		TIMES SOURCE:快Ｃ, 1.20
+		TIMES SOURCE:快Ｖ, 1.20
+	ENDIF
+ENDIF
+

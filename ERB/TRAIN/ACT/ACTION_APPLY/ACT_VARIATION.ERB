@@ -1,0 +1,606 @@
+﻿;口上のために調教者行動の派生を決定します
+
+;で。なんで派生条件コメントになってないんですか？これぶちきれていいよね？
+;っつうか手淫の派生と同じフラグをイきそうとか連続実行とかに与えてるのは困ってしまいます
+;それ口上超書きにくいので、断固粛清させていただきます。
+
+;性交系の派生については別に悪くないんですが、ついでだし今のうちに粛清で
+
+@TRAIN_VARIATION
+
+;TFLAG:90ごとに関数分けしてしまいます
+;後々、派生データを各ACTのファイルで管理させてもいいからね
+;RRじみたダダ長いIFネスト嫌いなのもあり。どんどん刻むよ！
+
+;引数もあってもいいけど、うーん？
+TRYCCALLFORM TRAIN_VARIATION_ACT{TFLAG:90}
+CATCH
+	;COMBI派生系はなければ派生前を見に行く
+	TRYCALLFORM TRAIN_VARIATION_ACT{GET_COMBIACTNUM(TFLAG:ACT)}
+ENDCATCH
+
+
+;服を脱げと命じる（服を着ろと命じる）
+@TRAIN_VARIATION_ACT5
+;性交中ではない
+IF !GETINSERT()
+	;着ているものが2枚以下のとき、服を着ろになりうる
+	VARSET LOCAL
+	FOR LOCAL, 0, 10
+		SIF TEQUIP:MASTER:LOCAL
+			LOCAL:1 ++
+	NEXT
+	SIF LOCAL:1 <= MAX(0,RAND:5-2)
+		TFLAG:ACT派生 = 1
+;性交中、脱げる部位をつけていれば脱げに。つけていないなら着ろに。
+;コスプレはACTABLEで弾いているので考慮外
+ELSEIF !(TEQUIP:MASTER:上半身下着 || TEQUIP:MASTER:上半身上着 || TEQUIP:MASTER:全身上着 || TEQUIP:MASTER:アクセサリ || TEQUIP:MASTER:靴下)
+	TFLAG:ACT派生 = 1
+ENDIF
+
+;愛撫（指で愛撫）
+@TRAIN_VARIATION_ACT10
+;調教対象にペニスがあると、必ず手淫になる
+SIF PENIS(MASTER)
+	TFLAG:ACT派生 = 1
+	;備考：ペニスがあると通常の愛撫は起こらない
+;調教対象がペニスバンド装着中は、ペニスバンド手淫になる
+SIF TEQUIP:ペニスバンド
+	TFLAG:ACT派生 = 2
+
+
+
+;胸愛撫
+@TRAIN_VARIATION_ACT11
+;調教対象がオトコなら必ず乳首責めになる
+IF TALENT:MASTER:オトコ
+	TFLAG:ACT派生 = 3
+	;必ず乳首責めになる
+	;備考：オトコにはこれしか発生しないので、妨害性の上半身服を着ていると胸愛撫自体行わない
+	;（ただし普通の上着は裾をまくって愛撫できる。ワンピース・導師服・ブラジャーはオトコは装備しないので関係ないかも）
+	;乳首責め自体は女の子にも発生するようにしておきます
+
+;調教対象が女の子
+ELSE
+	;前回が胸愛撫なら乳首系
+	;（ただし壁抜けがないと上半身服に妨害される）
+	IF IS_PREVACTNAME("胸愛撫") && (TALENT:壁抜け|| !BRACHECK(1, 1))
+		;調教者に幼稚か舌使いがあると3/4、なければ1/4で乳首吸い
+		IF TALENT:幼稚 || TALENT:舌使い ? RAND:4 # !RAND:4
+			TFLAG:ACT派生 = 1
+		;それ以外は乳首責め
+		ELSE
+			TFLAG:ACT派生 = 3
+		ENDIF
+	;単独実行なら揉み系
+	ELSE
+		;調教者の欲望+Ｂ感覚３以上なら、1/2で胸の揉み合い
+		SIF ABL:欲望 + ABL:Ｂ感覚 > 2 && RAND:2
+			TFLAG:ACT派生 = 2
+		;揉み合いにならなければ胸愛撫のまま
+	ENDIF
+ENDIF
+
+
+
+;クンニ（舌で愛撫）
+@TRAIN_VARIATION_ACT12
+;調教対象にペニスがあると、必ずフェラになる
+SIF PENIS(MASTER)
+	TFLAG:ACT派生 = 1
+	;備考：ペニスがあると通常のクンニは起こらない
+
+;ペニスがなければクンニのまま
+
+
+
+;アナル愛撫
+@TRAIN_VARIATION_ACT13
+;調教対象がオトコ
+IF TALENT:MASTER:オトコ
+	;アナルバイブ装備中は、アナルバイブ出し入れ
+	IF TEQUIP:アナルバイブ
+		TFLAG:ACT派生 = 2
+	;下半身上着に妨害されず、下半身下着がない
+	ELSEIF LOWERJACKET(1) < 2 && !LOWERUNDER(1)
+		;連続実行の場合、前立腺刺激
+		SIF IS_PREVACTNAME("アナル愛撫")
+			TFLAG:ACT派生 = 1
+		;イきそうor快Ｃが5000以上の場合、調教者の愛撫スキルに応じて前立腺刺激
+		SIF (TCVAR:MASTER:イきそう || PALAM:MASTER:快Ｃ >= 5000) && PERCENT(ABL:愛撫*10)
+			TFLAG:ACT派生 = 1
+		;勃起度が低い場合、調教者の愛撫スキルに応じて前立腺刺激
+		SIF TCVAR:MASTER:勃起度 < 1000 && PERCENT(ABL:愛撫*10)
+			TFLAG:ACT派生 = 1
+		;要強制勃起の場合、前立腺刺激
+		SIF TCVAR:MASTER:要強制勃起
+			TFLAG:ACT派生 = 1
+	ENDIF
+	;備考：ふたなりの前立腺は尿道、つまり膣の上にあるとし、Ｇスポット刺激の項に移動
+	;精力0でペニスが萎えている必要があったが省く。実行されないっつのそんなもん！
+ENDIF
+
+
+
+;アナル舐め
+@TRAIN_VARIATION_ACT14
+;前立腺刺激への分岐があったが、粛清する
+;そんなところまで舌が届くわけないじゃないかｗｗｗ
+
+
+
+;貝合わせ（性器を擦りあう）
+@TRAIN_VARIATION_ACT16
+;調教対象にペニスがあると、必ず素股するになる
+SIF PENIS(MASTER)
+	TFLAG:ACT派生 = 1
+	;備考：ペニスがあると通常の貝合わせは起こらない
+;調教対象がペニスバンド装着中は、ペニスバンド素股になる
+SIF TEQUIP:ペニスバンド
+	TFLAG:ACT派生 = 2
+
+;ペニスがなければ貝合わせのまま
+;また、調教者にペニスがあると実行できない（代わりに素股強制になる）
+
+;指挿入れ
+@TRAIN_VARIATION_ACT19
+;調教対象が処女ではダメ
+IF !TALENT:MASTER:処女
+	;バイブ装備中は、バイブ出し入れ
+	IF TEQUIP:バイブ
+		TFLAG:ACT派生 = 2
+	ELSE
+		;連続実行の場合、Ｇスポット刺激
+		SIF IS_PREVACTNAME("指挿入れ")
+			TFLAG:ACT派生 = 1
+		;イきそうor快Ｃが5000以上の場合、調教者の愛撫スキルに応じてＧスポット刺激
+		SIF (TCVAR:MASTER:イきそう || PALAM:MASTER:快Ｃ >= 5000) && PERCENT(ABL:愛撫*10)
+			TFLAG:ACT派生 = 1
+		;ふたなり限定
+		IF TALENT:MASTER:ふたなり
+			;勃起度が低い場合、調教者の愛撫スキルに応じてＧスポット刺激
+			SIF TCVAR:MASTER:勃起度 < 1000 && PERCENT(ABL:愛撫*10)
+				TFLAG:ACT派生 = 1
+			;要強制勃起の場合、Ｇスポット刺激
+			SIF TCVAR:MASTER:要強制勃起
+				TFLAG:ACT派生 = 1
+		ENDIF
+	ENDIF
+ENDIF
+
+
+;愛撫強制（指で愛撫を強制）
+@TRAIN_VARIATION_ACT50
+;調教者にペニスがあると、必ず手淫強制になる
+SIF PENIS(TARGET)
+	TFLAG:ACT派生 = 1
+	;備考：ペニスがあると通常の愛撫強制は起こらない
+;調教者がペニスバンド装着中は、ペニスバンド手淫強制になる
+SIF TEQUIP:調教者ペニスバンド
+	TFLAG:ACT派生 = 2
+
+;ペニスがなければ愛撫強制のまま
+
+
+
+;クンニ強制（口で愛撫を強制）
+@TRAIN_VARIATION_ACT51
+;調教者がオトコだと、必ずフェラ強制になる
+IF TALENT:オトコ
+	TFLAG:ACT派生 = 1
+
+;調教者がふたなりだと、調教対象が仰向けなら1/2で顔面騎乗、そうでなければフェラ強制になる
+ELSEIF TALENT:ふたなり
+	IF RAND:2 && TFLAG:仰向け
+		TFLAG:ACT派生 = 2
+	ELSE
+		TFLAG:ACT派生 = 1
+	ENDIF
+	;備考：ペニスがあると通常の愛撫強制は起こらない（ふたなりでもフェラか顔面騎乗になる）
+
+;調教者にペニスがなく、調教対象が仰向けなら顔面騎乗になる
+ELSEIF TFLAG:仰向け
+	TFLAG:ACT派生 = 2
+;それ以外なら通常のクンニ
+ENDIF
+
+;顔面騎乗が選ばれていたとき、顔面騎乗アナルに変化することがある
+SIF TFLAG:ACT派生 == 2 && RAND:(GET_ABL(TARGET, "Ａ感覚") + 100) > RAND:200
+	TFLAG:ACT派生 = 3
+
+;素股強制
+@TRAIN_VARIATION_ACT53
+;調教者がペニスバンド装着中は、ペニスバンド素股になる
+SIF TEQUIP:調教者ペニスバンド
+	TFLAG:ACT派生 = 1
+
+;胸愛撫強制
+@TRAIN_VARIATION_ACT57
+;ボールギャグがなければ、1/2の確率で口で愛撫になる
+;主人が愛撫継続中も姿勢に無理があるので弾くが、女の子に対する手で愛撫だけは許可
+SIF (RAND:2 == 0 && !TEQUIP:ボールギャグ && (!TEQUIP:調教対象Ｃ使用 || (TEQUIP:調教対象Ｃ使用 == 1 && !PENIS(MASTER)))) || TEQUIP:縄
+	TFLAG:ACT派生 = 2
+
+;備考：縄で縛られていれば必ず口で愛撫になる。ボールギャグと両方着けていると実行されない
+;TFLAG:93 == 1は本来「ぱふぱふ」だったが、調教者の行動として謎すぎるので粛清された
+
+
+
+
+;バイブ
+@TRAIN_VARIATION_ACT21
+;既に装備している場合、バイブ解除になる
+SIF TEQUIP:バイブ
+	TFLAG:ACT派生 = 1
+
+
+
+;アナルバイブ
+@TRAIN_VARIATION_ACT22
+;既に装備している場合、アナルバイブ解除になる
+SIF TEQUIP:アナルバイブ
+	TFLAG:ACT派生 = 1
+
+
+;アナルビーズ
+@TRAIN_VARIATION_ACT23
+;玉が5つ入っている場合、アナルビーズ解除になる
+IF TEQUIP:アナルビーズ > 4
+	TFLAG:ACT派生 = 1
+;既に装備している場合、アナルビーズ追加になる
+ELSEIF TEQUIP:アナルビーズ
+	TFLAG:ACT派生 = 2
+ENDIF
+
+
+
+;クリキャップ（Ｃ愛撫道具）
+@TRAIN_VARIATION_ACT24
+;調教対象にペニスがある
+IF PENIS(MASTER)
+	;既に装備している場合、オナホール解除になる
+	IF TEQUIP:オナホール
+		TFLAG:ACT派生 = 3
+	;そうでない場合、オナホールになる
+	ELSE
+		TFLAG:ACT派生 = 2
+	ENDIF
+;調教対象にペニスがない
+ELSE
+	;既に装備している場合、クリキャップ解除になる
+	SIF TEQUIP:クリキャップ
+		TFLAG:ACT派生 = 1
+ENDIF
+
+
+
+;ニプルキャップ
+@TRAIN_VARIATION_ACT25
+;既に装備している場合、ニプルキャップ解除になる
+SIF TEQUIP:ニプルキャップ
+	TFLAG:ACT派生 = 1
+
+;ペニスバンド
+@TRAIN_VARIATION_ACT26
+;既に装備している場合、ペニスバンド解除になる
+SIF TEQUIP:ペニスバンド
+	TFLAG:ACT派生 = 1
+
+
+
+;押し倒し
+@TRAIN_VARIATION_ACT27
+;既に押し倒している場合、解放になる
+SIF TEQUIP:押し倒し中
+	TFLAG:ACT派生 = 1
+
+
+
+;正常位
+@TRAIN_VARIATION_ACT30
+;他の体位で性交している場合、体位変更になる
+IF TEQUIP:性交中 != 1 && TEQUIP:性交中 < 6 && TEQUIP:性交中
+	TFLAG:ACT派生 = 2
+;アナルセックス中の場合、体位変更（アナルから）になる
+ELSEIF TEQUIP:性交中 == 6
+	TFLAG:ACT派生 = 3
+;逆挿入中だった場合、逆転になる
+ELSEIF TEQUIP:性交奉仕中 != 6 && TEQUIP:性交奉仕中 != 0 && TEQUIP:性交奉仕中
+	TFLAG:ACT派生 = 4
+;アナル逆性交中だった場合、逆転（アナルから）になる
+ELSEIF TEQUIP:性交奉仕中 == 6
+	TFLAG:ACT派生 = 5
+;連続実行の場合、腰を使うになる
+ELSEIF TEQUIP:性交中 == 1
+	TFLAG:ACT派生 = 1
+ENDIF
+
+
+
+;後背位
+@TRAIN_VARIATION_ACT31
+;他の体位で性交している場合、体位変更になる
+IF TEQUIP:性交中 != 2 && TEQUIP:性交中 < 6 && TEQUIP:性交中
+	TFLAG:ACT派生 = 2
+;アナルセックス中の場合、体位変更（アナルから）になる
+ELSEIF TEQUIP:性交中 == 6
+	TFLAG:ACT派生 = 3
+;逆性交中だった場合、逆転になる
+ELSEIF TEQUIP:性交奉仕中 != 6 && TEQUIP:性交奉仕中 != 0 && TEQUIP:性交奉仕中
+	TFLAG:ACT派生 = 4
+;アナル逆性交中だった場合、逆転（アナルから）になる
+ELSEIF TEQUIP:性交奉仕中 == 6
+	TFLAG:ACT派生 = 5
+;連続実行の場合、腰を使うになる
+ELSEIF TEQUIP:性交中 == 2
+	TFLAG:ACT派生 = 1
+ENDIF
+
+
+
+;騎乗位
+@TRAIN_VARIATION_ACT32
+;他の体位で性交している場合、体位変更になる
+IF TEQUIP:性交中 != 3 && TEQUIP:性交中 < 6 && TEQUIP:性交中
+	TFLAG:ACT派生 = 2
+;アナルセックス中の場合、体位変更（アナルから）になる
+ELSEIF TEQUIP:性交中 == 6
+	TFLAG:ACT派生 = 3
+;逆性交中だった場合、逆転になる
+ELSEIF TEQUIP:性交奉仕中 != 6 && TEQUIP:性交奉仕中 != 0 && TEQUIP:性交奉仕中
+	TFLAG:ACT派生 = 4
+;アナル逆性交中だった場合、逆転（アナルから）になる
+ELSEIF TEQUIP:性交奉仕中 == 6
+	TFLAG:ACT派生 = 5
+;連続実行の場合、腰を使うになる
+ELSEIF TEQUIP:性交中 == 3
+	TFLAG:ACT派生 = 1
+ENDIF
+
+
+
+;対面座位
+@TRAIN_VARIATION_ACT33
+;他の体位で性交している場合、体位変更になる
+IF TEQUIP:性交中 != 4 && TEQUIP:性交中 < 6 && TEQUIP:性交中
+	TFLAG:ACT派生 = 2
+;アナルセックス中の場合、体位変更（アナルから）になる
+ELSEIF TEQUIP:性交中 == 6
+	TFLAG:ACT派生 = 3
+;逆性交中だった場合、逆転になる
+ELSEIF TEQUIP:性交奉仕中 != 6 && TEQUIP:性交奉仕中 != 0 && TEQUIP:性交奉仕中
+	TFLAG:ACT派生 = 4
+;アナル逆性交中だった場合、逆転（アナルから）になる
+ELSEIF TEQUIP:性交奉仕中 == 6
+	TFLAG:ACT派生 = 5
+;連続実行の場合、腰を使うになる
+ELSEIF TEQUIP:性交中 == 4
+	TFLAG:ACT派生 = 1
+ENDIF
+
+
+
+;背面座位
+@TRAIN_VARIATION_ACT34
+;他の体位で性交している場合、体位変更になる
+IF TEQUIP:性交中 != 5 && TEQUIP:性交中 < 6 && TEQUIP:性交中
+	TFLAG:ACT派生 = 2
+;アナルセックス中の場合、体位変更（アナルから）になる
+ELSEIF TEQUIP:性交中 == 6
+	TFLAG:ACT派生 = 3
+;逆性交中だった場合、逆転になる
+ELSEIF TEQUIP:性交奉仕中 != 6 && TEQUIP:性交奉仕中 != 0 && TEQUIP:性交奉仕中
+	TFLAG:ACT派生 = 4
+;アナル逆性交中だった場合、逆転（アナルから）になる
+ELSEIF TEQUIP:性交奉仕中 == 6
+	TFLAG:ACT派生 = 5
+;連続実行の場合、腰を使うになる
+ELSEIF TEQUIP:性交中 == 5
+	TFLAG:ACT派生 = 1
+ENDIF
+
+
+
+
+;アナルセックス
+@TRAIN_VARIATION_ACT35
+;他の体位で性交している場合、体位変更（アナルへ）になる
+IF TEQUIP:性交中 < 6 && TEQUIP:性交中
+	TFLAG:ACT派生 = 3
+;逆性交中だった場合、逆転（アナルへ）になる
+ELSEIF TEQUIP:性交奉仕中 != 6 && TEQUIP:性交奉仕中 != 0 && TEQUIP:性交奉仕中
+	TFLAG:ACT派生 = 4
+;アナル逆性交中だった場合、逆転（アナルから）になる
+ELSEIF TEQUIP:性交奉仕中 == 6
+	TFLAG:ACT派生 = 5
+;連続実行の場合、腰を使うになる
+ELSEIF TEQUIP:性交中 == 6
+	TFLAG:ACT派生 = 1
+ENDIF
+
+
+
+;逆レイプ
+@TRAIN_VARIATION_ACT103
+;他の体位で逆性交している場合、体位変更になる
+IF TEQUIP:性交奉仕中 && TEQUIP:性交奉仕中 != 3 && TEQUIP:性交奉仕中 < 6
+	TFLAG:ACT派生 = 2
+;アナルセックス中の場合、逆転（アナルから）になる
+ELSEIF TEQUIP:性交中 == 6
+	TFLAG:ACT派生 = 3
+;性交中だった場合、逆転になる
+ELSEIF TEQUIP:性交中 < 6 && TEQUIP:性交中
+	TFLAG:ACT派生 = 4
+;アナル逆性交中だった場合、体位変更（アナルから）になる
+ELSEIF TEQUIP:性交奉仕中 == 6
+	TFLAG:ACT派生 = 5
+;連続実行の場合、腰を使うになる
+ELSEIF TEQUIP:性交奉仕中 == 3
+	TFLAG:ACT派生 = 1
+ENDIF
+
+
+
+;羞恥プレイ
+@TRAIN_VARIATION_ACT43
+;既に羞恥プレイ中なら、羞恥プレイ終了になる
+SIF TEQUIP:大鏡
+	TFLAG:ACT派生 = 1
+
+
+
+;野外プレイ
+@TRAIN_VARIATION_ACT44
+;既に野外プレイ中なら、野外プレイ終了になる
+SIF TEQUIP:野外プレイ
+	TFLAG:ACT派生 = 1
+
+
+;縄
+@TRAIN_VARIATION_ACT63
+;既に縄で拘束中なら、縄解除になる
+SIF TEQUIP:縄
+	TFLAG:ACT派生 = 1
+
+
+
+;アイマスク
+@TRAIN_VARIATION_ACT64
+;既に装備していたら、アイマスク解除になる
+SIF TEQUIP:アイマスク
+	TFLAG:ACT派生 = 1
+
+
+
+;ボールギャグ
+@TRAIN_VARIATION_ACT65
+;既に装備していたら、ボールギャグ解除になる
+SIF TEQUIP:ボールギャグ
+	TFLAG:ACT派生 = 1
+
+
+
+;三角木馬
+@TRAIN_VARIATION_ACT67
+;既に装備していたら、三角木馬解除になる
+SIF TEQUIP:三角木馬
+	TFLAG:ACT派生 = 1
+
+
+
+;浣腸セット
+@TRAIN_VARIATION_ACT68
+;浣腸液が5本入っている場合、浣腸プラグ解除になる
+IF TEQUIP:浣腸器＋プラグ > 4
+	TFLAG:ACT派生 = 1
+;既に装備している場合、浣腸液追加になる
+ELSEIF TEQUIP:浣腸器＋プラグ
+	TFLAG:ACT派生 = 2
+ENDIF
+
+;ペニスバンド装着
+@TRAIN_VARIATION_ACT75
+;既に装備している場合、解除
+SIF TEQUIP:調教者ペニスバンド
+	TFLAG:ACT派生 = 1
+
+
+;正常位させる
+@TRAIN_VARIATION_ACT95
+;他の体位で逆性交している場合、体位変更になる
+IF TEQUIP:性交奉仕中 && TEQUIP:性交奉仕中 != 1 && TEQUIP:性交奉仕中 < 6
+	TFLAG:ACT派生 = 2
+;アナルセックス中の場合、逆転（アナルから）になる
+ELSEIF TEQUIP:性交中 == 6
+	TFLAG:ACT派生 = 3
+;性交中だった場合、逆転になる
+ELSEIF TEQUIP:性交中 < 6 && TEQUIP:性交中
+	TFLAG:ACT派生 = 4
+;アナル逆性交中だった場合、体位変更（アナルから）になる
+ELSEIF TEQUIP:性交奉仕中 == 6
+	TFLAG:ACT派生 = 5
+;連続実行の場合、腰を使うになる
+ELSEIF TEQUIP:性交奉仕中 == 1
+	TFLAG:ACT派生 = 1
+ENDIF
+
+
+
+;後背位させる
+@TRAIN_VARIATION_ACT96
+;他の体位で逆性交している場合、体位変更になる
+IF TEQUIP:性交奉仕中 && TEQUIP:性交奉仕中 != 2 && TEQUIP:性交奉仕中 < 6
+	TFLAG:ACT派生 = 2
+;アナルセックス中の場合、逆転（アナルから）になる
+ELSEIF TEQUIP:性交中 == 6
+	TFLAG:ACT派生 = 3
+;性交中だった場合、逆転になる
+ELSEIF TEQUIP:性交中 < 6 && TEQUIP:性交中
+	TFLAG:ACT派生 = 4
+;アナル逆性交中だった場合、体位変更（アナルから）になる
+ELSEIF TEQUIP:性交奉仕中 == 6
+	TFLAG:ACT派生 = 5
+;連続実行の場合、腰を使うになる
+ELSEIF TEQUIP:性交奉仕中 == 2
+	TFLAG:ACT派生 = 1
+ENDIF
+
+
+
+;対面座位させる
+@TRAIN_VARIATION_ACT97
+;他の体位で逆性交している場合、体位変更になる
+IF TEQUIP:性交奉仕中 && TEQUIP:性交奉仕中 != 4 && TEQUIP:性交奉仕中 < 6
+	TFLAG:ACT派生 = 2
+;アナルセックス中の場合、逆転（アナルから）になる
+ELSEIF TEQUIP:性交中 == 6
+	TFLAG:ACT派生 = 3
+;性交中だった場合、逆転になる
+ELSEIF TEQUIP:性交中 < 6 && TEQUIP:性交中
+	TFLAG:ACT派生 = 4
+;アナル逆性交中だった場合、体位変更（アナルから）になる
+ELSEIF TEQUIP:性交奉仕中 == 6
+	TFLAG:ACT派生 = 5
+;連続実行の場合、腰を使うになる
+ELSEIF TEQUIP:性交奉仕中 == 4
+	TFLAG:ACT派生 = 1
+ENDIF
+
+
+
+;背面座位させる
+@TRAIN_VARIATION_ACT98
+;他の体位で逆性交している場合、体位変更になる
+IF TEQUIP:性交奉仕中 && TEQUIP:性交奉仕中 != 5 && TEQUIP:性交奉仕中 < 6
+	TFLAG:ACT派生 = 2
+;アナルセックス中の場合、逆転（アナルから）になる
+ELSEIF TEQUIP:性交中 == 6
+	TFLAG:ACT派生 = 3
+;性交中だった場合、逆転になる
+ELSEIF TEQUIP:性交中 < 6 && TEQUIP:性交中
+	TFLAG:ACT派生 = 4
+;アナル逆性交中だった場合、体位変更（アナルから）になる
+ELSEIF TEQUIP:性交奉仕中 == 6
+	TFLAG:ACT派生 = 5
+;連続実行の場合、腰を使うになる
+ELSEIF TEQUIP:性交奉仕中 == 5
+	TFLAG:ACT派生 = 1
+ENDIF
+
+
+
+;アナルセックスさせる
+@TRAIN_VARIATION_ACT99
+;他の体位で逆性交している場合、体位変更（アナルへ）になる
+IF V_SEX(MASTER)
+	TFLAG:ACT派生 = 3
+;アナルセックス中の場合、逆転（アナルから）になる
+ELSEIF TEQUIP:性交中 == 6
+	TFLAG:ACT派生 = 2
+;性交中だった場合、逆転（アナルへ）になる
+ELSEIF TEQUIP:性交中 < 6 && TEQUIP:性交中
+	TFLAG:ACT派生 = 4
+;連続実行の場合、腰を使うになる
+ELSEIF TEQUIP:性交奉仕中 == 6
+	TFLAG:ACT派生 = 1
+ENDIF

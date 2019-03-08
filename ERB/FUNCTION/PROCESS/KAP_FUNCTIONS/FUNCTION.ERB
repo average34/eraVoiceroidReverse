@@ -1,0 +1,198 @@
+﻿;---------------------------------------------------------------------
+;
+;	Module		:FUNCITON.ERB
+;	Facility	:組み込み関数群
+;
+;	Licence		:フリー
+;
+;	Modification Data:システム全体で使用される組み込み関数群
+;
+;	Edit	Date				Author		ver			Reason
+;	001		2012/05/30			kap			X.XX		新規作成
+;	002		2012/07/30			kap			0.300		KEYMARK2種を追加
+;			2012/08/04			kap			0.300		キャラクター削除関数を追加
+;			2012/08/12			kap			0.300		数値補正関数を追加
+;	003		2012/09/08			kap			0.350		SET_STR系を追加
+;	004		2012/10/04			kap			0.400		IS_EXIST_HEREを追加
+;								kap			0.400		GET_CNUMを追加
+;	005		2012/10/04			kap			0.400		FINDCHARA_IDとGET_IDを追加
+;	006		2012/10/26			kap			0.420		FRIENDキャラクター生成時にタレントと体力・気力の現在地を調整する措置を追加
+;														@ADD_FRIEND_POINTを追加
+;	007		2012/12/01			Ris			0.420		@SET_STRFの定義を#FUNCTIONから#FUNCTIONSへ修正
+;	008		2013/09/02			kap			0.480		@MAXWIDTHを追加
+;	009		2013/12/10			kap			0.510		@ADD_FREINDに採集場所の初期値の処理を追加
+;---------------------------------------------------------------------
+;@ADD_LINE			行数追加関数
+;@EQUATE_LINE		行数追加関数
+;@SHOW_BLANK		画面暗転関数
+;@MAXLINE			最大行数定義関数
+;@MAXWIDTH			最大幅定義関数
+;@PRINTSBUTTON_C	色付きボタン作成関数
+;@CALC				補正計算の基本関数
+;@EQUALCHECK_TURN	等値チェック関数
+;@GET_KEYMARK		キーボードの並び順のアルファベットを数値からとる
+;@GET_KEYMARK_NUM	キーボードの並び順のアルファベットを数値になおす
+;@SET_STR			STRセット関数
+;@SET_STRF			STRセット関数の式中関数版
+;@GET_STR			STR取得関数
+;@IS_EXIST_HERE		存在判定関数
+;@GET_CNUM			NICKNAMEがARGSのCHARAの登録番号を返す
+;@ADD FRIEND		フレンドキャラの生成関数
+;@GAIN_FRIEND_POINT	交友値の加算関数
+;@GET_FRIEND_POINT	交友値の表示関数(実際の1/100)
+;@SET_ID			IDの設定関数
+;@FINDCHARA_ID		IDがARGSのCHARAの登録番号を返す
+;@GET_ID			対象のキャラのIDを返す
+;----------------------------------------------------------
+;@DELETE_CHARA
+;キャラクター削除関数
+;キャラクター削除とそれに付随する様々な処理を行う
+;ARG	削除するキャラクターの登録番号
+;----------------------------------------------------------
+@DELETE_CHARA, ARG
+IF TARGET == ARG
+	TARGET = -1
+ELSEIF TARGET > ARG
+	TARGET -= 1
+ENDIF
+IF ASSI == ARG
+	ASSI = -1
+ELSEIF ASSI > ARG
+	ASSI -= 1
+ENDIF
+DELCHARA ARG
+
+;----------------------------------------------------------
+;ARGの数だけラインを追加
+;----------------------------------------------------------
+@ADD_LINE, ARG
+FOR LOCAL, 0, ARG
+	PRINTL 
+NEXT
+
+;----------------------------------------------------------
+;ARG行になるまでラインを追加
+;----------------------------------------------------------
+@EQUATE_LINE, ARG
+WHILE LINECOUNT < ARG
+	PRINTL 
+WEND
+
+;-------------------------------------------------
+;画面を暗転させる
+;ARG		暗転している時間(ms)
+;-------------------------------------------------
+@SHOW_BLANK, ARG = 100
+#LOCALSIZE 2
+LOCAL = CURRENTREDRAW()
+LOCAL:1 = LINECOUNT
+REDRAW 0
+CALL ADD_LINE(50)
+TWAIT ARG, 0
+REDRAW LOCAL
+CLEARLINE LINECOUNT - LOCAL:1
+
+;-------------------------------------------------
+;最大行数の定義関数
+;-------------------------------------------------
+@MAXLINE
+#FUNCTION
+RETURNF 51
+
+;-------------------------------------------------
+;最大幅の定義関数
+;-------------------------------------------------
+@MAXWIDTH
+#FUNCTION
+RETURNF STRLENS(DRAWLINESTR)
+
+;-------------------------------------------------
+;表示
+;ボタン内容
+;条件
+;条件(ARG)が真の時の色
+;条件(ARG:1)が否の時の色
+;-------------------------------------------------
+@PRINTSBUTTON_C, ARGS, ARGS:1, ARG, ARG:1 = -1, ARG:2 = -1
+#LOCALSIZE 1
+LOCAL = GETCOLOR()
+ARG:1 = ARG:1 == -1 ? GETDEFCOLOR() # ARG:1
+ARG:2 = ARG:2 == -1 ? GETDEFCOLOR() # ARG:2
+SETCOLOR ARG ? ARG:1 # ARG:2
+;IF IS_WINDOW
+;	PRINTBUTTON ARGS, ""
+;ELSE
+	PRINTBUTTON ARGS, ARGS:1
+;ENDIF
+SETCOLOR LOCAL
+
+;-------------------------------------------------
+;補正関数@CALCF
+;ARG	補正元の数値
+;ARG:1	補正係数
+;-------------------------------------------------
+@CALCF, ARG, ARG:1
+#FUNCTION
+RETURNF ARG:1 >= 0 ? ARG * (100 + ARG:1) / 100 # ARG *  100 / (100 - ARG:1)
+
+;-------------------------------------------------
+;@SET_STRF
+;STRセット関数の式中関数版
+;処理の都合上、こちらで呼ぶのが基本
+;本体はGET_STRだけど名前を変えてわかりやすくしておく
+;-------------------------------------------------
+@SET_STRF, ARGS, ARGS:1
+#FUNCTIONS
+CALLF GET_STR, ARGS, ARGS:1, 1
+
+;-------------------------------------------------
+;@GET_STR
+;STR取得関数
+;ARGSのSTRの中身を返す
+;要するに引数として、変数名を渡すのに使う
+;-------------------------------------------------
+@GET_STR, ARGS, ARGS:1, ARG
+#FUNCTIONS
+SELECTCASE AUTO_SPLIT(ARGS, ":", 0)
+	CASE "STR"
+		SIF ARG
+			STR:AUTO_SPLIT_INT(ARGS, ":", 1) = %ARGS%
+		RETURNF STR:AUTO_SPLIT_INT(ARGS, ":", 1)
+	CASE "RESULTS"
+		SIF ARG
+			RESULTS:AUTO_SPLIT_INT(ARGS, ":", 1) = %ARGS%
+		RETURNF RESULTS:AUTO_SPLIT_INT(ARGS, ":", 1)
+	CASE "CSTR"
+		SELECTCASE AUTO_SPLIT(ARGS, ":", 2)
+			CASE "TARGET"
+				LOCAL = TARGET
+			CASE "MASTER"
+				LOCAL = MASTER
+			CASE "ASSI"
+				LOCAL = ASSI
+			CASE "PLAYER"
+				LOCAL = PLAYER
+			CASEELSE
+				LOCAL = ISNUMERIC(AUTO_SPLIT(ARGS, ":", 2)) ? AUTO_SPLIT_INT(ARGS, ":", 2) # GETNUM(CSTR, AUTO_SPLIT(ARGS, ":", 2))
+		ENDSELECT
+		SIF ARG
+			CSTR:AUTO_SPLIT_INT(ARGS, ":", 1):LOCAL = %ARGS:1%
+		RETURNF CSTR:AUTO_SPLIT_INT(ARGS, ":", 1):LOCAL
+	CASE "TSTR"
+		LOCAL = ISNUMERIC(AUTO_SPLIT(ARGS, ":", 1)) ? AUTO_SPLIT_INT(ARGS, ":", 1) # GETNUM(TSTR, AUTO_SPLIT(ARGS, ":", 1))
+		SIF ARG
+			TSTR:LOCAL = %ARGS:1%
+		RETURNF TSTR:LOCAL
+	CASE "SAVESTR"
+		LOCAL = ISNUMERIC(AUTO_SPLIT(ARGS, ":", 1)) ? AUTO_SPLIT_INT(ARGS, ":", 1) # GETNUM(SAVESTR, AUTO_SPLIT(ARGS, ":", 1))
+		SIF ARG
+			SAVESTR:LOCAL = %ARGS:1%
+		RETURNF SAVESTR:LOCAL
+	CASE "GLOBALS"
+		LOCAL = ISNUMERIC(AUTO_SPLIT(ARGS, ":", 1)) ? AUTO_SPLIT_INT(ARGS, ":", 1) # GETNUM(GLOBALS, AUTO_SPLIT(ARGS, ":", 1))
+		SIF ARG
+			GLOBALS:LOCAL = %ARGS%
+		RETURNF GLOBALS:LOCAL
+	CASEELSE
+		THROW @GET_STRFの引数ARGS(%ARGS%)が異常です！
+ENDSELECT

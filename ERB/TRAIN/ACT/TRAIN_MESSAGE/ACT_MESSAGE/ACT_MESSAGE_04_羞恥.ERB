@@ -1,0 +1,187 @@
+﻿;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+;		羞恥系メッセージ
+
+;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+;────────────────────────────────────
+;040,自慰
+;────────────────────────────────────
+;★リアクション前★
+@TRAIN_MESSAGE_40
+PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("たまま、")%%CALLNAME:MASTER%に
+PRINTFORML 自分でするところを見せろと命令した…
+
+;☆リアクション後☆
+@TRAIN_MESSAGE2_40
+;リアクションが受容
+IF IS_COMGRONAME("消極的従う/平然と従う/積極的従う/受け入れる")
+	IF ME_PLAYER(1) == 9                ;顔射自慰絶頂
+		PRINTFORML %CALLNAME:MASTER%が自身の陰茎をしごきながら射精が近いことを伝えると、
+		PRINTFORML %CALLNAME:TARGET%は鈴口の前で舌をてろんと突き出して、口の中まで飛ばすように命令した…
+		RETURN 2
+	ELSEIF IS_COMGRONAME("積極的従う/受け入れる")
+		IF TCVAR:MASTER:イきそう && TCVAR:MASTER:焦らし度 < 2         ;イきそう状態で焦らし終了/無し
+			IF PENIS(MASTER)                      ;調教対象にペニスあり
+				PRINTFORML %CALLNAME:MASTER%が自身の陰茎をしごきながら射精が近いことを伝えると、
+			ELSEIF TEQUIP:ペニスバンド            ;調教対象がペニスバンド装着中
+				PRINTFORML %CALLNAME:MASTER%がペニスバンドの根元で陰核を揉み潰しながら絶頂が近いことを伝えると、
+			ELSE                                  ;その他
+				PRINTFORML %CALLNAME:MASTER%が自身の陰核をこね回しながら絶頂が近いことを伝えると、
+			ENDIF
+			PRINTFORML %CALLNAME:TARGET%は卑猥な言葉をささやきながら一人でイくように命じた…
+		ELSEIF TEQUIP:ペニスバンド                                    ;調教対象がペニスバンド装着中
+			PRINTFORML %CALLNAME:MASTER%はペニスバンドを握り、男性がするように自分で慰めた…
+		ELSE                                                          ;その他
+			PRINTFORML %CALLNAME:MASTER%はじっと見つめる%CALLNAME:TARGET%の視線に興奮しながら自分で慰めた…
+		ENDIF
+		RETURN 2
+	ELSEIF IS_COMGRONAME("平然と従う")
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:MASTER%は何でもない顔で自慰をして見せた…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME%の視線を気にしないようにして、
+				PRINTFORML 出来る限り普段通りの自慰をし始めた…
+			CASE "無理をした行動"
+				IF COMCOR_POSI()                  ;実はまんざらでもない
+					PRINTFORML %CALLNAME:MASTER%は感じているのをなるべく見せないように声や表情を我慢しつつ、
+					PRINTFORML 平常心を装って自慰を始めた…
+				ELSE                              ;実は嫌
+					PRINTFORML %CALLNAME%に目で犯されるような恥辱を必死に耐えながら、
+					PRINTFORML %CALLNAME:MASTER%は平然とした風で自慰をした…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+	ELSEIF IS_COMGRONAME("消極的従う")
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:MASTER%は羞恥を感じながらも、%CALLNAME%に逆らうことができず
+				PRINTFORML 仕方なく自慰を始めた…
+			CASE "無理のない行動"
+				PRINTFORML 羞恥に頬を染めながら自慰をする%CALLNAME:MASTER%を、%CALLNAME:TARGET%はじっと見つめている…
+			CASE "無理をした行動"
+				IF COMCOR_POSI()                  ;実は気持ちいい
+					PRINTFORML 恥ずかしさをこらえて仕方なさそうに自慰を始めた%CALLNAME:MASTER%だが、
+					PRINTFORML 自分の指で快楽を得てしまい、必死に表情を隠している…
+				ELSE                              ;実は嫌
+					PRINTFORML 自慰を見られる恥ずかしさに%CALLNAME:MASTER%は顔を真っ赤にしたが、
+					PRINTFORML %CALLNAME%が急かすと、しぶしぶ自慰を始めた…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+	ENDIF
+;リアクションが拒絶
+ELSE
+	IF PALAM:MASTER:恥情 > PALAM:MASTER:反抗      ;恥情先行
+		PRINTFORML %CALLNAME:MASTER%は恥ずかしくて%CALLNAME:TARGET%の命令通りに自慰できず、%CALLNAME:TARGET%は不満そうだ…
+	ELSE                                          ;反抗先行
+		PRINTFORML %CALLNAME:MASTER%は嫌がって%CALLNAME:TARGET%の要求に応じなかった。%CALLNAME:TARGET%は不満そうだ…
+	ENDIF
+	;拒絶扱いであるならばRESULTは1で良い気がするので変えてみる@/L
+	RETURN 1
+ENDIF
+
+;────────────────────────────────────
+;041,秘貝開帳
+;────────────────────────────────────
+;★リアクション前★
+@TRAIN_MESSAGE_41
+PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("つつ、")%%CALLNAME:MASTER%の縦筋を
+PRINTFORML 左右に広げて中までじっくり見ようとした…
+
+;☆リアクション後☆
+@TRAIN_MESSAGE2_41
+SELECTCASE COMGRONAME(TFLAG:REACT分類)
+	CASE "受け入れる"
+		PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%に大人しく従い、自ら陰唇を左右に開いた…
+	CASE "積極的従う", "平然と従う"
+		PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%が見やすいように腰を上げて自ら陰唇を左右に開いた…
+	CASE "許しを乞う"
+		PRINTFORML %CALLNAME:TARGET%は許しを乞う%CALLNAME:MASTER%に構わず、陰唇を開いて奥の奥まで観察した…
+	CASE "消極的従う"
+		PRINTFORML %CALLNAME:TARGET%は気の進まない様子の%CALLNAME:MASTER%に構わず、陰唇を開いて奥の奥まで観察した…
+ENDSELECT
+RETURN 2
+
+;────────────────────────────────────
+;042,自慰みせつけ
+;────────────────────────────────────
+;★リアクション前★
+@TRAIN_MESSAGE_42
+PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("ながら、")%%CALLNAME:MASTER%に
+PRINTFORML 見せ付けるように目の前で自慰を始めた…
+
+;☆リアクション後☆
+@TRAIN_MESSAGE2_42
+;COMが気持ち良くして/恥ずかしがる/自慰し始めるあたりに限定されるのでSELECTCOM分岐を設けてもいいのかも知れない
+;むしろ現状のREACT分類だと受け入れる/消極的従う以外は無駄になる場合が多いように思う
+SELECTCASE COMGRONAME(TFLAG:REACT分類)
+	CASE "受け入れる", "積極的従う"
+		PRINTFORML %CALLNAME:MASTER%は息を荒げながら%CALLNAME:TARGET%の痴態を凝視している…
+	CASE "平然と従う"
+		PRINTFORML %CALLNAME:MASTER%は黙って%CALLNAME%の自慰を観賞している…
+	CASE "許しを乞う"
+		PRINTFORML %CALLNAME:MASTER%は顔を背けて必死に欲情を抑えている…
+	CASE "消極的従う"
+		PRINTFORML %CALLNAME:MASTER%は顔を背けて必死に欲情を抑えている…
+ENDSELECT
+RETURN 2
+
+;────────────────────────────────────
+;043,羞恥プレイ
+;────────────────────────────────────
+@TRAIN_MESSAGE_43
+IF TFLAG:ACT派生 == 0         ;開始時
+	PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%を鏡の前に連れて来た…
+ELSE                          ;終了時
+	PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%を連れて鏡の前から離れた…
+ENDIF
+
+;────────────────────────────────────
+;044,野外プレイ
+;────────────────────────────────────
+@TRAIN_MESSAGE_44
+IF TFLAG:ACT派生 == 0         ;開始時
+	PRINTFORML %NAME:TARGET%は%CALLNAME:MASTER%に首輪をつけて外に連れ出した…
+ELSE                          ;終了時
+	PRINTFORML %NAME:TARGET%は%CALLNAME:MASTER%を連れて部屋に戻ってきた…
+ENDIF
+
+;────────────────────────────────────
+;045,放尿
+;────────────────────────────────────
+;★リアクション前★
+@TRAIN_MESSAGE_45
+PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("たまま、")%%CALLNAME:MASTER%に
+PRINTFORML その場で放尿しろと命令した…
+
+;☆リアクション後☆
+@TRAIN_MESSAGE2_45
+;リアクションが受容
+IF IS_COMGRONAME("消極的従う/平然と従う/積極的従う/受け入れる")
+	SELECTCASE COMGRONAME(TFLAG:REACT分類)
+		CASE "受け入れる"
+			PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%に言われるがまま、その場で放尿した…
+		CASE "消極的従う"
+			PRINTFORML %CALLNAME:MASTER%は仕方なく%CALLNAME:TARGET%の命令通りに放尿した…
+		CASEELSE
+			PRINTFORML %CALLNAME:MASTER%は恥ずかしげもなく放尿した…
+	ENDSELECT
+	RETURN 2
+;その他リアクションなら拒絶扱い
+ELSE
+	IF PALAM:MASTER:恥情 > PALAM:MASTER:反抗                ;恥情先行
+		PRINTFORML %CALLNAME:MASTER%は恥ずかしくて%CALLNAME:TARGET%の命令通りに放尿できなかった。%CALLNAME:TARGET%は不満そうだ…
+	ELSE                                                    ;反抗先行
+		PRINTFORML %CALLNAME:MASTER%は嫌がって%CALLNAME:TARGET%の要求に応じなかった。%CALLNAME:TARGET%は不満そうだ…
+	ENDIF
+	;拒絶扱いであるならばRESULTは1で良い気がするので変えてみる@/L
+	RETURN 1
+ENDIF
+
+;────────────────────────────────────
+;046,コスプレ
+;────────────────────────────────────
+;@TRAIN_MESSAGE_46
+;未実装です…すみません…(Str.csvより)

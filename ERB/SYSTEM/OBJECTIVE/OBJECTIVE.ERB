@@ -1,0 +1,246 @@
+﻿;==================================================
+;
+;調教目的処理
+;
+;==================================================
+;────────────────────────────────────
+;調教目的処理(管理)
+;ARGS 実行内容
+;────────────────────────────────────
+@OBJECTIVE(ARG, ARGS, ARGS:1 = "")
+;────────────────────────────────────
+;調教目的処理(調教対象/個別)
+;────────────────────────────────────
+[SKIPSTART]
+;脱走
+@OBJECTIVE_M_(ARGS)
+SELECTCASE ARGS
+	;目的解説文更新
+	CASE "CONF"
+		;調教目的
+		STR:調教目的 = 脱走
+		;目的解説文
+		STR:目的解説 = この状況から脱出するのが目的です
+		;目的詳細解説
+		STR:目的詳細 = 
+	;目的達成確認
+	CASE "ACHI"
+		;脱走成功
+		
+	;小目的指向処理
+	CASE "POIN"
+		;調教対象にはなし
+ENDSELECT
+;────────────────────────────────────
+;調教目的処理(調教者/個別)
+;────────────────────────────────────
+;調教者共通
+@OBJECTIVE_T_(ARGS)
+SELECTCASE ARGS
+	;目的解説文更新(ありません)
+	CASE "CONF"
+		;調教目的
+		STR:調教目的 = 
+		;目的解説文
+		STR:目的解説 = 
+		;目的詳細解説
+		STR:目的詳細 = 
+	;目的達成確認
+	CASE "ACHI"
+		;達成しません
+	;小目的指向処理
+	CASE "POIN"
+		;現状確認
+ENDSELECT
+
+;魔力収集
+@OBJECTIVE_T_MAG(ARGS)
+SELECTCASE ARGS
+	;目的解説文更新
+	CASE "CONF"
+		;調教目的
+		STR:調教目的 = 魔力収集
+		;目的解説文
+		STR:目的解説 = 魔力を効率良く集めるのが目的です
+		;目的詳細解説
+		STR:目的詳細 = 
+	;目的達成確認
+	CASE "ACHI"
+		;達成しません
+	;小目的指向処理
+	CASE "POIN"
+		
+ENDSELECT
+;────────────────────────────────────
+;調教目的処理(助手/個別)
+;────────────────────────────────────
+@OBJ_A
+[SKIPEND]
+
+;==================================================
+;
+;調教中目的処理
+;
+;==================================================
+[SKIPSTART]
+;体力・気力管理
+@OBJM_T_VIT(ARGS)
+#LOCALSIZE 1
+#DIMS 同一調教判定
+#DIM L体力
+#DIM L気力
+#DIM 体力消費速度
+#DIM 気力消費速度
+#DIM 信頼度
+#DIM ターン
+#DIM 予測体力消費速度
+#DIM 予測気力消費速度
+#DIM 予測信頼度
+#DIM 休憩
+;同一調教判定
+LOCALS = %SAME_TURN("調教")%
+;同一調教でなければ
+IF 同一調教判定 != LOCALS
+	;変数初期化
+	同一調教判定 = %LOCALS%
+	体力消費速度 = 0
+	気力消費速度 = 0
+	信頼度 = 0
+;休憩を挟んでいなければ
+ELSEIF (DATABASE_I_AM("休憩") - 休憩) == 0
+	;体力・気力消費量記録
+	IF L体力 != 0 && BASE:MASTER:体力 != 0
+		LOCAL = (L体力 - BASE:MASTER:体力) / (TFLAG:調教時間 - ターン)
+		体力消費速度 = 信頼度 == 0 ? LOCAL # (体力消費速度 + LOCAL) / 2
+	ENDIF
+	IF L気力 != 0 && BASE:MASTER:気力 != 0
+		LOCAL = (L気力 - BASE:MASTER:気力) / (TFLAG:調教時間 - ターン)
+		気力消費速度 = 信頼度 == 0 ? LOCAL # (気力消費速度 + LOCAL) / 2
+	ENDIF
+	信頼度 += TFLAG:調教時間 - ターン
+ENDIF
+L体力 = BASE:MASTER:体力
+L気力 = BASE:MASTER:気力
+ターン = TFLAG:調教時間
+休憩 = DATABASE_I_AM("休憩")
+
+NOSKIP
+PRINTVL 体力消費速度
+PRINTVL 気力消費速度
+PRINTVL L体力
+PRINTVL L気力
+ENDNOSKIP
+[SKIPEND]
+
+;==================================================
+;
+;調教小目的処理
+;
+;==================================================
+;調教者共通
+@OBJS_T(ARGS)
+;現状確認
+
+;魔力回収
+@OBJS_T_MAG(ARGS)
+
+;==================================================
+;
+;基幹判断処理
+;
+;==================================================
+@ESTIMATE_T(ARGS)
+
+[SKIPSTART]
+
+;初期化
+CALLF EST_TO_ACTM("初期化")
+CALLF EST_TO_ACT("初期化")
+
+;気力・体力回復判断
+CALL EST_T_REC_VIT()
+[SKIPEND]
+
+;────────────────────────────────────
+;調教継続判断
+;────────────────────────────────────
+@EST_T_TRA_END()
+
+;基幹処理呼び出し
+CALL ESTIMATE_T("TRA_END")
+
+LOCAL = 0
+
+;SANDBOX限定処理
+;体力が減少すると調教中断したがる
+SIF FLAG:モード == 1
+	LOCAL += LINE_CALC(BASE:MASTER:体力 * 100 / MAXBASE:MASTER:体力, "100→0,0→25,LIMIT/0～25")
+
+RETURN LOCAL
+
+
+;==================================================
+;
+;直接判断処理
+;
+;==================================================
+;気力・体力回復
+@EST_T_REC_VIT()
+;体力が1/5以下になったら
+IF BASE:MASTER:体力 < MAXBASE:MASTER:体力 / 5
+	;回復に向けて行動する
+	CALLF EST_TO_ACTM("加算", "休憩", 10)
+ENDIF
+
+;==================================================
+;
+;判断反映処理
+;
+;==================================================
+@EST_TO_ACTM(ARGS, ARGS:1, ARG)
+#FUNCTION
+#LOCALSIZE 20
+#DIM LTEMP
+[SKIPSTART]
+IF ARGS == "初期化"
+	VARSET LOCAL
+	RETURNF 0
+ENDIF
+LTEMP = GET_ACTNUM(ARGS:1)
+SIF LTEMP < 0
+	RETURNF 0
+IF ARGS == "加算"
+	LOCAL:GET_ACTNUM(ARGS:1) = ARG
+ELSEIF ARGS == "取得"
+	RETURNF LOCAL:GET_ACTNUM(ARGS:1)
+ENDIF
+[SKIPEND]
+
+@EST_TO_ACT(ARGS, ARGS:1, ARG)
+#FUNCTION
+#LOCALSIZE 200
+#DIM LTEMP
+[SKIPSTART]
+IF ARGS == "初期化"
+	VARSET LOCAL
+	RETURNF 0
+ENDIF
+LTEMP = MENUNUM(ARGS:1)
+SIF LTEMP < 0
+	RETURNF 0
+IF ARGS == "加算"
+	LOCAL:MENUNUM(ARGS:1) = ARG
+ELSEIF ARGS == "取得"
+	RETURNF LOCAL:MENUNUM(ARGS:1)
+ENDIF
+[SKIPEND]
+
+
+
+
+;────────────────────────────────────
+;調教目的文字列変数処理
+;────────────────────────────────────
+@OBJECTIVE_V(ARG, ARGS)
+
+

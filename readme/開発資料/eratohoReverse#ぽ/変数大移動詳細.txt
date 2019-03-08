@@ -1,0 +1,137 @@
+﻿
+R#には歴史的経緯により不自然な変数に格納されている数値が多数存在します。
+今後の更新内容を考えると、今のうちに自然な実装に変更しておきたいと思ったので
+格納位置を大規模に変更しました。
+その全てに関して下に記しておきましたのでご参照ください。
+
+また、同梱口上については既にこの変更に対応しましたので参考にしてください。
+この対応作業によって新たに生じたバグについては『これみ』が修正を担当します。
+
+変数移動一覧（左：移動前　右：移動後）
+
+PALAM:0,快Ｃ	→	PALAM:MASTER:0,快Ｃ
+PALAM:1,快Ｖ	→	PALAM:MASTER:1,快Ｖ
+PALAM:2,快Ａ	→	PALAM:MASTER:2,快Ａ
+PALAM:3,快Ｂ	→	PALAM:MASTER:3,快Ｂ
+PALAM:4,潤滑	→	PALAM:MASTER:4,潤滑
+PALAM:5,欲情	→	PALAM:MASTER:5,欲情
+PALAM:6,屈服	→	PALAM:MASTER:6,屈服
+PALAM:7,恐怖	→	PALAM:MASTER:7,恐怖
+PALAM:8,恭順	→	PALAM:MASTER:8,恭順
+PALAM:9,反抗	→	PALAM:MASTER:9,反抗
+PALAM:10,苦痛	→	PALAM:MASTER:10,苦痛
+PALAM:11,恥情	→	PALAM:MASTER:11,恥情
+PALAM:12,不快	→	PALAM:MASTER:12,不快
+PALAM:13,抑鬱	→	PALAM:MASTER:13,抑鬱
+PALAM:40,快ｃ	→	PALAM:0,快Ｃ
+PALAM:41,快ｖ	→	PALAM:1,快Ｖ
+PALAM:42,快ａ	→	PALAM:2,快Ａ
+PALAM:43,快ｂ	→	PALAM:3,快Ｂ
+
+UP:0,快Ｃ	→	CUP:MASTER:0,快Ｃ
+UP:1,快Ｖ	→	CUP:MASTER:1,快Ｖ
+UP:2,快Ａ	→	CUP:MASTER:2,快Ａ
+UP:3,快Ｂ	→	CUP:MASTER:3,快Ｂ
+UP:4,潤滑	→	CUP:MASTER:4,潤滑
+UP:5,欲情	→	CUP:MASTER:5,欲情
+UP:6,屈服	→	CUP:MASTER:6,屈服
+UP:7,恐怖	→	CUP:MASTER:7,恐怖
+UP:8,恭順	→	CUP:MASTER:8,恭順
+UP:9,反抗	→	CUP:MASTER:9,反抗
+UP:10,苦痛	→	CUP:MASTER:10,苦痛
+UP:11,恥情	→	CUP:MASTER:11,恥情
+UP:12,不快	→	CUP:MASTER:12,不快
+UP:13,抑鬱	→	CUP:MASTER:13,抑鬱
+UP:40,快ｃ	→	CUP:0,快Ｃ
+UP:41,快ｖ	→	CUP:1,快Ｖ
+UP:42,快ａ	→	CUP:2,快Ａ
+UP:43,快ｂ	→	CUP:3,快Ｂ
+
+DOWN:0,快Ｃ	→	CDOWN:MASTER:0,快Ｃ
+DOWN:1,快Ｖ	→	CDOWN:MASTER:1,快Ｖ
+DOWN:2,快Ａ	→	CDOWN:MASTER:2,快Ａ
+DOWN:3,快Ｂ	→	CDOWN:MASTER:3,快Ｂ
+DOWN:4,潤滑	→	CDOWN:MASTER:4,潤滑
+DOWN:5,欲情	→	CDOWN:MASTER:5,欲情
+DOWN:6,屈服	→	CDOWN:MASTER:6,屈服
+DOWN:7,恐怖	→	CDOWN:MASTER:7,恐怖
+DOWN:8,恭順	→	CDOWN:MASTER:8,恭順
+DOWN:9,反抗	→	CDOWN:MASTER:9,反抗
+DOWN:10,苦痛	→	CDOWN:MASTER:10,苦痛
+DOWN:11,恥情	→	CDOWN:MASTER:11,恥情
+DOWN:12,不快	→	CDOWN:MASTER:12,不快
+DOWN:13,抑鬱	→	CDOWN:MASTER:13,抑鬱
+DOWN:40,快ｃ	→	CDOWN:0,快Ｃ
+DOWN:41,快ｖ	→	CDOWN:1,快Ｖ
+DOWN:42,快ａ	→	CDOWN:2,快Ａ
+DOWN:43,快ｂ	→	CDOWN:3,快Ｂ
+
+DOWNBASE:90,M体力	→	DOWNBASE:MASTER:0,体力
+DOWNBASE:91,M気力	→	DOWNBASE:MASTER:1,気力
+DOWNBASE:92,M射精	→	DOWNBASE:MASTER:2,射精
+DOWNBASE:93,M母乳	→	DOWNBASE:MASTER:3,母乳
+DOWNBASE:94,M尿意	→	DOWNBASE:MASTER:4,尿意
+DOWNBASE:95,M理性	→	DOWNBASE:MASTER:5,理性
+
+EX:0,Ｃ絶頂	→	EX:MASTER:0,Ｃ絶頂
+EX:1,Ｖ絶頂	→	EX:MASTER:1,Ｖ絶頂
+EX:2,Ａ絶頂	→	EX:MASTER:2,Ａ絶頂
+EX:3,Ｂ絶頂	→	EX:MASTER:3,Ｂ絶頂
+EX:10,噴乳	→	EX:MASTER:10,噴乳
+EX:11,射精	→	EX:MASTER:11,射精
+EX:12,放尿	→	EX:MASTER:12,放尿
+EX:13,潮吹き	→	EX:MASTER:13,潮吹き
+EX:40,ｃ絶頂	→	EX:0,Ｃ絶頂
+EX:41,ｖ絶頂	→	EX:1,Ｖ絶頂
+EX:42,ａ絶頂	→	EX:2,Ａ絶頂
+EX:43,ｂ絶頂	→	EX:3,Ｂ絶頂
+EX:50,調教者噴乳	→	EX:10,噴乳
+EX:51,調教者射精	→	EX:11,射精
+
+NOWEX:0,Ｃ絶頂	→	NOWEX:MASTER:0,Ｃ絶頂
+NOWEX:1,Ｖ絶頂	→	NOWEX:MASTER:1,Ｖ絶頂
+NOWEX:2,Ａ絶頂	→	NOWEX:MASTER:2,Ａ絶頂
+NOWEX:3,Ｂ絶頂	→	NOWEX:MASTER:3,Ｂ絶頂
+NOWEX:10,噴乳	→	NOWEX:MASTER:10,噴乳
+NOWEX:11,射精	→	NOWEX:MASTER:11,射精
+NOWEX:12,放尿	→	NOWEX:MASTER:12,放尿
+NOWEX:13,潮吹き	→	NOWEX:MASTER:13,潮吹き
+NOWEX:40,ｃ絶頂	→	NOWEX:0,Ｃ絶頂
+NOWEX:41,ｖ絶頂	→	NOWEX:1,Ｖ絶頂
+NOWEX:42,ａ絶頂	→	NOWEX:2,Ａ絶頂
+NOWEX:43,ｂ絶頂	→	NOWEX:3,Ｂ絶頂
+NOWEX:50,調教者噴乳	→	NOWEX:10,噴乳
+NOWEX:51,調教者射精	→	NOWEX:11,射精
+
+SOURCE:0,快Ｃ	→	SOURCE:MASTER:0,快Ｃ
+SOURCE:1,快Ｖ	→	SOURCE:MASTER:1,快Ｖ
+SOURCE:2,快Ａ	→	SOURCE:MASTER:2,快Ａ
+SOURCE:3,快Ｂ	→	SOURCE:MASTER:3,快Ｂ
+SOURCE:10,接触	→	SOURCE:MASTER:10,接触
+SOURCE:11,情愛	→	SOURCE:MASTER:11,情愛
+SOURCE:12,性行動	→	SOURCE:MASTER:12,性行動
+SOURCE:13,痛み	→	SOURCE:MASTER:13,痛み
+SOURCE:14,拘束	→	SOURCE:MASTER:14,拘束
+SOURCE:20,露出	→	SOURCE:MASTER:20,露出
+SOURCE:21,不潔	→	SOURCE:MASTER:21,不潔
+SOURCE:22,逸脱	→	SOURCE:MASTER:22,逸脱
+SOURCE:23,中毒充足	→	SOURCE:MASTER:23,中毒充足
+SOURCE:24,トラウマ	→	SOURCE:MASTER:24,トラウマ
+SOURCE:30,屈従	→	SOURCE:MASTER:30,屈従
+SOURCE:31,達成	→	SOURCE:MASTER:31,達成
+SOURCE:32,悦楽	→	SOURCE:MASTER:32,悦楽
+SOURCE:33,反抗	→	SOURCE:MASTER:33,反抗
+SOURCE:34,恐怖	→	SOURCE:MASTER:34,恐怖
+SOURCE:40,快ｃ	→	SOURCE:0,快Ｃ
+SOURCE:41,快ｖ	→	SOURCE:1,快Ｖ
+SOURCE:42,快ａ	→	SOURCE:2,快Ａ
+SOURCE:43,快ｂ	→	SOURCE:3,快Ｂ
+
+CFLAG:79,コスプレ	→	EQUIP:9,コスプレ
+CFLAG:80,特殊	→	EQUIP:0,アクセサリ
+CFLAG:81,靴下	→	EQUIP:1,靴下
+CFLAG:82,下半身下着	→	EQUIP:2,下半身下着
+CFLAG:83,上半身下着	→	EQUIP:3,上半身下着
+CFLAG:84,下半身上着	→	EQUIP:4,下半身上着
+CFLAG:85,上半身上着	→	EQUIP:5,上半身上着
+CFLAG:86,全身上着	→	EQUIP:6,全身上着

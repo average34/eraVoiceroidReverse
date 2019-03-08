@@ -1,0 +1,350 @@
+﻿
+;────────────────────────────────────
+;道具生成処理
+;※ARGは要求偏差(0を基準に大きいほどこの種別で魔力を消費したがる)
+;────────────────────────────────────
+@MAKE_TOOLS()
+#LOCALSSIZE 50
+#DIM LCOUNT
+#DIM 可用魔力
+
+;この価格を上回る道具が存在すると破綻する
+LOCAL = 1000000
+FOR LCOUNT, 0, 50
+	SIF ITEMNAME:LCOUNT != "" && ITEM:LCOUNT == 0
+		LOCAL = MIN(LOCAL, ITEMPRICE:LCOUNT)
+NEXT
+;使用可能魔力判定
+可用魔力 = MAKE_TOOLS_MP_ABLE()
+
+SIF FLAG:デバッグ
+	PRINTFORML 『道具生成処理』(可用魔力：{可用魔力})
+
+;買えないか、買える道具がもう無いなら帰る
+IF 可用魔力 < LOCAL || LOCAL == 1000000
+	IF FLAG:デバッグ
+		IF LOCAL == 1000000
+			PRINTFORMW 購入可能な道具が存在しません！
+		ELSE
+			PRINTFORMW 可用魔力が不足しています(あと{LOCAL - 可用魔力})
+		ENDIF
+	ENDIF
+	RETURN RESULT
+ENDIF
+
+;変数を初期化
+CALL SET_CRI_VAR
+SPLIT "ローター/バイブ/Ａビーズ/Ｐバンド//////カスタム//Ａバイブ/Ｃキャプ/Ｂキャプ/Ｐホール//////Ｅマスク/鞭/縄////////ギャグ/針/浣腸/三角木馬///////大鏡//首輪", "/", LOCALS
+FOR LCOUNT, 0, 50
+	IF ITEMNAME:LCOUNT != "" && ITEM:LCOUNT == 0
+		CALL SET_CRI_VAR, ITEMNAME:LCOUNT, 1
+		CALL SET_CRI_VAR, LOCALS:LCOUNT, 1, 1
+	ENDIF
+NEXT
+
+;------------------------------------------
+;補正処理
+;------------------------------------------
+
+LOCALS = MAKE_TOOLS
+
+CALL CHA_CRI_VAR, "調教対象が処女"
+CALLFORM %LOCALS%_MAIDEN_M
+
+CALL CHA_CRI_VAR, "危険な道具"
+CALLFORM %LOCALS%_RISK
+
+CALL CHA_CRI_VAR, "責め具"
+CALLFORM %LOCALS%_TORMENT
+
+CALL CHA_CRI_VAR, "調教対象のＣ感覚"
+CALLFORM %LOCALS%_C_M
+
+CALL CHA_CRI_VAR, "調教対象のＶ感覚"
+CALLFORM %LOCALS%_V_M
+
+CALL CHA_CRI_VAR, "調教対象のＡ感覚"
+CALLFORM %LOCALS%_A_M
+
+CALL CHA_CRI_VAR, "調教対象のＢ感覚"
+CALLFORM %LOCALS%_B_M
+
+CALL CHA_CRI_VAR, "積極性"
+CALLFORM %LOCALS%_POSITIVELY_T
+
+CALL CHA_CRI_VAR, "サドマゾ"
+CALLFORM %LOCALS%_SM
+
+CALL CHA_CRI_VAR, "道具単体判定"
+CALLFORM %LOCALS%_TOOL
+
+CALL CHA_CRI_VAR, "調教者の狂気"
+CALLFORM %LOCALS%_INSANE
+
+CALL CHA_CRI_VAR, "価格による補正"
+CALLFORM %LOCALS%_PRICE
+
+CALL CHA_CRI_VAR, "実行判定"
+CALLFORM %LOCALS%_ABLE
+
+;------------------------------------------
+;生成判定
+;------------------------------------------
+
+LOCAL:2 = 0
+
+$MAKE_TOOLS
+
+;購入状況による判定(既に所持、魔力不足)
+;判定処理
+FOR LCOUNT, 0, 50
+	IF ITEMNAME:LCOUNT == "" || ITEM:LCOUNT > 0
+		CALL DIM_CRI_VAR(ITEMNAME:LCOUNT, -999)
+		CONTINUE
+	ENDIF
+	LOCAL = GET_CRI_VAR(ITEMNAME:LCOUNT + "累計")
+	IF LOCAL < 0
+		LOCAL = ITEMPRICE:LCOUNT * (10 + ABS(LOCAL)) / 10
+	ELSE
+		LOCAL = ITEMPRICE:LCOUNT * 10 / (10 + ABS(LOCAL))
+	ENDIF
+	SIF LOCAL > 可用魔力
+		CALL DIM_CRI_VAR(ITEMNAME:LCOUNT, -999)
+NEXT
+
+CALL DEF_CRI_VAR("最大前者")
+LOCAL = GET_CRI_VAR("決定")
+LOCALS = %RESULTS%
+CALL ANA_CRI_VAR()
+IF LOCAL != -1 && ITEMPRICE:LOCALS <= CFLAG:魔力
+	LOCAL = CFLAG:魔力
+	CFLAG:魔力 -= ITEMPRICE:LOCALS
+	可用魔力 -= ITEMPRICE:LOCALS
+	ITEM:LOCALS = 1
+	;錬成時口上呼び出し
+	;CALL KOJO_EVENT(110, XX)
+	;CALL VOIDLINE_IF(RESULT)
+	SKIPDISP 0
+	PRINTFORML %CALLNAME%は%LOCALS%を錬成しました
+	PRINTFORMW 魔力({LOCAL} → {CFLAG:魔力})
+	IF FLAG:オートモード > 0 && FLAG:オートモード表示設定 == 1
+		SKIPDISP 1
+	ENDIF
+	LOCAL:2++
+	SIF FLAG:デバッグ
+		PRINTFORML (可用魔力：{可用魔力})
+	GOTO MAKE_TOOLS
+ENDIF
+
+SIF FLAG:デバッグ
+	PRINTW 
+
+RETURN RESULT
+
+;------------------------------------------
+;調教対象が処女
+;------------------------------------------
+@MAKE_TOOLS_MAIDEN_M
+
+IF TALENT:MASTER:処女
+	;素質によって作用の方向を決定
+	LOCAL = TALENT:意地悪 - TALENT:心根優しい - TALENT:臆病 + TALENT:MASTER:貞操無頓着 - TALENT:MASTER:貞操観念
+	;素質によって作用の強度を決定
+	LOCAL = LOCAL * POWER(2, -TALENT:幼稚 + 12) / 1024
+	CALL ADD_CRI_VAR("バイブ"        , LOCAL)
+	CALL ADD_CRI_VAR("ペニスバンド"  , LOCAL)
+ENDIF
+
+;------------------------------------------
+;危険な道具
+;------------------------------------------
+@MAKE_TOOLS_RISK
+;LOCALにはリスクを代入
+LOCAL = 1 + TALENT:MASTER:妊娠
+;素質によって作用の方向を決定
+LOCAL = LOCAL * (TALENT:短気 - TALENT:慎重 - TALENT:臆病 - TALENT:大人しい + TALENT:衝動的 - TALENT:自制的)
+;素質によって作用の強度を決定
+LOCAL = LOCAL * POWER(2, TALENT:MASTER:痛みに弱い - TALENT:MASTER:痛みに強い + 12) / 1024
+CALL ADD_CRI_VAR("ローター"      , LOCAL)
+CALL ADD_CRI_VAR("バイブ"        , LOCAL * 2)
+CALL ADD_CRI_VAR("アナルビーズ"  , LOCAL * 3)
+CALL ADD_CRI_VAR("ペニスバンド"  , LOCAL * 3)
+CALL ADD_CRI_VAR("アナルバイブ"  , LOCAL * 2)
+CALL ADD_CRI_VAR("クリキャップ"  , LOCAL)
+CALL ADD_CRI_VAR("ニプルキャップ", LOCAL)
+CALL ADD_CRI_VAR("オナホール"    , LOCAL)
+CALL ADD_CRI_VAR("アイマスク"    , LOCAL)
+CALL ADD_CRI_VAR("鞭"            , LOCAL * 4)
+CALL ADD_CRI_VAR("縄"            , LOCAL * 3)
+CALL ADD_CRI_VAR("ボールギャグ"  , LOCAL)
+CALL ADD_CRI_VAR("針"            , LOCAL * 5)
+CALL ADD_CRI_VAR("浣腸セット"    , LOCAL * 3)
+CALL ADD_CRI_VAR("三角木馬"      , LOCAL * 8)
+CALL ADD_CRI_VAR("大鏡"          , LOCAL)
+CALL ADD_CRI_VAR("首輪"          , LOCAL)
+
+;------------------------------------------
+;責め具
+;------------------------------------------
+@MAKE_TOOLS_TORMENT
+;素質によって作用の方向を決定
+LOCAL = TALENT:MASTER:倒錯的 + TALENT:MASTER:隷属 + TALENT:サド
+;素質によって作用の強度を決定
+LOCAL = LOCAL * POWER(2, TALENT:MASTER:痛みに弱い - TALENT:MASTER:痛みに強い + TALENT:MASTER:恋慕 + 12) / 1024
+CALL ADD_CRI_VAR("アイマスク"    , LOCAL)
+CALL ADD_CRI_VAR("鞭"            , LOCAL * 3)
+CALL ADD_CRI_VAR("縄"            , LOCAL * 3)
+CALL ADD_CRI_VAR("ボールギャグ"  , LOCAL * 2)
+CALL ADD_CRI_VAR("針"            , LOCAL * 5)
+CALL ADD_CRI_VAR("浣腸セット"    , LOCAL * 4)
+CALL ADD_CRI_VAR("三角木馬"      , LOCAL * 8)
+CALL ADD_CRI_VAR("大鏡"          , LOCAL)
+CALL ADD_CRI_VAR("首輪"          , LOCAL * 2)
+
+;------------------------------------------
+;調教対象のＣ感覚
+;------------------------------------------
+@MAKE_TOOLS_C_M
+;素質によって作用の方向を決定
+LOCAL = TALENT:MASTER:Ｃ敏感 - TALENT:MASTER:Ｃ鈍感 + TALENT:MASTER:淫核／淫茎
+;素質によって作用の強度を決定
+LOCAL = LOCAL * POWER(2, TALENT:素直 + 12) / 1024
+CALL ADD_CRI_VAR("ローター"      , LOCAL)
+CALL ADD_CRI_VAR("クリキャップ"  , LOCAL)
+CALL ADD_CRI_VAR("オナホール"    , LOCAL)
+
+;------------------------------------------
+;調教対象のＶ感覚
+;------------------------------------------
+@MAKE_TOOLS_V_M
+;素質によって作用の方向を決定
+LOCAL = TALENT:MASTER:Ｖ敏感 - TALENT:MASTER:Ｖ鈍感 + TALENT:MASTER:淫壷 + TALENT:MASTER:濡れやすい - TALENT:MASTER:濡れにくい
+;素質によって作用の強度を決定
+LOCAL = LOCAL * POWER(2, TALENT:素直 + 12) / 1024
+CALL ADD_CRI_VAR("バイブ"        , LOCAL)
+CALL ADD_CRI_VAR("ペニスバンド"  , LOCAL)
+
+;------------------------------------------
+;調教対象のＡ感覚
+;------------------------------------------
+@MAKE_TOOLS_A_M
+;素質によって作用の方向を決定
+LOCAL = TALENT:MASTER:Ａ敏感 - TALENT:MASTER:Ａ鈍感 + TALENT:MASTER:淫尻
+;素質によって作用の強度を決定
+LOCAL = LOCAL * POWER(2, TALENT:素直 + 12) / 1024
+CALL ADD_CRI_VAR("アナルビーズ"  , LOCAL)
+CALL ADD_CRI_VAR("ペニスバンド"  , LOCAL)
+CALL ADD_CRI_VAR("アナルバイブ"  , LOCAL)
+CALL ADD_CRI_VAR("浣腸セット"    , LOCAL)
+
+;------------------------------------------
+;調教対象のＢ感覚
+;------------------------------------------
+@MAKE_TOOLS_B_M
+;素質によって作用の方向を決定
+LOCAL = TALENT:MASTER:Ｂ敏感 - TALENT:MASTER:Ｂ鈍感 + TALENT:MASTER:淫乳
+;素質によって作用の強度を決定
+LOCAL = LOCAL * POWER(2, TALENT:素直 + 12) / 1024
+CALL ADD_CRI_VAR("ニプルキャップ", LOCAL)
+
+;------------------------------------------
+;積極性
+;------------------------------------------
+@MAKE_TOOLS_POSITIVELY_T
+;素質によって作用の方向を決定
+LOCAL = TALENT:献身的 - TALENT:受け身
+;作用の強度を決定
+LOCAL = LOCAL * POWER(2, 0)
+CALL ADD_CRI_VAR("ローター"      , LOCAL * 2)
+CALL ADD_CRI_VAR("バイブ"        , LOCAL * 2)
+CALL ADD_CRI_VAR("アナルビーズ"  , LOCAL * 2)
+CALL ADD_CRI_VAR("ペニスバンド"  , LOCAL * 4)
+CALL ADD_CRI_VAR("アナルバイブ"  , LOCAL * 2)
+CALL ADD_CRI_VAR("クリキャップ"  , LOCAL)
+CALL ADD_CRI_VAR("ニプルキャップ", LOCAL)
+CALL ADD_CRI_VAR("オナホール"    , LOCAL)
+CALL ADD_CRI_VAR("アイマスク"    , LOCAL)
+CALL ADD_CRI_VAR("鞭"            , LOCAL * 2)
+CALL ADD_CRI_VAR("縄"            , LOCAL * 3)
+CALL ADD_CRI_VAR("ボールギャグ"  , LOCAL)
+CALL ADD_CRI_VAR("針"            , LOCAL * 3)
+CALL ADD_CRI_VAR("浣腸セット"    , LOCAL * 2)
+CALL ADD_CRI_VAR("三角木馬"      , LOCAL * 3)
+CALL ADD_CRI_VAR("大鏡"          , LOCAL)
+CALL ADD_CRI_VAR("首輪"          , LOCAL)
+
+;------------------------------------------
+;サドマゾ
+;------------------------------------------
+@MAKE_TOOLS_SM
+;素質によって作用の方向を決定
+LOCAL = TALENT:サド
+;素質によって作用の強度を決定
+LOCAL = LOCAL * POWER(2, TALENT:MASTER:痛みに弱い - TALENT:MASTER:痛みに強い + TALENT:MASTER:恋慕 + 12) / 1024
+CALL ADD_CRI_VAR("鞭"            , LOCAL * 2)
+CALL ADD_CRI_VAR("縄"            , LOCAL * 3)
+CALL ADD_CRI_VAR("ボールギャグ"  , LOCAL)
+CALL ADD_CRI_VAR("針"            , LOCAL * 3)
+CALL ADD_CRI_VAR("浣腸セット"    , LOCAL * 2)
+CALL ADD_CRI_VAR("三角木馬"      , LOCAL * 3)
+
+;------------------------------------------
+;道具単体判定
+;------------------------------------------
+@MAKE_TOOLS_TOOL
+CALL ADD_CRI_VAR("ペニスバンド"  , TALENT:好色 * 4)
+CALL ADD_CRI_VAR("縄"            , TALENT:縛り上手 * 4)
+CALL ADD_CRI_VAR("針"            , TALENT:針さばき * 4)
+CALL ADD_CRI_VAR("首輪"          , TALENT:目立ちたがり * 4)
+
+;------------------------------------------
+;調教者の狂気
+;------------------------------------------
+@MAKE_TOOLS_INSANE
+#DIM LCOUNT
+IF TALENT:狂気
+	FOR LCOUNT, 0, 50
+		IF ITEMNAME:LCOUNT != ""
+			CALL MUL_CRI_VAR(ITEMNAME:LCOUNT, -50, 100)
+		ENDIF
+	NEXT
+ENDIF
+
+;------------------------------------------
+;価格による補正
+;------------------------------------------
+@MAKE_TOOLS_PRICE
+#DIM LCOUNT
+FOR LCOUNT, 0, 50
+	IF ITEMNAME:LCOUNT != ""
+		LOCAL = GET_CRI_VAR(ITEMNAME:LCOUNT + "累計")
+		IF LOCAL > 0
+			CALL MUL_CRI_VAR(ITEMNAME:LCOUNT, 100 * POWER(2, 10 + TALENT:衝動的 - TALENT:自制的 + TALENT:目立ちたがり) / ITEMPRICE:LCOUNT)
+		ELSEIF LOCAL < 0
+			CALL MUL_CRI_VAR(ITEMNAME:LCOUNT, 100 * ITEMPRICE:LCOUNT / POWER(2, 10 + TALENT:衝動的 - TALENT:自制的 + TALENT:目立ちたがり))
+		ENDIF
+	ENDIF
+NEXT
+
+;------------------------------------------
+;実行判定
+;------------------------------------------
+@MAKE_TOOLS_ABLE
+;調教者にペニスが有ればペニスバンドは不要
+SIF PENIS(TARGET)
+	CALL DIM_CRI_VAR("ペニスバンド"  , -999)
+;調教対象にペニスが無ければオナホは不要
+SIF !PENIS(MASTER)
+	CALL DIM_CRI_VAR("オナホール"    , -999)
+;カスタム道具は未対応
+CALL DIM_CRI_VAR("カスタム道具"  , -999)
+
+;------------------------------------------
+;使用可能魔力判定
+;------------------------------------------
+@MAKE_TOOLS_MP_ABLE()
+#FUNCTION
+;魔力不足基準設定
+RETURNF LIMIT(CFLAG:魔力 * (8 + MANAGE_MP_PROP() + TALENT:道具使い) * 10 / 100, 0, CFLAG:魔力)
+
+

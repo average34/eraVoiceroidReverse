@@ -1,0 +1,110 @@
+﻿;キャラ名＠作者
+@CHARAMAKE_K番号(ARG)
+PRINTFORMW 
+PRINTL 
+CALL CHARA_CUTIN(CSTR:10, CSTR:11, CSTR:12)
+PRINTL 
+PRINTFORML 
+PRINTFORMW 
+PRINTL 
+PRINTFORMDL [0] 答えない
+PRINTFORMDL [1] 
+PRINTFORMDL [2] 
+PRINTFORMDL [3] 
+PRINTFORMDL [4] 
+CALL INPUTINT(0, 1, 2, 3, 4)
+SELECTCASE RESULT
+	CASE 0
+		PRINTFORML 
+		;無回答の補正値は固定
+		CALLF CM_PROF("衝動", -10)
+		CALLF CM_PROF("好奇心", -10)
+		CALLF CM_PROF("羞恥", 10)
+		CALLF CM_PROF("神経質", 10)
+	CASE 1
+		PRINTFORML 
+		;補正値一覧
+		;-30～+30程度で自由に設定
+		;いらないのは消す
+		CALLF CM_PROF("攻撃",     )
+		CALLF CM_PROF("被虐",     )
+		CALLF CM_PROF("素直さ",   )
+		CALLF CM_PROF("プライド", )
+		CALLF CM_PROF("衝動",     )
+		CALLF CM_PROF("好奇心",   )
+		CALLF CM_PROF("羞恥",     )
+		CALLF CM_PROF("楽観",     )
+		CALLF CM_PROF("知性",     )
+		CALLF CM_PROF("倒錯",     )
+		CALLF CM_PROF("同性愛",   )
+		CALLF CM_PROF("潔癖",     )
+		CALLF CM_PROF("モラル",   )
+		CALLF CM_PROF("神経質",   )
+		CALLF CM_PROF("Ｃ好き",   )
+		CALLF CM_PROF("Ｖ好き",   )
+		CALLF CM_PROF("Ｂ好き",   )
+		CALLF CM_PROF("Ａ好き",   )
+	CASE 2
+		PRINTFORML 
+		CALLF CM_PROF("攻撃",     )
+		CALLF CM_PROF("被虐",     )
+		CALLF CM_PROF("素直さ",   )
+		CALLF CM_PROF("プライド", )
+		CALLF CM_PROF("衝動",     )
+		CALLF CM_PROF("好奇心",   )
+		CALLF CM_PROF("羞恥",     )
+		CALLF CM_PROF("楽観",     )
+		CALLF CM_PROF("知性",     )
+		CALLF CM_PROF("倒錯",     )
+		CALLF CM_PROF("同性愛",   )
+		CALLF CM_PROF("潔癖",     )
+		CALLF CM_PROF("モラル",   )
+		CALLF CM_PROF("神経質",   )
+		CALLF CM_PROF("Ｃ好き",   )
+		CALLF CM_PROF("Ｖ好き",   )
+		CALLF CM_PROF("Ｂ好き",   )
+		CALLF CM_PROF("Ａ好き",   )
+	CASE 3
+		PRINTFORML 
+		CALLF CM_PROF("攻撃",     )
+		CALLF CM_PROF("被虐",     )
+		CALLF CM_PROF("素直さ",   )
+		CALLF CM_PROF("プライド", )
+		CALLF CM_PROF("衝動",     )
+		CALLF CM_PROF("好奇心",   )
+		CALLF CM_PROF("羞恥",     )
+		CALLF CM_PROF("楽観",     )
+		CALLF CM_PROF("知性",     )
+		CALLF CM_PROF("倒錯",     )
+		CALLF CM_PROF("同性愛",   )
+		CALLF CM_PROF("潔癖",     )
+		CALLF CM_PROF("モラル",   )
+		CALLF CM_PROF("神経質",   )
+		CALLF CM_PROF("Ｃ好き",   )
+		CALLF CM_PROF("Ｖ好き",   )
+		CALLF CM_PROF("Ｂ好き",   )
+		CALLF CM_PROF("Ａ好き",   )
+	CASE 4
+		PRINTFORML 
+		CALLF CM_PROF("攻撃", )
+		CALLF CM_PROF("被虐", )
+		CALLF CM_PROF("素直さ", )
+		CALLF CM_PROF("プライド", )
+		CALLF CM_PROF("衝動", )
+		CALLF CM_PROF("好奇心", )
+		CALLF CM_PROF("羞恥", )
+		CALLF CM_PROF("楽観", )
+		CALLF CM_PROF("知性", )
+		CALLF CM_PROF("倒錯", )
+		CALLF CM_PROF("同性愛", )
+		CALLF CM_PROF("潔癖", )
+		CALLF CM_PROF("モラル", )
+		CALLF CM_PROF("神経質", )
+		CALLF CM_PROF("Ｃ好き", )
+		CALLF CM_PROF("Ｖ好き", )
+		CALLF CM_PROF("Ｂ好き", )
+		CALLF CM_PROF("Ａ好き", )
+ENDSELECT
+PRINTFORMW 
+RETURN 1
+

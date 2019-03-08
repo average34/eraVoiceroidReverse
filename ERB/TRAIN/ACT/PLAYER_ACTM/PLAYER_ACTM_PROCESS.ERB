@@ -1,0 +1,254 @@
+﻿
+;────────────────────────────────────
+;関数初期化
+;────────────────────────────────────
+@ACT_M_INIT(ARG)
+#DIM LCOUNT
+;変数を初期化
+CALL SET_CRI_VAR
+FOR LCOUNT, 0, ACTM_NUM(ARG, -1)
+	LOCAL = ACTM_NUM(ARG, LCOUNT)
+	CALL SET_CRI_VAR, GET_ACTNAME(LOCAL), 1
+	CALL SET_CRI_VAR, GET_ACTABBNAME(LOCAL), 1, 1
+NEXT
+
+;────────────────────────────────────
+;補正値計算
+;────────────────────────────────────
+;補正値加算に関しては系列内でも共有の物を加算したりしなかったりがあるので
+;共通処理にはしない。その気になれば出来るだろって？
+;面倒なんだよ。言わせんな恥ずかしい@これみ
+@ACT_ACTM_CORRECTION(ARG)
+#DIM LCOUNT
+;補正値を判定値に加算する
+FOR LCOUNT, 0, ACTM_NUM(ARG, -1)
+	LOCAL = ACTM_NUM(ARG, LCOUNT)
+	CALL ACT_M_RES_FETCH(LOCAL)
+	CALL ADD_CRI_VAR(GET_ACTNAME(LOCAL), RESULT)
+NEXT
+
+;────────────────────────────────────
+;口上ACT分類補正値加算
+;────────────────────────────────────
+@ACT_MENU_KOJO_CORRECTION_T
+#DIM LCOUNT
+;補正値を判定値に加算する
+FOR LCOUNT, 0, STRCOUNT(MENULIST(), "/")
+	CALL ADD_CRI_VAR(MENU(LCOUNT), 0, GET_KOJO_MENU_CORRECTION(MENU(LCOUNT), TARGET))
+NEXT
+;────────────────────────────────────
+;口上補正値取得
+;_コマンド番号/補正値_
+;ARGS		メニュー名・あるいはメニュー番号
+;ARG		対象のキャラクター
+;────────────────────────────────────
+@GET_KOJO_MENU_CORRECTION(ARGS, ARG = -1)
+#FUNCTION
+#DIM LCOUNT
+#LOCALSSIZE 200
+SIF ARG == -1
+	ARG = TARGET
+SIF ISNUMERIC(ARGS)
+	ARGS = %MENU(TOINT(ARGS))%
+IF STRFIND(CSTR:ARG:口上ACT分類補正値, "_" + ARGS + "/") >= 0
+	SPLIT CSTR:ARG:口上ACT分類補正値, "_", LOCALS
+	RETURNF TOINT(AUTO_SPLIT(LOCALS:FINDELEMENT(LOCALS, ARGS + "/",  , , 0), "/", 1))
+ENDIF
+RETURNF 0
+
+
+;────────────────────────────────────
+;口上補正値消去関数
+;ARG	対象のキャラ　省略した場合はTARGETになります
+;────────────────────────────────────
+@CLEAR_KOJO_MENU_CORRECTION, ARGS, ARG = -1
+SIF ARG == -1
+	ARG = TARGET
+CSTR:ARG:口上ACT分類補正値 = 
+
+;────────────────────────────────────
+;口上補正値設定
+;_コマンド番号/補正値_
+;ARGS		メニュー名・あるいはメニュー番号
+;ARG		補正値の数値
+;ARG:1		対象のキャラクター
+;────────────────────────────────────
+@SET_KOJO_MENU_CORRECTION(ARGS, ARG, ARG:1 = -1)
+CALLF SETF_KOJO_MENU_CORRECTION, ARGS, ARG, ARG:1
+
+;────────────────────────────────────
+;口上補正値設定
+;_コマンド番号/補正値_
+;デバッグウィンドウでつかうための式中版
+;────────────────────────────────────
+@SETF_KOJO_MENU_CORRECTION(ARGS, ARG, ARG:1 = -1)
+#FUNCTION
+#DIM LCOUNT
+#DIMS LARGS
+#LOCALSSIZE 200
+SIF ARG:1 == -1
+	ARG:1 = TARGET
+IF ISNUMERIC(ARGS)
+	LARGS = %MENU(TOINT(ARGS))%
+ELSE
+	LARGS = %ARGS%
+ENDIF
+SIF LARGS == "" || MENUNUM(LARGS) == -1
+	THROW 口上ACT分類補正値設定において「%ARGS%」はコマンドの指定として不適切です
+IF STRFIND(CSTR:(ARG:1):口上ACT分類補正値, "_" + LARGS + "/") >= 0
+	SPLIT CSTR:(ARG:1):口上ACT分類補正値, "_", LOCALS
+	CSTR:(ARG:1):口上ACT分類補正値 = %REPLACE(CSTR:(ARG:1):口上ACT補正値, "_" + LOCALS:FINDELEMENT(LOCALS, LARGS + "/",  , , 0), "_" + LARGS + "/" + TOSTR(ARG) + "_")%
+ELSE
+	SIF CSTR:(ARG:1):口上ACT分類補正値 == ""
+		CSTR:(ARG:1):口上ACT分類補正値 += "_"
+	CSTR:(ARG:1):口上ACT分類補正値 += LARGS + "/" + TOSTR(ARG) + "_"
+ENDIF
+
+;────────────────────────────────────
+;口上補正値加算
+;メニュー問わずとメニュー限定はそのまま足してるので注意
+;────────────────────────────────────
+@ACT_ACTM_KOJO_CORRECTION_T(ARG)
+#DIM LCOUNT
+;補正値を判定値に加算する
+FOR LCOUNT, 0, ACTM_NUM(ARG, -1)
+	LOCAL = ACTM_NUM(ARG, LCOUNT)
+	CALL ADD_CRI_VAR(GET_ACTNAME(LOCAL), 0, GET_KOJO_CORRECTION(GET_ACTNAME(ACTM_NUM(ARG, LCOUNT)), , TARGET))
+	CALL ADD_CRI_VAR(GET_ACTNAME(LOCAL), 0, GET_KOJO_CORRECTION(GET_ACTNAME(ACTM_NUM(ARG, LCOUNT)), MENU(ARG), TARGET))
+NEXT
+
+;────────────────────────────────────
+;口上補正値取得
+;_コマンド番号/補正値_
+;ARGS		コマンド名・あるいはコマンド番号
+;ARGS:1		メニュー名・あるいはメニュー番号　省略した場合はメニュー問わずになる
+;ARG		対象のキャラクター
+;────────────────────────────────────
+@GET_KOJO_CORRECTION(ARGS, ARGS:1, ARG = -1)
+#FUNCTION
+#DIM LCOUNT
+#LOCALSSIZE 200
+SIF ARG == -1
+	ARG = TARGET
+SIF ISNUMERIC(ARGS)
+	ARGS = %GET_ACTNAME(TOINT(ARGS))%
+SIF ISNUMERIC(ARGS:1)
+	ARGS:1 = %MENU(TOINT(ARGS:1))%
+SIF ARGS:1 != ""
+	ARGS += "<" + ARGS:1
+IF STRFIND(CSTR:ARG:口上ACT補正値, "_" + ARGS + "/") >= 0
+	SPLIT CSTR:ARG:口上ACT補正値, "_", LOCALS
+	RETURNF TOINT(AUTO_SPLIT(LOCALS:FINDELEMENT(LOCALS, ARGS + "/",  , , 0), "/", 1))
+ENDIF
+RETURNF 0
+
+
+;────────────────────────────────────
+;口上補正値設定
+;_コマンド番号/補正値_
+;ARGS		コマンド名・あるいはコマンド番号
+;ARGS:1		メニュー名・あるいはメニュー番号　省略した場合はメニュー問わずになる
+;ARG		補正値の数値
+;ARG:1		対象のキャラクター
+;────────────────────────────────────
+@SET_KOJO_CORRECTION(ARGS, ARGS:1, ARG, ARG:1 = -1)
+CALLF SETF_KOJO_CORRECTION, ARGS, ARGS:1, ARG, ARG:1
+
+;────────────────────────────────────
+;口上補正値設定
+;_コマンド番号/補正値_
+;デバッグウィンドウでつかうための式中版
+;────────────────────────────────────
+@SETF_KOJO_CORRECTION(ARGS, ARGS:1, ARG, ARG:1 = -1)
+#FUNCTION
+#DIM LCOUNT
+#DIMS LARGS, 2
+#LOCALSSIZE 200
+SIF ARG:1 == -1
+	ARG:1 = TARGET
+IF ISNUMERIC(ARGS)
+	LARGS = %GET_ACTNAME(TOINT(ARGS))%
+ELSE
+	LARGS = %ARGS%
+ENDIF
+SIF LARGS == "" || GET_ACTNUM(LARGS) == -1
+	THROW 口上ACT補正値設定において「%ARGS%」はコマンドの指定として不適切です
+IF ISNUMERIC(ARGS:1)
+	LARGS:1 = %MENU(TOINT(ARGS:1))%
+ELSE
+	LARGS:1 = %ARGS:1%
+ENDIF
+SIF MENUNUM(LARGS:1) == -1
+	THROW 口上ACT補正値設定において「%ARGS:1%」はメニューの指定として不適切です
+SIF ARGS:1 != ""
+	LARGS += "<" + LARGS:1
+IF STRFIND(CSTR:(ARG:1):口上ACT補正値, "_" + LARGS + "/") >= 0
+	SPLIT CSTR:(ARG:1):口上ACT補正値, "_", LOCALS
+	CSTR:(ARG:1):口上ACT補正値 = %REPLACE(CSTR:(ARG:1):口上ACT補正値, "_" + LOCALS:FINDELEMENT(LOCALS, LARGS + "/",  , , 0), "_" + LARGS + "/" + TOSTR(ARG) + "_")%
+ELSE
+	SIF CSTR:(ARG:1):口上ACT補正値 == ""
+		CSTR:(ARG:1):口上ACT補正値 += "_"
+	CSTR:(ARG:1):口上ACT補正値 += LARGS + "/" + TOSTR(ARG) + "_"
+ENDIF
+
+
+;────────────────────────────────────
+;口上補正値消去関数
+;ARGS	メニュー名を入れるとそのMENUのものをすべて消します。省略した場合は全て消えます
+;ARG	対象のキャラ　省略した場合はTARGETになります
+;────────────────────────────────────
+@CLEAR_KOJO_CORRECTION, ARGS, ARG = -1
+#DIMS LARGS
+#DIMS LTEMPS
+SIF ARG == -1
+	ARG = TARGET
+IF ARGS == ""
+	CSTR:ARG:口上ACT補正値 = 
+ELSE
+	IF ISNUMERIC(ARGS)
+		LARGS = %MENU(TOINT(ARGS))%
+	ELSE
+		LARGS = %ARGS%
+	ENDIF
+	SIF MENUNUM(LARGS) == -1
+		THROW 口上ACT補正値設定において「%ARGS%」はメニューの指定として不適切です
+		LARGS = <%LARGS%
+	LTEMPS = 
+	SPLIT CSTR:ARG:口上ACT補正値, "_", LOCALS
+	FOR LOCAL, 0, RESULT
+		IF !STRCOUNT(LOCALS:LOCAL, LARGS)
+			SIF LTEMPS != ""
+				LTEMPS += "_"
+			LTEMPS += LOCALS:LOCAL
+		ENDIF
+	NEXT
+	CSTR:ARG:口上ACT補正値 = %LTEMPS%
+ENDIF
+
+;────────────────────────────────────
+;実行不可能の判定
+;────────────────────────────────────
+@ACT_ACTM_ABLE(ARG)
+#DIM LCOUNT
+;不可能判定
+FOR LCOUNT, 0, ACTM_NUM(ARG, -1)
+	LOCAL = ACTM_NUM(ARG, LCOUNT)
+	CALLFORM ACT_ABLE{LOCAL}
+	SIF !RESULT
+		CALL DIM_CRI_VAR(GET_ACTNAME(LOCAL), -999)
+NEXT
+
+;────────────────────────────────────
+;系列一括実行判定
+;────────────────────────────────────
+@ACTM_ABLE(ARG)
+#DIM LCOUNT
+FOR LCOUNT, 0, ACTM_NUM(ARG, -1)
+	LOCAL = ACTM_NUM(ARG, LCOUNT)
+	CALLFORM ACT_ABLE{LOCAL}
+	SIF RESULT
+		RETURN 1
+NEXT
+RETURN 0
+
+

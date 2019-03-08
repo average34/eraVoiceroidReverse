@@ -1,0 +1,209 @@
+﻿;────────────────────────────────────
+;000,沈黙する（お仕置きポイント）
+;────────────────────────────────────
+@COM0
+;質問されて答えない場合はお仕置きポイントに加算
+IF IS_NOWACTNAME("今の気分を聞く/自分への気持ちを聞く")
+	TFLAG:お仕置きポイント += 1 + RAND:3 + MARK:反抗刻印 / 2 + BASE:苛立ち / 100
+	;派生：質問に答えない
+	TFLAG:REACT派生 = 1
+ELSE
+	;派生：ただの沈黙
+	TFLAG:REACT派生 = 0
+ENDIF
+;COM印象
+CALL SET_COMIMP("悪印象小")
+;依存度変化
+CALL ADD_DEPEND(-1, -1)
+RETURN 1
+
+
+;────────────────────────────────────
+;001,気弱く応答する（トラウマ、屈従、恐怖、消極的従う、哀願）
+;────────────────────────────────────
+@COM1
+;トラウマ化加速
+TIMES SOURCE:MASTER:トラウマ , 1.20
+;屈従SOURCE増加
+SOURCE:MASTER:屈従 += 100 + MARK:屈服刻印 * 20
+;ACT条件により恐怖SOURCE増加
+SIF IS_NOWACTNAME("厳しく脅す/お仕置きと宣言する/怒鳴る/不気味に笑う/罵倒")
+	SOURCE:MASTER:恐怖 += 200 + MARK:MASTER:トラウマ * 50
+;大体の状況は消極的従うになるが、特定の状況で哀願になります
+LOCAL = PALAM:MASTER:屈服 / 1000 + PALAM:MASTER:恭順 / 1000 + PALAM:MASTER:恐怖 / 1000 + PALAM:MASTER:苦痛 / 1500 + PALAM:MASTER:不快 / 2000
+LOCAL -= PALAM:MASTER:反抗 / 200 - MARK:反抗刻印 * 2
+PRINTL 
+IF (IS_NOWACTNAME("厳しく脅す/お仕置きと宣言する/怒鳴る/押し倒す/罵倒")) && LOCAL > 0
+	;COM分類
+	CALL SET_COMGRO("許しを乞う")
+	;派生：哀願する
+	TFLAG:REACT派生 = 1
+ELSE
+	;COM分類
+	CALL SET_COMGRO("消極的従う")
+	;派生：気弱く応答する
+	TFLAG:REACT派生 = 0
+ENDIF
+PRINTL 
+;COM印象
+CALL SET_COMIMP("好印象小")
+;依存度変化
+CALL ADD_DEPEND(0, +1)
+RETURN 1
+
+
+;────────────────────────────────────
+;002,無愛想に応答する（反抗、お仕置きポイント）
+;────────────────────────────────────
+@COM2
+;反抗SOURCE増加
+SOURCE:MASTER:反抗 += 200
+;お仕置きポイント加算
+TFLAG:お仕置きポイント += RAND:5 + MARK:反抗刻印 / 2 + BASE:苛立ち / 100 - BASE:理性 / 100
+;COM印象
+CALL SET_COMIMP("悪印象小")
+;依存度変化
+CALL ADD_DEPEND(-2, -2)
+RETURN 1
+
+
+;────────────────────────────────────
+;003,愛想よく応答する（達成、悦楽、積極的従う）
+;────────────────────────────────────
+@COM3
+;達成、悦楽SOURCE増加
+SOURCE:MASTER:達成 += 200
+SOURCE:MASTER:悦楽 += 50 + MARK:MASTER:快楽刻印 * 20 + SOURCE:MASTER:快Ｃ / 8 + SOURCE:MASTER:快Ｖ / 8 + SOURCE:MASTER:快Ａ / 8 + SOURCE:MASTER:快Ｂ / 8
+;COM分類
+CALL SET_COMGRO("積極的従う")
+;COM印象
+CALL SET_COMIMP("好印象大")
+;依存度変化
+CALL ADD_DEPEND(+3, +1)
+RETURN 1
+
+
+;────────────────────────────────────
+;004,強気に応答する（反抗、お仕置きポイント）
+;────────────────────────────────────
+@COM4
+;反抗SOURCE増加
+SOURCE:MASTER:反抗 += 500 + MARK:反抗刻印 * 10
+;お仕置きポイント加算
+TFLAG:お仕置きポイント += 5 + MARK:反抗刻印 / 2 + BASE:苛立ち / 100 - BASE:興味 / 100
+;ACT条件により派生
+IF IS_NOWACTNAME("押し倒す")
+	;派生：押し倒しに屈しない
+	TFLAG:REACT派生 = 1
+ELSE
+	;派生：強気に応答
+	TFLAG:REACT派生 = 0
+ENDIF
+;COM印象
+CALL SET_COMIMP("悪印象小")
+;依存度変化
+CALL ADD_DEPEND(-1, -3)
+RETURN 1
+
+
+;────────────────────────────────────
+;005,皮肉を言う（屈従、反抗、消極的従う、お仕置きポイント）
+;────────────────────────────────────
+@COM5
+;屈従、反抗SOURCE増加
+SOURCE:MASTER:屈従 += 250 - MARK:反抗刻印 * 20
+SOURCE:MASTER:反抗 += 250 - MARK:屈服刻印 * 20
+;お仕置きポイント加算
+TFLAG:お仕置きポイント += 3 + RAND:5 + MARK:反抗刻印 / 5
+;質問でなければ平然と従う分類
+SIF !IS_NOWACTNAME("今の気分を聞く/自分への気持ちを聞く")
+	CALL SET_COMGRO("平然と従う")
+;COM印象
+CALL SET_COMIMP("悪印象小")
+;依存度変化
+CALL ADD_DEPEND(-3, -1)
+RETURN 1
+
+
+;────────────────────────────────────
+;006,もっとハードにして（屈従、お仕置きポイント）
+;────────────────────────────────────
+@COM6
+;屈従SOURCE増加
+SOURCE:MASTER:屈従 += 50 + MARK:MASTER:苦痛刻印 * 20 + GET_ABL(MASTER, "マゾっ気") * CFLAG:MASTER:調教レベル * 2
+;この恥知らずのメス豚め！とか言いながらお仕置きになります
+LOCAL = BASE:苛立ち / 100 + TALENT:サド * 3 + TALENT:意地悪 * 5 - TALENT:心根優しい * 5 - MARK:屈服刻印 - CFLAG:アライメント / 10 + RAND:5
+IF LOCAL > 0
+	;お仕置きポイント加算
+	TFLAG:お仕置きポイント += LOCAL
+	;派生：「この恥知らずのメス豚め！」
+	TFLAG:REACT派生 = 1
+ELSE
+	;派生：「ふーん」
+	TFLAG:REACT派生 = 0
+ENDIF
+CALL SET_COMGRO("受け入れる")
+;COM印象
+CALL SET_COMIMP("0から遠ざかる")
+;依存度変化
+CALL ADD_DEPEND(0, +3)
+RETURN 1
+;快SOURCEに応じてREACTION_MESSAGEで分岐させるなら、REACT派生にも反映させるべき気がする
+;条件そのまま書けば参照可能だが、そういう問題ではないと考えます@/L
+
+;────────────────────────────────────
+;007,許しを乞う（屈従、恐怖、哀願、お仕置きポイント）
+;────────────────────────────────────
+@COM7
+;屈従、恐怖SOURCE増加
+SOURCE:MASTER:屈従 += 200 + MARK:屈服刻印 * MARK:MASTER:トラウマ * 10
+SOURCE:MASTER:恐怖 += SOURCE:MASTER:痛み / 3 + SOURCE:MASTER:拘束 / 5 + SOURCE:MASTER:逸脱 / 4 + SOURCE:MASTER:トラウマ / 3
+;意見を出すなんていい度胸だね！とか言いながらお仕置きになります
+LOCAL = BASE:苛立ち / 80 - BASE:理性 / 100 - CFLAG:アライメント / 10 + PALAM:MASTER:反抗 / 1000 + TALENT:サド * 5 + TALENT:意地悪 * 5 - TALENT:心根優しい * 5 - MARK:MASTER:トラウマ / 2
+SIF IS_POLICY("今", "異常")
+	LOCAL += RAND:7
+;COM印象が共通なのは納得いかなかったのでを派生毎に別ける@/L
+IF LOCAL > 0 && !IS_NOWACTNAME("公衆肉便器プレイ")
+	;お仕置きポイント加算
+	TFLAG:お仕置きポイント += LOCAL
+	;派生：「意見を出すなんていい度胸だね！」
+	TFLAG:REACT派生 = 1
+	;COM印象
+	CALL SET_COMIMP("0から遠ざかる")
+ELSE
+	;派生：「ふーん」
+	TFLAG:REACT派生 = 0
+	;COM分類
+	CALL SET_COMGRO("許しを乞う")
+	;COM印象
+	CALL SET_COMIMP("0に近づく")
+ENDIF
+;依存度変化
+CALL ADD_DEPEND(0, +2)
+RETURN 1
+
+
+;────────────────────────────────────
+;008,気持ち良くして（悦楽、受け入れる、お仕置きポイント）
+;────────────────────────────────────
+@COM8
+;悦楽SOURCE増加
+SOURCE:MASTER:悦楽 += PALAM:MASTER:欲情 / 5 + CFLAG:MASTER:調教レベル * GET_ABL(MASTER, "欲望") * MARK:MASTER:快楽刻印 / 10
+;この恥知らずのメス豚め！とか言いながらお仕置きになります
+LOCAL = BASE:苛立ち / 100 - CFLAG:アライメント / 10 - CFLAG:MASTER:調教レベル + TALENT:サド * 3 + TALENT:意地悪 * 5 + MARK:MASTER:快楽刻印 / 2 + RAND:5
+IF LOCAL > 0
+	;お仕置きポイント加算
+	TFLAG:お仕置きポイント += LOCAL
+	;派生：「この恥知らずのメス豚め！」
+	TFLAG:REACT派生 = 1
+ELSE
+	;派生：「ふーん」
+	TFLAG:REACT派生 = 0
+ENDIF
+;COM分類
+CALL SET_COMGRO("受け入れる")
+;COM印象
+CALL SET_COMIMP("0から遠ざかる")
+;依存度変化
+CALL ADD_DEPEND(+2, +1)
+RETURN 1

@@ -1,0 +1,64 @@
+﻿;愛撫系リアクションコマンド群
+;────────────────────────────────────
+;070,イかせて！
+;────────────────────────────────────
+@COM70
+;逸脱SOURCE減少
+TIMES SOURCE:MASTER:逸脱 , 0.70
+;トラウマ化減速
+TIMES SOURCE:MASTER:トラウマ , 0.80
+;屈従、達成、悦楽SOURCE増加
+SOURCE:MASTER:屈従 += 50 + (MARK:MASTER:快楽刻印 + 1) * (SOURCE:MASTER:快Ｃ + SOURCE:MASTER:快Ｖ + SOURCE:MASTER:快Ａ + SOURCE:MASTER:快Ｂ) * CFLAG:MASTER:調教レベル / 200
+SOURCE:MASTER:達成 += 100 + (CFLAG:MASTER:調教レベル + 5) * (SOURCE:MASTER:快Ｃ + SOURCE:MASTER:快Ｖ + SOURCE:MASTER:快Ａ + SOURCE:MASTER:快Ｂ) / 100
+SOURCE:MASTER:悦楽 += 100 + SOURCE:MASTER:快Ｃ / 25 + SOURCE:MASTER:快Ｖ / 25 + SOURCE:MASTER:快Ａ / 25 + SOURCE:MASTER:快Ｂ / 25
+;補正値初期化
+VARSET LOCAL
+;素質補正値設定
+LOCAL = (CFLAG:好意 / 500) + TALENT:好色 - TALENT:清楚 + TALENT:献身的 - TALENT:受け身
+LOCAL = LIMIT(LOCAL, 1, 5)
+;加虐補正値設定
+;3<=(LOCAL:1)<=8
+SIF TALENT:サド
+	LOCAL:1 += 1
+SIF TALENT:意地悪
+	LOCAL:1 += 1
+IF ABL:加虐 >= ABL:愛撫
+	LOCAL:1 += 1
+ELSE
+	LOCAL:1 -= 1
+ENDIF
+SIF TALENT:心根優しい
+	LOCAL:1 -= 1
+LOCAL:1 += 5
+;素質によって焦らし終了
+IF RAND:LOCAL > 0
+	TCVAR:MASTER:焦らし度 = 1
+	;加虐補正によって焦らし延長
+	IF RAND:(LOCAL:1) >= RAND:5
+		;技巧によって期間決定
+		LOCAL:2 = ABL:技巧 / 5 + 2
+		SIF LOCAL:2 > 4
+			LOCAL:2 = 4
+		TCVAR:MASTER:焦らし度 += LOCAL:2
+	ENDIF
+ENDIF
+IF TCVAR:MASTER:焦らし度 == 1
+	;派生：イかせてあげる
+	TFLAG:REACT派生 = 1
+ELSEIF TCVAR:MASTER:焦らし度 > 1
+	;派生：イかせてあげない
+	TFLAG:REACT派生 = 2
+ELSE
+	;派生：「ふーん」
+	TFLAG:REACT派生 = 0
+ENDIF
+;イかせて状態へ移行
+TCVAR:MASTER:イかせて挙動制御用 = 1
+;COM分類
+CALL SET_COMGRO("受け入れる")
+;COM印象
+CALL SET_COMIMP("好印象大")
+;依存度変化
+CALL ADD_DEPEND(+10, +6)
+RETURN 1
+

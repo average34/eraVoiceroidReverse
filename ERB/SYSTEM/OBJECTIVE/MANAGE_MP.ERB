@@ -1,0 +1,432 @@
+﻿
+;────────────────────────────────────
+;道具生成処理
+;────────────────────────────────────
+@MANAGE_MP
+#DIM LCOUNT
+#DIM 収入見込
+#DIM 平均
+#DIM 分配種数
+#DIM 最大値
+#DIM 処理種
+#DIMS 分配種
+#DIM 元REDRAW
+
+;魔力が全く無ければ処理しない
+SIF CFLAG:魔力 == 0
+	RETURN 0
+IF FLAG:オートモード > 0 && FLAG:オートモード表示設定 == 1
+	SKIPDISP 1
+ENDIF
+;-------------------------------------------------------------------------
+;魔力収入に関する処理
+;-------------------------------------------------------------------------
+;収入の記録を参照し、将来の収入を予測する
+
+;既に現在の魔力はデータベースに記入済みであること前提
+収入見込 = CFLAG:6101 - CFLAG:6100
+FOR LCOUNT, 0, 20
+	SIF CFLAG:(6101 + LCOUNT) == 0
+		BREAK
+	収入見込 = (収入見込 * LCOUNT + CFLAG:(6102 + LCOUNT) - CFLAG:(6101 + LCOUNT)) / (LCOUNT + 1)
+NEXT
+;-------------------------------------------------------------------------
+;ランニングコストに関する処理
+;-------------------------------------------------------------------------
+;※現在は0で処理しているが、魔力を収集する必要があるくらいだから
+;  自動的に消耗してしかるべきなのでは？
+
+;-------------------------------------------------------------------------
+;魔力分配に関する処理
+;-------------------------------------------------------------------------
+;魔力の使用先には『調教者追加、技巧上昇、知識・技能取得、道具錬成』が存在する。
+;これらを現在の状況、素質、能力などによって判断し、優先度や消費限界魔力を設定する。
+
+SIF FLAG:デバッグ
+	PRINTFORML 『魔力消費処理』(可用魔力：{CFLAG:魔力})
+
+分配種 = 人員追加/技巧上昇/技能取得/道具錬成
+
+CALL SET_CRI_VAR, 分配種
+
+LOCALS = MANAGE_MP
+
+CALL CHA_CRI_VAR, "調教者の素質"
+CALLFORM %LOCALS%_TALENT_T
+
+CALL CHA_CRI_VAR, "調教対象の素質"
+CALLFORM %LOCALS%_TALENT_M
+
+CALL CHA_CRI_VAR, "調教者が妊娠"
+CALLFORM %LOCALS%_MATERNITY_T
+
+CALL CHA_CRI_VAR, "調教者の能力"
+CALLFORM %LOCALS%_ABL_T
+
+CALL CHA_CRI_VAR, "性別関係"
+CALLFORM %LOCALS%_SEX
+
+CALL CHA_CRI_VAR, "調教者の体力"
+CALLFORM %LOCALS%_PHYSICAL_T
+
+CALL CHA_CRI_VAR, "調教者の気力"
+CALLFORM %LOCALS%_MENTAL_T
+
+CALL CHA_CRI_VAR, "調教者の興味"
+CALLFORM %LOCALS%_INTEREST_T
+
+CALL CHA_CRI_VAR, "調教者の苛立ち"
+CALLFORM %LOCALS%_IRRITATION_T
+
+CALL CHA_CRI_VAR, "調教者の好感度"
+CALLFORM %LOCALS%_LIKE_T
+
+CALL CHA_CRI_VAR, "調教対象の好感度"
+CALLFORM %LOCALS%_LIKE_M
+
+CALL CHA_CRI_VAR, "実行判定"
+CALLFORM %LOCALS%_ABLE
+
+;──────────────────────────────
+;最終判定
+;──────────────────────────────
+CALL DEF_CRI_VAR()
+CALL ANA_CRI_VAR()
+
+SIF FLAG:デバッグ
+	PRINTW 
+
+;分配種ごとの基準値取得
+SPLIT 分配種, "/", LOCALS
+分配種数 = RESULT
+CALLF GET_CRI_VAR("累計")
+;ついでに平均値をとる
+平均 = 0
+FOR LCOUNT, 0, 分配種数
+	LOCAL:LCOUNT = RESULT:LCOUNT
+	SIF LOCAL:LCOUNT > -99
+		平均 += LOCAL:LCOUNT
+NEXT
+平均 /= 分配種数
+WHILE 1
+	;最大値取得
+	最大値 = MAXARRAY(LOCAL, 0, 分配種数)
+	;最大値が-99を下回れば終了
+	SIF 最大値 <= -99
+		BREAK
+	;大きな値のものから順に処理
+	処理種 = FINDELEMENT(LOCAL, 最大値, 0, 分配種数)
+	;使用可能魔力判定用数値代入
+	CALLF MANAGE_MP_PROP(1, LOCAL:処理種 - 平均, 収入見込)
+	;処理種が……
+	SELECTCASE LOCALS:処理種
+		CASE "人員追加"
+			;SIF FLAG:デバッグ
+			;	PRINTFORML 『人員追加』
+		CASE "技巧上昇"
+			CALL RIZE_ABL_AI
+		CASE "技能取得"
+			CALL GAIN_TALENT_AI
+		CASE "道具錬成"
+			CALL MAKE_TOOLS
+	ENDSELECT
+	;現在の処理種に対して処理を終了する
+	LOCAL:処理種 = -99
+	IF FLAG:オートモード > 0 && FLAG:オートモード表示設定 == 1
+		SKIPDISP 1
+	ENDIF
+WEND
+;-------------------------------------------------------------------------
+;調教者の素質を参照
+;-------------------------------------------------------------------------
+@MANAGE_MP_TALENT_T
+
+;調教者が臆病
+SIF TALENT:臆病
+	CALL ADD_CRI_VAR("人員追加", 3)
+
+;調教者がプライド高い/低い
+IF TALENT:プライド高い
+	CALL ADD_CRI_VAR("技巧上昇", 6)
+	CALL ADD_CRI_VAR("技能取得", 9)
+	CALL ADD_CRI_VAR("道具錬成", -6)
+ELSEIF TALENT:プライド低い
+	CALL ADD_CRI_VAR("技巧上昇", -6)
+	CALL ADD_CRI_VAR("技能取得", -9)
+	CALL ADD_CRI_VAR("道具錬成", 6)
+ENDIF
+
+;調教者が無関心/好奇心
+IF TALENT:無関心
+	CALL ADD_CRI_VAR("技巧上昇", -3)
+	CALL ADD_CRI_VAR("技能取得", -9)
+	CALL ADD_CRI_VAR("道具錬成", -9)
+ELSEIF TALENT:好奇心
+	CALL ADD_CRI_VAR("技巧上昇", 3)
+	CALL ADD_CRI_VAR("技能取得", 9)
+	CALL ADD_CRI_VAR("道具錬成", 9)
+ENDIF
+
+;調教者が習得早い/習得遅い
+IF TALENT:習得早い
+	CALL ADD_CRI_VAR("技巧上昇", 6)
+	CALL ADD_CRI_VAR("技能取得", 6)
+ELSEIF TALENT:習得遅い
+	CALL ADD_CRI_VAR("技巧上昇", -6)
+	CALL ADD_CRI_VAR("技能取得", -6)
+ENDIF
+
+;調教者が献身的
+IF TALENT:献身的
+	CALL ADD_CRI_VAR("技巧上昇", 6)
+	CALL ADD_CRI_VAR("技能取得", 3)
+ENDIF
+
+;調教者が受け身
+IF TALENT:受け身
+	CALL ADD_CRI_VAR("人員追加", 6)
+	CALL ADD_CRI_VAR("道具錬成", 3)
+ENDIF
+	
+;-------------------------------------------------------------------------
+;調教対象の素質を参照
+;-------------------------------------------------------------------------
+@MANAGE_MP_TALENT_M
+
+;調教対象が無関心/好奇心
+IF TALENT:MASTER:無関心
+	CALL ADD_CRI_VAR("技能取得", -3)
+	CALL ADD_CRI_VAR("道具錬成", -3)
+ELSEIF TALENT:MASTER:好奇心
+	CALL ADD_CRI_VAR("技能取得", 3)
+	CALL ADD_CRI_VAR("道具錬成", 3)
+ENDIF
+
+;-------------------------------------
+;調教者が妊娠中
+;-------------------------------------
+@MANAGE_MP_MATERNITY_T
+
+;妊娠中
+IF TALENT:妊娠
+	CALL ADD_CRI_VAR("人員追加", 9)
+	CALL ADD_CRI_VAR("技巧上昇", -9)
+	CALL ADD_CRI_VAR("技能取得", -9)
+	CALL ADD_CRI_VAR("道具錬成", 6)
+ENDIF
+
+;-------------------------------------------------------------------------
+;調教者の能力を参照
+;-------------------------------------------------------------------------
+@MANAGE_MP_ABL_T
+
+;調教者の奉仕精神が[0→0, 5→5]を加算(0～5)
+CALL ADD_CRI_VAR("技巧上昇", LINE_CALC(ABL:奉仕精神, "0→0,5→5,LIMIT/0～5"))
+CALL ADD_CRI_VAR("技能取得", LINE_CALC(ABL:奉仕精神, "0→0,5→5,LIMIT/0～5"))
+
+;-------------------------------------------------------------------------
+;性別関係
+;同性で対応の能力や素質がない場合は体の接触を避けるように
+;-------------------------------------------------------------------------
+@MANAGE_MP_SEX
+
+;調教者に両刀が無く、オトコ同士
+IF TALENT:オトコ && TALENT:MASTER:オトコ && !TALENT:両刀
+	;調教者のＢＬっ気が[0→0, 4→4]を加算(0～4)
+	CALL ADD_CRI_VAR("人員追加", LINE_CALC(ABL:ＢＬっ気, "0→0,4→4,LIMIT/0～4"))
+	;調教者のＢＬっ気が[0→0, 4→2]を加算(0～2)
+	CALL ADD_CRI_VAR("道具錬成", LINE_CALC(ABL:ＢＬっ気, "0→0,4→2,LIMIT/0～2"))
+	;調教者のＢＬっ気が[0→-2, 4→0]を加算(-2～0)
+	CALL ADD_CRI_VAR("技巧上昇", LINE_CALC(ABL:ＢＬっ気, "0→-2,4→0,LIMIT/-2～0"))
+	CALL ADD_CRI_VAR("技能取得", LINE_CALC(ABL:ＢＬっ気, "0→-2,4→0,LIMIT/-2～0"))
+ENDIF
+
+;調教者に両刀が無く、女の子同士
+IF !TALENT:オトコ && !TALENT:MASTER:オトコ && !TALENT:両刀
+	;調教者のレズっ気が[0→0, 4→4]を加算(0～4)
+	CALL ADD_CRI_VAR("人員追加", LINE_CALC(ABL:レズっ気, "0→0,4→4,LIMIT/0～4"))
+	;調教者のレズっ気が[0→0, 4→2]を加算(0～2)
+	CALL ADD_CRI_VAR("道具錬成", LINE_CALC(ABL:レズっ気, "0→0,4→2,LIMIT/0～2"))
+	;調教者のレズっ気が[0→-2, 4→0]を加算(-2～0)
+	CALL ADD_CRI_VAR("技巧上昇", LINE_CALC(ABL:レズっ気, "0→-2,4→0,LIMIT/-2～0"))
+	CALL ADD_CRI_VAR("技能取得", LINE_CALC(ABL:レズっ気, "0→-2,4→0,LIMIT/-2～0"))
+	
+	;調教者のレズ中毒が[0→0, 4→4]を加算(0～4)
+	CALL ADD_CRI_VAR("技巧上昇", LINE_CALC(ABL:レズ中毒, "0→0,4→4,LIMIT/0～4"))
+	CALL ADD_CRI_VAR("技能取得", LINE_CALC(ABL:レズ中毒, "0→0,4→4,LIMIT/0～4"))
+ENDIF
+
+;調教者が男嫌いかつ、調教対象がオトコ
+IF TALENT:男嫌い && TALENT:MASTER:オトコ
+	CALL ADD_CRI_VAR("人員追加", 2)
+	CALL ADD_CRI_VAR("道具錬成", 4)
+ENDIF
+
+;-------------------------------------
+;調教者の体力
+;-------------------------------------
+@MANAGE_MP_PHYSICAL_T
+
+;調教者の体力が[0→-4, 1500→2]を加算(-4～2)
+CALL ADD_CRI_VAR("技巧上昇", LINE_CALC(BASE:体力, "0→-4,1500→2,LIMIT/-4～2"))
+CALL ADD_CRI_VAR("技能取得", LINE_CALC(BASE:体力, "0→-4,1500→2,LIMIT/-4～2"))
+;調教者の体力が[0→-2, 500→0]を加算(-2～0)
+CALL ADD_CRI_VAR("道具錬成", LINE_CALC(BASE:体力, "0→-2,500→0,LIMIT/-2～0"))
+
+;-------------------------------------
+;調教者の気力
+;-------------------------------------
+@MANAGE_MP_MENTAL_T
+
+;調教者の気力が[0→-4, 1500→2]を加算(-4～2)
+CALL ADD_CRI_VAR("技巧上昇", LINE_CALC(BASE:気力, "0→-4,1500→2,LIMIT/-4～2"))
+CALL ADD_CRI_VAR("技能取得", LINE_CALC(BASE:気力, "0→-4,1500→2,LIMIT/-4～2"))
+;調教者の体力が[0→-2, 500→0]を加算(-2～0)
+CALL ADD_CRI_VAR("人員追加", LINE_CALC(BASE:気力, "0→-2,500→0,LIMIT/-2～0"))
+CALL ADD_CRI_VAR("道具錬成", LINE_CALC(BASE:気力, "0→-2,500→0,LIMIT/-2～0"))
+
+;-------------------------------------
+;調教者の興味
+;-------------------------------------
+@MANAGE_MP_INTEREST_T
+
+;調教者の興味が[0→-4, 1000→4]を加算(-4～4)
+CALL ADD_CRI_VAR("技巧上昇", LINE_CALC(BASE:興味, "0→-4,1000→4,LIMIT/-4～4"))
+CALL ADD_CRI_VAR("技能取得", LINE_CALC(BASE:興味, "0→-4,1000→4,LIMIT/-4～4"))
+;調教者の興味が[0→2, 1000→-2]を加算(-2～2)
+CALL ADD_CRI_VAR("人員追加", LINE_CALC(BASE:興味, "0→-2,1000→2,LIMIT/-2～2"))
+;調教者の興味が[0→4, 1000→-4]を加算(-4～4)
+CALL ADD_CRI_VAR("道具錬成", LINE_CALC(BASE:興味, "0→-4,1000→4,LIMIT/-4～4"))
+
+;-------------------------------------
+;調教者の苛立ち
+;-------------------------------------
+@MANAGE_MP_IRRITATION_T
+
+;調教者の苛立ちが[0→0, 800→5]を加算(0～5)
+CALL ADD_CRI_VAR("道具錬成", LINE_CALC(BASE:苛立ち, "0→0,800→5,LIMIT/0～5"))
+
+;-------------------------------------
+;調教者の好意
+;-------------------------------------
+@MANAGE_MP_LIKE_T
+
+;調教者の好意が[-2000→3 2000→-3]を加算(-3～3)
+CALL ADD_CRI_VAR("人員追加", LINE_CALC(CFLAG:好意, "-2000→3,2000→-3,LIMIT/-3～3"))
+;調教者の好意が[-2000→-3 2000→3]を加算(-3～3)
+CALL ADD_CRI_VAR("技巧上昇", LINE_CALC(CFLAG:好意, "-2000→-3,2000→3,LIMIT/-3～3"))
+CALL ADD_CRI_VAR("技能取得", LINE_CALC(CFLAG:好意, "-2000→-3,2000→3,LIMIT/-3～3"))
+
+;-------------------------------------
+;調教対象の好意
+;主人公から調教者への好意は調教者自身が保持しているのに注意
+;-------------------------------------
+@MANAGE_MP_LIKE_M
+
+;調教者の好意が[-2000→3 2000→-3]を加算(-3～3)
+CALL ADD_CRI_VAR("人員追加", LINE_CALC(CFLAG:M好意, "-2000→3,2000→-3,LIMIT/-3～3"))
+
+;----------------------------------------------------------
+;実行判定
+;----------------------------------------------------------
+@MANAGE_MP_ABLE
+
+;オンになっていない設定に関しては実行不可
+SIF !(FLAG:AI自由度 & 1)
+	CALL DIM_CRI_VAR("人員追加", -999)
+SIF !(FLAG:AI自由度 & 2)
+	CALL DIM_CRI_VAR("技巧上昇", -999)
+SIF !(FLAG:AI自由度 & 4)
+	CALL DIM_CRI_VAR("技能取得", -999)
+SIF !(FLAG:AI自由度 & 8)
+	CALL DIM_CRI_VAR("道具錬成", -999)
+
+;────────────────────────────────────
+;関連諸関数
+;────────────────────────────────────
+;-------------------------------------
+;魔力消費性向
+;0を基準に大きいほど魔力を消費したがる
+;ARG:0 = 0:使用可能魔力判定 1:数値代入
+;ARG:1 = 要求偏差(0を基準に大きいほどこの種別で魔力を消費したがる)
+;ARG:2 = 収入見込
+;-------------------------------------
+@MANAGE_MP_PROP(ARG = 0, ARG:1, ARG:2)
+#FUNCTION
+IF ARG
+	LOCAL:0 = ARG:1 / 5
+	LOCAL:1 = (ARG:2 * 2 / MAX(CFLAG:魔力, 1)) - 2
+	RETURNF 0
+ENDIF
+RETURNF LOCAL + LOCAL:1 + TALENT:好奇心 - TALENT:無関心 + TALENT:衝動的 - TALENT:自制的 + TALENT:楽観的 - TALENT:悲観的
+
+;────────────────────────────────────
+;技巧上昇処理
+;※ARGは要求偏差(0を基準に大きいほどこの種別で魔力を消費したがる)
+;────────────────────────────────────
+@RIZE_ABL_AI
+#DIM 可用魔力
+
+;使用可能魔力判定
+可用魔力 = RIZE_ABL_MP_ABLE()
+
+SIF FLAG:デバッグ
+	PRINTFORML 『技巧上昇処理』(可用魔力：{可用魔力})
+
+SKIPDISP 0
+WHILE 1
+	;魔力不足判定
+	IF 可用魔力 < RIZE_ABL_V(0)
+		SIF FLAG:デバッグ
+			PRINTFORMW 可用魔力が不足しています(あと{RIZE_ABL_V(0) - 可用魔力})
+		RETURN 0
+	ENDIF
+	;技巧上昇に挑戦
+	CALL RIZE_ABL
+	LOCAL = RESULT:1
+	SELECTCASE RESULT
+		;成功時
+		CASE 0
+			;地の文表示
+			PRINTFORMW %CALLNAME:TARGET%の調教技巧は<{ABL:技巧}>になりました
+			;イベント口上：調教技巧アップ
+			;CALL KOJO_EVENT(110, 1)
+			;CALL VOIDLINE_IF(RESULT)
+			
+			;魔力・可用魔力を消費
+			CFLAG:魔力 -= LOCAL
+			可用魔力 -= LOCAL
+			SIF FLAG:デバッグ
+				PRINTFORML (可用魔力：{可用魔力})
+		;魔力不足時
+		CASE 1
+			IF FLAG:デバッグ
+				PRINTFORML 魔力が不足しています(あと{RIZE_ABL_V(0) - CFLAG:魔力})
+				PRINTW 
+			ENDIF
+			RETURN 0
+		;調教レベル不足時
+		CASE 2
+			IF FLAG:デバッグ
+				PRINTFORML 調教レベルが不足しています(あと{RIZE_ABL_V(1) - CFLAG:調教レベル})
+				PRINTW 
+			ENDIF
+			RETURN 0
+		;技巧上限時
+		CASE 3
+			IF FLAG:デバッグ
+				PRINTFORML これ以上技巧は上げられません(現在技巧：{ABL:技巧})
+				PRINTW 
+			ENDIF
+			RETURN 0
+	ENDSELECT
+WEND
+
+;------------------------------------------
+;使用可能魔力判定
+;------------------------------------------
+@RIZE_ABL_MP_ABLE()
+#FUNCTION
+;魔力不足基準設定
+RETURNF LIMIT(CFLAG:魔力 * (8 + MANAGE_MP_PROP() + TALENT:習得早い - TALENT:習得遅い) * 10 / 100, 0, CFLAG:魔力)
+

@@ -1,0 +1,159 @@
+﻿;────────────────────────────────────
+;休憩 (休み90/服薬91/治療92)
+;────────────────────────────────────
+@ACT_M9(ARG = 0)
+;1以上なら判定を行わない
+#DIM LCOUNT, 1
+
+;関数初期化
+CALL ACT_M_INIT(9)
+
+;処理開始
+
+LOCALS = ACT_ACTM9
+
+CALL CHA_CRI_VAR, "基準値"
+CALLFORM %LOCALS%_REFERENCE
+
+CALL CHA_CRI_VAR, "調教者の素質"
+CALLFORM %LOCALS%_TALENT_T
+
+CALL CHA_CRI_VAR, "調教者の体力"
+CALLFORM %LOCALS%_PHYSICAL_T
+
+CALL CHA_CRI_VAR, "調教者の気力"
+CALLFORM %LOCALS%_MENTAL_T
+
+CALL CHA_CRI_VAR, @"調教者の状態(%CONDITION(TCVAR:状態変化)%)"
+CALLFORM %LOCALS%_CONDITION_T
+
+CALL CHA_CRI_VAR, "連続行動補正"
+CALLFORM %LOCALS%_PREV
+
+CALL CHA_CRI_VAR, "ヒート値"
+CALLFORM %LOCALS%_HEAT
+
+CALL CHA_CRI_VAR, "口上補正値"
+CALL ACT_ACTM_KOJO_CORRECTION_T, 9
+
+CALL CHA_CRI_VAR, "ACT補正値"
+CALLFORM %LOCALS%_CORRECTION(ARG)
+
+;ARGが1以上なら処理中断
+SIF ARG
+	RETURN RESULT
+
+CALL CHA_CRI_VAR, "実行判定"
+CALLFORM %LOCALS%_ABLE
+
+;────────────────────────────────────
+;最終判定
+;────────────────────────────────────
+CALL DEF_CRI_VAR("最大前者")
+LOCAL = GET_CRI_VAR("決定")
+IF LOCAL == -1
+	PRINTL (休憩カウンタ異常)
+	TFLAG:ACT = 90
+ELSE
+	TFLAG:ACT = GET_ACTNUM(RESULTS)
+ENDIF
+CALL ANA_CRI_VAR()
+
+;-------------------------------------------------------------------------
+;基準値
+;-------------------------------------------------------------------------
+@ACT_ACTM9_REFERENCE
+;調合知識があるときに増加する動作にするために修正@kap
+CALL ADD_CRI_VAR("治療する", -5)
+;要らないかもと思ったので試しに無効化@これみ
+[SKIPSTART]
+CALL DIM_CRI_VAR("休ませる", 5)
+CALL DIM_CRI_VAR("栄養剤を飲ませる", 8)
+CALL DIM_CRI_VAR("治療する", 10)
+[SKIPEND]
+
+;-------------------------------------------------------------------------
+;調教者の素質を参照
+;-------------------------------------------------------------------------
+@ACT_ACTM9_TALENT_T
+
+;調合知識がない <<---------？
+SIF TALENT:調合知識
+	CALL ADD_CRI_VAR("治療する", 5)
+
+;────────────────────────────────────
+;ゲージや状態による変動
+;────────────────────────────────────
+;-------------------------------------
+;調教者の体力
+;-------------------------------------
+@ACT_ACTM9_PHYSICAL_T
+
+;調教者の体力が[0→3, 900→0]を加算(0～3)
+CALL ADD_CRI_VAR("休ませる", LINE_CALC(BASE:体力, "0→3,900→0,LIMIT/0～3"))
+
+;-------------------------------------
+;調教者の気力
+;-------------------------------------
+@ACT_ACTM9_MENTAL_T
+
+;調教者の気力が[0→-9～0, 450→0]を加算(-9～0)
+CALL ADD_CRI_VAR("治療する", , LINE_CALC(BASE:気力, "0→-9,450→0,LIMIT/-9～0"))
+
+;-------------------------------------
+;調教者の状態
+;-------------------------------------
+@ACT_ACTM9_CONDITION_T
+
+;調教者の状態(0=通常/1=疲弊/2=衰弱/3=無気力/4=朦朧/5=情欲/6=怒り/7=退屈/8=鬱屈)
+SELECTCASE GET_CONDITION(TARGET)
+	CASE "無気力"
+		CALL ADD_CRI_VAR("治療する", -3)
+	CASE "朦朧"
+		CALL ADD_CRI_VAR("治療する", , -4)
+ENDSELECT
+
+;────────────────────────────────────
+;同じ行動連続実行の確率をダウンします
+;────────────────────────────────────
+@ACT_ACTM9_PREV
+SIF INRANGE(TFLAG:前ACT, 90, 92)
+	CALL ADD_CRI_VAR(GET_ACTNAME(TFLAG:前ACT), -3 * TFLAG:同一行動ボーナス, -4 * TFLAG:同一行動ボーナス)
+
+;────────────────────────────────────
+;ヒート値を差し引きます
+;────────────────────────────────────
+@ACT_ACTM9_HEAT
+
+;栄養剤のヒート値
+SIF FLAG:栄養ヒート > 0
+	CALL ADD_CRI_VAR("栄養剤を飲ませる", -FLAG:栄養ヒート)
+;治療のヒート値
+SIF FLAG:治療ヒート > 0
+	CALL ADD_CRI_VAR("治療する", -FLAG:治療ヒート)
+
+;────────────────────────────────────
+;補正値計算
+;────────────────────────────────────
+@ACT_ACTM9_CORRECTION(ARG)
+#DIM LCOUNT
+
+;ARGが0以外なら補正値を計算し、以後の処理を行わない
+IF ARG
+	FOR LCOUNT, 90, 93
+		CALL ACT_M_RES_CALC(LCOUNT, GET_CRI_VAR(GET_ACTNAME(LCOUNT) + "累計"))
+	NEXT
+ELSE
+	;補正値を判定値に加算する
+	CALL ACT_ACTM_CORRECTION(9)
+ENDIF
+
+;────────────────────────────────────
+;その他変動や実行不可能の判定
+;────────────────────────────────────
+@ACT_ACTM9_ABLE
+#DIM LCOUNT
+
+;不可能判定
+CALL ACT_ACTM_ABLE(9)
+

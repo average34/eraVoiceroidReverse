@@ -1,0 +1,355 @@
+﻿
+;────────────────────────────────────
+;刻印取得のチェック、そして刻印による素質変動（条件設定はかなり適当…調整が必要と思うなら連絡してください）
+;────────────────────────────────────
+@MARK_CHECK_SOURCE
+#DIM LTEMP, 5
+
+;刻印は一回に一段階まであがる仕様です
+VARSET LOCAL
+VARSET LTEMP
+
+;刻印:苦痛刻印
+;苦痛が規定量を突破すると刻印取得
+SIF CUP:MASTER:苦痛 > (400 * (MARK:MASTER:苦痛刻印 + 1))
+	LOCAL++
+;10LVが上限
+SIF LOCAL && (MARK:MASTER:苦痛刻印 < 10)
+	LTEMP:0 = ++MARK:MASTER:苦痛刻印
+
+;LOCAL:0 初期化
+LOCAL = 0
+
+;刻印:快楽刻印 今の仕様では快楽刻印がもりもり上がるので調整　要検討
+;屈服刻印より先には上がらない(屈服刻印以下のレベルになる)
+;快感が規定量を突破すると刻印取得
+SIF (CUP:MASTER:快Ｃ + CUP:MASTER:快Ｖ + CUP:MASTER:快Ａ + CUP:MASTER:快Ｂ) > (800 * (MARK:MASTER:快楽刻印 + 1))
+	LOCAL ++
+;屈服刻印LVを越えない。また10LVが上限
+SIF LOCAL && (MARK:MASTER:快楽刻印 < MARK:屈服刻印) && (MARK:MASTER:快楽刻印 < 10)
+	LTEMP:1 = ++MARK:MASTER:快楽刻印
+
+;屈服刻印取得
+CALL MARK_CHECK_SOURCE_SURRENDER
+LTEMP:2 = RESULT
+
+;刻印:反抗刻印
+;(今回調教対象の反応が従順であれば判定しない)
+IF !IS_COMGRONAME("消極的従う") && !IS_COMGRONAME("平然と従う/積極的従う/受け入れる")
+	LOCAL = CUP:MASTER:反抗 > (MARK:反抗刻印 + 1) * 400
+	;調教者の平時アライメントが十分高ければ(Sツン)刻印取得を中断
+	SIF MARK:反抗刻印 > 10 - MARK:5
+		LOCAL = 0
+	;10-屈服+苦痛/2を超えない
+	SIF LOCAL && (MARK:反抗刻印 < 10-((MARK:屈服刻印+MARK:MASTER:苦痛刻印)/2))
+		LTEMP:3 = ++MARK:反抗刻印
+ENDIF
+
+;刻印:トラウマ
+LOCAL = CUP:MASTER:恐怖 > (MARK:MASTER:トラウマ + 1) * 400
+;10LVが上限
+IF LOCAL && (MARK:MASTER:トラウマ < 10)
+	LTEMP:4 = ++MARK:MASTER:トラウマ
+	;今回の調教者行動をトラウマの元として上書き記憶
+	CFLAG:MASTER:トラウマ = TFLAG:ACT
+ENDIF
+
+CALL MARK_CHECK_SOURCE_MESSAGE(LTEMP:0, LTEMP:1, LTEMP:2, LTEMP:3, LTEMP:4)
+
+;────────────────────────────────────
+;刻印取得口上と表示
+;────────────────────────────────────
+@MARK_CHECK_SOURCE_MESSAGE(ARG:0, ARG:1, ARG:2, ARG:3, ARG:4)
+;刻印取得時改行
+SIF ARG:0 || ARG:1 || ARG:2 || ARG:3 || ARG:4
+	PRINTL
+;刻印未取得時でも刻印取得時口上は呼ぶ
+RESULT = 0
+CALL KOJO_MARK(ARG:0, ARG:1, ARG:2, ARG:3, ARG:4)
+
+FOR LOCAL, 0, 5
+	;刻印取得を個別に確認
+	IF ARG:LOCAL
+		;刻印取得表示
+		PRINTFORML %MARKNAME:LOCAL%は{ARG:LOCAL}になった
+		;屈服刻印取得時、屈服P2が屈服刻印の二乗に応じて上昇
+		SIF LOCAL == 2
+			CFLAG:MASTER:屈服P2 += POWER(LOCAL:LOCAL, 2) - POWER(LOCAL:LOCAL - 1, 2)
+		;苦痛刻印Lv9取得時、気丈を失う
+		IF LOCAL == 0 && ARG:0 == 9 && TALENT:MASTER:気丈
+			TALENT:MASTER:気丈 = 0
+			PRINTFORMW そして%CALLNAME:MASTER%は[気丈]を失った
+		;快楽刻印Lv5取得時、快感の否定を失う
+		ELSEIF LOCAL == 1 && ARG:1 == 5 && TALENT:MASTER:快感の否定
+			TALENT:MASTER:快感の否定 = 0
+			PRINTFORMW そして%CALLNAME:MASTER%は[快感の否定]を失った
+		;快楽刻印Lv7取得時、抑圧を失う
+		ELSEIF LOCAL == 1 && ARG:1 == 7 && TALENT:MASTER:抑圧
+			TALENT:MASTER:抑圧 = 0
+			PRINTFORMW そして%CALLNAME:MASTER%は[抑圧]を失った
+		;快楽刻印Lv10取得時、快感に素直を得る
+		ELSEIF LOCAL == 1 && ARG:1 == 10 && !TALENT:MASTER:快感に素直
+			TALENT:MASTER:快感に素直 = 1
+			PRINTFORMW そして%CALLNAME:MASTER%は[快感に素直]を得た
+		;屈服刻印Lv7取得時、反抗的を失う
+		ELSEIF LOCAL == 2 && ARG:2 == 7 && TALENT:MASTER:反抗的
+			TALENT:MASTER:反抗的 = 0
+			PRINTFORMW そして%CALLNAME:MASTER%は[反抗的]を失った
+		;屈服刻印Lv10取得時、プライド高いを失い、エンディング用フラグが立つ
+		ELSEIF LOCAL == 2 && ARG:2 == 10
+			FLAG:屈服Lv10 += 1
+			IF TALENT:MASTER:プライド高い
+				TALENT:MASTER:プライド高い = 0
+				PRINTFORMW そして%CALLNAME:MASTER%は[プライド高い]を失った
+			ENDIF
+		;トラウマLv10取得時、臆病、幼稚を得、
+		;元々幼稚を持っているか1/3の確率で狂気を得る
+		ELSEIF LOCAL == 4 && ARG:4 == 10
+			IF !TALENT:MASTER:臆病
+				TALENT:MASTER:臆病 = 1
+				PRINTFORMW そして%CALLNAME:MASTER%は[臆病]を得た
+			ELSEIF !TALENT:MASTER:狂気 && (TALENT:MASTER:幼稚 || !RAND:3)
+				TALENT:MASTER:狂気 = 1
+				PRINTFORMW そして%CALLNAME:MASTER%は[狂気]を得た
+			ELSEIF !TALENT:MASTER:幼稚
+				TALENT:MASTER:幼稚 = 1
+				PRINTFORMW そして%CALLNAME:MASTER%は幼児退行した
+			ENDIF
+		ENDIF
+	ENDIF
+NEXT
+
+;反抗刻印Lv上限の処理
+;反抗刻印は10-(苦痛刻印+屈服刻印)/2を超えない
+IF MARK:反抗刻印 > 10-((MARK:屈服刻印+MARK:MASTER:苦痛刻印)/2)
+	MARK:反抗刻印 = 10-((MARK:屈服刻印+MARK:MASTER:苦痛刻印)/2)
+	;口上呼び出し
+	CALL KOJO_EVENT(29)
+	PRINTFORML %CALLNAME:TARGET%の与える快楽\@ MARK:MASTER:苦痛刻印 ? と苦痛 # \@が%CALLNAME:MASTER%から反抗の気力を奪っていく…
+	PRINTFORMW 反抗刻印は{MARK:反抗刻印}になった
+ENDIF
+
+;────────────────────────────────────
+;刻印:屈服刻印
+;────────────────────────────────────
+;抜かずの二発と抜かずの三発はSOURCE_1.ERBに移動。決断的に新仕様へ大工事＋α@revkoishi(14/05/28)
+;抜かずの二発と抜かずの三発の処理を差し戻し。SOURCE_1の処理を改めたのでここで良いということで@/L(2014/06/05)
+@MARK_CHECK_SOURCE_SURRENDER
+#DIM LCOUNT
+
+;-------------------------------------------------
+;協力的調教対象行動による屈服
+;-------------------------------------------------
+SIF IS_COMGRONAME("積極的従う/受け入れる/平然と従う") && !IS_NOWCOMNAME("なすがまま") && !IS_COMIMPNAME("悪印象大")
+	CALL MARK_CHECK_GET("好意的反応")	;【屈服:0】好意的反応(調教対象が積極的従う系を選択)
+;足舐め強制/イラマチオが他のACT分類から派生した場合でもMENUMATCHなら拾うことが可能@/L
+SIF MENUMATCH(TFLAG:ACT, "奉仕") && IS_COMGRONAME("積極的従う")
+	CALL MARK_CHECK_GET("積極奉仕")		;【屈服:29】積極奉仕(ACT分類が奉仕系中に積極的に従う)
+SIF ((SEX_INITIATIVE(MASTER) && IS_COMGRONAME("積極的従う")) || (SEX_INITIATIVE(TARGET) && IS_COMGRONAME("受け入れる"))) ;&& !IS_NOWCOMNAME("なすがまま")
+	CALL MARK_CHECK_GET("腰をふる")		;【屈服:31】腰をふる(性交中積極的に従う)
+SIF IS_NOWCOMNAME("イかせて！")
+	CALL MARK_CHECK_GET("イかせて")		;【屈服:49】イかせて！
+
+;-------------------------------------------------
+;調教対象快感による屈服
+;-------------------------------------------------
+SIF TCVAR:MASTER:勃起度 >= 1000
+	CALL MARK_CHECK_GET("勃起")			;【屈服:2】勃起させた(勃起度1000突破)
+FOR LCOUNT, 0, 4
+	SIF PALAM:MASTER:LCOUNT >= 1000
+		CALL MARK_CHECK_GET(TOSTR(3 + LCOUNT))	;【屈服:3】【屈服:4】【屈服:5】【屈服:6】快Ｘを1000以上与えた
+NEXT
+SIF IS_CONDITION(MASTER, "情欲")
+	CALL MARK_CHECK_GET("情欲")			;【屈服:32】情欲(調教対象の状態が情欲)
+SIF TCVAR:MASTER:焦らし度 > 1
+	CALL MARK_CHECK_GET("焦らし")		;【屈服:33】焦らしプレイ
+SIF PALAM:MASTER:潤滑 >= 1000 && !TALENT:MASTER:オトコ
+	CALL MARK_CHECK_GET("濡れた")		;【屈服:62】濡れた(潤滑1000突破)
+
+;-------------------------------------------------
+;絶頂による屈服
+;-------------------------------------------------
+FOR LCOUNT, 0, 4
+	SIF NOWEX:MASTER:LCOUNT
+		CALL MARK_CHECK_GET(TOSTR(12 + LCOUNT))	;【屈服:12】【屈服:13】【屈服:14】【屈服:15】Ｘ絶頂
+NEXT
+SIF (NOWEX:MASTER:Ｃ絶頂 || NOWEX:MASTER:Ｖ絶頂 || NOWEX:MASTER:Ａ絶頂 || NOWEX:MASTER:Ｂ絶頂) && GETBIT(TEQUIP:自慰中, 0)
+	CALL MARK_CHECK_GET("自慰絶頂")		;【屈服:26】自慰絶頂
+SIF (NOWEX:MASTER:Ｃ絶頂 || NOWEX:MASTER:Ｖ絶頂 || NOWEX:MASTER:Ａ絶頂 || NOWEX:MASTER:Ｂ絶頂) && TEQUIP:縄
+	CALL MARK_CHECK_GET("拘束絶頂")		;【屈服:34】拘束絶頂
+SIF ((NOWEX:MASTER:Ｃ絶頂 != 0) + (NOWEX:MASTER:Ｖ絶頂 != 0) + (NOWEX:MASTER:Ａ絶頂 != 0) + (NOWEX:MASTER:Ｂ絶頂 != 0)) > 1
+	CALL MARK_CHECK_GET("多重絶頂")		;【屈服:37】多重絶頂(複数箇所同時絶頂)
+SIF (NOWEX:MASTER:Ｃ絶頂 || NOWEX:MASTER:Ｖ絶頂 || NOWEX:MASTER:Ａ絶頂 || NOWEX:MASTER:Ｂ絶頂) && (NOWEX:Ｃ絶頂 || NOWEX:Ｖ絶頂 || NOWEX:Ａ絶頂 || NOWEX:Ｂ絶頂)
+	CALL MARK_CHECK_GET("同時絶頂")		;【屈服:38】同時絶頂(調教対象、調教者同時絶頂)
+SIF ((TEQUIP:性交中 && (NOWEX:MASTER:Ｖ絶頂 || NOWEX:MASTER:Ａ絶頂) && (NOWEX:射精 || NOWEX:Ｃ絶頂)) || (TEQUIP:性交奉仕中 && (NOWEX:MASTER:射精 || NOWEX:MASTER:Ｃ絶頂) && (NOWEX:Ｖ絶頂 || NOWEX:Ａ絶頂)))
+	CALL MARK_CHECK_GET("性交同時絶頂")	;【屈服:39】性交同時絶頂(性交中、挿入者射精時に被挿入者がA/V絶頂)
+SIF TFLAG:前回中出し == 1 && NOWEX:MASTER:Ｖ絶頂
+	CALL MARK_CHECK_GET("被膣射Ｖ絶頂")	;【屈服:60】膣内射精Ｖ絶頂(調教者に膣内射精されたと同時に調教対象がＶ絶頂)
+SIF NOWEX:MASTER:Ｃ絶頂 && NOWEX:MASTER:Ｖ絶頂 && NOWEX:MASTER:Ａ絶頂 && NOWEX:MASTER:Ｂ絶頂
+	CALL MARK_CHECK_GET("四重絶頂")		;【屈服:61】四重絶頂
+
+;-------------------------------------------------
+;射精による屈服
+;-------------------------------------------------
+;抜かずの二発/抜かずの三発の調整@revkoishi(14/06/07)
+SIF NOWEX:MASTER:射精 > 1
+	CALL MARK_CHECK_GET("射精")			;【屈服:19】射精
+SIF NOWEX:MASTER:射精 == 3
+	CALL MARK_CHECK_GET("大量射精")		;【屈服:20】大量射精
+SIF NOWEX:MASTER:射精 == 4
+	CALL MARK_CHECK_GET("早漏射精")		;【屈服:21】射精(早漏)
+SIF TFLAG:前回中出し == 1
+	CALL MARK_CHECK_GET("被膣内射精")	;【屈服:22】膣内射精された
+SIF TFLAG:前回中出し == 2
+	CALL MARK_CHECK_GET("膣内射精")		;【屈服:25】膣内射精
+;空射精は弾く。一見分かり難いので@PENISを+@/L
+SIF PENIS(TARGET) && IS_NOWACTNAME("口で愛撫を強制/イラマチオ") && NOWEX:射精 > 1
+	CALL MARK_CHECK_GET("被口内射精")	;【屈服:27】口内射精された(フェラ/イラマ中に調教者が射精)
+;空射精は弾く。一見分かり難いので@PENISを+@/L
+SIF PENIS(MASTER) && (IS_NOWACTNAME("口で愛撫") || TEQUIP:調教対象Ｃ使用 == 2) && NOWEX:MASTER:射精 > 1
+	CALL MARK_CHECK_GET("口内射精")		;【屈服:28】口内射精(調教者フェラ中に射精)
+SIF TFLAG:前回中出し == 6
+	CALL MARK_CHECK_GET("肛内射精")		;【屈服:41】アナルへ射精
+SIF TFLAG:前回中出し == 5
+	CALL MARK_CHECK_GET("被肛内射精")	;【屈服:42】アナルに射精される
+;空射精での抜かずはとりあえず認めるものとする@/L
+SIF IS_UNEXTRACTION(MASTER) && GROUPMATCH(TFLAG:前回中出し, 2, 4, 6, 8) > 0
+	CALL MARK_CHECK_GET("抜かずの二発")	;【屈服:43】抜かずの二発(射精後挿入を中断せず射精)
+SIF NOWEX:MASTER:射精 == 1
+	CALL MARK_CHECK_GET("空射精")		;【屈服:44】空射精
+SIF NOWEX:MASTER:射精 == 5
+	CALL MARK_CHECK_GET("前立腺射精")	;【屈服:45】前立腺射精
+SIF IS_UNEXTRACTION(MASTER) > 1 && GROUPMATCH(TFLAG:前回中出し, 2, 4, 6, 8) > 0
+	CALL MARK_CHECK_GET("抜かずの三発")	;【屈服:55】抜かずの三発(抜かずの二発後挿入を中断せず射精)
+
+;-------------------------------------------------
+;調教対象恥情による屈服
+;-------------------------------------------------
+SIF !(TEQUIP:MASTER:コスプレ || TEQUIP:MASTER:下半身下着 || TEQUIP:MASTER:上半身下着 || TEQUIP:MASTER:下半身上着 || TEQUIP:MASTER:上半身上着 || TEQUIP:MASTER:全身上着)
+	CALL MARK_CHECK_GET("全裸")			;【屈服:1】裸に剥いた(MASTERの衣服がなくなる)(※靴下等は着衣に数えない)
+SIF CUP:MASTER:快Ａ
+	CALL MARK_CHECK_GET("Ａ調教")		;【屈服:9】アナル調教(快A発生)
+SIF TEQUIP:野外プレイ
+	CALL MARK_CHECK_GET("野外")			;【屈服:16】野外プレイ
+SIF TEQUIP:大鏡
+	CALL MARK_CHECK_GET("大鏡")			;【屈服:17】羞恥プレイ
+;リアクションが受容である場合に限定する。放尿の場合、許しを乞うは拒否扱い@/L
+SIF IS_NOWACTNAME("放尿") && IS_COMGRONAME("消極的従う/平然と従う/積極的従う/受け入れる")
+	CALL MARK_CHECK_GET("放尿")			;【屈服:18】放尿させた(調教対象が従う系を選択)L
+SIF TEQUIP:浣腸器＋プラグ
+	CALL MARK_CHECK_GET("浣腸")			;【屈服:35】浣腸
+SIF TFLAG:失禁
+	CALL MARK_CHECK_GET("失禁")			;【屈服:36】失禁
+SIF IS_NOWACTNAME("浣腸セット") && TFLAG:ACT派生 == 1
+	CALL MARK_CHECK_GET("排泄")			;【屈服:50】排泄(浣腸器＋プラグ解除時)
+
+;-------------------------------------------------
+;調教対象苦痛による屈服
+;-------------------------------------------------
+SIF CUP:MASTER:恐怖 || CUP:MASTER:苦痛
+	CALL MARK_CHECK_GET("威圧")			;【屈服:7】苦痛、恐怖(が発生)
+SIF IS_NOWACTNAME("鞭")
+	CALL MARK_CHECK_GET("鞭")			;【屈服:8】ムチで叩いた
+SIF TEQUIP:縄
+	CALL MARK_CHECK_GET("拘束")			;【屈服:10】拘束した
+SIF TFLAG:お仕置きフラグ && (CUP:MASTER:恐怖 || CUP:MASTER:苦痛)
+	CALL MARK_CHECK_GET("お仕置き")		;【屈服:48】お仕置き(お仕置き時、恐怖/苦痛が発生)
+SIF TEQUIP:三角木馬
+	CALL MARK_CHECK_GET("三角木馬")		;【屈服:52】三角木馬
+
+;-------------------------------------------------
+;決定的状況による屈服
+;-------------------------------------------------
+;リアクションが受容である場合に限定@/L
+SIF IS_NOWACTNAME("キス") && IS_COMGRONAME("消極的従う/平然と従う/積極的従う/受け入れる/許しを乞う")
+	CALL MARK_CHECK_GET("キス")			;【屈服:11】キス
+SIF TEQUIP:バイブ
+	CALL MARK_CHECK_GET("バイブ")		;【屈服:23】バイブ
+SIF TEQUIP:アナルバイブ || TEQUIP:アナルビーズ
+	CALL MARK_CHECK_GET("Ａ道具")		;【屈服:24】アナルバイブ、ビーズ
+SIF TEQUIP:性交中 || TEQUIP:性交奉仕中
+	CALL MARK_CHECK_GET("性交")			;【屈服:30】性交
+SIF NOWEX:MASTER:噴乳
+	CALL MARK_CHECK_GET("噴乳")			;【屈服:40】噴乳
+SIF TEQUIP:性交中 == 6
+	CALL MARK_CHECK_GET("Ａ性交・受")	;【屈服:46】アナルセックス(受け)
+SIF TEQUIP:性交奉仕中 == 6
+	CALL MARK_CHECK_GET("Ａ性交・攻")	;【屈服:47】アナルセックス(攻め)
+SIF IS_NOWACTNAME("公衆肉便器プレイ") && GROUPMATCH(TFLAG:ACT派生, 2, 3)
+	CALL MARK_CHECK_GET("公衆便所")		;【屈服:51】公衆便所(公衆肉便器プレイ受容時)
+SIF IS_NOWACTNAME("フィストファック/両穴フィスト")
+	CALL MARK_CHECK_GET("Ｖ拡張")		;【屈服:53】Ｖ拡張(フィスト/両穴フィスト時)
+SIF IS_NOWACTNAME("アナルフィスト/両穴フィスト")
+	CALL MARK_CHECK_GET("Ａ拡張")		;【屈服:54】Ａ拡張(Aフィスト/両穴フィスト時)
+SIF NOWEX:MASTER:潮吹き
+	CALL MARK_CHECK_GET("潮吹き")		;【屈服:59】潮吹き
+
+;-------------------------------------------------
+;口上独自の屈服
+;-------------------------------------------------
+;口上独自実績用リザーブX
+;【屈服:112】【屈服:113】【屈服:114】【屈服:115】【屈服:116】【屈服:117】【屈服:118】【屈服:119】
+;【屈服:120】【屈服:121】【屈服:122】【屈服:123】【屈服:124】【屈服:125】【屈服:126】【屈服:127】
+TRYCALLFORM KOJO_CHECK_SURRENDER_K{NO:TARGET}
+
+;屈服刻印取得確認
+CALL MARK_CHECK_SOURCE_SURRENDER_CHECK
+RETURN RESULT
+
+;その他屈服条件は【屈服:\d*】で検索可能
+;
+;56失神はEVENTCOMENDで
+;57,58処女、童貞喪失はEXPCHECKで
+;他にもあるかも、ですって？ あったら困ります(レイプ目)
+
+
+@MARK_CHECK_SOURCE_SURRENDER_CHECK
+;刻印をMASTER側に適用
+;CFLAG:MASTER:刻印にMASTERの受けたすべての刻印
+;CFLAG:TARGET:刻印にTARGETの与えたすべての刻印
+;が入ることになります
+CFLAG:MASTER:刻印 |= CFLAG:刻印
+CFLAG:MASTER:刻印2 |= CFLAG:TARGET:刻印2	;どこで使うか知らないけど一応追加@revkoishi(14/05/26)
+
+;LOCAL:1に屈服ポイント総計を入れ補正する
+LOCAL:1 = CFLAG:屈服P1
+SIF TALENT:MASTER:オトコ
+	TIMES LOCAL:1, 1.10
+;ふたなりでも男でもない(つまり女)
+SIF TALENT:MASTER:ふたなり !| TALENT:MASTER:オトコ
+	TIMES LOCAL:1, 1.20
+SIF TALENT:MASTER:臆病
+	TIMES LOCAL:1, 1.05
+SIF TALENT:MASTER:気丈
+	TIMES LOCAL:1, 0.95
+SIF TALENT:MASTER:反抗的
+	TIMES LOCAL:1, 0.95
+SIF TALENT:MASTER:プライド高い
+	TIMES LOCAL:1, 1.05
+SIF TALENT:MASTER:プライド低い
+	TIMES LOCAL:1, 0.95
+SIF TALENT:威圧感
+	TIMES LOCAL:1, 1.50
+
+;補正値を元に屈服刻印条件を超過しているか算出
+LOCAL = LOCAL:1 > (MARK:屈服刻印 * 5 + MARK:屈服刻印 * MARK:屈服刻印 / 2)
+;10LVが上限
+SIF LOCAL && (MARK:屈服刻印 < 10)
+	RETURN ++MARK:屈服刻印
+
+RETURN 0
+
+;────────────────────────────────────
+;屈服刻印取得関数 イベント制です。特定の条件でターンエンドすると屈服ポイントが貯まりだんだんと篭絡されていきます
+;ARGS:0 屈服実績名 または 文字列形式の屈服実績番号(0～127)
+;決断的に新仕様へ大工事(14/05/26)。性別で有効判定するようにガード@revkoishi(14/06/01)
+;────────────────────────────────────
+@MARK_CHECK_GET(ARGS:0)
+LOCAL:1 = RESULT
+LOCAL:0 = ISNUMERIC(ARGS:0) ? TOINT(ARGS:0) # GET_SURRENDER_NUM(ARGS:0)
+IF IS_SURRENDER_ENABLE(LOCAL:0) && !(LOCAL:0 > 63 ? GETBIT(CFLAG:TARGET:刻印2, LOCAL:0 - 64) # GETBIT(CFLAG:TARGET:刻印, LOCAL:0))
+	PRINTFORML 【%GET_SURRENDER_STR_M(LOCAL:0)%】屈服ポイント+{GET_SURRENDER_POINT(LOCAL:0)}
+	CFLAG:TARGET:屈服P1 += GET_SURRENDER_POINT(LOCAL:0)
+	SETBIT CFLAG:TARGET:\@ LOCAL:0 > 63 ? 刻印2 # 刻印 \@, LOCAL:0 > 63 ? LOCAL:0 - 64 # LOCAL:0
+ENDIF
+RETURN LOCAL:1

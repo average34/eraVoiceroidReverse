@@ -1,0 +1,518 @@
+﻿;性格決定質問の結果からTALENTを生成
+;素質ごとに関数を作ります
+
+;処女
+@CM_SET_TALENT_0
+;オトコお断り
+SIF TALENT:MASTER:オトコ
+	RETURN 0
+;素質判定値
+LOCAL = CM_TALENT_MAKE("プライド", "衝動逆", "楽観逆", "羞恥", "知性", "潔癖", "潔癖", "モラル", "モラル", "Ｖ好き逆", "素直さ")+40
+;小柄だと判定値+50
+SIF TALENT:MASTER:小柄
+	LOCAL += 50
+TALENT:MASTER:処女 = PERCENT(LOCAL)
+
+;童貞
+@CM_SET_TALENT_1
+;ちんこない子お断り
+SIF !PENIS(MASTER)
+	RETURN 0
+;素質判定値
+LOCAL = CM_TALENT_MAKE("プライド", "衝動逆", "楽観", "羞恥", "知性", "潔癖", "モラル", "モラル", "Ｃ好き逆", "攻撃逆")+40
+;小柄だと判定値+50
+SIF TALENT:MASTER:小柄
+	LOCAL += 50
+TALENT:MASTER:童貞 = PERCENT(LOCAL)
+
+;臆病
+@CM_SET_TALENT_10
+;素質判定値
+LOCAL = CM_TALENT_MAKE("プライド逆", "楽観逆", "羞恥", "知性逆", "潔癖", "攻撃逆", "被虐", "攻撃逆", "好奇心逆")
+;小柄だと判定値+20
+SIF TALENT:MASTER:小柄
+	LOCAL += 20
+TALENT:MASTER:臆病 = PERCENT(LOCAL)
+
+;反抗的
+@CM_SET_TALENT_11
+;素質判定値
+LOCAL = CM_TALENT_MAKE("プライド", "攻撃", "素直さ逆", "潔癖", "モラル逆", "攻撃", "プライド")
+;小柄だと判定値+20
+SIF TALENT:MASTER:小柄
+	LOCAL += 20
+TALENT:MASTER:反抗的 = PERCENT(LOCAL)
+
+;気丈
+@CM_SET_TALENT_12
+;素質判定値
+LOCAL = CM_TALENT_MAKE("プライド", "攻撃", "被虐逆", "潔癖", "モラル", "神経質", "知性", "知性", "プライド")
+;小柄だと判定値-10
+SIF TALENT:MASTER:小柄
+	LOCAL -= 10
+;長身だと判定値+10
+SIF TALENT:MASTER:長身
+	LOCAL += 10
+TALENT:MASTER:気丈 = PERCENT(LOCAL)
+
+;素直
+@CM_SET_TALENT_13
+;反抗的お断り
+SIF TALENT:MASTER:反抗的
+	RETURN 0
+;素質判定値
+LOCAL = CM_TALENT_MAKE("プライド逆", "素直さ", "素直さ", "素直さ", "モラル", "神経質逆", "知性逆", "攻撃逆", "楽観")
+;小柄だと判定値+20
+SIF TALENT:MASTER:小柄
+	LOCAL += 20
+TALENT:MASTER:素直 = PERCENT(LOCAL)
+
+;大人しい
+@CM_SET_TALENT_14
+;反抗的お断り
+SIF TALENT:MASTER:反抗的
+	RETURN 0
+;素質判定値
+LOCAL = CM_TALENT_MAKE("プライド逆", "素直さ", "攻撃逆", "攻撃逆", "衝動", "楽観逆", "モラル")
+TALENT:MASTER:大人しい = PERCENT(LOCAL)
+
+;プライド高い
+@CM_SET_TALENT_15
+;素質判定値
+LOCAL = CM_TALENT_MAKE("プライド", "プライド", "被虐逆", "知性", "素直さ逆")
+TALENT:MASTER:プライド高い = PERCENT(LOCAL)
+
+;生意気
+@CM_SET_TALENT_16
+;素直お断り
+SIF TALENT:MASTER:素直
+	RETURN 0
+;素質判定値
+LOCAL = CM_TALENT_MAKE("プライド", "プライド", "素直さ逆", "攻撃", "好奇心", "モラル逆", "衝動")
+;小柄だと判定値+10
+SIF TALENT:MASTER:小柄
+	LOCAL += 10
+TALENT:MASTER:生意気 = PERCENT(LOCAL)
+
+;プライド低い
+@CM_SET_TALENT_17
+;プライド高いお断り
+SIF TALENT:MASTER:プライド高い
+	RETURN 0
+;素質判定値
+LOCAL = CM_TALENT_MAKE("プライド逆", "プライド逆", "素直さ", "被虐", "知性逆")
+TALENT:MASTER:プライド低い = PERCENT(LOCAL)
+
+;自制的
+@CM_SET_TALENT_20
+;素質判定値
+LOCAL = CM_TALENT_MAKE("プライド", "衝動逆", "衝動逆", "衝動逆", "好奇心逆", "羞恥", "神経質", "知性")
+;小柄だと判定値-10
+SIF TALENT:MASTER:小柄
+	LOCAL -= 10
+TALENT:MASTER:自制的 = PERCENT(LOCAL)
+
+;衝動的
+@CM_SET_TALENT_21
+;自制的お断り
+SIF TALENT:MASTER:自制的
+	RETURN 0
+;素質判定値
+LOCAL = CM_TALENT_MAKE("プライド逆", "衝動", "衝動", "衝動", "好奇心", "羞恥逆", "神経質逆", "知性逆")
+;小柄だと判定値+10
+SIF TALENT:MASTER:小柄
+	LOCAL += 10
+TALENT:MASTER:衝動的 = PERCENT(LOCAL)
+
+;無関心
+@CM_SET_TALENT_22
+;素質判定値
+LOCAL = CM_TALENT_MAKE("攻撃逆", "衝動逆", "好奇心逆", "好奇心逆", "好奇心逆", "楽観逆", "神経質", "潔癖")
+;小柄だと判定値-20
+SIF TALENT:MASTER:小柄
+	LOCAL -= 20
+TALENT:MASTER:無関心 = PERCENT(LOCAL)
+
+;好奇心
+@CM_SET_TALENT_23
+;無関心お断り
+SIF TALENT:MASTER:無関心
+	RETURN 0
+;素質判定値
+LOCAL = CM_TALENT_MAKE("攻撃", "衝動", "好奇心", "好奇心", "好奇心", "楽観", "神経質逆", "潔癖逆")
+;小柄だと判定値+20
+SIF TALENT:MASTER:小柄
+	LOCAL += 20
+TALENT:MASTER:好奇心 = PERCENT(LOCAL)
+
+;感情乏しい
+@CM_SET_TALENT_24
+;素質判定値
+LOCAL = CM_TALENT_MAKE("衝動逆", "好奇心逆", "攻撃", "神経質")
+;小柄だと判定値-20
+SIF TALENT:MASTER:小柄
+	LOCAL -= 20
+TALENT:MASTER:感情乏しい = PERCENT(LOCAL)
+
+;情緒豊か
+@CM_SET_TALENT_25
+;感情乏しいお断り
+SIF TALENT:MASTER:感情乏しい
+	RETURN 0
+;素質判定値
+LOCAL = CM_TALENT_MAKE("衝動", "好奇心", "攻撃逆", "神経質逆")
+;小柄だと判定値+20
+SIF TALENT:MASTER:小柄
+	LOCAL += 20
+TALENT:MASTER:情緒豊か = PERCENT(LOCAL)
+
+;楽観的
+@CM_SET_TALENT_26
+;素質判定値
+LOCAL = CM_TALENT_MAKE("衝動", "楽観", "楽観", "素直さ")
+TALENT:MASTER:楽観的 = PERCENT(LOCAL)
+
+;悲観的
+@CM_SET_TALENT_27
+;楽観的お断り
+SIF TALENT:MASTER:楽観的
+	RETURN 0
+;素質判定値
+LOCAL = CM_TALENT_MAKE("衝動逆", "楽観逆", "楽観逆", "素直さ逆")
+TALENT:MASTER:悲観的 = PERCENT(LOCAL)
+
+;一線越えない
+@CM_SET_TALENT_28
+;素質判定値
+LOCAL = CM_TALENT_MAKE("被虐逆", "プライド", "衝動逆", "羞恥", "知性", "モラル", "倒錯逆", "倒錯逆")
+TALENT:MASTER:一線越えない = PERCENT(LOCAL)
+;この素質がついた場合、90％の確率で処女・童貞を強制的に付ける
+IF TALENT:MASTER:一線越えない && !RAND:10
+	SIF PENIS(MASTER)
+		TALENT:MASTER:童貞 = 1
+	SIF !TALENT:MASTER:オトコ
+		TALENT:MASTER:処女 = 1
+ENDIF
+
+;目立ちたがり
+@CM_SET_TALENT_29
+;素質判定値
+LOCAL = CM_TALENT_MAKE("攻撃", "被虐", "素直さ", "プライド", "衝動", "羞恥逆", "楽観", "倒錯", "潔癖逆", "モラル逆", "神経質逆")
+TALENT:MASTER:目立ちたがり = PERCENT(LOCAL)
+
+;貞操観念
+@CM_SET_TALENT_30
+;素質判定値
+LOCAL = CM_TALENT_MAKE("被虐", "プライド", "衝動逆", "好奇心逆", "羞恥", "倒錯逆", "同性愛", "モラル", "モラル")
+TALENT:MASTER:貞操観念 = PERCENT(LOCAL)
+
+;貞操無頓着
+@CM_SET_TALENT_31
+;貞操観念お断り
+SIF TALENT:MASTER:貞操観念
+	RETURN 0
+;素質判定値
+LOCAL = CM_TALENT_MAKE("被虐逆", "プライド逆", "衝動", "好奇心", "羞恥逆", "倒錯", "同性愛逆", "モラル逆", "モラル逆")
+TALENT:MASTER:貞操無頓着 = PERCENT(LOCAL)
+
+;抑圧
+@CM_SET_TALENT_32
+;素質判定値
+LOCAL = CM_TALENT_MAKE("攻撃逆", "被虐逆", "衝動逆", "好奇心逆", "倒錯逆", "モラル", "潔癖", "神経質")
+TALENT:MASTER:抑圧 = PERCENT(LOCAL)
+
+;解放
+@CM_SET_TALENT_33
+;抑圧お断り
+SIF TALENT:MASTER:抑圧
+	RETURN 0
+;素質判定値
+LOCAL = CM_TALENT_MAKE("攻撃", "被虐", "衝動", "好奇心", "倒錯", "モラル逆", "潔癖逆", "神経質逆")
+TALENT:MASTER:解放 = PERCENT(LOCAL)
+
+;恥じらい
+@CM_SET_TALENT_34
+;素質判定値
+LOCAL = CM_TALENT_MAKE("被虐", "好奇心逆", "楽観逆", "潔癖", "羞恥", "羞恥")
+TALENT:MASTER:恥じらい = PERCENT(LOCAL)
+
+;恥薄い
+@CM_SET_TALENT_35
+;恥じらいお断り
+SIF TALENT:MASTER:恥じらい
+	RETURN 0
+;素質判定値
+LOCAL = CM_TALENT_MAKE("被虐逆", "好奇心", "楽観", "潔癖逆", "羞恥逆", "羞恥逆")
+TALENT:MASTER:恥薄い = PERCENT(LOCAL)
+
+;痛みに弱い
+@CM_SET_TALENT_40
+;素質判定値
+LOCAL = CM_TALENT_MAKE("攻撃逆", "倒錯逆", "プライド逆", "神経質", "被虐")
+;小柄だと判定値+10
+SIF TALENT:MASTER:小柄
+	LOCAL += 10
+;長身だと判定値-10
+SIF TALENT:MASTER:長身
+	LOCAL -= 10
+TALENT:MASTER:痛みに弱い = PERCENT(LOCAL)
+
+;痛みに強い
+@CM_SET_TALENT_41
+;痛みに弱いお断り
+SIF TALENT:MASTER:痛みに弱い
+	RETURN 0
+;素質判定値
+LOCAL = CM_TALENT_MAKE("攻撃", "倒錯", "プライド", "神経質逆", "被虐逆")
+;小柄だと判定値-10
+SIF TALENT:MASTER:小柄
+	LOCAL -= 10
+;長身だと判定値+10
+SIF TALENT:MASTER:長身
+	LOCAL += 10
+TALENT:MASTER:痛みに強い = PERCENT(LOCAL)
+
+;習得早い
+@CM_SET_TALENT_50
+;素質判定値
+LOCAL = CM_TALENT_MAKE("素直さ", "知性", "知性")
+TALENT:MASTER:習得早い = PERCENT(LOCAL)
+
+;習得遅い
+@CM_SET_TALENT_51
+;習得早いお断り
+SIF TALENT:MASTER:習得早い
+	RETURN 0
+;素質判定値
+LOCAL = CM_TALENT_MAKE("素直さ逆", "知性逆", "知性逆")
+TALENT:MASTER:習得遅い = PERCENT(LOCAL)
+
+;舌使い
+@CM_SET_TALENT_52
+;素質判定値
+LOCAL = CM_TALENT_MAKE("素直さ", "潔癖逆", "Ｂ好き", "神経質逆", "神経質逆")
+TALENT:MASTER:舌使い = PERCENT(LOCAL)
+
+;器用な指先
+@CM_SET_TALENT_57
+;素質判定値
+LOCAL = CM_TALENT_MAKE("倒錯", "Ｃ好き", "神経質", "神経質")/2
+TALENT:MASTER:器用な指先 = PERCENT(LOCAL)
+
+;道具使い
+@CM_SET_TALENT_59
+;素質判定値
+LOCAL = CM_TALENT_MAKE("好奇心", "知性", "知性")/3
+TALENT:MASTER:道具使い = PERCENT(LOCAL)
+
+;自慰しやすい
+@CM_SET_TALENT_60
+;素質判定値
+LOCAL = CM_TALENT_MAKE("素直さ", "プライド逆", "衝動", "衝動", "楽観", "潔癖逆", "モラル逆")/3
+TALENT:MASTER:自慰しやすい = PERCENT(LOCAL)
+
+;汚臭鈍感
+@CM_SET_TALENT_61
+;素質判定値
+LOCAL = CM_TALENT_MAKE("被虐", "素直さ", "潔癖逆", "神経質逆", "潔癖逆")
+TALENT:MASTER:汚臭鈍感 = PERCENT(LOCAL)
+
+;汚臭敏感
+@CM_SET_TALENT_62
+;汚臭鈍感お断り
+SIF TALENT:MASTER:汚臭鈍感
+	RETURN 0
+;素質判定値
+LOCAL = CM_TALENT_MAKE("被虐逆", "素直さ逆", "潔癖", "潔癖", "神経質")
+TALENT:MASTER:汚臭敏感 = PERCENT(LOCAL)
+
+;献身的
+@CM_SET_TALENT_63
+;素質判定値
+LOCAL = CM_TALENT_MAKE("プライド逆", "素直さ", "モラル", "モラル")
+TALENT:MASTER:献身的 = PERCENT(LOCAL)
+
+;受け身
+@CM_SET_TALENT_65
+;素質判定値
+LOCAL = CM_TALENT_MAKE("プライド", "攻撃逆", "衝動逆", "羞恥")
+TALENT:MASTER:受け身 = PERCENT(LOCAL)
+
+;腰使い
+@CM_SET_TALENT_66
+;素質判定値
+LOCAL = CM_TALENT_MAKE("Ｖ好き", "Ｃ好き", "同性愛逆", "羞恥逆")
+TALENT:MASTER:腰使い = PERCENT(LOCAL)
+
+;快感に素直
+@CM_SET_TALENT_70
+;素質判定値
+LOCAL = CM_TALENT_MAKE("素直さ", "素直さ", "衝動", "好奇心", "羞恥逆", "潔癖逆", "モラル逆", "モラル逆")/4
+TALENT:MASTER:快感に素直 = PERCENT(LOCAL)
+
+;快感の否定
+@CM_SET_TALENT_71
+;快感に素直お断り
+SIF TALENT:MASTER:快感に素直
+	RETURN 0
+;素質判定値
+LOCAL = CM_TALENT_MAKE("素直さ逆", "素直さ逆", "衝動逆", "好奇心逆", "羞恥", "潔癖", "モラル", "モラル")/4
+TALENT:MASTER:快感の否定 = PERCENT(LOCAL)
+
+;倒錯的
+@CM_SET_TALENT_80
+;素質判定値
+LOCAL = CM_TALENT_MAKE("プライド", "被虐", "倒錯", "倒錯", "知性")/2
+TALENT:MASTER:倒錯的 = PERCENT(LOCAL)
+
+;両刀
+@CM_SET_TALENT_81
+;素質判定値
+LOCAL = CM_TALENT_MAKE("同性愛", "Ｃ好き", "同性愛", "倒錯", "モラル逆")/2
+TALENT:MASTER:両刀 = PERCENT(LOCAL)
+
+;男嫌い
+@CM_SET_TALENT_82
+;両刀お断り
+SIF TALENT:MASTER:両刀
+	RETURN 0
+;オトコお断り
+SIF TALENT:MASTER:オトコ
+	RETURN 0
+;素質判定値
+LOCAL = CM_TALENT_MAKE("同性愛", "Ｃ好き逆", "同性愛", "モラル", "プライド")/4
+TALENT:MASTER:男嫌い = PERCENT(LOCAL)
+
+;サド
+@CM_SET_TALENT_83
+;素質判定値
+LOCAL = CM_TALENT_MAKE("攻撃", "攻撃", "被虐逆", "倒錯", "モラル逆")/3
+TALENT:MASTER:サド = PERCENT(LOCAL)
+
+;慎重
+@CM_SET_TALENT_84
+;素質判定値
+LOCAL = CM_TALENT_MAKE("攻撃逆", "攻撃逆", "プライド", "好奇心逆", "衝動逆", "衝動逆")/2
+TALENT:MASTER:慎重 = PERCENT(LOCAL)
+
+;短気
+@CM_SET_TALENT_85
+;慎重お断り
+SIF TALENT:MASTER:慎重
+	RETURN 0
+;素質判定値
+LOCAL = CM_TALENT_MAKE("攻撃", "攻撃", "プライド逆", "好奇心", "衝動", "衝動")/2
+TALENT:MASTER:短気 = PERCENT(LOCAL)
+
+;意地悪
+@CM_SET_TALENT_86
+;素質判定値
+LOCAL = CM_TALENT_MAKE("攻撃", "素直さ逆", "素直さ逆", "好奇心", "倒錯", "モラル逆", "モラル逆")/2
+TALENT:MASTER:意地悪 = PERCENT(LOCAL)
+
+;心根優しい
+@CM_SET_TALENT_87
+;意地悪お断り
+SIF TALENT:MASTER:意地悪
+	RETURN 0
+;素質判定値
+LOCAL = CM_TALENT_MAKE("攻撃逆", "素直さ", "素直さ", "好奇心逆", "倒錯逆", "モラル", "モラル")/2
+TALENT:MASTER:心根優しい = PERCENT(LOCAL)
+
+;威圧感
+@CM_SET_TALENT_90
+;素質判定値
+LOCAL = CM_TALENT_MAKE("プライド", "プライド", "攻撃", "攻撃")/4
+TALENT:MASTER:威圧感 = PERCENT(LOCAL)
+
+;親しみやすい
+@CM_SET_TALENT_92
+;威圧感お断り
+SIF TALENT:MASTER:威圧感
+	RETURN 0
+;素質判定値
+LOCAL = CM_TALENT_MAKE("攻撃逆", "プライド逆", "素直さ", "神経質逆", "神経質逆")/2
+TALENT:MASTER:親しみやすい = PERCENT(LOCAL)
+
+;近寄り難い
+@CM_SET_TALENT_93
+;親しみやすいお断り
+SIF TALENT:MASTER:親しみやすい
+	RETURN 0
+;素質判定値
+LOCAL = CM_TALENT_MAKE("攻撃", "プライド", "素直さ逆", "神経質", "神経質")/2
+TALENT:MASTER:近寄り難い = PERCENT(LOCAL)
+
+;Ｃ敏感
+@CM_SET_TALENT_100
+;素質判定値
+LOCAL = CM_TALENT_MAKE("Ｃ好き")
+;ペニスがあると付きにくい
+LOCAL /= PENIS(MASTER)+1
+TALENT:MASTER:Ｃ敏感 = PERCENT(LOCAL/4)
+
+;Ｃ鈍感
+@CM_SET_TALENT_101
+;Ｃ敏感お断り
+SIF TALENT:MASTER:Ｃ敏感
+	RETURN 0
+;素質判定値
+LOCAL = CM_TALENT_MAKE("Ｃ好き逆")
+;ペニスがあると付きにくい
+LOCAL /= PENIS(MASTER)+1
+TALENT:MASTER:Ｃ鈍感 = PERCENT(LOCAL/2)
+
+;Ｖ敏感
+@CM_SET_TALENT_102
+;オトコお断り
+SIF TALENT:MASTER:オトコ
+	RETURN 0
+;素質判定値
+LOCAL = CM_TALENT_MAKE("Ｖ好き")
+TALENT:MASTER:Ｖ敏感 = PERCENT(LOCAL/2)
+
+;Ｖ鈍感
+@CM_SET_TALENT_103
+;オトコお断り
+SIF TALENT:MASTER:オトコ
+	RETURN 0
+;Ｖ敏感お断り
+SIF TALENT:MASTER:Ｖ敏感
+	RETURN 0
+;素質判定値
+LOCAL = CM_TALENT_MAKE("Ｖ好き逆")
+TALENT:MASTER:Ｖ鈍感 = PERCENT(LOCAL/2)
+
+;Ａ敏感
+@CM_SET_TALENT_104
+;素質判定値
+LOCAL = CM_TALENT_MAKE("Ａ好き")
+;ペニスがないと付きにくい
+LOCAL /= !PENIS(MASTER)+1
+TALENT:MASTER:Ａ敏感 = PERCENT(LOCAL/2)
+
+;Ａ鈍感
+@CM_SET_TALENT_105
+;Ａ敏感お断り
+SIF TALENT:MASTER:Ａ敏感
+	RETURN 0
+;素質判定値
+LOCAL = CM_TALENT_MAKE("Ａ好き逆")
+;ペニスがないと付きにくい
+LOCAL /= !PENIS(MASTER)+1
+TALENT:MASTER:Ａ鈍感 = PERCENT(LOCAL/2)
+
+;Ｂ敏感
+@CM_SET_TALENT_106
+;素質判定値
+LOCAL = CM_TALENT_MAKE("Ｂ好き")
+TALENT:MASTER:Ｂ敏感 = PERCENT(LOCAL/2)
+
+;Ｂ鈍感
+@CM_SET_TALENT_107
+;Ｂ敏感お断り
+SIF TALENT:MASTER:Ｂ敏感
+	RETURN 0
+;素質判定値
+LOCAL = CM_TALENT_MAKE("Ｂ好き逆")
+TALENT:MASTER:Ｂ鈍感 = PERCENT(LOCAL/2)

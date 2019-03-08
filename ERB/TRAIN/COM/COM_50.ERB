@@ -1,0 +1,249 @@
+﻿;────────────────────────────────────
+;050,自慰し始める（自慰、悦楽、反抗、お仕置きポイント）
+;────────────────────────────────────
+@COM50
+;自慰処理
+CALL ONANIE_APPLY
+;悦楽、屈従SOURCE増加
+SOURCE:MASTER:悦楽 += (SOURCE:MASTER:快Ｃ + SOURCE:MASTER:快Ｖ + SOURCE:MASTER:快Ａ + SOURCE:MASTER:快Ｂ) / 1000
+SOURCE:MASTER:屈従 += 250 + (SOURCE:MASTER:快Ｃ + SOURCE:MASTER:快Ｖ + SOURCE:MASTER:快Ａ + SOURCE:MASTER:快Ｂ) * (GET_ABL(MASTER, "欲望") + 10) / 300
+LOCAL = (SOURCE:MASTER:快Ｃ + SOURCE:MASTER:快Ｖ + SOURCE:MASTER:快Ａ + SOURCE:MASTER:快Ｂ) * (3 + TALENT:意地悪) / 50
+SIF LOCAL > 100
+	LOCAL = 100
+;-------------------------------------------------
+;ACTが休ませる、もしくは奉仕系ならREACT分類は拒否扱いに。お仕置きポイント加算でCOMGRO受け入れるは違和感という事も含めての処置
+;さらにSET_COMGRO, SET_COMIMPをREACT派生代入箇所と統合@/L
+;-------------------------------------------------
+;調教者が満足してるならお仕置きにならないかもしれません
+IF BASE:満足 / 100 + CFLAG:MASTER:調教レベル / 2 < BASE:苛立ち / 100 + RAND:5 || MENUMATCH(TFLAG:ACT, "奉仕") || IS_NOWACTNAME("休ませる")
+	;お仕置きポイント加算
+	TFLAG:お仕置きポイント += LOCAL
+	;派生：勝手にオナニーするな
+	TFLAG:REACT派生 = 1
+	;REACT分類:拒否をセット
+	CALL SET_COMGRO("拒否")
+	;REACT印象はCOM40,拒否するに準じて悪印象大
+	CALL SET_COMIMP("悪印象大")
+	;依存度変化
+	CALL ADD_DEPEND(-3, +2)
+ELSE
+	;派生：勝手にオナニーしてるけどいいか
+	TFLAG:REACT派生 = 0
+	;REACT分類:受け入れるをセット
+	CALL SET_COMGRO("受け入れる")
+	;REACT印象は悪印象小
+	CALL SET_COMIMP("悪印象小")
+	;依存度変化
+	CALL ADD_DEPEND(-1, 0)
+ENDIF
+;我慢フラグ解消
+TCVAR:MASTER:我慢 = 0
+RETURN 1
+
+
+;────────────────────────────────────
+;051,道具を外す（快Ｃ、快Ａ、達成逆、反抗、お仕置きポイント）
+;────────────────────────────────────
+@COM51
+;達成SOURCE減少
+SOURCE:MASTER:達成 -= 100 + (CFLAG:M好意 - 500) * (SOURCE:MASTER:快Ｃ + SOURCE:MASTER:快Ｖ + SOURCE:MASTER:快Ａ) / 1000
+;反抗SOURCE増加
+SOURCE:MASTER:反抗 += 250 + SOURCE:MASTER:快Ｖ / 2 + SOURCE:MASTER:快Ａ / 2 + (CFLAG:MASTER:調教レベル + 1) * (GET_ABL(MASTER, "技巧") + 10) * CFLAG:M好意 / 100
+;道具を外すの優先順判定。一度は一つまで。最初はランダム１～３外す予定だったが何だか面倒で
+;外した道具のTEQUIP番号がREACT派生に入る
+IF TEQUIP:アイマスク
+	TEQUIP:アイマスク = 0
+	TFLAG:REACT派生 = GETNUM(TEQUIP, "アイマスク")
+ELSEIF TEQUIP:浣腸器＋プラグ
+	SOURCE:MASTER:快Ａ = 500 * TEQUIP:浣腸器＋プラグ * (100 + RAND:11 - RAND:11) / 100
+	TEQUIP:浣腸器＋プラグ = 0
+	;オトコはＡで前立腺刺激
+	SIF TALENT:MASTER:オトコ
+		TCVAR:MASTER:前立腺刺激 += 1
+	TFLAG:REACT派生 = GETNUM(TEQUIP, "浣腸器＋プラグ")
+ELSEIF TEQUIP:アナルバイブ
+	TEQUIP:アナルバイブ = 0
+	;オトコはＡで前立腺刺激
+	SIF TALENT:MASTER:オトコ
+		TCVAR:MASTER:前立腺刺激 += 1
+	TFLAG:REACT派生 = GETNUM(TEQUIP, "アナルバイブ")
+ELSEIF TEQUIP:バイブ
+	TEQUIP:バイブ = 0
+	TCVAR:MASTER:前立腺刺激 += 1
+	TFLAG:REACT派生 = GETNUM(TEQUIP, "バイブ")
+ELSEIF TEQUIP:オナホール
+	SOURCE:MASTER:快Ｃ = 50 * (TALENT:MASTER:道具使い + 1) * GET_ABL(MASTER, "技巧") * CFLAG:MASTER:調教レベル / 10
+	TEQUIP:オナホール = 0
+	TFLAG:REACT派生 = GETNUM(TEQUIP, "オナホール")
+ELSEIF TEQUIP:クリキャップ
+	SOURCE:MASTER:快Ｃ = 50 * (TALENT:MASTER:道具使い + 1) * GET_ABL(MASTER, "技巧") * CFLAG:MASTER:調教レベル / 10
+	TEQUIP:クリキャップ = 0
+	TFLAG:REACT派生 = GETNUM(TEQUIP, "クリキャップ")
+ELSEIF TEQUIP:ボールギャグ
+	TEQUIP:ボールギャグ = 0
+	TFLAG:REACT派生 = GETNUM(TEQUIP, "ボールギャグ")
+ELSEIF TEQUIP:ニプルキャップ
+	TEQUIP:ニプルキャップ = 0
+	TFLAG:REACT派生 = GETNUM(TEQUIP, "ニプルキャップ")
+ELSEIF TEQUIP:ペニスバンド
+	TEQUIP:ペニスバンド = 0
+	TCVAR:MASTER:前立腺刺激 += 1
+	TFLAG:REACT派生 = GETNUM(TEQUIP, "ペニスバンド")
+ELSE
+	SOURCE:MASTER:快Ａ = 50 * TEQUIP:アナルビーズ + 50 * TEQUIP:アナルビーズ + (TALENT:MASTER:道具使い + 1) * GET_ABL(MASTER, "技巧") * CFLAG:MASTER:調教レベル * (TEQUIP:アナルビーズ - 1) / 10
+	TEQUIP:アナルビーズ = 0
+	;オトコはＡで前立腺刺激
+	SIF TALENT:MASTER:オトコ
+		TCVAR:MASTER:前立腺刺激 += 2
+	TFLAG:REACT派生 = GETNUM(TEQUIP, "アナルビーズ")
+ENDIF
+;調教対象自慰を中断
+TEQUIP:自慰中 &= ~1
+;お仕置きポイント加算
+LOCAL = (BASE:苛立ち / 100 + PALAM:MASTER:反抗 / 1000) * (GET_TRAINLV(TARGET) + 5) + 5 + RAND:10
+SIF LOCAL > 100
+	LOCAL = 100
+TFLAG:お仕置きポイント += LOCAL
+;暴れたように設定
+;COM分類
+CALL SET_COMGRO("暴れる")
+;COM印象
+CALL SET_COMIMP("悪印象大")
+;依存度変化
+CALL ADD_DEPEND(-3, -10)
+RETURN 1
+
+
+;────────────────────────────────────
+;052,なすがまま（効果なし。実行できる反応が一つもない時の救済、必要かどうかはわかりませんが）
+;必要になってしまったので改名し、多少内容を整備。
+;────────────────────────────────────
+@COM52
+;派性の処理
+;一回休み
+IF TFLAG:一回休み == 1
+	TFLAG:REACT派生 = -1
+;性交系ACT・逆レイプ
+ELSEIF MENUMATCH(TFLAG:ACT, "性交") && !IS_NOWACTNAME("騎乗位") || IS_NOWACTNAME("逆レイプ")
+	;無抵抗に犯される
+	TFLAG:REACT派生 = 1
+	;COM分類
+	CALL SET_COMGRO("受け入れる")
+	;依存度変化
+	CALL ADD_DEPEND(+4, +10)
+;性交奉仕系ACT・騎乗位
+ELSEIF MENUMATCH(TFLAG:ACT, "性奉") && !IS_NOWACTNAME("逆レイプ") || IS_NOWACTNAME("騎乗位")
+	;溺れたように腰を振る
+	TFLAG:REACT派生 = 2
+	;COM分類
+	CALL SET_COMGRO("受け入れる")
+	;依存度変化
+	CALL ADD_DEPEND(+10, +10)
+;衣装変更・自慰・放尿・開帳・イラマチオ
+ELSEIF IS_NOWACTNAME("衣装の変更を要求する/自慰/秘貝開帳/放尿/イラマチオ")
+	;言われるままゆっくり従う
+	TFLAG:REACT派生 = 3
+	;COM分類
+	CALL SET_COMGRO("受け入れる")
+	;依存度変化
+	CALL ADD_DEPEND(+4, +10)
+;奉仕系ACT
+ELSEIF MENUMATCH(TFLAG:ACT, "奉仕")
+	;魅入られたように奉仕を繰り返す
+	TFLAG:REACT派生 = 4
+	;COM分類
+	CALL SET_COMGRO("受け入れる")
+	;依存度変化
+	CALL ADD_DEPEND(+8, +10)
+;脅す・不気味に笑う・罵倒・怒鳴る・お仕置き
+ELSEIF IS_NOWACTNAME("厳しく脅す/お仕置きと宣言する/怒鳴る/不気味に笑う/罵倒")
+	;反抗的な素質があり、屈服刻印5以下
+	IF MARK:屈服刻印 <= 5 && (TALENT:MASTER:気丈 || TALENT:MASTER:プライド高い || TALENT:MASTER:生意気 || TALENT:MASTER:反抗的)
+		;悔しそうに睨む
+		TFLAG:REACT派生 = 5
+		;依存度変化
+		CALL ADD_DEPEND(0, -2)
+	ELSE
+		;怯えたように見つめる
+		TFLAG:REACT派生 = 6
+		;依存度変化
+		CALL ADD_DEPEND(+2, +10)
+	ENDIF
+	;COM分類
+	CALL SET_COMGRO("消極的従う")
+;加虐系ACT・または苦痛が大きい
+ELSEIF SOURCE:MASTER:痛み > 400 || MENUMATCH(TFLAG:ACT, "加虐")
+	;声にならない悲鳴を上げてのたうちまわる
+	TFLAG:REACT派生 = 7
+	;COM分類
+	CALL SET_COMGRO("消極的従う")
+	;依存度変化
+	CALL ADD_DEPEND(+8, +10)
+;快感がある
+ELSEIF SOURCE:MASTER:快Ｃ + SOURCE:MASTER:快Ｖ + SOURCE:MASTER:快Ａ + SOURCE:MASTER:快Ｂ > 10
+	;会話系ACT
+	IF MENUMATCH(TFLAG:ACT, "会話")
+		;自慰中
+		IF GETBIT(TEQUIP:自慰中, 0)
+			;おなにーに夢中で聞いてない
+			TFLAG:REACT派生 = 8
+			;COM印象
+			CALL SET_COMIMP("悪印象小")
+			;COM分類
+			CALL SET_COMGRO("受け入れる")
+			;依存度変化
+			CALL ADD_DEPEND(-2, +2)
+		ELSE
+			;気持ちよくって生返事
+			TFLAG:REACT派生 = 9
+			;COM分類
+			CALL SET_COMGRO("受け入れる")
+			;依存度変化
+			CALL ADD_DEPEND(+4, +2)
+		ENDIF
+	ELSE
+		;頭真っ白恍惚状態
+		TFLAG:REACT派生 = 10
+		;COM分類
+		CALL SET_COMGRO("受け入れる")
+		;依存度変化
+		CALL ADD_DEPEND(+4, +10)
+	ENDIF
+;会話系ACT
+ELSEIF MENUMATCH(TFLAG:ACT, "会話")
+	;自分でもわからないまま恥ずかしいことを口走る
+	TFLAG:REACT派生 = 11
+	;COM分類
+	CALL SET_COMGRO("受け入れる")
+	;依存度変化
+	CALL ADD_DEPEND(+8, +4)
+;どれでもない
+ELSE
+	TFLAG:REACT派生 = 0
+	;COM分類
+	CALL SET_COMGRO("受け入れる")
+	;依存度変化
+	CALL ADD_DEPEND(+4, +10)
+ENDIF
+
+;快感系補正
+IF SOURCE:MASTER:快Ｃ + SOURCE:MASTER:快Ｖ + SOURCE:MASTER:快Ａ + SOURCE:MASTER:快Ｂ > 10
+	;快ＸSOURCE増加
+	TIMES SOURCE:MASTER:快Ｃ , 1.20
+	TIMES SOURCE:MASTER:快Ｖ , 1.20
+	TIMES SOURCE:MASTER:快Ａ , 1.20
+	TIMES SOURCE:MASTER:快Ｂ , 1.20
+	;逸脱SOURCE減少
+	TIMES SOURCE:MASTER:逸脱 , 0.70
+	;トラウマ化加速
+	TIMES SOURCE:MASTER:トラウマ , 1.30
+	;屈従、悦楽SOURCE増加
+	SOURCE:MASTER:屈従 += 50 + (MARK:MASTER:快楽刻印 + 1) * (SOURCE:MASTER:快Ｃ + SOURCE:MASTER:快Ｖ + SOURCE:MASTER:快Ａ + SOURCE:MASTER:快Ｂ) * CFLAG:MASTER:調教レベル / 200
+	SOURCE:MASTER:悦楽 += 100 + SOURCE:MASTER:快Ｃ / 25 + SOURCE:MASTER:快Ｖ / 25 + SOURCE:MASTER:快Ａ / 25 + SOURCE:MASTER:快Ｂ / 25
+ENDIF
+
+;屈服系補正
+;屈従SOURCE増加
+SOURCE:MASTER:屈従 += 50 + MARK:MASTER:苦痛刻印 * 20 + GET_ABL(MASTER, "マゾっ気") * CFLAG:MASTER:調教レベル * 2
+
+RETURN 1

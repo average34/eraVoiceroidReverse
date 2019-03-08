@@ -1,0 +1,1109 @@
+﻿;==================================================
+;
+;	汎用関数置き場＠便利関数編
+;		演算や命令、組み込み関数の拡張にあたるもの
+;
+;		おおよそバリアントを問わず使えるものが多いです
+;
+;==================================================
+
+;-------------------------------------------------
+;確率判定関数@PERCENT
+;式中で使用する関数です。引数％の確率判定を行います。通れば1を返します
+;常用する関数ですが、なぜ本体にこれ無いんだろ…。
+;-------------------------------------------------
+@PERCENT(ARG)
+#FUNCTION
+RETURNF (ARG - RAND:100) > 0
+
+;-------------------------------------------------
+;範囲判定関数@RANGE
+;	引数0：対象の数字
+;	引数1～2：範囲の上限・下限（逆順可）
+;引数0が引数1と引数2の間に収まっていれば1を返します。ともに同値を許容します
+;こいつも本体にあっていいと思う。
+;-------------------------------------------------
+@RANGE(ARG:0, ARG:1, ARG:2)
+#FUNCTION
+RETURNF INRANGE(ARG:0, MIN(ARG:1, ARG:2), MAX(ARG:1, ARG:2))
+
+
+;-------------------------------------------------
+;関数名:INPUTINT(|D)
+;概　要:数値型インプット関数
+;引　数:ARG:0~99…[一部省略可] ユーザが入力可能な数値。ARG:1以降は省略可
+;戻り値:ユーザの入力した数値
+;数値の入力待ちをします。引数に含まれない数値を入力された場合は自動的に再入力となります
+;有効な数値が入力されたらそれを返します
+;選択肢を汎用処理するため、ループの構文を書く必要がなくなります
+;引数が妙な値なのは、-1とかだと被るから。nullがあればいいのだけどねえ
+;Dオプションで入力時などの文字色をデフォルト色で表示できます。主に口上向け
+;-------------------------------------------------
+@INPUTINT(ARG:0 = -147258369, ARG:1 = -147258369, ARG:2 = -147258369, ARG:3 = -147258369, ARG:4 = -147258369, ARG:5 = -147258369, ARG:6 = -147258369, ARG:7 = -147258369, ARG:8 = -147258369, ARG:9 = -147258369, ARG:10 = -147258369, ARG:11 = -147258369, ARG:12 = -147258369, ARG:13 = -147258369, ARG:14 = -147258369, ARG:15 = -147258369, ARG:16 = -147258369, ARG:17 = -147258369, ARG:18 = -147258369, ARG:19 = -147258369, ARG:20 = -147258369, ARG:21 = -147258369, ARG:22 = -147258369, ARG:23 = -147258369, ARG:24 = -147258369, ARG:25 = -147258369, ARG:26 = -147258369, ARG:27 = -147258369, ARG:28 = -147258369, ARG:29 = -147258369, ARG:30 = -147258369, ARG:31 = -147258369, ARG:32 = -147258369, ARG:33 = -147258369, ARG:34 = -147258369, ARG:35 = -147258369, ARG:36 = -147258369, ARG:37 = -147258369, ARG:38 = -147258369, ARG:39 = -147258369, ARG:40 = -147258369, ARG:41 = -147258369, ARG:42 = -147258369, ARG:43 = -147258369, ARG:44 = -147258369, ARG:45 = -147258369, ARG:46 = -147258369, ARG:47 = -147258369, ARG:48 = -147258369, ARG:49 = -147258369, ARG:50 = -147258369, ARG:51 = -147258369, ARG:52 = -147258369, ARG:53 = -147258369, ARG:54 = -147258369, ARG:55 = -147258369, ARG:56 = -147258369, ARG:57 = -147258369, ARG:58 = -147258369, ARG:59 = -147258369, ARG:60 = -147258369, ARG:61 = -147258369, ARG:62 = -147258369, ARG:63 = -147258369, ARG:64 = -147258369, ARG:65 = -147258369, ARG:66 = -147258369, ARG:67 = -147258369, ARG:68 = -147258369, ARG:69 = -147258369, ARG:70 = -147258369, ARG:71 = -147258369, ARG:72 = -147258369, ARG:73 = -147258369, ARG:74 = -147258369, ARG:75 = -147258369, ARG:76 = -147258369, ARG:77 = -147258369, ARG:78 = -147258369, ARG:79 = -147258369, ARG:80 = -147258369, ARG:81 = -147258369, ARG:82 = -147258369, ARG:83 = -147258369, ARG:84 = -147258369, ARG:85 = -147258369, ARG:86 = -147258369, ARG:87 = -147258369, ARG:88 = -147258369, ARG:89 = -147258369, ARG:90 = -147258369, ARG:91 = -147258369, ARG:92 = -147258369, ARG:93 = -147258369, ARG:94 = -147258369, ARG:95 = -147258369, ARG:96 = -147258369, ARG:97 = -147258369, ARG:98 = -147258369, ARG:99 = -147258369)
+#LOCALSIZE 2
+LOCAL:1 = CURRENTREDRAW()
+REDRAW 0
+DO
+	INPUT
+	LOCAL:0 = !MATCH(ARG, RESULT)
+	IF LOCAL:0
+		CLEARLINE 1
+		REUSELASTLINE 入力値が範囲外です
+	ENDIF
+LOOP LOCAL:0
+REDRAW LOCAL:1
+RETURN RESULT
+
+
+@INPUTINTD(ARG:0 = -147258369, ARG:1 = -147258369, ARG:2 = -147258369, ARG:3 = -147258369, ARG:4 = -147258369, ARG:5 = -147258369, ARG:6 = -147258369, ARG:7 = -147258369, ARG:8 = -147258369, ARG:9 = -147258369, ARG:10 = -147258369, ARG:11 = -147258369, ARG:12 = -147258369, ARG:13 = -147258369, ARG:14 = -147258369, ARG:15 = -147258369, ARG:16 = -147258369, ARG:17 = -147258369, ARG:18 = -147258369, ARG:19 = -147258369, ARG:20 = -147258369, ARG:21 = -147258369, ARG:22 = -147258369, ARG:23 = -147258369, ARG:24 = -147258369, ARG:25 = -147258369, ARG:26 = -147258369, ARG:27 = -147258369, ARG:28 = -147258369, ARG:29 = -147258369, ARG:30 = -147258369, ARG:31 = -147258369, ARG:32 = -147258369, ARG:33 = -147258369, ARG:34 = -147258369, ARG:35 = -147258369, ARG:36 = -147258369, ARG:37 = -147258369, ARG:38 = -147258369, ARG:39 = -147258369, ARG:40 = -147258369, ARG:41 = -147258369, ARG:42 = -147258369, ARG:43 = -147258369, ARG:44 = -147258369, ARG:45 = -147258369, ARG:46 = -147258369, ARG:47 = -147258369, ARG:48 = -147258369, ARG:49 = -147258369, ARG:50 = -147258369, ARG:51 = -147258369, ARG:52 = -147258369, ARG:53 = -147258369, ARG:54 = -147258369, ARG:55 = -147258369, ARG:56 = -147258369, ARG:57 = -147258369, ARG:58 = -147258369, ARG:59 = -147258369, ARG:60 = -147258369, ARG:61 = -147258369, ARG:62 = -147258369, ARG:63 = -147258369, ARG:64 = -147258369, ARG:65 = -147258369, ARG:66 = -147258369, ARG:67 = -147258369, ARG:68 = -147258369, ARG:69 = -147258369, ARG:70 = -147258369, ARG:71 = -147258369, ARG:72 = -147258369, ARG:73 = -147258369, ARG:74 = -147258369, ARG:75 = -147258369, ARG:76 = -147258369, ARG:77 = -147258369, ARG:78 = -147258369, ARG:79 = -147258369, ARG:80 = -147258369, ARG:81 = -147258369, ARG:82 = -147258369, ARG:83 = -147258369, ARG:84 = -147258369, ARG:85 = -147258369, ARG:86 = -147258369, ARG:87 = -147258369, ARG:88 = -147258369, ARG:89 = -147258369, ARG:90 = -147258369, ARG:91 = -147258369, ARG:92 = -147258369, ARG:93 = -147258369, ARG:94 = -147258369, ARG:95 = -147258369, ARG:96 = -147258369, ARG:97 = -147258369, ARG:98 = -147258369, ARG:99 = -147258369)
+#LOCALSIZE 1
+LOCAL:0 = GETCOLOR()
+RESETCOLOR
+CALL INPUTINT(ARG:0, ARG:1, ARG:2, ARG:3, ARG:4, ARG:5, ARG:6, ARG:7, ARG:8, ARG:9, ARG:10, ARG:11, ARG:12, ARG:13, ARG:14, ARG:15, ARG:16, ARG:17, ARG:18, ARG:19, ARG:20, ARG:21, ARG:22, ARG:23, ARG:24, ARG:25, ARG:26, ARG:27, ARG:28, ARG:29, ARG:30, ARG:31, ARG:32, ARG:33, ARG:34, ARG:35, ARG:36, ARG:37, ARG:38, ARG:39, ARG:40, ARG:41, ARG:42, ARG:43, ARG:44, ARG:45, ARG:46, ARG:47, ARG:48, ARG:49, ARG:50, ARG:51, ARG:52, ARG:53, ARG:54, ARG:55, ARG:56, ARG:57, ARG:58, ARG:59, ARG:60, ARG:61, ARG:62, ARG:63, ARG:64, ARG:65, ARG:66, ARG:67, ARG:68, ARG:69, ARG:70, ARG:71, ARG:72, ARG:73, ARG:74, ARG:75, ARG:76, ARG:77, ARG:78, ARG:79, ARG:80, ARG:81, ARG:82, ARG:83, ARG:84, ARG:85, ARG:86, ARG:87, ARG:88, ARG:89, ARG:90, ARG:91, ARG:92, ARG:93, ARG:94, ARG:95, ARG:96, ARG:97, ARG:98, ARG:99)
+SETCOLOR LOCAL:0
+RETURN RESULT
+
+
+;-------------------------------------------------
+;関数名:TINPUTINT(|D)
+;概　要:数値型時間制限インプット関数
+;引　数:ARG:0　　…制限時間(ミリ秒)。100ミリ秒単位より細かい値を設定しても正確な動作はできませんので注意
+;　　　 ARG:1　　…[省略可] 時間切れ時の戻り値。省略した場合は-1
+;　　　 ARG:2　　…[省略可] 残り時間表示(真偽値)。真(0以外)の場合は残り時間表示を行います。省略した場合は偽(0、表示しない)
+;　　　 ARG:3~102…[一部省略可] ユーザが入力可能な数値。ARG:4以降は省略可
+;戻り値:ユーザの入力した数値(または時間切れ時の戻り値)
+;ARG:3以降で与えられた数値を有効な選択肢として数値の入力を受け付けます
+;引数に含まれない数値が入力された場合は再入力となります
+;Dオプションで入力時などの文字色をデフォルト色で表示できます。主に口上向け
+;-------------------------------------------------
+@TINPUTINT(ARG:0, ARG:1 = -1, ARG:2, ARG:3 = -147258369, ARG:4 = -147258369, ARG:5 = -147258369, ARG:6 = -147258369, ARG:7 = -147258369, ARG:8 = -147258369, ARG:9 = -147258369, ARG:10 = -147258369, ARG:11 = -147258369, ARG:12 = -147258369, ARG:13 = -147258369, ARG:14 = -147258369, ARG:15 = -147258369, ARG:16 = -147258369, ARG:17 = -147258369, ARG:18 = -147258369, ARG:19 = -147258369, ARG:20 = -147258369, ARG:21 = -147258369, ARG:22 = -147258369, ARG:23 = -147258369, ARG:24 = -147258369, ARG:25 = -147258369, ARG:26 = -147258369, ARG:27 = -147258369, ARG:28 = -147258369, ARG:29 = -147258369, ARG:30 = -147258369, ARG:31 = -147258369, ARG:32 = -147258369, ARG:33 = -147258369, ARG:34 = -147258369, ARG:35 = -147258369, ARG:36 = -147258369, ARG:37 = -147258369, ARG:38 = -147258369, ARG:39 = -147258369, ARG:40 = -147258369, ARG:41 = -147258369, ARG:42 = -147258369, ARG:43 = -147258369, ARG:44 = -147258369, ARG:45 = -147258369, ARG:46 = -147258369, ARG:47 = -147258369, ARG:48 = -147258369, ARG:49 = -147258369, ARG:50 = -147258369, ARG:51 = -147258369, ARG:52 = -147258369, ARG:53 = -147258369, ARG:54 = -147258369, ARG:55 = -147258369, ARG:56 = -147258369, ARG:57 = -147258369, ARG:58 = -147258369, ARG:59 = -147258369, ARG:60 = -147258369, ARG:61 = -147258369, ARG:62 = -147258369, ARG:63 = -147258369, ARG:64 = -147258369, ARG:65 = -147258369, ARG:66 = -147258369, ARG:67 = -147258369, ARG:68 = -147258369, ARG:69 = -147258369, ARG:70 = -147258369, ARG:71 = -147258369, ARG:72 = -147258369, ARG:73 = -147258369, ARG:74 = -147258369, ARG:75 = -147258369, ARG:76 = -147258369, ARG:77 = -147258369, ARG:78 = -147258369, ARG:79 = -147258369, ARG:80 = -147258369, ARG:81 = -147258369, ARG:82 = -147258369, ARG:83 = -147258369, ARG:84 = -147258369, ARG:85 = -147258369, ARG:86 = -147258369, ARG:87 = -147258369, ARG:88 = -147258369, ARG:89 = -147258369, ARG:90 = -147258369, ARG:91 = -147258369, ARG:92 = -147258369, ARG:93 = -147258369, ARG:94 = -147258369, ARG:95 = -147258369, ARG:96 = -147258369, ARG:97 = -147258369, ARG:98 = -147258369, ARG:99 = -147258369, ARG:100 = -147258369, ARG:101 = -147258369, ARG:102 = -147258369)
+#LOCALSIZE 5
+LOCAL:2 = LINECOUNT
+LOCAL:3 = CURRENTREDRAW()	;REDRAW 0 で入ってくると残り時間表示が動かないためこのガードは重要
+LOCAL:4 = 0					;再入力フラグ
+REDRAW ARG:2 != 0
+DO
+	LOCAL:1 = GETMILLISECOND()
+	TINPUT ARG:0, ARG:1, ARG:2
+	ARG:0 -= GETMILLISECOND() - LOCAL:1
+	IF ARG:0 > 0
+		LOCAL:0 = !MATCH(ARG, RESULT, 3)
+		IF LOCAL:0
+			CLEARLINE LINECOUNT - LOCAL:2
+			PRINTL 入力値が範囲外です
+		ENDIF
+		LOCAL:4 = 1
+	ELSE
+		LOCAL:0 = 0
+		;※暫定処理。ISTIMEOUT変数が修正された後、正式対応するかも(しなくてもいいかも)
+		;入力後時間切れかつ入力値範囲外の場合は時間切れ捏造
+		IF HTML_TOPLAINTEXT(HTML_GETPRINTEDSTR(2)) != "時間切れ" && !MATCH(ARG, RESULT, 3)
+			RESULT = ARG:1
+			CLEARLINE LINECOUNT - LOCAL:2
+			PRINTFORML \@ LOCAL:4 ? 入力値が範囲外です\n # \@時間切れ\n{RESULT}
+		ENDIF
+		;入力後時間切れかつ入力値範囲内の場合は時間内に正しく入力出来ているのでスルー
+		;入力中時間切れの場合はTINPUTで時間切れ処理行われているのでスルー
+	ENDIF
+LOOP LOCAL:0
+REDRAW LOCAL:3
+RETURN RESULT
+
+@TINPUTINTD(ARG:0, ARG:1 = -1, ARG:2, ARG:3 = -147258369, ARG:4 = -147258369, ARG:5 = -147258369, ARG:6 = -147258369, ARG:7 = -147258369, ARG:8 = -147258369, ARG:9 = -147258369, ARG:10 = -147258369, ARG:11 = -147258369, ARG:12 = -147258369, ARG:13 = -147258369, ARG:14 = -147258369, ARG:15 = -147258369, ARG:16 = -147258369, ARG:17 = -147258369, ARG:18 = -147258369, ARG:19 = -147258369, ARG:20 = -147258369, ARG:21 = -147258369, ARG:22 = -147258369, ARG:23 = -147258369, ARG:24 = -147258369, ARG:25 = -147258369, ARG:26 = -147258369, ARG:27 = -147258369, ARG:28 = -147258369, ARG:29 = -147258369, ARG:30 = -147258369, ARG:31 = -147258369, ARG:32 = -147258369, ARG:33 = -147258369, ARG:34 = -147258369, ARG:35 = -147258369, ARG:36 = -147258369, ARG:37 = -147258369, ARG:38 = -147258369, ARG:39 = -147258369, ARG:40 = -147258369, ARG:41 = -147258369, ARG:42 = -147258369, ARG:43 = -147258369, ARG:44 = -147258369, ARG:45 = -147258369, ARG:46 = -147258369, ARG:47 = -147258369, ARG:48 = -147258369, ARG:49 = -147258369, ARG:50 = -147258369, ARG:51 = -147258369, ARG:52 = -147258369, ARG:53 = -147258369, ARG:54 = -147258369, ARG:55 = -147258369, ARG:56 = -147258369, ARG:57 = -147258369, ARG:58 = -147258369, ARG:59 = -147258369, ARG:60 = -147258369, ARG:61 = -147258369, ARG:62 = -147258369, ARG:63 = -147258369, ARG:64 = -147258369, ARG:65 = -147258369, ARG:66 = -147258369, ARG:67 = -147258369, ARG:68 = -147258369, ARG:69 = -147258369, ARG:70 = -147258369, ARG:71 = -147258369, ARG:72 = -147258369, ARG:73 = -147258369, ARG:74 = -147258369, ARG:75 = -147258369, ARG:76 = -147258369, ARG:77 = -147258369, ARG:78 = -147258369, ARG:79 = -147258369, ARG:80 = -147258369, ARG:81 = -147258369, ARG:82 = -147258369, ARG:83 = -147258369, ARG:84 = -147258369, ARG:85 = -147258369, ARG:86 = -147258369, ARG:87 = -147258369, ARG:88 = -147258369, ARG:89 = -147258369, ARG:90 = -147258369, ARG:91 = -147258369, ARG:92 = -147258369, ARG:93 = -147258369, ARG:94 = -147258369, ARG:95 = -147258369, ARG:96 = -147258369, ARG:97 = -147258369, ARG:98 = -147258369, ARG:99 = -147258369, ARG:100 = -147258369, ARG:101 = -147258369, ARG:102 = -147258369)
+#LOCALSIZE 1
+LOCAL:0 = GETCOLOR()
+RESETCOLOR
+CALL TINPUTINT(ARG:0, ARG:1, ARG:2, ARG:3, ARG:4, ARG:5, ARG:6, ARG:7, ARG:8, ARG:9, ARG:10, ARG:11, ARG:12, ARG:13, ARG:14, ARG:15, ARG:16, ARG:17, ARG:18, ARG:19, ARG:20, ARG:21, ARG:22, ARG:23, ARG:24, ARG:25, ARG:26, ARG:27, ARG:28, ARG:29, ARG:30, ARG:31, ARG:32, ARG:33, ARG:34, ARG:35, ARG:36, ARG:37, ARG:38, ARG:39, ARG:40, ARG:41, ARG:42, ARG:43, ARG:44, ARG:45, ARG:46, ARG:47, ARG:48, ARG:49, ARG:50, ARG:51, ARG:52, ARG:53, ARG:54, ARG:55, ARG:56, ARG:57, ARG:58, ARG:59, ARG:60, ARG:61, ARG:62, ARG:63, ARG:64, ARG:65, ARG:66, ARG:67, ARG:68, ARG:69, ARG:70, ARG:71, ARG:72, ARG:73, ARG:74, ARG:75, ARG:76, ARG:77, ARG:78, ARG:79, ARG:80, ARG:81, ARG:82, ARG:83, ARG:84, ARG:85, ARG:86, ARG:87, ARG:88, ARG:89, ARG:90, ARG:91, ARG:92, ARG:93, ARG:94, ARG:95, ARG:96, ARG:97, ARG:98, ARG:99, ARG:100, ARG:101, ARG:102)
+SETCOLOR LOCAL:0
+RETURN RESULT
+
+
+;-------------------------------------------------
+;関数名:INPUT_MANY(|D)
+;概　要:数量入力用関数
+;引　数: ARG:0…入力を許容する範囲の最小値。ARG:1と指定順が逆でもよい
+;　　　  ARG:1…入力を許容する範囲の最大値。ARG:0と指定順が逆でもよい
+;　　　 ARGS:0…[省略可] オプション。現在のところ ログを残す のみ存在。省略した場合はログを残す
+;　　　 ARGS:1…[省略可] 例外の数値設定。範囲外でも通る数値を設定する。
+;　　　                  記述方法は0/20/30/-1といったように、文字列で"/"を区切り文字とする
+;戻り値:ユーザの入力した数値
+;ARG:0で最小値、ARG:1で最大値を指定、
+;電卓風のコンソールから数値を入力させます
+;Dオプションで入力時などの文字色をデフォルト色で表示できます。主に口上向け
+;-------------------------------------------------
+@INPUT_MANY(ARG:0, ARG:1, ARGS:0 = "ログを残す", ARGS:1)
+#LOCALSIZE 3
+#LOCALSSIZE 20
+#DIM LINE
+#DIMS BSTR, 2
+;最初は0
+LOCAL:0 = 0
+LOCAL:1 = 1
+VARSET LOCALS
+SPLIT ARGS:1, "/", LOCALS
+LINE = LINECOUNT
+$START
+REDRAW 0
+CLEARLINE LINECOUNT - LINE
+BSTR:0 '= LOCAL:1 == -1 ? "[+]" # "[-]"
+BSTR:1 '= LOCAL:1 == -1 ? "+" # "-"
+PRINTFORML 【{LOCAL}】　《【{ARG}】 - 【{ARG:1}】》
+CALL HTMLPRINTL(@"%HTMLBUTTON("[7]", "７")%　%HTMLBUTTON("[8]", "８")%　%HTMLBUTTON("[9]", "９")%　%HTMLBUTTON("[ AC]", "AC")%")
+CALL HTMLPRINTL(@"%HTMLBUTTON("[4]", "４")%　%HTMLBUTTON("[5]", "５")%　%HTMLBUTTON("[6]", "６")%　%HTMLBUTTON("[Max]", "MAX")%")
+CALL HTMLPRINTL(@"%HTMLBUTTON("[1]", "１")%　%HTMLBUTTON("[2]", "２")%　%HTMLBUTTON("[3]", "３")%　%HTMLBUTTON("[Min]", "MIN")%")
+CALL HTMLPRINTL(@"%HTMLBUTTON("[0]", "０")%　%HTMLBUTTON(BSTR:0, BSTR:1)%　%HTMLBUTTON("[ENTER]", "ENTER")%")
+PRINTFORML ※キーボードから、直接数値を入力することもできます
+INPUTS
+SELECTCASE RESULTS
+	CASE "AC"
+		RESTART
+	CASE "+"
+		LOCAL:0 *= -1
+		LOCAL:1 = 1
+	CASE "-"
+		LOCAL:0 *= -1
+		LOCAL:1 = -1
+	CASE "MIN"
+		LOCAL:0 = ARG:0
+	CASE "MAX"
+		LOCAL:0 = ARG:1
+	CASE "０", "１", "２", "３", "４", "５", "６", "７", "８", "９"
+		IF LOCAL:0 == 0
+			LOCAL:0 = ABS(LOCAL:0) + TOINT(TOHALF(RESULTS)) * LOCAL:1
+		ELSE
+			;桁数を取る
+			LOCAL:2 = 1
+			WHILE LOCAL:0 >= POWER(10, LOCAL:2)
+				LOCAL:2++
+				IF LOCAL:2 > 18
+					PRINTFORMW 桁数が多すぎます！
+					GOTO START
+				ENDIF
+			WEND
+			LOCAL:0 = LOCAL:0 * 10 + TOINT(TOHALF(RESULTS)) * LOCAL:1
+		ENDIF
+	CASEELSE
+		IF RESULTS != "ENTER"
+			FOR LOCAL:2, 0, STRLENS(RESULTS)
+				SIF GROUPMATCH(SUBSTRING(RESULTS, LOCAL:2, 1), "0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
+					CONTINUE
+				PRINTFORMW 入力が異常です。入力しなおしてください
+				RESTART
+			NEXT
+			LOCAL:0 = TOINT(RESULTS)
+		ENDIF
+		IF RANGE(LOCAL:0, ARG:0, ARG:1) || MATCH(LOCALS, TOSTR(LOCAL:0))
+			SIF !STRCOUNT(ARGS:0, "ログを残す")
+				CLEARLINE LINE - LINECOUNT
+			REDRAW 1
+			RETURN LOCAL:0
+		ELSE
+			PRINTFORMW 数値が範囲外です。入力しなおしてください
+			RESTART
+		ENDIF
+ENDSELECT
+GOTO START
+
+@INPUT_MANYD(ARG:0, ARG:1, ARGS:0 = "ログを残す", ARGS:1)
+#LOCALSIZE 1
+LOCAL:0 = GETCOLOR()
+RESETCOLOR
+CALL INPUT_MANY(ARG:0, ARG:1, ARGS:0, ARGS:1)
+SETCOLOR LOCAL:0
+RETURN RESULT
+
+
+;-------------------------------------------------
+;未読判定関数@FIRSTTIME
+;式中で使用する関数です。理論上無限にイベントを登録できます。
+;特に使用法に指定のない、イベントの初回判定用関数です。
+;ARGはイベント番号、ARG:1はキャラ登録番号（省略するとTARGET）、ARG:2が真だと初回判定を更新しない（参照のみ）
+;CSTR:0で管理します
+;
+;ASSI系でARG:1を省略した際のキャラがTARGETになっていたので修正@revkoishi(14/04/28)
+;-------------------------------------------------
+@FIRSTTIME(ARG, ARG:1 = -2, ARG:2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+RETURNF FIRSTPROCESS(ARG:1, @"TIME%TOSTR(ARG)%", ARG:2)
+
+;汎用初回判定処理
+;引数はキャラ番号、判定文字列、更新の有無、使用するCSTRの番号
+@FIRSTPROCESS(ARG, ARGS, ARG:1, ARG:2)
+#FUNCTION
+;空文字列の場合、/を1つ入れる
+SIF CSTR:ARG:(ARG:2) == ""
+	CSTR:ARG:(ARG:2) = /
+;初回判定済みなら0を返す
+SIF STRCOUNT(CSTR:ARG:(ARG:2), @"/%ARGS%/")
+	RETURNF 0
+;初回判定を更新しないチェックが無ければ更新
+SIF !ARG:1
+	CSTR:ARG:(ARG:2) = %CSTR:ARG:(ARG:2)%%ARGS%/
+;初回なので1を返す
+RETURNF 1
+
+;-------------------------------------------------
+;初回EVENT判定関数@FIRSTEVENT
+;式中で使用する関数です。理論上無限にイベントを登録できます。
+;EVENTと派生ごとに保存される初回判定用関数です。
+;TFLAG:イベント番号（TFLAG:10）を自動で参照するので、現在発生しいるEVENTごとに番号が独立して保存されます。
+;なお、他のイベントの初回判定を参照する場合は、ARG:3にイベント番号を入れることで一応可能です。
+;ARGはイベント番号、ARG:1はキャラ登録番号（省略するとTARGET）、ARG:2が真だと初回判定を更新しない（参照のみ）
+;CSTR:0で管理します
+;-------------------------------------------------
+@FIRSTEVENT(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:3 = ARG:3 == -2 ? TFLAG:イベント番号 # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"EVENT%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2)
+
+;-------------------------------------------------
+;初回助手EVENT判定関数@FIRSTEVENTASSI
+;式中で使用する関数です。理論上無限にイベントを登録できます。
+;助手EVENTと派生ごとに保存される初回判定用関数です。
+;TFLAG:助手イベント番号（TFLAG:11）を自動で参照するので、現在発生しいる助手EVENTごとに番号が独立して保存されます。
+;なお、他の助手イベントの初回判定を参照する場合は、ARG:3に助手イベント番号を入れることで一応可能です。
+;ARGは助手イベント番号、ARG:1はキャラ登録番号（省略するとASSI）、ARG:2が真だと初回判定を更新しない（参照のみ）
+;CSTR:0で管理します
+;-------------------------------------------------
+@FIRSTEVENTASSI(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? ASSI # ARG:1
+ARG:3 = ARG:3 == -2 ? TFLAG:助手イベント番号 # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"EVENTASSI%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2)
+
+;-------------------------------------------------
+;初回刻印判定関数@FIRSTMARK
+;式中で使用する関数です。理論上無限にイベントを登録できます。
+;刻印取得口上向けの初回判定用関数です。管理は通常のFIRSTTIME同様。使わないだろうけどあっても困らないので。
+;ARGは口上番号（任意の設定）、ARG:1はキャラ登録番号（省略するとTARGET）、ARG:2が真だと初回判定を更新しない（参照のみ）
+;CSTR:0で管理します
+;-------------------------------------------------
+@FIRSTMARK(ARG, ARG:1 = -2, ARG:2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+RETURNF FIRSTPROCESS(ARG:1, @"MARK%TOSTR(ARG)%", ARG:2)
+
+;-------------------------------------------------
+;初回脱衣判定関数@FIRSTDATUI
+;式中で使用する関数です。理論上無限にイベントを登録できます。
+;脱衣口上向けの初回判定用関数です。管理は通常のFIRSTTIME同様。使わないかもだけどあっても困らないので。
+;ARGは口上番号（任意の設定）、ARG:1はキャラ登録番号（省略するとTARGET）、ARG:2が真だと初回判定を更新しない（参照のみ）
+;CSTR:0で管理します
+;-------------------------------------------------
+@FIRSTDATUI(ARG, ARG:1 = -2, ARG:2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+RETURNF FIRSTPROCESS(ARG:1, @"DATUI%TOSTR(ARG)%", ARG:2)
+
+;-------------------------------------------------
+;初回ACTMESSAGE判定関数@FIRSTACTMESSAGE
+;式中で使用する関数です。理論上無限にイベントを登録できます。
+;ACTごとに保存される地の文口上初回判定用関数です。
+;TFLAG:ACT（TFLAG:90）を自動で参照するので、現在実行されているACTごとに番号が独立して保存されます。
+;つまり、「今の気分を聞く」内のFIRSTACTMESSAGE(0)と「性についての話をする」内のFIRSTACTMESSAGE(0)は別に管理されます。
+;なお、他のACTの初回判定を参照する場合は、ARG:3にACT番号を入れることで一応可能です。
+;ARGはイベント番号、ARG:1はキャラ登録番号（省略するとTARGET）、ARG:2が真だと初回判定を更新しない（参照のみ）
+;CSTR:0で管理します
+;-------------------------------------------------
+@FIRSTACTMESSAGE(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:3 = ARG:3 == -2 ? TFLAG:ACT # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"ACTMESSAGE%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2)
+
+;-------------------------------------------------
+;初回ACT判定関数@FIRSTACT
+;式中で使用する関数です。理論上無限にイベントを登録できます。
+;ACTごとに保存される初回判定用関数です。
+;TFLAG:ACT（TFLAG:90）を自動で参照するので、現在実行されているACTごとに番号が独立して保存されます。
+;つまり、「今の気分を聞く」内のFIRSTACT(0)と「性についての話をする」内のFIRSTACT(0)は別に管理されます。
+;なお、他のACTの初回判定を参照する場合は、ARG:3にACT番号を入れることで一応可能です。
+;ARGはイベント番号、ARG:1はキャラ登録番号（省略するとTARGET）、ARG:2が真だと初回判定を更新しない（参照のみ）
+;CSTR:0で管理します
+;-------------------------------------------------
+@FIRSTACT(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:3 = ARG:3 == -2 ? TFLAG:ACT # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"ACT%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2)
+
+;-------------------------------------------------
+;初回追加ACT判定関数@FIRSTACTEX
+;式中で使用する関数です。理論上無限にイベントを登録できます。
+;追加ACTごとに保存される初回判定用関数です。
+;TFLAG:追加ACT（TFLAG:122）を自動で参照するので、現在実行されている追加ACTごとに番号が独立して保存されます。
+;なお、他の追加ACTの初回判定を参照する場合は、ARG:3に追加ACT番号を入れることで一応可能です。
+;ARGはイベント番号、ARG:1はキャラ登録番号（省略するとTARGET）、ARG:2が真だと初回判定を更新しない（参照のみ）
+;CSTR:0で管理します
+;-------------------------------------------------
+@FIRSTACTEX(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:3 = ARG:3 == -2 ? TFLAG:追加ACT # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"ACTEX%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2)
+
+;-------------------------------------------------
+;初回助手ACT判定関数@FIRSTACTASSI
+;式中で使用する関数です。理論上無限にイベントを登録できます。
+;助手ACTごとに保存される初回判定用関数です。
+;TFLAG:助手ACT（TFLAG:122）を自動で参照するので、現在実行されている助手ACTごとに番号が独立して保存されます。
+;なお、他の助手ACTの初回判定を参照する場合は、ARG:3に助手ACT番号を入れることで一応可能です。
+;ARGはイベント番号、ARG:1はキャラ登録番号（省略するとASSI）、ARG:2が真だと初回判定を更新しない（参照のみ）
+;CSTR:0で管理します
+;-------------------------------------------------
+@FIRSTACTASSI(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? ASSI # ARG:1
+ARG:3 = ARG:3 == -2 ? TFLAG:助手ACT # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"ACTASSI%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2)
+
+;-------------------------------------------------
+;初回薬品使用判定関数@FIRSTUSE
+;式中で使用する関数です。理論上無限にイベントを登録できます。
+;脱衣口上向けの初回判定用関数です。管理は通常のFIRSTTIME同様。使わないかもだけどあっても困らないので。
+;ARGは口上番号（任意の設定）、ARG:1はキャラ登録番号（省略するとTARGET）、ARG:2が真だと初回判定を更新しない（参照のみ）
+;CSTR:0で管理します
+;-------------------------------------------------
+@FIRSTUSE(ARG, ARG:1 = -2, ARG:2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+RETURNF FIRSTPROCESS(ARG:1, @"USE%TOSTR(ARG)%", ARG:2)
+
+;-------------------------------------------------
+;初回個別リアクション判定関数@FIRSTREACT
+;式中で使用する関数です。理論上無限にイベントを登録できます。
+;ACTごとに保存される初回判定用関数です。
+;TFLAG:ACT（TFLAG:90）を自動で参照するので、現在実行されているACTごとに番号が独立して保存されます。
+;つまり、「今の気分を聞く」内のFIRSTREACT(0)と「性についての話をする」内のFIRSTREACT(0)は別に管理されます。
+;なお、他のACTの初回判定を参照する場合は、ARG:3にACT番号を入れることで一応可能です。
+;ARGはイベント番号、ARG:1はキャラ登録番号（省略するとTARGET）、ARG:2が真だと初回判定を更新しない（参照のみ）
+;CSTR:0で管理します
+;-------------------------------------------------
+@FIRSTREACT(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:3 = ARG:3 == -2 ? TFLAG:ACT # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"REACT%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2)
+
+;-------------------------------------------------
+;初回汎用リアクション判定関数@FIRSTCOM
+;式中で使用する関数です。理論上無限にイベントを登録できます。
+;COMごとに保存される初回判定用関数です。
+;SELECTCOMを自動で参照するので、現在選択したCOMごとに番号が独立して保存されます。
+;つまり、「消極的やる」内のFIRSTCOM(0)と「快感を受け入れる」内のFIRSTCOM(0)は別に管理されます。
+;なお、他のCOMの初回判定を参照する場合は、ARG:3にCOM番号を入れることで一応可能です。
+;ARGはイベント番号、ARG:1はキャラ登録番号（省略するとTARGET）、ARG:2が真だと初回判定を更新しない（参照のみ）
+;CSTR:0で管理します
+;-------------------------------------------------
+@FIRSTCOM(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:3 = ARG:3 == -2 ? SELECTCOM # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"COM%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2)
+
+;-------------------------------------------------
+;初回統括汎用リアクション判定関数@FIRSTREACTALL
+;式中で使用する関数です。理論上無限にイベントを登録できます。
+;ACT分類ごとに保存される初回判定用関数です。
+;TFLAG:ACT分類（TFLAG:80）を自動で参照するので、現在行われているACTの分類ごとに番号が独立して保存されます。
+;つまり、「会話系アクション」内のFIRSTREACTALL(0)と「愛撫系アクション」内のFIRSTREACTALL(0)は別に管理されます。
+;なお、他のACT分類の初回判定を参照する場合は、ARG:3にACT分類を入れることで一応可能です。
+;ARGはイベント番号、ARG:1はキャラ登録番号（省略するとTARGET）、ARG:2が真だと初回判定を更新しない（参照のみ）
+;CSTR:0で管理します
+;-------------------------------------------------
+@FIRSTREACTALL(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:3 = ARG:3 == -2 ? TFLAG:ACT分類 # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"REACTALL%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2)
+
+;-------------------------------------------------
+;調教内未読判定関数@ONCE
+;式中で使用する関数です。理論上無限にイベントを登録できます。
+;特に使用法に指定のない、イベントの初回判定用関数です。FIRSTTIMEと違い、調教前に初期化されます。
+;ARGはイベント番号、ARG:1はキャラ登録番号（省略するとTARGET）、ARG:2が真だと初回判定を更新しない（参照のみ）
+;CSTR:1で管理します
+;
+;ASSI系でARG:1を省略した際のキャラがTARGETになっていたので修正@revkoishi(14/04/28)
+;-------------------------------------------------
+@ONCE(ARG, ARG:1 = -2, ARG:2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+RETURNF FIRSTPROCESS(ARG:1, @"ONCE%TOSTR(ARG)%", ARG:2, 1)
+
+;フラグリセット処理
+@EVENTTRAIN
+CVARSET CSTR, 1
+
+;以下、FIRSTTIMEファミリーと同様のラインナップ
+
+@ONCEEVENT(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:3 = ARG:3 == -2 ? TFLAG:イベント番号 # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"EVENT%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2, 1)
+
+@ONCEEVENTASSI(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? ASSI # ARG:1
+ARG:3 = ARG:3 == -2 ? TFLAG:助手イベント番号 # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"EVENTASSI%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2, 1)
+
+@ONCEMARK(ARG, ARG:1 = -2, ARG:2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+RETURNF FIRSTPROCESS(ARG:1, @"MARK%TOSTR(ARG)%", ARG:2, 1)
+
+@ONCEDATUI(ARG, ARG:1 = -2, ARG:2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+RETURNF FIRSTPROCESS(ARG:1, @"DATUI%TOSTR(ARG)%", ARG:2, 1)
+
+@ONCEACTMESSAGE(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:3 = ARG:3 == -2 ? TFLAG:ACT # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"ACTMESSAGE%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2, 1)
+
+@ONCEACT(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:3 = ARG:3 == -2 ? TFLAG:ACT # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"ACT%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2, 1)
+
+@ONCEACTEX(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:3 = ARG:3 == -2 ? TFLAG:追加ACT # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"ACTEX%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2, 1)
+
+@ONCEACTASSI(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? ASSI # ARG:1
+ARG:3 = ARG:3 == -2 ? TFLAG:助手ACT # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"ACTASSI%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2, 1)
+
+@ONCEUSE(ARG, ARG:1 = -2, ARG:2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+RETURNF FIRSTPROCESS(ARG:1, @"USE%TOSTR(ARG)%", ARG:2, 1)
+
+@ONCEREACT(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:3 = ARG:3 == -2 ? TFLAG:ACT # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"REACT%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2, 1)
+
+@ONCECOM(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:3 = ARG:3 == -2 ? SELECTCOM # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"COM%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2, 1)
+
+@ONCEREACTALL(ARG, ARG:1 = -2, ARG:2, ARG:3 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:3 = ARG:3 == -2 ? TFLAG:ACT分類 # ARG:3
+RETURNF FIRSTPROCESS(ARG:1, @"REACTALL%TOSTR(ARG:3)%_%TOSTR(ARG)%", ARG:2, 1)
+
+
+;-------------------------------------------------
+;ランダムイベント整理関数@AUTORAND
+;式中で使用する関数です。RAND処理でイベント種類ごとの番号を返しますが、全種見るまで同じ数字は返さない仕様です。
+;特に使用法に指定のない、ランダムイベントの表示順整理関数です。ONCEと違い、調教前ではなく、全て表示したときに初期化されます。
+;ARGはイベントの種類数（1以上100未満）、ARG:1はイベント番号、ARG:2はキャラ登録番号（省略するとTARGET）
+;参照のみオプションはありません。CSTR:0で管理します…重いかな？
+;
+;ARG:2が重複していた箇所を削除、ASSI系でARG:1を省略した際のキャラがTARGETになっていたので修正@revkoishi(14/04/28)
+;-------------------------------------------------
+@AUTORAND(ARG, ARG:1, ARG:2 = -2)
+#FUNCTION
+ARG:2 = ARG:2 == -2 ? TARGET # ARG:2
+SIF !RANGE(ARG, 1, 99)
+	RETURNF 0
+
+RETURNF AUTORANDPROCESS(ARG, ARG:2, @"AUTORAND%TOSTR(ARG:1)%")
+
+;汎用AUTORAND処理
+@AUTORANDPROCESS(ARG, ARG:1, ARGS)
+#FUNCTION
+#DIM DYNAMIC UNREAD, 1
+#DIM LCOUNT, 1
+#LOCALSIZE 100
+VARSET LOCAL, -1
+;未読の番号を数える
+FOR LCOUNT, 0, ARG
+	IF FIRSTPROCESS(ARG:1, @"%ARGS%_%TOSTR(LCOUNT)%", 1)
+		LOCAL:UNREAD = LCOUNT
+		UNREAD++
+	ENDIF
+NEXT
+;未読がある場合、ランダムに選んで番号を返し、戻る
+IF UNREAD
+	UNREAD = LOCAL:(RAND:UNREAD)
+	RETURNF FIRSTPROCESS(ARG:1, @"%ARGS%_%TOSTR(UNREAD)%")*UNREAD
+;未読が無い場合、既読フラグをリセットして再帰する…ちょっと危ないけど大丈夫なはず
+ELSE
+	FOR LCOUNT, 0, ARG
+		CSTR:(ARG:1):FIRSTTIME用 = %REPLACE(CSTR:(ARG:1):0, @"/%ARGS%_%TOSTR(LCOUNT)%/", "/")%
+	NEXT
+	RETURNF AUTORANDPROCESS(ARG, ARG:1, ARGS)
+ENDIF
+
+;以下、FIRSTTIMEファミリーと同様のラインナップ
+
+@RANDEVENT(ARG, ARG:1, ARG:2 = -2, ARG:3 = -2)
+#FUNCTION
+ARG:2 = ARG:2 == -2 ? TARGET # ARG:2
+ARG:3 = ARG:3 == -2 ? TFLAG:イベント番号 # ARG:3
+RETURNF AUTORANDPROCESS(ARG, ARG:2, @"RANDEVENT%TOSTR(ARG:3)%_%TOSTR(ARG:1)%")
+
+@RANDEVENTASSI(ARG, ARG:1, ARG:2 = -2, ARG:3 = -2)
+#FUNCTION
+ARG:2 = ARG:2 == -2 ? ASSI # ARG:2
+ARG:3 = ARG:3 == -2 ? TFLAG:助手イベント番号 # ARG:3
+RETURNF AUTORANDPROCESS(ARG, ARG:2, @"RANDEVENTASSI%TOSTR(ARG:3)%_%TOSTR(ARG:1)%")
+
+@RANDMARK(ARG, ARG:1, ARG:2 = -2)
+#FUNCTION
+ARG:2 = ARG:2 == -2 ? TARGET # ARG:2
+RETURNF AUTORANDPROCESS(ARG, ARG:2, @"RANDMARK%TOSTR(ARG:1)%")
+
+@RANDDATUI(ARG, ARG:1, ARG:2 = -2)
+#FUNCTION
+ARG:2 = ARG:2 == -2 ? TARGET # ARG:2
+RETURNF AUTORANDPROCESS(ARG, ARG:2, @"RANDDATUI%TOSTR(ARG:1)%")
+
+@RANDACTMESSAGE(ARG, ARG:1, ARG:2 = -2, ARG:3 = -2)
+#FUNCTION
+ARG:2 = ARG:2 == -2 ? TARGET # ARG:2
+ARG:3 = ARG:3 == -2 ? TFLAG:ACT # ARG:3
+RETURNF AUTORANDPROCESS(ARG, ARG:2, @"RANDACTMESSAGE%TOSTR(ARG:3)%_%TOSTR(ARG:1)%")
+
+@RANDACT(ARG, ARG:1, ARG:2 = -2, ARG:3 = -2)
+#FUNCTION
+ARG:2 = ARG:2 == -2 ? TARGET # ARG:2
+ARG:3 = ARG:3 == -2 ? TFLAG:ACT # ARG:3
+RETURNF AUTORANDPROCESS(ARG, ARG:2, @"RANDACT%TOSTR(ARG:3)%_%TOSTR(ARG:1)%")
+
+@RANDACTEX(ARG, ARG:1, ARG:2 = -2, ARG:3 = -2)
+#FUNCTION
+ARG:2 = ARG:2 == -2 ? TARGET # ARG:2
+ARG:3 = ARG:3 == -2 ? TFLAG:追加ACT # ARG:3
+RETURNF AUTORANDPROCESS(ARG, ARG:2, @"RANDACTEX%TOSTR(ARG:3)%_%TOSTR(ARG:1)%")
+
+@RANDACTASSI(ARG, ARG:1, ARG:2 = -2, ARG:3 = -2)
+#FUNCTION
+ARG:2 = ARG:2 == -2 ? ASSI # ARG:2
+ARG:3 = ARG:3 == -2 ? TFLAG:助手ACT # ARG:3
+RETURNF AUTORANDPROCESS(ARG, ARG:2, @"RANDACTASSI%TOSTR(ARG:3)%_%TOSTR(ARG:1)%")
+
+@RANDUSE(ARG, ARG:1, ARG:2 = -2)
+#FUNCTION
+ARG:2 = ARG:2 == -2 ? TARGET # ARG:2
+RETURNF AUTORANDPROCESS(ARG, ARG:2, @"RANDUSE%TOSTR(ARG:1)%")
+
+@RANDREACT(ARG, ARG:1, ARG:2 = -2, ARG:3 = -2)
+#FUNCTION
+ARG:2 = ARG:2 == -2 ? TARGET # ARG:2
+ARG:3 = ARG:3 == -2 ? TFLAG:ACT # ARG:3
+RETURNF AUTORANDPROCESS(ARG, ARG:2, @"RANDREACT%TOSTR(ARG:3)%_%TOSTR(ARG:1)%")
+
+@RANDCOM(ARG, ARG:1, ARG:2 = -2, ARG:3 = -2)
+#FUNCTION
+ARG:2 = ARG:2 == -2 ? TARGET # ARG:2
+ARG:3 = ARG:3 == -2 ? SELECTCOM # ARG:3
+RETURNF AUTORANDPROCESS(ARG, ARG:2, @"RANDCOM%TOSTR(ARG:3)%_%TOSTR(ARG:1)%")
+
+@RANDREACTALL(ARG, ARG:1, ARG:2 = -2, ARG:3 = -2)
+#FUNCTION
+ARG:2 = ARG:2 == -2 ? TARGET # ARG:2
+ARG:3 = ARG:3 == -2 ? TFLAG:ACT分類 # ARG:3
+RETURNF AUTORANDPROCESS(ARG, ARG:2, @"RANDREACTALL%TOSTR(ARG:3)%_%TOSTR(ARG:1)%")
+
+
+;-------------------------------------------------
+;順序イベント整理関数@AUTOORDER
+;式中で使用する関数です。呼ばれるたびにそのイベントが何度目に呼ばれたかを返します。初期化はされません。
+;特に使用法に指定のない、段階式イベントの表示順整理関数です。0～100まで呼ばれるごとに更新します
+;ARGはイベント番号、ARG:1はキャラ登録番号（省略するとTARGET）
+;こちらも面倒なので、参照のみオプションはありません。そういうのが必要な処理はFIRSTTIMEで行ってください。
+;CSTR:0で管理します…重いかな？
+;
+;ASSI系でARG:1を省略した際のキャラがTARGETになっていたので修正@revkoishi(14/04/28)
+;-------------------------------------------------
+@AUTOORDER(ARG, ARG:1 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+RETURNF AUTOORDERPROCESS(ARG:1, @"AUTOORDER%TOSTR(ARG)%")
+
+;汎用AUTOORDER処理
+@AUTOORDERPROCESS(ARG, ARGS)
+#FUNCTION
+#DIM LCOUNT, 1
+#LOCALSIZE 100
+VARSET LOCAL, -1
+;0～99の未読判定をし、最初に引っかかった数字を返す
+FOR LCOUNT, 0, 100
+	SIF FIRSTPROCESS(ARG, @"%ARGS%_%TOSTR(LCOUNT)%")
+		RETURNF LCOUNT
+NEXT
+;限界は100
+RETURNF 100
+
+;以下、FIRSTTIMEファミリーと同様のラインナップ
+
+@ORDEREVENT(ARG, ARG:1 = -2, ARG:2 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:2 = ARG:2 == -2 ? TFLAG:イベント番号 # ARG:2
+RETURNF AUTOORDERPROCESS(ARG:1, @"ORDEREVENT%TOSTR(ARG:2)%_%TOSTR(ARG)%")
+
+@ORDEREVENTASSI(ARG, ARG:1 = -2, ARG:2 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? ASSI # ARG:1
+ARG:2 = ARG:2 == -2 ? TFLAG:助手イベント番号 # ARG:2
+RETURNF AUTOORDERPROCESS(ARG:1, @"ORDEREVENTASSI%TOSTR(ARG:2)%_%TOSTR(ARG)%")
+
+@ORDERMARK(ARG, ARG:1 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+RETURNF AUTOORDERPROCESS(ARG:1, @"ORDERMARK%TOSTR(ARG)%")
+
+@ORDERDATUI(ARG, ARG:1 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+RETURNF AUTOORDERPROCESS(ARG:1, @"ORDERDATUI%TOSTR(ARG)%")
+
+@ORDERACTMESSAGE(ARG, ARG:1 = -2, ARG:2 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:2 = ARG:2 == -2 ? TFLAG:ACT # ARG:2
+RETURNF AUTOORDERPROCESS(ARG:1, @"ORDERACTMESSAGE%TOSTR(ARG:2)%_%TOSTR(ARG)%")
+
+@ORDERACT(ARG, ARG:1 = -2, ARG:2 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:2 = ARG:2 == -2 ? TFLAG:ACT # ARG:2
+RETURNF AUTOORDERPROCESS(ARG:1, @"ORDERACT%TOSTR(ARG:2)%_%TOSTR(ARG)%")
+
+@ORDERACTEX(ARG, ARG:1 = -2, ARG:2 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:2 = ARG:2 == -2 ? TFLAG:追加ACT # ARG:2
+RETURNF AUTOORDERPROCESS(ARG:1, @"ORDERACTEX%TOSTR(ARG:2)%_%TOSTR(ARG)%")
+
+@ORDERACTASSI(ARG, ARG:1 = -2, ARG:2 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? ASSI # ARG:1
+ARG:2 = ARG:2 == -2 ? TFLAG:助手ACT # ARG:2
+RETURNF AUTOORDERPROCESS(ARG:1, @"ORDERACTASSI%TOSTR(ARG:2)%_%TOSTR(ARG)%")
+
+@ORDERUSE(ARG, ARG:1 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+RETURNF AUTOORDERPROCESS(ARG:1, @"ORDERUSE%TOSTR(ARG)%")
+
+@ORDERREACT(ARG, ARG:1 = -2, ARG:2 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:2 = ARG:2 == -2 ? TFLAG:ACT # ARG:2
+RETURNF AUTOORDERPROCESS(ARG:1, @"ORDERREACT%TOSTR(ARG:2)%_%TOSTR(ARG)%")
+
+@ORDERCOM(ARG, ARG:1 = -2, ARG:2 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:2 = ARG:2 == -2 ? SELECTCOM # ARG:2
+RETURNF AUTOORDERPROCESS(ARG:1, @"ORDERCOM%TOSTR(ARG:2)%_%TOSTR(ARG)%")
+
+@ORDERREACTALL(ARG, ARG:1 = -2, ARG:2 = -2)
+#FUNCTION
+ARG:1 = ARG:1 == -2 ? TARGET # ARG:1
+ARG:2 = ARG:2 == -2 ? TFLAG:ACT分類 # ARG:2
+RETURNF AUTOORDERPROCESS(ARG:1, @"ORDERREACTALL%TOSTR(ARG:2)%_%TOSTR(ARG)%")
+
+;-------------------------------------------------
+;関数名:VOIDLINE_IF
+;概　要:条件付き空行
+;引　数:ARG:0…正なら空行表示
+;戻り値:RESULTを保存する
+;備　考:口上表示したときの空行追加用
+;-------------------------------------------------
+@VOIDLINE_IF(ARG)
+SIF ARG
+	PRINTL 
+RETURN RESULT
+
+;-------------------------------------------------
+;関数名:LINE_IF
+;概　要:条件付きDRAWLINE
+;引　数:ARG:0…正ならDRAWLINE
+;戻り値:RESULTを保存する
+;備　考:口上表示したときの罫線追加用
+;-------------------------------------------------
+@LINE_IF(ARG)
+SIF ARG
+	DRAWLINE
+RETURN RESULT
+
+;-------------------------------------------------
+;真値集計関数@TRUECHECK
+;	引数0～19：集計対象
+;引数のうち真になるものがいくつあるかを数えます
+;-------------------------------------------------
+@TRUECHECK(ARG:0, ARG:1, ARG:2, ARG:3, ARG:4, ARG:5, ARG:6, ARG:7, ARG:8, ARG:9, ARG:10, ARG:11, ARG:12, ARG:13, ARG:14, ARG:15, ARG:16, ARG:17, ARG:18, ARG:19, ARG:20, ARG:21, ARG:22, ARG:23, ARG:24, ARG:25, ARG:26, ARG:27, ARG:28, ARG:29, ARG:30, ARG:31, ARG:32, ARG:33, ARG:34, ARG:35, ARG:36, ARG:37, ARG:38, ARG:39, ARG:40, ARG:41, ARG:42, ARG:43, ARG:44, ARG:45, ARG:46, ARG:47, ARG:48, ARG:49, ARG:50, ARG:51, ARG:52, ARG:53, ARG:54, ARG:55, ARG:56, ARG:57, ARG:58, ARG:59, ARG:60, ARG:61, ARG:62, ARG:63, ARG:64, ARG:65, ARG:66, ARG:67, ARG:68, ARG:69, ARG:70, ARG:71, ARG:72, ARG:73, ARG:74, ARG:75, ARG:76, ARG:77, ARG:78, ARG:79, ARG:80, ARG:81, ARG:82, ARG:83, ARG:84, ARG:85, ARG:86, ARG:87, ARG:88, ARG:89, ARG:90, ARG:91, ARG:92, ARG:93, ARG:94, ARG:95, ARG:96, ARG:97, ARG:98, ARG:99)
+#FUNCTION
+RETURNF VARSIZE("ARG") - MATCH(ARG, 0)
+
+;-------------------------------------------------
+;複数ビットセット関数@SETBITS
+;	引数0：セットする対象
+;	引数1～100：セットに用いられる数値
+;通常関数です。引数0の値に与えられた引数番目のビットを立てます
+;-------------------------------------------------
+@SETBITS(ARG, ARG:1 = -1, ARG:2 = -1, ARG:3 = -1, ARG:4 = -1, ARG:5 = -1, ARG:6 = -1, ARG:7 = -1, ARG:8 = -1, ARG:9 = -1, ARG:10 = -1, ARG:11 = -1, ARG:12 = -1, ARG:13 = -1, ARG:14 = -1, ARG:15 = -1, ARG:16 = -1, ARG:17 = -1, ARG:18 = -1, ARG:19 = -1, ARG:20 = -1, ARG:21 = -1, ARG:22 = -1, ARG:23 = -1, ARG:24 = -1, ARG:25 = -1, ARG:26 = -1, ARG:27 = -1, ARG:28 = -1, ARG:29 = -1, ARG:30 = -1, ARG:31 = -1, ARG:32 = -1, ARG:33 = -1, ARG:34 = -1, ARG:35 = -1, ARG:36 = -1, ARG:37 = -1, ARG:38 = -1, ARG:39 = -1, ARG:40 = -1, ARG:41 = -1, ARG:42 = -1, ARG:43 = -1, ARG:44 = -1, ARG:45 = -1, ARG:46 = -1, ARG:47 = -1, ARG:48 = -1, ARG:49 = -1, ARG:50 = -1, ARG:51 = -1, ARG:52 = -1, ARG:53 = -1, ARG:54 = -1, ARG:55 = -1, ARG:56 = -1, ARG:57 = -1, ARG:58 = -1, ARG:59 = -1, ARG:60 = -1, ARG:61 = -1, ARG:62 = -1, ARG:63 = -1, ARG:64 = -1, ARG:65 = -1, ARG:66 = -1, ARG:67 = -1, ARG:68 = -1, ARG:69 = -1, ARG:70 = -1, ARG:71 = -1, ARG:72 = -1, ARG:73 = -1, ARG:74 = -1, ARG:75 = -1, ARG:76 = -1, ARG:77 = -1, ARG:78 = -1, ARG:79 = -1, ARG:80 = -1, ARG:81 = -1, ARG:82 = -1, ARG:83 = -1, ARG:84 = -1, ARG:85 = -1, ARG:86 = -1, ARG:87 = -1, ARG:88 = -1, ARG:89 = -1, ARG:90 = -1, ARG:91 = -1, ARG:92 = -1, ARG:93 = -1, ARG:94 = -1, ARG:95 = -1, ARG:96 = -1, ARG:97 = -1, ARG:98 = -1, ARG:99 = -1, ARG:100 = -1)
+#LOCALSIZE 2
+LOCAL = 0
+FOR LOCAL:1, 1, 100
+	SIF ARG:(LOCAL:1) < 0 || ARG:(LOCAL:1) > 63
+		RETURN RESULT
+	SETBIT ARG, ARG:(LOCAL:1)
+NEXT
+RETURN RESULT
+
+;-------------------------------------------------
+;関数名:COUNTBIT
+;概　要:BIT和取得関数
+;引　数:ARG:0…対象の変数
+;　　　:ARG:1…BIT番号始点
+;　　　:ARG:2…BIT番号終点
+;戻り値:ARG:1～ARG:2番目のビットの和
+;備　考:式中関数。引数1～2を省略すると全BITの和になる
+;-------------------------------------------------
+@COUNTBIT(ARG, ARG:1, ARG:2 = 63)
+#FUNCTION
+#LOCALSIZE 2
+LOCAL:1 = 0
+ARG >>= ARG:1
+FOR LOCAL, 0, ARG:1-ARG:2+1
+	LOCAL:1 += ARG & 1
+	ARG >>= 1
+NEXT
+RETURNF LOCAL:1
+
+;-------------------------------------------------
+;ORビットチェック関数@GETBITOR
+;	引数0：チェックされる数値・変数
+;	引数1～100：チェックするビット
+;式中で使用する関数です。引数0の値で与えられた引数1～100番目のビットを見ます。いずれかが立っていれば1を返します
+;引数0はチェックする対象、チェックされる数値は100まで引き受け可能
+;チェック数値がすべて省略されるか不適切だと0が返ります
+;-------------------------------------------------
+@GETBITOR(ARG, ARG:1 = -1, ARG:2 = -1, ARG:3 = -1, ARG:4 = -1, ARG:5 = -1, ARG:6 = -1, ARG:7 = -1, ARG:8 = -1, ARG:9 = -1, ARG:10 = -1, ARG:11 = -1, ARG:12 = -1, ARG:13 = -1, ARG:14 = -1, ARG:15 = -1, ARG:16 = -1, ARG:17 = -1, ARG:18 = -1, ARG:19 = -1, ARG:20 = -1, ARG:21 = -1, ARG:22 = -1, ARG:23 = -1, ARG:24 = -1, ARG:25 = -1, ARG:26 = -1, ARG:27 = -1, ARG:28 = -1, ARG:29 = -1, ARG:30 = -1, ARG:31 = -1, ARG:32 = -1, ARG:33 = -1, ARG:34 = -1, ARG:35 = -1, ARG:36 = -1, ARG:37 = -1, ARG:38 = -1, ARG:39 = -1, ARG:40 = -1, ARG:41 = -1, ARG:42 = -1, ARG:43 = -1, ARG:44 = -1, ARG:45 = -1, ARG:46 = -1, ARG:47 = -1, ARG:48 = -1, ARG:49 = -1, ARG:50 = -1, ARG:51 = -1, ARG:52 = -1, ARG:53 = -1, ARG:54 = -1, ARG:55 = -1, ARG:56 = -1, ARG:57 = -1, ARG:58 = -1, ARG:59 = -1, ARG:60 = -1, ARG:61 = -1, ARG:62 = -1, ARG:63 = -1, ARG:64 = -1, ARG:65 = -1, ARG:66 = -1, ARG:67 = -1, ARG:68 = -1, ARG:69 = -1, ARG:70 = -1, ARG:71 = -1, ARG:72 = -1, ARG:73 = -1, ARG:74 = -1, ARG:75 = -1, ARG:76 = -1, ARG:77 = -1, ARG:78 = -1, ARG:79 = -1, ARG:80 = -1, ARG:81 = -1, ARG:82 = -1, ARG:83 = -1, ARG:84 = -1, ARG:85 = -1, ARG:86 = -1, ARG:87 = -1, ARG:88 = -1, ARG:89 = -1, ARG:90 = -1, ARG:91 = -1, ARG:92 = -1, ARG:93 = -1, ARG:94 = -1, ARG:95 = -1, ARG:96 = -1, ARG:97 = -1, ARG:98 = -1, ARG:99 = -1, ARG:100 = -1)
+#FUNCTION
+#DIM LCOUNT, 1
+FOR LCOUNT, 1, 100
+	SIF ARG:LCOUNT < 0 || ARG:LCOUNT > 63
+		RETURNF 0
+	SIF GETBIT(ARG, ARG:LCOUNT)
+		RETURNF 1
+NEXT
+RETURNF 0
+
+[SKIPSTART]
+@GETBITOR(ARG:0, ARG:1 = -1, ..., ARG:100 = -1)
+#FUNCTION
+LOCAL:0 = 0, 0
+WHILE ++LOCAL:1 < 100 && ARG:(LOCAL:1) >= 0
+        LOCAL:0 |= 1 << (ARG:(LOCAL:1) & 0x3F)
+WEND
+RETURNF (ARG:0 & LOCAL:0) != 0
+[SKIPEND]
+
+;-------------------------------------------------
+;配列ビットチェック関数@GETBITAR
+;	引数0：チェックするビット
+;	引数1～100：チェックされる数値・変数
+;式中で使用する関数です。引数0の値番目のビットを引数1～100番目に対して見ます。いずれかで立っていれば1を返します
+;GETBITOR等と比べて引数配置が逆になっています。また、便宜上配列と銘打ってますが配列をまとめて扱うことはできません
+;チェック数値がすべて省略されるか不適切だと0が返ります
+;-------------------------------------------------
+@GETBITAR(ARG = -1 , ARG:1 = -1, ARG:2 = -1, ARG:3 = -1, ARG:4 = -1, ARG:5 = -1, ARG:6 = -1, ARG:7 = -1, ARG:8 = -1, ARG:9 = -1, ARG:10 = -1, ARG:11 = -1, ARG:12 = -1, ARG:13 = -1, ARG:14 = -1, ARG:15 = -1, ARG:16 = -1, ARG:17 = -1, ARG:18 = -1, ARG:19 = -1, ARG:20 = -1, ARG:21 = -1, ARG:22 = -1, ARG:23 = -1, ARG:24 = -1, ARG:25 = -1, ARG:26 = -1, ARG:27 = -1, ARG:28 = -1, ARG:29 = -1, ARG:30 = -1, ARG:31 = -1, ARG:32 = -1, ARG:33 = -1, ARG:34 = -1, ARG:35 = -1, ARG:36 = -1, ARG:37 = -1, ARG:38 = -1, ARG:39 = -1, ARG:40 = -1, ARG:41 = -1, ARG:42 = -1, ARG:43 = -1, ARG:44 = -1, ARG:45 = -1, ARG:46 = -1, ARG:47 = -1, ARG:48 = -1, ARG:49 = -1, ARG:50 = -1, ARG:51 = -1, ARG:52 = -1, ARG:53 = -1, ARG:54 = -1, ARG:55 = -1, ARG:56 = -1, ARG:57 = -1, ARG:58 = -1, ARG:59 = -1, ARG:60 = -1, ARG:61 = -1, ARG:62 = -1, ARG:63 = -1, ARG:64 = -1, ARG:65 = -1, ARG:66 = -1, ARG:67 = -1, ARG:68 = -1, ARG:69 = -1, ARG:70 = -1, ARG:71 = -1, ARG:72 = -1, ARG:73 = -1, ARG:74 = -1, ARG:75 = -1, ARG:76 = -1, ARG:77 = -1, ARG:78 = -1, ARG:79 = -1, ARG:80 = -1, ARG:81 = -1, ARG:82 = -1, ARG:83 = -1, ARG:84 = -1, ARG:85 = -1, ARG:86 = -1, ARG:87 = -1, ARG:88 = -1, ARG:89 = -1, ARG:90 = -1, ARG:91 = -1, ARG:92 = -1, ARG:93 = -1, ARG:94 = -1, ARG:95 = -1, ARG:96 = -1, ARG:97 = -1, ARG:98 = -1, ARG:99 = -1, ARG:100 = -1)
+#FUNCTION
+#DIM LCOUNT, 1
+SIF ARG < 0 || ARG > 63
+	RETURNF 0
+FOR LCOUNT, 1, 100
+	SIF ARG:LCOUNT < 0
+		RETURNF 0
+	SIF GETBIT(ARG:LCOUNT, ARG)
+		RETURNF 1
+NEXT
+RETURNF 0
+
+;-------------------------------------------------
+;ANDビットチェック関数@GETBITAND
+;	引数0：チェックされる数値・変数
+;	引数1～100：チェックするビット
+;式中で使用する関数です。引数0の値で与えられた引数1～100番目のビットを見ます。すべて立っていれば1を返します
+;引数0はチェックする対象、チェックされる数値は100まで引き受け可能
+;チェック数値がすべて省略されるか不適切だと1が返ります
+;-------------------------------------------------
+@GETBITAND(ARG, ARG:1 = -1, ARG:2 = -1, ARG:3 = -1, ARG:4 = -1, ARG:5 = -1, ARG:6 = -1, ARG:7 = -1, ARG:8 = -1, ARG:9 = -1, ARG:10 = -1, ARG:11 = -1, ARG:12 = -1, ARG:13 = -1, ARG:14 = -1, ARG:15 = -1, ARG:16 = -1, ARG:17 = -1, ARG:18 = -1, ARG:19 = -1, ARG:20 = -1, ARG:21 = -1, ARG:22 = -1, ARG:23 = -1, ARG:24 = -1, ARG:25 = -1, ARG:26 = -1, ARG:27 = -1, ARG:28 = -1, ARG:29 = -1, ARG:30 = -1, ARG:31 = -1, ARG:32 = -1, ARG:33 = -1, ARG:34 = -1, ARG:35 = -1, ARG:36 = -1, ARG:37 = -1, ARG:38 = -1, ARG:39 = -1, ARG:40 = -1, ARG:41 = -1, ARG:42 = -1, ARG:43 = -1, ARG:44 = -1, ARG:45 = -1, ARG:46 = -1, ARG:47 = -1, ARG:48 = -1, ARG:49 = -1, ARG:50 = -1, ARG:51 = -1, ARG:52 = -1, ARG:53 = -1, ARG:54 = -1, ARG:55 = -1, ARG:56 = -1, ARG:57 = -1, ARG:58 = -1, ARG:59 = -1, ARG:60 = -1, ARG:61 = -1, ARG:62 = -1, ARG:63 = -1, ARG:64 = -1, ARG:65 = -1, ARG:66 = -1, ARG:67 = -1, ARG:68 = -1, ARG:69 = -1, ARG:70 = -1, ARG:71 = -1, ARG:72 = -1, ARG:73 = -1, ARG:74 = -1, ARG:75 = -1, ARG:76 = -1, ARG:77 = -1, ARG:78 = -1, ARG:79 = -1, ARG:80 = -1, ARG:81 = -1, ARG:82 = -1, ARG:83 = -1, ARG:84 = -1, ARG:85 = -1, ARG:86 = -1, ARG:87 = -1, ARG:88 = -1, ARG:89 = -1, ARG:90 = -1, ARG:91 = -1, ARG:92 = -1, ARG:93 = -1, ARG:94 = -1, ARG:95 = -1, ARG:96 = -1, ARG:97 = -1, ARG:98 = -1, ARG:99 = -1, ARG:100 = -1)
+#FUNCTION
+#DIM LCOUNT, 1
+FOR LCOUNT, 1, 100
+	SIF ARG:LCOUNT < 0 || ARG:LCOUNT > 63
+		RETURNF 1
+	SIF !GETBIT(ARG, ARG:LCOUNT)
+		RETURNF 0
+NEXT
+RETURNF 1
+
+;-------------------------------------------------
+;除外ビットチェック関数@GETBITEX
+;	引数0：チェックされる数値・変数
+;	引数1～100：チェックするビット
+;式中で使用する関数です。引数0の値で与えられた引数1～100番目のビットを見ます。それらのビット以外に何か立っていれば真になります
+;それらのビットが立っているかどうか自体は見ないので、見たい場合はGETBITORを併用してください
+;引数0はチェックする対象、チェックされる数値は100まで引き受け可能
+;チェック数値がすべて省略されるか不適切だと1が返ります
+;-------------------------------------------------
+@GETBITEX(ARG, ARG:1 = -1, ARG:2 = -1, ARG:3 = -1, ARG:4 = -1, ARG:5 = -1, ARG:6 = -1, ARG:7 = -1, ARG:8 = -1, ARG:9 = -1, ARG:10 = -1, ARG:11 = -1, ARG:12 = -1, ARG:13 = -1, ARG:14 = -1, ARG:15 = -1, ARG:16 = -1, ARG:17 = -1, ARG:18 = -1, ARG:19 = -1, ARG:20 = -1, ARG:21 = -1, ARG:22 = -1, ARG:23 = -1, ARG:24 = -1, ARG:25 = -1, ARG:26 = -1, ARG:27 = -1, ARG:28 = -1, ARG:29 = -1, ARG:30 = -1, ARG:31 = -1, ARG:32 = -1, ARG:33 = -1, ARG:34 = -1, ARG:35 = -1, ARG:36 = -1, ARG:37 = -1, ARG:38 = -1, ARG:39 = -1, ARG:40 = -1, ARG:41 = -1, ARG:42 = -1, ARG:43 = -1, ARG:44 = -1, ARG:45 = -1, ARG:46 = -1, ARG:47 = -1, ARG:48 = -1, ARG:49 = -1, ARG:50 = -1, ARG:51 = -1, ARG:52 = -1, ARG:53 = -1, ARG:54 = -1, ARG:55 = -1, ARG:56 = -1, ARG:57 = -1, ARG:58 = -1, ARG:59 = -1, ARG:60 = -1, ARG:61 = -1, ARG:62 = -1, ARG:63 = -1, ARG:64 = -1, ARG:65 = -1, ARG:66 = -1, ARG:67 = -1, ARG:68 = -1, ARG:69 = -1, ARG:70 = -1, ARG:71 = -1, ARG:72 = -1, ARG:73 = -1, ARG:74 = -1, ARG:75 = -1, ARG:76 = -1, ARG:77 = -1, ARG:78 = -1, ARG:79 = -1, ARG:80 = -1, ARG:81 = -1, ARG:82 = -1, ARG:83 = -1, ARG:84 = -1, ARG:85 = -1, ARG:86 = -1, ARG:87 = -1, ARG:88 = -1, ARG:89 = -1, ARG:90 = -1, ARG:91 = -1, ARG:92 = -1, ARG:93 = -1, ARG:94 = -1, ARG:95 = -1, ARG:96 = -1, ARG:97 = -1, ARG:98 = -1, ARG:99 = -1, ARG:100 = -1)
+#FUNCTION
+#DIM LCOUNT, 1
+FOR LCOUNT, 1, 100
+	SIF ARG:LCOUNT < 0 || ARG:LCOUNT > 63
+		RETURNF ARG
+	CLEARBIT ARG, ARG:LCOUNT
+NEXT
+RETURNF ARG
+
+;-------------------------------------------------------------------------------
+;	KOMEIJI_FUNCTIONS由来関数群は最新の関数と差し替えられました。
+;	
+;	_PARSE_INT	→	ISNUMERICとTOINT または PARSEINT64を使用してください
+;-------------------------------------------------------------------------------
+
+;-------------------------------------------------
+;関数名:PARSEINT64
+;概　要:数値を表す文字列型を解析し数値型に変換する関数
+;引　数:ARGS:0…数値を表す文字列
+;　　　 ARG:0 …[省略可]数値の基数(何進数か)。2～36まで指定可能。省略した場合は10
+;戻り値:解析結果の数値、__INT_MIN__+1～__INT_MAX__(-0x7FFFFFFFFFFFFFFF～0x7FFFFFFFFFFFFFFF)
+;　　　 但し数値として解釈できない場合は__INT_MIN__(-0x8000000000000000)を返す
+;備　考:式中関数 ※結果が__INT_MIN__になる値を解析できない仕様なので注意
+;TOINTすら無かった大昔に作ったのを叩き直して、もう少し汎用的かつ実用的な雰囲気にした
+;事前に解析可能かわからない文字列を入れる場合にすぐ例外吐いて死ぬのは非常に拙いのと、
+;解析不能の場合を返す良い手段が思いつかなかったので、符号付64bitの最小値は解析できない仕様として、これをエラー戻り値扱いに
+;実際安いが使えればいい。うふふ、めでたい　と思っていたら…
+;えっ、TOINTやISNUMERICって実は"0xCAFEBABE"や"0b10110101"みたいな16進や2進も処理できる、ですって？！
+;Wikiには半角数字だけって書いてあったのに…テストに出ないよぉ…でもTOINTとは微妙に方向性が異なるので、もしかすると使い道が微レ存
+;あと実は__INT_MIN__でも処理できるように直すのがちょっと面倒だったのは秘密
+;(負数処理を計算中にやって、符号フラグとズレた時点でオーバーフロー扱いにすればいい気もするけど)
+;-------------------------------------------------
+;使用例と処理結果
+;PARSEINT64("0", 10)                   →           0   PARSEINT64("-9223372036854775807", 10) → -9223372036854775807
+;PARSEINT64("473", 10)                 →         473   PARSEINT64("9223372036854775808", 10)  →          __INT_MIN__
+;PARSEINT64("-0", 10)                  →           0   PARSEINT64("-9223372036854775808", 10) →          __INT_MIN__
+;PARSEINT64("-FF", 16)                 →        -255   PARSEINT64("99", 8)                    →          __INT_MIN__
+;PARSEINT64("1100110", 2)              →         102   PARSEINT64("Kona", 10)                 →          __INT_MIN__
+;PARSEINT64("9223372036854775807", 10) → __INT_MAX__   PARSEINT64("Kona", 27)                 →               411787
+;-------------------------------------------------
+;※結果が__INT_MIN__になる値を正しく解釈できるようにする場合の方法の例。必要になったら考えよう
+;関数にチェックモードを付ける/RESULT:1に代入する/参照型引数で返す/式中関数やめてRESULT:1で返す
+;-------------------------------------------------
+@PARSEINT64(ARGS:0, ARG:0 = 10)
+#FUNCTION
+#LOCALSIZE 5
+#LOCALSSIZE 2
+SIF !INRANGE(ARG:0, 2, 36)	;基数チェック。これが不正な場合だけTHROWしちゃう
+	THROW @PARSEINT64に不正な引数が渡されました。範囲外の基数です（{ARG:0}）
+LOCAL:0 = 0	;解析結果の数値
+LOCAL:1 = 1	;符号フラグ(1か-1を入れて乗算)
+LOCAL:2 = STRLENSU(ARGS:0)	;文字数
+IF !LOCAL:2					;解析対象文字列チェック。これが不正な場合は解析不能扱い
+	DEBUGPRINTFORML @PARSEINT64に不正な引数が渡されました。解析対象文字列が空文字列です
+	RETURNF __INT_MIN__
+ENDIF
+;大文字にして処理
+LOCALS:0 = %TOUPPER(ARGS:0)%
+FOR LOCAL:3, 0, LOCAL:2
+	LOCAL:4 = ENCODETOUNI(CHARATU(LOCALS:0, LOCAL:3))	;ENCODETOUNIのお陰でUnicode値から数値化できる。いい時代になったわ
+	SELECTCASE LOCAL:4
+		CASE 0x2D			;"-"
+			IF LOCAL:3 || LOCAL:2 == 1	;-記号を処理出来るのは先頭だけ。-記号1文字だけの場合もアウト
+				DEBUGPRINTFORML @PARSEINT64で数値解析中に例外が発生。不正な-記号です（%ARGS:0%）
+				RETURNF __INT_MIN__
+			ENDIF
+			LOCAL:1 = -1	;符号フラグを変更
+			CONTINUE		;計算部分には行かない
+		CASE 0x30 TO 0x39	;"0" ～ "9"。TOINTが無かった頃は個別処理していたのよ
+			LOCAL:4 -= 0x30
+		CASE 0x41 TO 0x5A	;"A" ～ "Z"。ENCODETOUNIのお陰で随分と楽が出来るようになったわ
+			LOCAL:4 -= 0x37
+		CASEELSE
+			DEBUGPRINTFORML @PARSEINT64で数値解析中に例外が発生。数値として解析できません（%ARGS:0%）
+			RETURNF __INT_MIN__
+	ENDSELECT
+	IF !INRANGE(LOCAL:4, 0, ARG:0 - 1)
+		DEBUGPRINTFORML @PARSEINT64で数値解析中に例外が発生。基数({ARG:0})以上の数字が含まれています（%ARGS:0%）
+		RETURNF __INT_MIN__
+	ENDIF
+	LOCAL:0 = LOCAL:0 * ARG:0 + LOCAL:4
+	IF LOCAL:0 < 0	;ここで負数になるのはオーバーフロー。-0x8000000000000000を解析できないのは仕様ということでよろしく
+		DEBUGPRINTFORML @PARSEINT64で数値解析中に例外が発生。オーバーフローが発生しました（%ARGS:0%）
+		RETURNF __INT_MIN__
+	ENDIF
+NEXT
+RETURNF LOCAL:0 * LOCAL:1
+
+
+;-------------------------------------------------
+;関数名:FACESITTING_SET
+;概　要:顔面騎乗状態調整処理
+;引　数:ARG = (0 = 顔面騎乗解除, 1 = 顔面騎乗, 2 = 顔面騎乗アナル)
+;備　考:通常関数
+;引数に従って顔面騎乗状態をセットするだけの関数
+;-------------------------------------------------
+@FACESITTING_SET(ARG)
+TEQUIP:顔面騎乗 = ARG & 1
+TEQUIP:顔面騎乗アナル = (ARG & 2) / 2
+
+;-------------------------------------------------
+;関数名:SEX_SET
+;概　要:性交状態調整処理
+;引　数:ARGS = 性交系ACT名、もしくはACT番号（体位番号は拾わないので注意）
+;備　考:通常関数
+;引数に従って性交状態をセットするだけの関数。省略すると性交を解除。片方を解除したい場合は直接代入して下さい。
+;TEQUIP:70 性交中    (調教者が調教対象に挿入中)(1=正常位/2=後背位/3=騎乗位/4=対面座位/5=背面座位/6=アナルセックス)
+;TEQUIP:71 性交奉仕中(調教対象が調教者に挿入中)(70と同じ)
+;-------------------------------------------------
+@SEX_SET(ARGS = "解除")
+#LOCALSIZE 1
+IF ARGS == "解除"
+	TEQUIP:性交中 = 0
+	TEQUIP:性交奉仕中 = 0
+ELSE
+	LOCAL = ISNUMERIC(ARGS) ? TOINT(ARGS) # GET_ACTNUM(ARGS)
+	SELECTCASE LOCAL
+		CASE 30 TO 35
+			TEQUIP:性交中 = POSITION(LOCAL)
+			TEQUIP:性交奉仕中 = 0
+		CASE 95 TO 99, 103
+			TEQUIP:性交奉仕中 = POSITION(LOCAL)
+			TEQUIP:性交中 = 0
+	ENDSELECT
+ENDIF
+RETURN RESULT
+
+;-------------------------------------------------
+;関数名:ACT_SET
+;概　要:ACT予約関数
+;引　数:ARGS   = 実行したいACT名、または番号
+;		ARG    = 内部処理。真にすると次段階を踏む
+;備　考:通常関数
+;ACTABLEを参照して実行までのハードルを外すように調教者アクションを誘導する関数
+;セットしたときの戻り値が0だと、その調教中にそれを実行可能な状況にはできないという意味。
+;最悪ACTがループとかするかもしれない？
+;-------------------------------------------------
+@ACT_SET(ARGS = "-1", ARG)
+
+;現在まだ未実装
+;ACTABLE改修後に作ります
+
+
+;-------------------------------------------------
+;関数名:SAME_TURN
+;概　要:同一ターン判定関数（調教中限定）
+;引　数:ARGS = 同一判定段階
+;戻り値:同一ターン判定用文字列
+;備　考:式中関数
+;現在時間を示す文字列を返す
+;前回返された物と比べることにより同一ターンかが判定できるという仕組み
+;調教中に使われることを想定してるので
+;それ以外で使いたければ手直しが必要@これみ
+;
+;書式 {年数}/{日数}/%昼夜%/{調教時間}
+;-------------------------------------------------
+@SAME_TURN(ARGS)
+#FUNCTIONS
+LOCALS = {FLAG:年数+1}
+SIF ARGS == "年"
+	RETURNF LOCALS
+LOCALS = %LOCALS%/{FLAG:日数+1}
+SIF ARGS == "日"
+	RETURNF LOCALS
+LOCALS = %LOCALS%/%GET_TIME()%
+SIF ARGS == "調教"
+	RETURNF LOCALS
+LOCALS = %LOCALS%/{TFLAG:調教時間}
+;SIF ARGS == "ターン"
+RETURNF LOCALS
+
+;-------------------------------------------------
+;口上色指定文字列表示関数@PRINT_KOJO_COLOR～系
+;	ARG :0：表示させる文字色のキャラ番号
+;	ARG :1：戻したい文字色のキャラ番号（日常イベント等、口上主がTARGETでない場合を想定）。省略するとTARGET
+;	ARG :2：1なら改行。2なら改行してWAIT
+;	ARGS:0：表示する文字列
+;指定したキャラ番号の文字色で文字列を表示します
+;当該キャラの専用口上が存在しない場合はデフォルトの薄灰色で表示
+;改行する「PRINT_KOJO_COLORL」改行待ちする「PRINT_KOJO_COLORW」のバリエーションあり
+;例えば…
+;CALL PRINT_KOJO_COLORW(ASSI, "この文字列はASSIの設定色で表示されて改行待ちをします。")
+;ぱにめーしょんに入れたいがバリアント互換がないのでここで。
+;-------------------------------------------------
+@PRINT_KOJO_COLOR(ARG:0, ARGS:0, ARG:1 = -2, ARG:2)
+ARG:1 = ARG:1 != -2 ? ARG:1 # TARGET
+CALL KOJO_COLOR(ARG:0)
+PRINTFORM %ARGS%
+SIF ARG:2 == 1
+	PRINTFORML
+SIF ARG:2 == 2
+	PRINTFORMW
+CALL KOJO_COLOR(ARG:1)
+RETURN RESULT
+
+@PRINT_KOJO_COLORL(ARG:0, ARGS:0, ARG:1 = -2)
+CALL PRINT_KOJO_COLOR(ARG:0, ARGS:0, ARG:1, 1)
+RETURN RESULT
+
+@PRINT_KOJO_COLORW(ARG:0, ARGS:0, ARG:1 = -2)
+CALL PRINT_KOJO_COLOR(ARG:0, ARGS:0, ARG:1, 2)
+RETURN RESULT
+
+
+;-------------------------------------------------
+;関数名:PRINT_ERRORMESSAGE
+;概　要:エラーメッセージ関数
+;戻り値:なし
+;備　考:通常関数
+;ARGSを表示しつつエラー落ちする
+;ARGS:1に"DEBUG"を渡すと落ちない
+;
+;Crow氏が役に立つって言うから……(責任転嫁)@これみ
+;-------------------------------------------------
+@PRINT_ERRORMESSAGE(ARGS, ARGS:1)
+#FUNCTION
+IF ARGS:1 == "DEBUG"
+	PRINTL 
+	PRINTSL ARGS
+	PRINTL 
+ELSE
+	THROW %ARGS%
+ENDIF
+
+;-------------------------------------------------------------------------------
+;	TIMESの式中関数版TIMESF(式中関数)
+;-------------------------------------------------------------------------------
+;	例  LOCAL = TIMESF(100,200)
+;       この場合 100 * 2.00 + 0 = 200
+;===============================================================================
+@TIMESF(ARG, ARG:1, ARG:2)
+#FUNCTION
+; とりあえず0から1兆
+RETURNF LIMIT((ARG * ARG:1 / 100) + ARG:2, 0, 999999999999)
+

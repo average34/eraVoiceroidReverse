@@ -1,0 +1,597 @@
+﻿;────────────────────────────────────
+;調教方針の判定 (休憩1/ソフト2/ノーマル3/ハード4/異常5)
+;────────────────────────────────────
+@ACT_COURSE
+#LOCALSSIZE 10
+#DIMS 方針種
+
+方針種 = 休憩/ソフト/ノーマル/ハード/異常
+
+;変数を初期化
+CALL SET_CRI_VAR, 方針種
+
+LOCALS = ACT_COURCE
+
+CALL CHA_CRI_VAR, @"本日の方針(%POLICY("今日")%)"
+CALLFORM %LOCALS%_OF_TODAY
+
+CALL CHA_CRI_VAR, "調教者の素質"
+CALLFORM %LOCALS%_TALENT_T
+
+CALL CHA_CRI_VAR, "調教者の能力"
+CALLFORM %LOCALS%_ABL_T
+
+CALL CHA_CRI_VAR, "調教対象の能力"
+CALLFORM %LOCALS%_ABL_M
+
+CALL CHA_CRI_VAR, "調教者のアライメント"
+CALLFORM %LOCALS%_ALI
+
+CALL CHA_CRI_VAR, "調教者の罪悪感"
+CALLFORM %LOCALS%_SIN
+
+CALL CHA_CRI_VAR, @"調教者の状態(%CONDITION(TCVAR:状態変化)%)"
+CALLFORM %LOCALS%_CONDITION_T
+
+CALL CHA_CRI_VAR, "調教対象の疲労"
+CALLFORM %LOCALS%_TIRED
+
+CALL CHA_CRI_VAR, "調教者の体力"
+CALLFORM %LOCALS%_PHYSICAL_T
+
+CALL CHA_CRI_VAR, "調教者の気力"
+CALLFORM %LOCALS%_MENTAL_T
+
+CALL CHA_CRI_VAR, "調教者の理性"
+CALLFORM %LOCALS%_REASON_T
+
+CALL CHA_CRI_VAR, "調教者の興味"
+CALLFORM %LOCALS%_INTEREST_T
+
+CALL CHA_CRI_VAR, "調教者の恐怖"
+CALLFORM %LOCALS%_TERROR_T
+
+CALL CHA_CRI_VAR, "調教者の反感"
+CALLFORM %LOCALS%_ANGER_T
+
+CALL CHA_CRI_VAR, "勃起度(要強制勃起モード)"
+CALLFORM %LOCALS%_ERECTION_M
+
+CALL CHA_CRI_VAR, "前回コマンド"
+CALLFORM %LOCALS%_PREVCOM
+
+CALL CHA_CRI_VAR, "TEQUIP"
+CALLFORM %LOCALS%_TEQUIP
+
+CALL CHA_CRI_VAR, "お仕置き"
+CALLFORM %LOCALS%_OSHIOKI
+
+CALL CHA_CRI_VAR, "ヒート値"
+CALLFORM %LOCALS%_HEAT(方針種)
+
+CALL CHA_CRI_VAR, "状況による方針制限"
+CALLFORM %LOCALS%_PLAYNOW
+
+;SANDBOX限定処理
+CALL CHA_CRI_VAR, "暫定処理"
+;SANDBOX限定処理
+SIF FLAG:モード == 1
+	CALL ADD_CRI_VAR("休憩", -99)
+
+;──────────────────────────────
+;最終判定、引き分ける時の優先順はﾉｰﾏﾙ3＞ｿﾌﾄ2＞ﾊｰﾄﾞ4＞異常5＞休憩1
+;──────────────────────────────
+SPLIT 方針種, "/", LOCALS
+CALL DEF_CRI_VAR("最大優先指定-ノーマル/ソフト/ハード/異常/休憩")
+LOCAL = GET_CRI_VAR("決定")
+IF LOCAL == -1
+	PRINTW 調教方針カウンタが異常です
+	TFLAG:ターン方針 = 3
+ELSE
+	TFLAG:ターン方針 = FINDELEMENT(LOCALS, RESULTS, , , 1) + 1
+ENDIF
+CALL ANA_CRI_VAR()
+
+;-------------------------------------------
+;本日の方針
+;0=いつもどおり/1=A開発/2=お仕置き/3=ハード/4=イチャイチャ/5=異常/6=野外/7=異常/8=休憩
+;TFLAG:今日の方針で管理されている
+;ここで影響するのは４方針のみなので注意
+;-------------------------------------------
+@ACT_COURCE_OF_TODAY
+;今日の方針
+SELECTCASE POLICY("今日")
+	CASE "アナル"
+		CALL ADD_CRI_VAR("ソフト"  , -5)
+	CASE "ハード"
+		CALL ADD_CRI_VAR("ソフト"  , -5)
+		CALL ADD_CRI_VAR("ノーマル", -2)
+		CALL ADD_CRI_VAR("ハード"  ,  5)
+		CALL ADD_CRI_VAR("異常"    ,  5)
+	CASE "イチャイチャ"
+		CALL ADD_CRI_VAR("ソフト"  , 10)
+	CASE "異常"
+		CALL ADD_CRI_VAR("ハード"  ,  0, 20)
+		CALL ADD_CRI_VAR("異常"    ,  0, 20)
+ENDSELECT
+
+;-------------------------------------------
+;調教者の性格補正
+;ARGが省略された場合はTARGETを参照する
+;というか特にこだわりがなければTARGET以外を見ることはないと思いますが一応
+;-------------------------------------------
+@ACT_COURCE_TALENT_T, ARG = -1
+#LOCALSIZE 1
+
+LOCAL = ARG == -1 ? TARGET # ARG
+
+;休憩の補正値
+;============
+SIF TALENT:LOCAL:臆病               ;10,        臆病
+	CALL ADD_CRI_VAR("休憩",  0, 3)
+SIF TALENT:LOCAL:反抗的             ;11,      反抗的
+	CALL ADD_CRI_VAR("休憩", -1)
+SIF TALENT:LOCAL:気丈               ;12,        気丈
+	CALL ADD_CRI_VAR("休憩", -1)
+SIF TALENT:LOCAL:大人しい           ;14,    大人しい
+	CALL ADD_CRI_VAR("休憩",  2)
+SIF TALENT:LOCAL:生意気             ;16,      生意気
+	CALL ADD_CRI_VAR("休憩", -2)
+SIF TALENT:LOCAL:感情乏しい         ;24,  感情乏しい
+	CALL ADD_CRI_VAR("休憩", -1)
+SIF TALENT:LOCAL:目立ちたがり       ;29,目立ちたがり
+	CALL ADD_CRI_VAR("休憩", -2)
+SIF TALENT:LOCAL:慎重               ;84,        慎重
+	CALL ADD_CRI_VAR("休憩",  2)
+SIF TALENT:LOCAL:短気               ;85,        短気
+	CALL ADD_CRI_VAR("休憩", -2)
+SIF TALENT:LOCAL:心根優しい         ;87,  心根優しい
+	CALL ADD_CRI_VAR("休憩",  2)
+SIF TALENT:LOCAL:幼稚               ;88,        幼稚
+	CALL ADD_CRI_VAR("休憩", -1)
+
+
+;ソフトの補正値
+;==============
+SIF TALENT:LOCAL:妊娠                  ; 2,        妊娠
+	CALL ADD_CRI_VAR("ソフト",  6)
+SIF TALENT:LOCAL:臆病                  ;10,        臆病
+	CALL ADD_CRI_VAR("ソフト",  0,  5)
+SIF TALENT:LOCAL:気丈                  ;12,        気丈
+	CALL ADD_CRI_VAR("ソフト",  0, -4)
+SIF TALENT:LOCAL:大人しい              ;14,    大人しい
+	CALL ADD_CRI_VAR("ソフト",  0,  5)
+SIF TALENT:LOCAL:生意気                ;16,      生意気
+	CALL ADD_CRI_VAR("ソフト", -1)
+SIF TALENT:LOCAL:自制的                ;20,      自制的
+	CALL ADD_CRI_VAR("ソフト",  2)
+SIF TALENT:LOCAL:衝動的                ;21,      衝動的
+	CALL ADD_CRI_VAR("ソフト",  0, -5)
+SIF TALENT:LOCAL:一線越えない          ;28,一線越えない
+	CALL ADD_CRI_VAR("ソフト",  2)
+SIF TALENT:LOCAL:清楚                  ;37,        清楚
+	CALL ADD_CRI_VAR("ソフト",  2)
+SIF TALENT:LOCAL:サド                  ;83,        サド
+	CALL ADD_CRI_VAR("ソフト", -1, -5)
+SIF TALENT:LOCAL:慎重                  ;84,        慎重
+	CALL ADD_CRI_VAR("ソフト",  1)
+SIF TALENT:LOCAL:意地悪                ;86,      意地悪
+	CALL ADD_CRI_VAR("ソフト", -2)
+SIF TALENT:LOCAL:心根優しい            ;87,  心根優しい
+	CALL ADD_CRI_VAR("ソフト",  2)
+
+
+;ノーマルの補正値
+;================
+SIF TALENT:LOCAL:妊娠                   ; 2,        妊娠
+	CALL ADD_CRI_VAR("ノーマル", 0,  3)
+SIF TALENT:LOCAL:自制的                 ;20,      自制的
+	CALL ADD_CRI_VAR("ノーマル", 1)
+SIF TALENT:LOCAL:感情乏しい             ;24  ,感情乏しい
+	CALL ADD_CRI_VAR("ノーマル", 1)
+SIF TALENT:LOCAL:情緒豊か               ;25,    情緒豊か
+	CALL ADD_CRI_VAR("ノーマル", 0,  1)
+SIF TALENT:LOCAL:一線越えない           ;28,一線越えない
+	CALL ADD_CRI_VAR("ノーマル", 1)
+SIF TALENT:LOCAL:解放                   ;33,        解放
+	CALL ADD_CRI_VAR("ノーマル", 0,  5)
+SIF TALENT:LOCAL:清楚                   ;37,        清楚
+	CALL ADD_CRI_VAR("ノーマル", 1)
+SIF TALENT:LOCAL:サド                   ;83,        サド
+	CALL ADD_CRI_VAR("ノーマル", 0, -2)
+SIF TALENT:LOCAL:短気                   ;85,        短気
+	CALL ADD_CRI_VAR("ノーマル", 0,  3)
+SIF TALENT:LOCAL:心根優しい             ;87,  心根優しい
+	CALL ADD_CRI_VAR("ノーマル", 1)
+
+
+;ハードの補正値
+;==============
+SIF TALENT:LOCAL:妊娠                  ; 2,        妊娠
+	CALL ADD_CRI_VAR("ハード", -4)
+SIF TALENT:LOCAL:臆病                  ;10,        臆病
+	CALL ADD_CRI_VAR("ハード", -1)
+SIF TALENT:LOCAL:気丈                  ;12,        気丈
+	CALL ADD_CRI_VAR("ハード",  1)
+SIF TALENT:LOCAL:大人しい              ;14,    大人しい
+	CALL ADD_CRI_VAR("ハード",  0, -3)
+SIF TALENT:LOCAL:生意気                ;16,      生意気
+	CALL ADD_CRI_VAR("ハード",  0,  6)
+SIF TALENT:LOCAL:自制的                ;20,      自制的
+	CALL ADD_CRI_VAR("ハード",  -1)
+SIF TALENT:LOCAL:衝動的                ;21,      衝動的
+	CALL ADD_CRI_VAR("ハード", IS_CONDITION(TARGET, "怒り") ? 5 # 0, 7)
+SIF TALENT:LOCAL:情緒豊か              ;25,    情緒豊か
+	CALL ADD_CRI_VAR("ハード",  0,  4)
+SIF TALENT:LOCAL:目立ちたがり          ;29,目立ちたがり
+	CALL ADD_CRI_VAR("ハード",  0,  4)
+SIF TALENT:LOCAL:抑圧                  ;32,        抑圧
+	CALL ADD_CRI_VAR("ハード", -2)
+SIF TALENT:LOCAL:解放                  ;33,        解放
+	CALL ADD_CRI_VAR("ハード",  0,  4)
+SIF TALENT:LOCAL:サド                  ;83,        サド
+	CALL ADD_CRI_VAR("ハード",  5)
+SIF TALENT:LOCAL:短気                  ;85,        短気
+	CALL ADD_CRI_VAR("ハード",  0,  5)
+SIF TALENT:LOCAL:意地悪                ;86,      意地悪
+	CALL ADD_CRI_VAR("ハード",  2)
+SIF TALENT:LOCAL:心根優しい            ;87,  心根優しい
+	CALL ADD_CRI_VAR("ハード", -2)
+
+
+;異常の補正値
+;============
+SIF TALENT:LOCAL:妊娠                ; 2,        妊娠
+	CALL ADD_CRI_VAR("異常", -5)
+SIF TALENT:LOCAL:臆病                ;10,        臆病
+	CALL ADD_CRI_VAR("異常",  0, -4)
+SIF TALENT:LOCAL:大人しい            ;14,    大人しい
+	CALL ADD_CRI_VAR("異常", -2)
+SIF TALENT:LOCAL:生意気              ;16,      生意気
+	CALL ADD_CRI_VAR("異常",  0,  2)
+SIF TALENT:LOCAL:自制的              ;20,      自制的
+	CALL ADD_CRI_VAR("異常", -2)
+SIF TALENT:LOCAL:衝動的              ;21,      衝動的
+	CALL ADD_CRI_VAR("異常",  0, IS_CONDITION(LOCAL, "怒り") ? 8 + 9 # 9)
+SIF TALENT:LOCAL:感情乏しい          ;24,  感情乏しい
+	CALL ADD_CRI_VAR("異常", -1)
+SIF TALENT:LOCAL:情緒豊か            ;25,    情緒豊か
+	CALL ADD_CRI_VAR("異常",  0,  3)
+SIF TALENT:LOCAL:一線越えない        ;28,一線越えない
+	CALL ADD_CRI_VAR("異常", -3)
+SIF TALENT:LOCAL:目立ちたがり        ;29,目立ちたがり
+	CALL ADD_CRI_VAR("異常",  0,  3)
+SIF TALENT:LOCAL:抑圧                ;32,        抑圧
+	CALL ADD_CRI_VAR("異常", -3)
+SIF TALENT:LOCAL:解放                ;33,        解放
+	CALL ADD_CRI_VAR("異常",  0,  3)
+SIF TALENT:LOCAL:サド                ;83,        サド
+	CALL ADD_CRI_VAR("異常",  2)
+SIF TALENT:LOCAL:慎重                ;84,        慎重
+	CALL ADD_CRI_VAR("異常", -2)
+SIF TALENT:LOCAL:心根優しい          ;87,  心根優しい
+	CALL ADD_CRI_VAR("異常", -3)
+SIF TALENT:LOCAL:狂気                ;89,        狂気
+	CALL ADD_CRI_VAR("異常",  5, 10)
+
+
+;-------------------------------------------
+;調教者のABL補正
+;ARGが省略された場合はTARGETを参照する
+;というか特にこだわりがなければTARGET以外を見ることはないと思いますが一応
+;-------------------------------------------
+@ACT_COURCE_ABL_T, ARG = -1
+#LOCALSIZE 1
+
+LOCAL = ARG == -1 ? TARGET # ARG
+;欲望
+CALL ADD_CRI_VAR("休憩", -ABL:LOCAL:欲望)
+
+;奉仕精神
+CALL ADD_CRI_VAR("ソフト"  , LINE_CALC(ABL:LOCAL:奉仕精神, "0→0,5→2,LIMIT/0～2"))
+CALL ADD_CRI_VAR("ノーマル", LINE_CALC(ABL:LOCAL:奉仕精神, "0→0,5→4,LIMIT/0～4"))
+
+;加虐
+CALL ADD_CRI_VAR("ノーマル", LINE_CALC(ABL:LOCAL:加虐, "0→0,5→-2,LIMIT/-2～0"))
+CALL ADD_CRI_VAR("ハード"  , LINE_CALC(ABL:LOCAL:加虐, "0→0,5→4,LIMIT/0～4"))
+
+;異常
+CALL ADD_CRI_VAR("ハード", LINE_CALC(ABL:LOCAL:異常, "0→0,5→2,LIMIT/0～2"))
+CALL ADD_CRI_VAR("異常"  , LINE_CALC(ABL:LOCAL:異常, "0→0,5→4,LIMIT/0～4"))
+
+;-------------------------------------------
+;調教対象のABL補正
+;ARGが省略された場合はMASTERを参照する
+;というか特にこだわりがなければMASTER以外を見ることはないと思いますが一応
+;-------------------------------------------
+@ACT_COURCE_ABL_M, ARG = -1
+#LOCALSIZE 1
+
+LOCAL = ARG == -1 ? TARGET # MASTER
+;調教Lv(ABLと似たようなものだしここで処理)
+CALL ADD_CRI_VAR("ソフト"  , LINE_CALC(CFLAG:LOCAL:調教レベル, "0→2,9→-1,LIMIT/-1～2"))
+CALL ADD_CRI_VAR("ノーマル", LINE_CALC(CFLAG:LOCAL:調教レベル, "0→1,9→-1,LIMIT/-1～1"))
+CALL ADD_CRI_VAR("ハード"  , LINE_CALC(CFLAG:LOCAL:調教レベル, "0→-2,9→2,LIMIT/-2～2"))
+
+;-------------------------------------------
+;調教者のALI補正
+;ARGが省略された場合はTARGETを参照する
+;というか特にこだわりがなければTARGET以外を見ることはないと思いますが一応
+;-------------------------------------------
+@ACT_COURCE_ALI, ARG = -1
+#LOCALSIZE 1
+
+LOCAL = ARG == -1 ? TARGET # ARG
+CALL ADD_CRI_VAR("ソフト"  , LINE_CALC(CFLAG:LOCAL:アライメント, "-50→-5,0→0,50→5,LIMIT/-5～5"))
+CALL ADD_CRI_VAR("ノーマル", LINE_CALC(CFLAG:LOCAL:アライメント, "-50→0,0→3,50→0,LIMIT/0～3"))
+CALL ADD_CRI_VAR("ハード"  , LINE_CALC(CFLAG:LOCAL:アライメント, "-50→6,0→0,50→-3,LIMIT/-3～6"))
+CALL ADD_CRI_VAR("異常",  0, LINE_CALC(CFLAG:LOCAL:アライメント, "-50→9,0→0,50→-5,LIMIT/-5～9"))
+
+;-------------------------------------------
+;調教者の罪悪感補正
+;ARGが省略された場合はTARGETを参照する
+;というか特にこだわりがなければTARGET以外を見ることはないと思いますが一応
+;-------------------------------------------
+@ACT_COURCE_SIN, ARG = -1
+#LOCALSIZE 1
+
+LOCAL = ARG == -1 ? TARGET # ARG
+CALL ADD_CRI_VAR("ハード", LINE_CALC(CFLAG:LOCAL:罪悪感, "0→0,100→-5,LIMIT/-5～0"))
+CALL ADD_CRI_VAR("異常"  , LINE_CALC(CFLAG:LOCAL:罪悪感, "0→0,100→-3,LIMIT/-3～0"), LINE_CALC(CFLAG:LOCAL:罪悪感, "0→0,100→-5,LIMIT/-5～0"))
+
+;-------------------------------------------
+;調教者の状態補正
+;ARGが省略された場合はTARGETを参照する
+;というか特にこだわりがなければTARGET以外を見ることはないと思いますが一応
+;
+;;調教者の状態(0=通常/1=疲弊/2=衰弱/3=無気力/4=朦朧/5=情欲/6=怒り/7=退屈/8=鬱屈)
+;-------------------------------------------
+@ACT_COURCE_CONDITION_T, ARG = -1
+#LOCALSIZE 1
+
+LOCAL = ARG == -1 ? TARGET # ARG
+SELECTCASE GET_CONDITION(LOCAL)
+	CASE "疲弊", "衰弱"
+		;TCVAR:状態変化は1の時疲弊、2の時衰弱、つまり、疲弊は+2、衰弱は+4
+		;TFLAG:調教者消耗度は調教者の消耗フラグ
+		CALL ADD_CRI_VAR("休憩"    ,  TFLAG:調教者消耗度 + 5 + TCVAR:状態変化 * 2)
+		CALL ADD_CRI_VAR("ソフト"  , -TFLAG:調教者消耗度)
+		CALL ADD_CRI_VAR("ノーマル", -TFLAG:調教者消耗度)
+		CALL ADD_CRI_VAR("ハード"  , -TFLAG:調教者消耗度)
+		CALL ADD_CRI_VAR("異常"    , -TFLAG:調教者消耗度)
+		CALL ADD_CRI_VAR("ソフト"  , -TFLAG:調教者消耗度)
+	CASE "無気力"
+		CALL ADD_CRI_VAR("ソフト"  , -1)
+		CALL ADD_CRI_VAR("ノーマル", -1)
+		CALL ADD_CRI_VAR("ハード"  , -2)
+		CALL ADD_CRI_VAR("異常"    , -2)
+	CASE "朦朧"
+		CALL ADD_CRI_VAR("休憩"    ,  6)
+		CALL ADD_CRI_VAR("ソフト"  ,  0, 10)
+		CALL ADD_CRI_VAR("ノーマル",  0, 10)
+		CALL ADD_CRI_VAR("ハード"  ,  0, 10)
+		CALL ADD_CRI_VAR("異常"    ,  0, 10)
+	CASE "情欲"
+		CALL ADD_CRI_VAR("ソフト"  ,  4)
+		CALL ADD_CRI_VAR("ノーマル",  4)
+	CASE "怒り"
+		CALL ADD_CRI_VAR("休憩"    , -3)
+		CALL ADD_CRI_VAR("ソフト"  , -4)
+		CALL ADD_CRI_VAR("ノーマル", -2)
+		CALL ADD_CRI_VAR("ハード"  ,  4)
+		CALL ADD_CRI_VAR("異常"    ,  2)
+	CASE "退屈"
+		CALL ADD_CRI_VAR("休憩"    ,  4)
+		CALL ADD_CRI_VAR("ソフト"  , -3)
+		CALL ADD_CRI_VAR("ノーマル", -3)
+		CALL ADD_CRI_VAR("ハード"  , -3)
+		CALL ADD_CRI_VAR("異常"    ,  3)
+	CASE "鬱屈"
+		CALL ADD_CRI_VAR("異常"    ,  4, 10)
+ENDSELECT
+
+;-------------------------------------------
+;調教対象が疲れている場合の補正
+;ARGが省略された場合はTARGETを参照する
+;疲れているのは調教対象であるがそれに対する態度を決めるのは
+;あくまで調教者であるので注意
+;
+;ここのRANDは切りだすのが厄介なので固定に混ぜてしまう
+;-------------------------------------------
+@ACT_COURCE_TIRED, ARG = -1
+#LOCALSIZE 2
+
+LOCAL = ARG == -1 ? TARGET # ARG
+;疲れが0なら帰る
+SIF !TFLAG:消耗度
+	RETURN 0
+LOCAL:1 = TFLAG:消耗度 * 2
+;調教者が反抗的/意地悪/威圧感/近寄り難い
+SIF TALENT:LOCAL:反抗的 || TALENT:LOCAL:意地悪 || TALENT:LOCAL:威圧感 || TALENT:LOCAL:近寄り難い
+	TIMES LOCAL:1, 0.80
+;調教者が素直/献身的/心根優しい
+SIF TALENT:LOCAL:素直 || TALENT:LOCAL:献身的 || TALENT:LOCAL:心根優しい
+	TIMES LOCAL:1, 1.20
+;調教対象の状態が衰弱
+SIF IS_CONDITION(MASTER, "疲弊")
+	TIMES LOCAL:1, 1.20
+;調教者が狂気/調教者の状態が鬱屈
+SIF TALENT:LOCAL:狂気 || IS_CONDITION(TARGET, "鬱屈")
+	LOCAL:1 -= RAND:6
+LOCAL:1 += MAX(LOCAL:1, 0)
+CALL ADD_CRI_VAR("休憩", LOCAL:1)
+
+;-------------------------------------------
+;以下、BASE及びPALAMによる補正
+;これらは個別で見ていく
+;-------------------------------------------
+
+;-------------------------------------------
+;調教者の体力補正
+;ARGが省略された場合はTARGETを参照する
+;というか特にこだわりがなければTARGET以外を見ることはないと思いますが一応
+;-------------------------------------------
+@ACT_COURCE_PHYSICAL_T, ARG = -1
+#LOCALSIZE 1
+
+LOCAL = ARG == -1 ? TARGET # ARG
+CALL ADD_CRI_VAR("休憩", LINE_CALC(BASE:LOCAL:体力, "0→3,1500→-1,LIMIT/-1～3"))
+CALL MUL_CRI_VAR("休憩", LINE_CALC(BASE:LOCAL:体力, "0→120,1500→80,LIMIT/80～120"))
+
+;-------------------------------------------
+;調教者の気力補正
+;-------------------------------------------
+@ACT_COURCE_MENTAL_T, ARG = -1
+#LOCALSIZE 1
+
+LOCAL = ARG == -1 ? TARGET # ARG
+CALL ADD_CRI_VAR("ソフト"  , LINE_CALC(BASE:LOCAL:気力, "0→-2,500→0,LIMIT/-2～0"))
+CALL ADD_CRI_VAR("ノーマル", LINE_CALC(BASE:LOCAL:気力, "0→-2,750→0,LIMIT/-2～0"))
+CALL ADD_CRI_VAR("ハード"  , LINE_CALC(BASE:LOCAL:気力, "0→-3,750→0,LIMIT/-3～0"))
+CALL ADD_CRI_VAR("異常"    , LINE_CALC(BASE:LOCAL:気力, "0→-3,1000→0,LIMIT/-3～0"))
+IF BASE:LOCAL:気力 > 750
+	CALL ADD_CRI_VAR("休憩", -2)
+	CALL MUL_CRI_VAR("休憩", 80)
+ENDIF
+
+;-------------------------------------------
+;調教者の理性補正
+;-------------------------------------------
+@ACT_COURCE_REASON_T, ARG = -1
+#LOCALSIZE 1
+
+LOCAL = ARG == -1 ? TARGET # ARG
+CALL ADD_CRI_VAR("ソフト"  , LINE_CALC(BASE:LOCAL:理性, "0→-2,600→0,LIMIT/-2～0"))
+CALL ADD_CRI_VAR("ノーマル", LINE_CALC(BASE:LOCAL:理性, "0→-2,600→0,LIMIT/-2～0"))
+CALL ADD_CRI_VAR("ハード"  , LINE_CALC(BASE:LOCAL:理性, "0→-1,300→0,LIMIT/-1～0"))
+CALL ADD_CRI_VAR("異常"    , LINE_CALC(BASE:LOCAL:理性, "0→4,800→-2,LIMIT/-2～4"))
+
+;-------------------------------------------
+;調教者の興味補正
+;-------------------------------------------
+@ACT_COURCE_INTEREST_T, ARG = -1
+#LOCALSIZE 1
+
+LOCAL = ARG == -1 ? TARGET # ARG
+CALL ADD_CRI_VAR("ソフト"  , LINE_CALC(BASE:LOCAL:興味, "0→-3,900→1,LIMIT/-3～1"))
+CALL ADD_CRI_VAR("ノーマル", LINE_CALC(BASE:LOCAL:興味, "0→-3,900→1,LIMIT/-3～1"))
+CALL ADD_CRI_VAR("ハード"  , LINE_CALC(BASE:LOCAL:興味, "0→-3,900→1,LIMIT/-3～1"))
+CALL ADD_CRI_VAR("異常"    , LINE_CALC(BASE:LOCAL:興味, "0→-3,900→1,LIMIT/-3～1"))
+
+;-------------------------------------------
+;調教者の恐怖補正
+;-------------------------------------------
+@ACT_COURCE_TERROR_T, ARG = -1
+#LOCALSIZE 1
+
+LOCAL = ARG == -1 ? TARGET # ARG
+CALL ADD_CRI_VAR("ソフト", LINE_CALC(PALAM:LOCAL:恐怖, "3000→0,7500→3,LIMIT/0～3"))
+CALL ADD_CRI_VAR("ハード", LINE_CALC(PALAM:LOCAL:恐怖, "4500→0,7500→-2,LIMIT/-2～0"))
+CALL ADD_CRI_VAR("異常"  , LINE_CALC(PALAM:LOCAL:恐怖, "4500→0,7500→-2,LIMIT/-2～0"))
+
+;-------------------------------------------
+;調教者の反感補正
+;-------------------------------------------
+@ACT_COURCE_ANGER_T, ARG = -1
+#LOCALSIZE 1
+
+LOCAL = ARG == -1 ? TARGET # ARG
+CALL ADD_CRI_VAR("ハード", LINE_CALC(PALAM:LOCAL:反抗, "3000→0,7500→3,LIMIT/0～3"))
+CALL ADD_CRI_VAR("異常"  , LINE_CALC(PALAM:LOCAL:反抗, "4500→0,7500→2,LIMIT/0～2"))
+
+;-------------------------------------------
+;勃起度(要強制勃起モード)による補正
+;-------------------------------------------
+@ACT_COURCE_ERECTION_M
+
+SIF !TCVAR:MASTER:要強制勃起
+	RETURN 0
+CALL ADD_CRI_VAR("ソフト", LINE_CALC(TCVAR:MASTER:勃起度, "0→-50,1000→0,LIMIT/-50～0"))
+
+;--------------------------------------------
+;前回のコマンドによる補正
+;--------------------------------------------
+@ACT_COURCE_PREVCOM, ARG
+#LOCALSIZE 1
+
+LOCAL = ARG == -1 ? TARGET # ARG
+;もっとハードにお願いした
+IF IS_PREVCOMNAME("もっとハードにして")
+	CALL ADD_CRI_VAR("ソフト"  , -5)
+	CALL ADD_CRI_VAR("ノーマル", -3)
+	CALL ADD_CRI_VAR("ハード"  ,  5)
+	CALL ADD_CRI_VAR("異常"    ,  3)
+ENDIF
+
+;許しを乞ったかつ、調教者の状態が鬱屈以外
+IF IS_PREVCOMNAME("許しを乞う") && !IS_CONDITION(TARGET, "鬱屈")
+	CALL ADD_CRI_VAR("休憩"    ,  5, (TALENT:サド || TALENT:意地悪) ? -5 # 0)
+	CALL ADD_CRI_VAR("ソフト"  ,  5)
+	CALL ADD_CRI_VAR("ノーマル",  0, (TALENT:サド || TALENT:意地悪) ? 2 # 0)
+	CALL ADD_CRI_VAR("ハード"  , -5, (TALENT:サド || TALENT:意地悪) ? 5 # 0)
+	CALL ADD_CRI_VAR("異常"    , -5)
+ENDIF
+
+;気持ちよくしてかつ、調教者の状態が怒り/退屈/鬱屈以外
+SIF IS_PREVCOMNAME("気持ち良くして") && IS_CONDITION(TARGET, "通常/疲弊/衰弱/無気力/朦朧/情欲")
+	CALL ADD_CRI_VAR("ソフト", 3)
+
+;怯えるかつ、調教者の状態が鬱屈以外
+IF IS_PREVCOMNAME("怯える") && !IS_CONDITION(TARGET, "鬱屈")
+	CALL ADD_CRI_VAR("休憩"    ,  5, (TALENT:サド || TALENT:意地悪) ? -5 # 0)
+	CALL ADD_CRI_VAR("ソフト"  ,  5)
+	CALL ADD_CRI_VAR("ノーマル",  0, (TALENT:サド || TALENT:意地悪) ? 2 # 0)
+	CALL ADD_CRI_VAR("ハード"  , -5, (TALENT:サド || TALENT:意地悪) ? 5 # 0)
+	CALL ADD_CRI_VAR("異常"    , -5)
+ENDIF
+
+;--------------------------------------------
+;TEQUIPによる補正
+;これはターゲット以外みれないはずなのでターゲットに
+;--------------------------------------------
+@ACT_COURCE_TEQUIP
+
+;ボールギャグ
+SIF TEQUIP:ボールギャグ
+	CALL ADD_CRI_VAR("休憩", -5)
+;大鏡
+SIF TEQUIP:大鏡
+	CALL ADD_CRI_VAR("ノーマル", 1)
+;野外
+SIF TEQUIP:野外プレイ
+	CALL ADD_CRI_VAR("異常", 0, 6)
+	
+;--------------------------------------------
+;お仕置きによる補正
+;--------------------------------------------
+@ACT_COURCE_OSHIOKI
+
+IF TFLAG:お仕置きフラグ
+	CALL ADD_CRI_VAR("休憩", -99)
+	CALL ADD_CRI_VAR("ハード", 4)
+ENDIF
+
+;--------------------------------------------
+;ヒート値による補正
+;--------------------------------------------
+@ACT_COURCE_HEAT(ARGS)
+#LOCALSSIZE 10
+#DIM LCOUNT
+
+SPLIT ARGS, "/", LOCALS
+FOR LCOUNT, 0, RESULT
+	CALL ADD_CRI_VAR(LOCALS:LCOUNT, -TFLAG:(@"%LOCALS:LCOUNT%方針のヒート"))
+NEXT
+
+;--------------------------------------------
+;状況による方針制限
+;--------------------------------------------
+@ACT_COURCE_PLAYNOW
+
+IF TEQUIP:性交中 || TEQUIP:性交奉仕中 || IS_CONDITION(TARGET, "情欲")
+	CALL ADD_CRI_VAR("休憩", -99)
+	CALL ADD_CRI_VAR("異常", -99)
+ENDIF
+IF TCVAR:MASTER:焦らし度
+	CALL ADD_CRI_VAR("休憩", -99)
+ENDIF

@@ -1,0 +1,438 @@
+﻿;------------------------------------------------------------------------
+;EDIT	001		kap			2011/10/14		コンビネーションアクションの決定処理を変更
+;EDIT	002		revkoishi	2014/06/07		抜かずフラグを折る処理を追加
+;------------------------------------------------------------------------
+;-----------EDIT 001 START--------------
+;基本的に表記を変更し、
+;---------------------------------------
+@ASSI_ACT, ARG
+TCVAR:ARG:助手方針 = 0
+TCVAR:ARG:助手ACT派生 = 0
+
+CALL ASSIACT_SELECT, ARG
+
+;ＳＰアクションのチェック
+SIF GET_SP_ASSIACTNUM(ARG) >= 0
+	TCVAR:ARG:助手ACT = GET_SP_ASSIACTNUM(ARG)
+
+;連続実行の確率低下のためにここで記録しておく
+TCVAR:ARG:前回助手愛撫箇所 = TCVAR:ARG:助手方針
+
+;特殊コマンド派生チェック
+SIF GET_SP_ASSIACTNUM(ARG) >= 0
+	TCVAR:ARG:助手ACT = GET_SP_ASSIACTNUM(ARG)
+
+;テスト用記述。いつでも消していいよ
+;TCVAR:ARG:助手ACT = GET_ASSIACTNUM("写真撮影")
+
+;────────────────────────────────────
+;014,待機する（ソースなし）
+;────────────────────────────────────
+SIF NOWASSIACTNAME(ARG) == "待機"
+	PRINTFORML %CALLNAME:TARGET%は%CALLNAME:ARG%を側に待機させた…
+
+;---------------------------------------
+@ASSIACT_SELECT, ARG
+#DIM Ｃ愛撫
+#DIM Ｂ愛撫
+#DIM Ａ愛撫
+#DIM Ｖ愛撫
+#DIM Ｍ愛撫
+;-----------EDIT 001 START--------------
+;行動決定のうち優先度がもっとも高いので変更
+;また、行動予約を通さずこの場で直接戻り値を弄る
+;---------------------------------------
+;優先されるものを先に処理
+;---------------------------------------
+;薬品使用と強制脱衣の手伝うは優先
+;脱衣
+IF TFLAG:強制脱衣 > 0 && ARG == ASSI:1
+	TCVAR:ARG:助手方針 = GET_ASSIMENUNUM("その他")
+	TCVAR:ARG:助手ACT = GET_ASSIACTNUM("脱衣")
+	RETURN 1
+ENDIF
+;薬品
+IF TFLAG:媚薬等使用 > 0 && ARG == ASSI:1
+	TCVAR:ARG:助手方針 = GET_ASSIMENUNUM("その他")
+	TCVAR:ARG:助手ACT = GET_ASSIACTNUM("薬品")
+	RETURN 1
+ENDIF
+;公衆プレイ・放置プレイは強制待機
+IF IS_NOWACTNAME("公衆肉便器プレイ/放置プレイ")
+	TCVAR:ARG:助手方針 = GET_ASSIMENUNUM("その他")
+	TCVAR:ARG:助手ACT = GET_ASSIACTNUM("待機")
+	RETURN 1
+ENDIF
+;休憩中は待機
+IF IS_POLICY("今", "休憩")
+	TCVAR:ARG:助手方針 = GET_ASSIMENUNUM("その他")
+	TCVAR:ARG:助手ACT = GET_ASSIACTNUM("待機")
+	RETURN 1
+ENDIF
+;挿入中(逆レイプ中)は他の行動をとらないように
+IF TFLAG:助手に挿入中 == ARG
+	TFLAG:助手連続交合 = 1
+	TCVAR:ARG:助手方針 = GET_ASSIMENUNUM("Ｖ愛撫")
+	TCVAR:ARG:助手ACT = GET_ASSIACTNUM("逆レイプ")
+	RETURN 1
+ENDIF
+;-----------EDIT 001 END  --------------
+
+;-----------EDIT 001 START-----------------
+;コンビネーションの決定を変換関数に置き換える
+;-------------------------------------------
+;コンビネーションは暫定で発動率50%
+IF (RAND:2 == 0 || TFLAG:コンビネーション予約) && ARG == ASSI:1
+	IF GET_COMBIACTNUM(TFLAG:ACT) >= 0
+		;助手が処女だと谷渡りはできない
+		IF GET_COMBIACTNUM(TFLAG:ACT) != 311 || !TALENT:ASSI:処女
+			;主人の行動を上書き
+			TFLAG:ACT = GET_COMBIACTNUM(TFLAG:ACT)
+			;-----------EDIT 002 START-----------------
+			;抜かずフラグを折る処理を追加@revkoishi(14/06/07)
+			;------------------------------------------
+			TFLAG:抜かず = IS_NOWACTNAME("Ｗ逆レイプ/谷渡り") ? 0 # TFLAG:抜かず
+			;-----------EDIT 002 END  -----------------
+			;助手には-1をいれておく
+			TCVAR:ARG:助手ACT = -1
+			TCVAR:ARG:助手方針 = GET_ASSIMENUNUM("コンビネーション")
+			RETURN 1
+		ENDIF
+	ENDIF
+ENDIF
+;-----------EDIT 001 END  -----------------
+
+
+;-----------EDIT 001 START-----------------
+;基本的に処理内容は変わらないが
+;旧来は優先度の低い順に処理して、あとから数値を上書きしていたのを
+;優先度が高い順に処理して、確定で打ち切るように変更した
+;-------------------------------------------
+;加虐
+IF MENU(TFLAG:ACT分類) == "加虐"
+	TCVAR:ARG:助手方針 = GET_ASSIMENUNUM("加虐")
+	CALL ASSI_ACTM8, ARG
+	RETURN 1
+ENDIF
+
+;MASTER自慰中
+IF MENU(TFLAG:ACT分類) == "羞恥"
+	TCVAR:ARG:助手方針 = GET_ASSIMENUNUM("羞恥")
+	CALL ASSI_ACTM7, ARG
+	RETURN 1
+ENDIF
+
+;たまには言葉責めするように
+IF RAND:10 == 0
+	IF GROUPMATCH(MENU(TFLAG:ACT分類), "愛撫", "道具", "性交", "奉仕", "性奉")
+		TCVAR:ARG:助手方針 = GET_ASSIMENUNUM("羞恥")
+		CALL ASSI_ACTM7, ARG
+	ENDIF
+	RETURN 1
+ENDIF
+
+;助手の行動選択
+;C責め
+Ｃ愛撫 = (10 + ABL:MASTER:Ｃ感覚) * (RAND:100 + 1)
+;A責め
+Ａ愛撫 = (10 + ABL:MASTER:Ａ感覚) * (RAND:100 + 1)
+;B責め
+Ｂ愛撫 = (10 + ABL:MASTER:Ｂ感覚) * (RAND:100 + 1)
+;V責め
+Ｖ愛撫 = (10 + ABL:MASTER:Ｖ感覚) * (RAND:100 + 1)
+;M責め
+Ｍ愛撫 = (10 + (TALENT:ARG:舌使い - TALENT:ARG:猫舌) * 3) * (RAND:100 + 1)
+SIF TCVAR:MASTER:イきそう
+	Ｃ愛撫 *= 2
+;同じ部位を連続して責めないように
+SELECTCASE TCVAR:ARG:前回助手愛撫箇所
+	CASE 2
+		Ｃ愛撫 /= 2
+	CASE 3
+		Ａ愛撫 /= 2
+	CASE 4
+		Ｂ愛撫 /= 2
+	CASE 5
+		Ｖ愛撫 /= 2
+	CASE 6
+		Ｍ愛撫 /= 2
+ENDSELECT
+;実行判定
+SIF !ASSI_ACTABLE("Ｃ愛撫", ARG)
+	Ｃ愛撫 = 0
+SIF !ASSI_ACTABLE("Ａ愛撫", ARG)
+	Ａ愛撫 = 0
+SIF !ASSI_ACTABLE("Ｂ愛撫", ARG)
+	Ｂ愛撫 = 0
+SIF !ASSI_ACTABLE("Ｖ愛撫", ARG)
+	Ｖ愛撫 = 0
+SIF !ASSI_ACTABLE("Ｍ愛撫", ARG)
+	Ｍ愛撫 = 0
+SELECTCASE MAX(Ｃ愛撫, Ｂ愛撫, Ａ愛撫, Ｖ愛撫, Ｍ愛撫)
+	;空き場所がない
+	CASE IS <= 0
+		TCVAR:ARG:助手方針 = GET_ASSIMENUNUM("羞恥")
+		CALL ASSI_ACTM7, ARG
+	CASE Ｃ愛撫
+		TCVAR:ARG:助手方針 = GET_ASSIMENUNUM("Ｃ愛撫")
+		CALL ASSI_ACTM2, ARG
+	CASE Ａ愛撫
+		TCVAR:ARG:助手方針 = GET_ASSIMENUNUM("Ａ愛撫")
+		CALL ASSI_ACTM3, ARG
+	CASE Ｂ愛撫
+		TCVAR:ARG:助手方針 = GET_ASSIMENUNUM("Ｂ愛撫")
+		CALL ASSI_ACTM4, ARG
+	CASE Ｖ愛撫
+		TCVAR:ARG:助手方針 = GET_ASSIMENUNUM("Ｖ愛撫")
+		CALL ASSI_ACTM5, ARG
+	CASE Ｍ愛撫
+		TCVAR:ARG:助手方針 = GET_ASSIMENUNUM("Ｍ愛撫")
+		CALL ASSI_ACTM6, ARG
+ENDSELECT
+;-----------EDIT 001 END  -----------------
+
+;以下は細かい設定
+;-----------EDIT 001 START--------------
+;以下の関数群は基本的に表記を変更し、ACTABLEに実行判定を移したのみだが
+;例外的に猫舌は実行確率がプラスされていたのをマイナスに変更
+;なお、AIの判断が大雑把というか、おそらく暫定処理のママ放置になってるんで
+;もっと細かく組むべきかもしれない
+;---------------------------------------
+;C責め
+@ASSI_ACTM2, ARG
+#DIM 手で
+#DIM 舌で
+#DIM 素股
+#DIM パイズリ
+#DIM 足コキ
+#DIM Ｃ道具
+#DIM 逆レイプ
+;A 手で B 舌で C 素股 D パイズリ E 足コキ F ローター、オナホール G 性交
+手で = (10 + ABL:ARG:愛撫 + TALENT:ARG:器用な指先 * 5) * (RAND:100 + 1)
+舌で = (10 + ABL:ARG:愛撫 + (TALENT:ARG:舌使い - TALENT:ARG:猫舌 - TALENT:ARG:汚臭敏感) * 5) * (RAND:100 + 1)
+素股 = (10 + ABL:ARG:愛撫) * (RAND:100 + 1)
+パイズリ = (10 + ABL:ARG:愛撫 + (TALENT:ARG:巨乳 - TALENT:ARG:貧乳 + TALENT:ARG:淫乳 - TALENT:ARG:汚臭敏感) * 5) * (RAND:100 + 1)
+足コキ = (10 + ABL:ARG:愛撫 + TALENT:ARG:サド * 5) * (RAND:100 + 1)
+Ｃ道具 = (10 + ABL:ARG:愛撫 + TALENT:ARG:道具使い * 5) * (RAND:100 + 1)
+逆レイプ = (10 + ABL:ARG:性交 + TALENT:ARG:淫壷 * 5) * (RAND:100 + 1)
+
+;実行判定
+SIF !ASSI_ACTABLE("手で愛撫", ARG)
+	手で = 0
+SIF !ASSI_ACTABLE("口で愛撫", ARG)
+	舌で = 0
+SIF !ASSI_ACTABLE("素股", ARG)
+	素股 = 0
+SIF !ASSI_ACTABLE("パイズリする", ARG)
+	パイズリ = 0
+SIF !ASSI_ACTABLE("足コキする", ARG)
+	足コキ = 0
+SIF !ASSI_ACTABLE("Ｃ道具", ARG)
+	Ｃ道具 = 0
+SIF !ASSI_ACTABLE("逆レイプ", ARG)
+	逆レイプ = 0
+SELECTCASE MAX(手で, 舌で, 素股, パイズリ, 足コキ, Ｃ道具, 逆レイプ)
+	;実行可能なものがない場合は羞恥に飛ばす
+	CASE 0
+		CALL ASSI_ACTM7, ARG
+	CASE 手で
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("手で愛撫")
+	CASE 舌で
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("口で愛撫")
+	CASE 素股
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("素股")
+	CASE パイズリ
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("パイズリする")
+	CASE 足コキ
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("足コキする")
+	CASE Ｃ道具
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("Ｃ道具")
+	CASE 逆レイプ
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("逆レイプ")
+ENDSELECT
+
+;A責め
+@ASSI_ACTM3, ARG
+#DIM アナル愛撫
+#DIM アナル舐め
+#DIM アナルローター
+#DIM アナルバイブ
+;A 手で B 舌で C ローター D アナルバイブ
+アナル愛撫 = (10 + ABL:ARG:愛撫 + TALENT:ARG:器用な指先 * 5) * (RAND:100 + 1)
+アナル舐め = (10 + ABL:ARG:愛撫 + (TALENT:ARG:舌使い - TALENT:ARG:猫舌 - TALENT:ARG:汚臭敏感) * 5) * (RAND:100 + 1)
+アナルローター = (10 + ABL:ARG:道具 + TALENT:ARG:道具使い * 5) * (RAND:100 + 1)
+アナルバイブ = (10 + ABL:ARG:道具 + TALENT:ARG:道具使い * 5) * (RAND:100 + 1)
+;実行判定
+SIF !ASSI_ACTABLE("アナル愛撫", ARG)
+	アナル愛撫 = 0
+SIF !ASSI_ACTABLE("アナル舐め", ARG)
+	アナル舐め = 0
+SIF !ASSI_ACTABLE("アナルローター", ARG)
+	アナルローター = 0
+SIF !ASSI_ACTABLE("アナルバイブ", ARG)
+	アナルバイブ = 0
+	
+SELECTCASE MAX(アナル愛撫, アナル舐め, アナルローター, アナルバイブ)
+	;実行可能なものがない場合は羞恥に飛ばす
+	CASE 0
+		CALL ASSI_ACTM7, ARG
+	CASE アナル愛撫
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("アナル愛撫")
+	CASE アナル舐め
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("アナル舐め")
+	CASE アナルローター
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("アナルローター")
+	CASE アナルバイブ
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("アナルバイブ")
+ENDSELECT
+
+@ASSI_ACTM4, ARG
+#DIM 胸愛撫
+#DIM 乳首舐め
+#DIM 乳首ローター
+;A 手で B 舌で C ローター
+胸愛撫 = (10 + ABL:ARG:愛撫 + TALENT:ARG:器用な指先 * 5) * (RAND:100 + 1)
+乳首舐め = (10 + ABL:ARG:愛撫 + (TALENT:ARG:舌使い - TALENT:ARG:猫舌 ) * 5) * (RAND:100 + 1)
+乳首ローター = (10 + ABL:ARG:道具 + TALENT:ARG:道具使い * 5) * (RAND:100 + 1)
+
+SIF !ASSI_ACTABLE("胸愛撫", ARG)
+	胸愛撫 = 0
+SIF !ASSI_ACTABLE("乳首舐め", ARG)
+	乳首舐め = 0
+SIF !ASSI_ACTABLE("乳首ローター", ARG)
+	乳首ローター = 0
+	
+SELECTCASE MAX(胸愛撫, 乳首舐め, 乳首ローター)
+	;実行可能なものがない場合は羞恥に飛ばす
+	CASE 0
+		CALL ASSI_ACTM7, ARG
+	CASE 胸愛撫
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("胸愛撫")
+	CASE 乳首舐め
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("乳首舐め")
+	CASE 乳首ローター
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("乳首ローター")
+ENDSELECT
+
+@ASSI_ACTM5, ARG
+;A 手で B バイブ C 性交
+#DIM 指挿入
+#DIM バイブ
+#DIM 性交
+指挿入 = (10 + ABL:ARG:愛撫 + TALENT:ARG:器用な指先 * 5) * (RAND:100 + 1)
+バイブ = (10 + ABL:ARG:道具 + TALENT:ARG:道具使い * 5) * (RAND:100 + 1)
+性交 = (10 + ABL:ARG:"性交" + TALENT:ARG:淫壷 * 5) * (RAND:100 + 1)
+SIF !ASSI_ACTABLE("指挿入", ARG)
+	指挿入 = 0
+SIF !ASSI_ACTABLE("バイブ", ARG)
+	バイブ = 0
+SIF !ASSI_ACTABLE("性交", ARG)
+	性交 = 0
+	
+SELECTCASE MAX(指挿入, バイブ, 性交)
+	;実行可能なものがない場合は羞恥に飛ばす
+	CASE 0
+		CALL ASSI_ACTM7, ARG
+	CASE 指挿入
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("指挿入")
+	CASE バイブ
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("バイブ")
+	CASE 性交
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("性交")
+ENDSELECT
+
+@ASSI_ACTM6, ARG
+;A キス B 顔面騎乗 C 足を舐めさせる
+#DIM キス
+#DIM 顔面騎乗
+#DIM 足を舐めさせる
+キス = (5 + ABL:ARG:愛撫 + (TALENT:ARG:舌使い - TALENT:ARG:猫舌) * 5) * (RAND:100 + 1)
+顔面騎乗 = (5 + ABL:ARG:奉仕精神 + TALENT:ARG:サド * 5) * (RAND:100 + 1)
+足を舐めさせる = (10 + ABL:ARG:奉仕 + TALENT:ARG:サド * 5) * (RAND:100 + 1)
+
+
+SIF !ASSI_ACTABLE("キス", ARG)
+	キス = 0
+SIF !ASSI_ACTABLE("顔面騎乗", ARG)
+	顔面騎乗 = 0
+SIF !ASSI_ACTABLE("足を舐めさせる", ARG)
+	足を舐めさせる = 0
+	
+SELECTCASE MAX(キス, 顔面騎乗, 足を舐めさせる)
+	;実行可能なものがない場合は羞恥に飛ばす
+	CASE 0
+		CALL ASSI_ACTM7, ARG
+	CASE キス
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("キス")
+	CASE 顔面騎乗
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("顔面騎乗")
+	CASE 足を舐めさせる
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("足を舐めさせる")
+ENDSELECT
+
+@ASSI_ACTM7, ARG
+#DIM 自慰見せつけ
+#DIM 罵倒
+#DIM 写真撮影
+#DIM 調教者とキス
+#DIM 痴態を見つめる
+;A 自慰見せつけ B 罵倒 C 写真を撮る D 調教者とキス E 痴態を見つめる
+自慰見せつけ = (10 + ABL:ARG:自慰中毒 + TALENT:ARG:目立ちたがり * 5) * (RAND:100 + 1)
+罵倒 = (10 + ABL:ARG:会話 + TALENT:ARG:サド * 5) * (RAND:100 + 1)
+写真撮影 = (10 + ABL:ARG:羞恥 ) * (RAND:100 + 1)
+調教者とキス = (10 + ABL:ARG:レズっ気 + ABL:ARG:自慰中毒 ) * (RAND:100 + 1)
+痴態を見つめる = (10 + ABL:ARG:羞恥 + TALENT:ARG:好奇心 * 5) * (RAND:100 + 1)
+
+
+;実行判定
+SIF !ASSI_ACTABLE("自慰見せつけ", ARG)
+	自慰見せつけ = 0
+SIF !ASSI_ACTABLE("罵倒", ARG)
+	罵倒 = 0
+SIF !ASSI_ACTABLE("写真撮影", ARG)
+	写真撮影 = 0
+SIF !ASSI_ACTABLE("調教者とキス", ARG)
+	調教者とキス = 0
+SIF !ASSI_ACTABLE("痴態を見つめる", ARG)
+	痴態を見つめる = 0
+SELECTCASE MAX(自慰見せつけ, 罵倒, 写真撮影, 調教者とキス, 痴態を見つめる)
+	;実行可能なものがない場合は羞恥に飛ばす
+	CASE 自慰見せつけ
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("自慰見せつけ")
+	CASE 罵倒
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("罵倒")
+	CASE 写真撮影
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("写真撮影")
+	CASE 調教者とキス
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("調教者とキス")
+	CASE 痴態を見つめる
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("痴態を見つめる")
+ENDSELECT
+
+@ASSI_ACTM8, ARG
+#DIM 頭を踏みつける
+#DIM 足を舐めさせる
+#DIM 罵倒
+;A 頭を踏みつける B 足を舐めさせる C 罵倒
+頭を踏みつける = (10 + ABL:ARG:加虐 ) * (RAND:100 + 1)
+足を舐めさせる = (10 + ABL:ARG:奉仕 ) * (RAND:100 + 1)
+罵倒 = (10 + ABL:ARG:会話) * (RAND:100 + 1)
+SIF !ASSI_ACTABLE("頭を踏みつける", ARG)
+	頭を踏みつける = 0
+SIF !ASSI_ACTABLE("足を舐めさせる", ARG)
+	足を舐めさせる = 0
+SIF !ASSI_ACTABLE("罵倒", ARG)
+	罵倒 = 0
+
+SELECTCASE MAX(頭を踏みつける, 足を舐めさせる, 罵倒)
+	;実行可能なものがない場合は羞恥に飛ばす
+	CASE 0
+		CALL ASSI_ACTM7, ARG
+	CASE 頭を踏みつける
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("頭を踏みつける")
+	CASE 足を舐めさせる
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("足を舐めさせる")
+	CASE 罵倒
+		TCVAR:ARG:助手ACT = GET_ASSIACTNUM("罵倒")
+ENDSELECT
+

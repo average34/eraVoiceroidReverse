@@ -1,0 +1,2962 @@
+﻿
+;────────────────────────────────────
+;COMABLE管理関数(COMABLEn関数を呼び出し、結果を記憶する)
+;※なすがまま処理とかのため、COMABLE実行順を調整したかった
+;  あと、気力消費量とか何度も計算したくなかったし@これみ
+;
+;ARG = -1ならCOMABLE処理、COM番号なら可(1)否(0)を返す
+;────────────────────────────────────
+@COMABLE(ARG)
+#LOCALSIZE 100
+#LOCALSSIZE 1
+#DIM LTEMP, 2
+#DIM LCOUNT, 2
+;COMABLE処理
+IF ARG == -1
+	;変数初期化
+	VARSET LOCAL
+	;気力消費量の判定
+	CALL SET_COM_VITALITY
+	;気力限界判定
+	FOR LCOUNT, 0, 100
+		CALL COMABLE_LIMIT(TRAINNAME:LCOUNT)
+		SIF RESULT == 0
+			CONTINUE
+		;ここまで通ったら可能
+		TFLAG:可能なCOM数 ++
+		LOCAL:LCOUNT = 1
+	NEXT
+	;それでも実行可能なCOMが無ければ、なすがままを追加する
+	IF TFLAG:可能なCOM数 == 0
+		;CALL COMABLE52
+		;CALL COMABLEM52
+		CALLF COM_VITALITY, "代入_ランク", TOSTR(COM_VITALITY("順位数")), GETNUM(TRAINNAME, "なすがまま")
+		CALLF COM_VITALITY, "代入_消費気力", "0", 0
+		CALLF COM_VITALITY, "順位数設定"
+		TFLAG:可能なCOM数 = 1
+		LOCAL:52 = 1
+	ENDIF
+;可否取得
+ELSE
+	RETURN LOCAL:ARG
+ENDIF
+RETURN 0
+
+;処理しないCOM・実行できないCOMの判別
+@COMABLE_PASS(ARG)
+;なすがまま は処理しない
+SIF ARG == 52
+	RETURN 0
+;存在しないCOMは飛ばす
+SIF TRAINNAME:ARG == ""
+	RETURN 0
+;実行不可能なCOMは飛ばす
+RESULT = 0
+TRYCALLFORM COMABLE{ARG}
+RETURN RESULT
+
+;────────────────────────────────────
+;COM気力消費量管理(COMABLE管理)のリスト作成関数
+;────────────────────────────────────
+@SET_COM_VITALITY
+#LOCALSIZE 100
+#DIM LCOUNT
+#DIM LTEMP
+#DIM LRANK, 100
+VARSET LOCAL, -1
+;消費気力 * 1000 + COM番号で登録する
+FOR LCOUNT, 0, 100
+	;実行不可能な場合は登録しない
+	CALL COMABLE_PASS(LCOUNT)
+	SIF !RESULT
+		CONTINUE
+	;消費量を取得
+	TRYCCALLFORM COMABLEM{LCOUNT}
+		LOCAL:LCOUNT = LCOUNT + RESULT * 1000
+	CATCH
+	ENDCATCH
+NEXT
+;多順にソート
+ARRAYSORT LOCAL, BACK
+;消費気力とランキングに分離
+FOR LCOUNT, 0, 100
+	LRANK:LCOUNT = LOCAL:LCOUNT % 1000
+	LOCAL:LCOUNT /= 1000
+NEXT
+;気力消費量調整
+;ここまでで得られたもっとも気力消費の少ないCOMは、自然な行動として気力消費を1/4にする
+;２番目に気力消費の少ないCOMは、無理のない行動として気力消費1/2にする
+LTEMP = FINDELEMENT(LRANK, -1)
+;気力消費が登録されたCOMが1つも無い場合は飛ばす
+IF LTEMP > 0
+	LOCAL:(LTEMP - 1) /= 4
+	LOCAL:(LTEMP - 2) /= 2
+ENDIF
+;消費気力とランキングをCOM_VITALITYに移す
+FOR LCOUNT, 0, 100
+	CALLF COM_VITALITY, "代入_ランク", TOSTR(LCOUNT), LRANK:LCOUNT
+	CALLF COM_VITALITY, "代入_消費気力", TOSTR(LCOUNT), LOCAL:LCOUNT
+NEXT
+CALLF COM_VITALITY, "順位数設定"
+
+;────────────────────────────────────
+;COM気力消費量管理(COMABLE管理)
+;ARGS   = 処理内容
+;	"取得"   指定COMの消費量取得(初期値)
+;	"代入_ランク/消費気力" SET関数の内容をLOCALに保存するための命令
+;	"順位低" 指定COMの気力消費量が何番目に低いか("順位"での指定も許容)
+;	"順位高" 指定COMの気力消費量が何番目に高いか
+;	"順位数" 気力消費量順位が何段階あるか
+;	"消費低" 指定順位の気力消費量(低いものから)
+;	"消費高" 指定順位の気力消費量(高いものから)
+;	※順位は0から開始
+;ARGS:1 = COM名称指定
+;ARG    = 消費気力(順位指定)
+;
+;LOCAL	消費気力が多い順に入っている
+;LRANK	COM番号が消費気力の多い順に入っている
+;		LRANK:0 = 0 なら沈黙するが一番消費気力が大きく、LOCAL:0がその消費気力の値となる
+;
+;────────────────────────────────────
+@COM_VITALITY(ARGS = "", ARGS:1 = "", ARG = 0)
+#FUNCTION
+#LOCALSIZE 100
+#DIM LCOUNT
+#DIM LTEMP, 2
+#DIM LRANK, 100
+#DIM LRNUM
+;初期化
+IF ARGS == "出力"
+	RESULTS = 
+	FOR LCOUNT, 0, 100
+		SIF LRANK:LCOUNT == -1
+			BREAK
+		RESULTS += TRAINNAME:(LRANK:LCOUNT) + "_" + TOSTR(LOCAL:LCOUNT) + "/"
+	NEXT
+	RETURNF 0
+ELSEIF ARGS == "代入_ランク"
+	LRANK:TOINT(ARGS:1) = ARG
+	RETURNF 0
+ELSEIF ARGS == "代入_消費気力"
+	LOCAL:TOINT(ARGS:1) = ARG
+	RETURNF 0
+ELSEIF ARGS == "順位数設定"
+	LRNUM = VARSIZE("LRANK") - MATCH(LRANK, -1)
+	RETURNF 0
+;順位数
+ELSEIF ARGS == "順位数"
+	RETURNF LRNUM
+;消費高
+ELSEIF ARGS == "消費高"
+	RETURNF LRANK:ARG
+;消費低
+ELSEIF ARGS == "消費低"
+	SIF LRNUM - ARG - 1 < 0
+		RETURNF -1
+	RETURNF LRANK:(LRNUM - ARG - 1)
+ENDIF
+;COM名称が空白なら処理しない
+SIF ARGS:1 == ""
+	RETURNF -1
+;無効なCOM名に文句を言う
+LTEMP:1 = FINDELEMENT(TRAINNAME, ARGS:1, , , 1)
+IF LTEMP:1 == -1
+	CALLF PRINT_ERRORMESSAGE(@"@COM_VITALITY に無効なCOM名(%ARGS:1%)が渡されました")
+	RETURNF -1
+ENDIF
+;COMを多順の順位に変換
+LTEMP = FINDELEMENT(LRANK, LTEMP:1, , , 1)
+
+IF ARGS == "順位低" || ARGS == "順位" || ARGS == "順位高"
+	IF LTEMP < 0
+		;CALLF PRINT_ERRORMESSAGE(@"@COM_VITALITY にて未処理/消費量不正なCOM(%ARGS:1%)にて順位評価が行われました")
+		RETURNF -1
+	ENDIF
+	A = LRNUM, LTEMP
+	RETURNF ARGS == "順位高" ? LTEMP # LRNUM - LTEMP - 1
+;取得
+ELSEIF ARGS == "" || ARGS == "取得"
+	SIF LTEMP == -1
+		RETURNF -1
+	RETURNF LOCAL:LTEMP
+;無効な指定
+ELSE
+	CALLF PRINT_ERRORMESSAGE(@"@COM_VITALITY に無効な指定(%ARGS%)が渡されました")
+	RETURNF 0
+ENDIF
+RETURNF 1
+
+;────────────────────────────────────
+;汎用処理
+;────────────────────────────────────
+;COMABLE一括処理
+@GLOBAL_COMABLE(ARG)
+#FUNCTION
+;一回休みのときは『なすがまま』のみ許容
+IF TFLAG:一回休み == 1 && ARG != 52
+	RESULT = 0
+	RETURNF 1
+ENDIF
+RETURNF 0
+
+;道具/プレイ解除の判定
+;ACTが道具/プレイで、かつ解除/終了でなければ1を返す
+@ABLE_TOOL_ON
+#FUNCTION
+;羞恥プレイ
+SIF IS_NOWACTNAME("羞恥プレイ") && TFLAG:ACT派生 != 1
+	RETURNF 1
+;野外プレイ
+SIF IS_NOWACTNAME("野外プレイ") && TFLAG:ACT派生 != 1
+	RETURNF 1
+;縄
+SIF IS_NOWACTNAME("縄") && TFLAG:ACT派生 != 1
+	RETURNF 1
+;アイマスク
+SIF IS_NOWACTNAME("アイマスク") && TFLAG:ACT派生 != 1
+	RETURNF 1
+;ボールギャグ
+SIF IS_NOWACTNAME("ボールギャグ") && TFLAG:ACT派生 != 1
+	RETURNF 1
+;三角木馬
+SIF IS_NOWACTNAME("三角木馬") && TFLAG:ACT派生 != 1
+	RETURNF 1
+RETURNF 0
+
+;快感関連の計算
+@ABLE_KAIKAN
+#FUNCTION
+FOR LOCAL, 0, 4
+	;LOCAL:1-4 に 快ＣＶＡＢ をそれぞれ代入
+	LOCAL:(LOCAL + 1) = SOURCE:MASTER:LOCAL
+	;敏感時1.2倍、鈍感時0.8倍
+	SIF TALENT:MASTER:(100 + (LOCAL * 2))
+		TIMES LOCAL:(LOCAL + 1) , 1.20
+	SIF TALENT:MASTER:(101 + (LOCAL * 2))
+		TIMES LOCAL:(LOCAL + 1) , 0.80
+	;淫核・淫茎/淫壷/淫尻/淫乳時、対応感覚1.3倍
+	SIF TALENT:MASTER:(72 + LOCAL)
+		TIMES LOCAL:(LOCAL + 1) , 1.30
+	;Ｘ感覚により1～1.5倍
+	LOCAL:(LOCAL + 1) = LOCAL:(LOCAL + 1) * (10 + LIMIT(ABL:MASTER:(LOCAL + 3), 0, 5)) / 10
+NEXT
+;LOCAL:1-4の合計をLOCALに代入
+LOCAL = LOCAL:1 + LOCAL:2 + LOCAL:3 + LOCAL:4
+;キスはＣＶＡＢのソースが入らないので例外として処理します
+SIF IS_NOWACTNAME("キス")
+	LOCAL = SOURCE:MASTER:情愛 + SOURCE:MASTER:性行動
+;快感に素直/否定
+SIF TALENT:MASTER:快感に素直
+	TIMES LOCAL, 1.20
+SIF TALENT:MASTER:快感の否定
+	TIMES LOCAL, 0.80
+;LOCALを返す
+RETURNF LOCAL
+
+;加虐関連の計算
+@ABLE_GYAKU
+#FUNCTION
+;LOCAL:1,2に痛み、拘束SOURCEを代入
+LOCAL:1 = SOURCE:MASTER:痛み
+LOCAL:2 = SOURCE:MASTER:拘束
+;痛みに弱い/強い
+SIF TALENT:MASTER:痛みに弱い
+	TIMES LOCAL:1 , 1.50
+SIF TALENT:MASTER:痛みに強い
+	TIMES LOCAL:1 , 0.60
+;LOCALにLOCAL:1,2の合計を代入
+LOCAL = LOCAL:1 + LOCAL:2
+;痛みが強すぎる場合LOCAL減衰(5500から減衰、8500→*0.75まで)
+LOCAL = LOCAL * (17500 - LIMIT(PALAM:MASTER:苦痛, 5500, 8500)) / 12000
+;不自由な状態(不快、拘束補正が高いとLOCAL増加、*1.3まで)
+LOCAL:3 = MAX(PALAM:MASTER:不快 - 4000, LOCAL:2 * 3) + 15000
+LOCAL = LOCAL * LIMIT(LOCAL:3, 15000, 19500) / 15000
+;LOCALを返す
+RETURNF LOCAL
+
+;────────────────────────────────────
+;沈黙する
+;────────────────────────────────────
+@COMABLE0
+;-------------------------------------------------
+;可否判定
+;-------------------------------------------------
+;一括管理
+SIF GLOBAL_COMABLE(0)
+	RETURN RESULT
+;トリガーする行動や状況
+IF 0
+ELSEIF IS_NOWACTNAME("今の気分を聞く/自分への気持ちを聞く/性についての話をする/優しく慰める")
+ELSEIF IS_NOWACTNAME("厳しく脅す/お仕置きと宣言する/怒鳴る/不気味に笑う/罵倒")
+ELSEIF IS_NOWACTNAME("羞恥プレイ/野外プレイ/縄/アイマスク/ボールギャグ/三角木馬/ペニスバンド装着")
+ELSEIF IS_NOWACTNAME("放置プレイ")
+ELSEIF IS_NOWACTNAME("休ませる/栄養剤を飲ませる/治療する")
+ELSE
+	RETURN 0
+ENDIF
+;道具/プレイ解除の判定
+SIF ABLE_TOOL_ON()
+	RETURN 0
+RETURN 1
+;-------------------------------------------------
+;気力判定
+;-------------------------------------------------
+@COMABLEM0
+;LOCAL初期化
+VARSET LOCAL
+;調教済み(恋慕/隷属)なら聞かれたら答えなきゃならないため消費気力量増大
+;(今の気分を聞く/自分への気持ちを聞く/放置プレイ)(ボールギャグ時免除)
+IF (TALENT:MASTER:恋慕 || TALENT:MASTER:隷属) && (IS_NOWACTNAME("今の気分を聞く/自分への気持ちを聞く/放置プレイ")) && TEQUIP:ボールギャグ == 0
+	LOCAL = 50
+ELSE
+	LOCAL = 5
+ENDIF
+;消費気力量判定
+LOCALS = 積極_-10/反抗_{LOCAL}/活気_-10/根気_10/好意_{-LOCAL}/愛想_-10/堕落_-10
+CALL COMABLE_CORRECTION("沈黙する", LOCALS)
+LOCAL = RESULT
+RETURN LOCAL
+
+;────────────────────────────────────
+;気弱く応答する
+;────────────────────────────────────
+@COMABLE1
+;-------------------------------------------------
+;可否判定
+;-------------------------------------------------
+;一括管理
+SIF GLOBAL_COMABLE(1)
+	RETURN RESULT
+;トリガーする行動や状況
+IF 0
+ELSEIF IS_NOWACTNAME("今の気分を聞く/自分への気持ちを聞く/性についての話をする/優しく慰める")
+ELSEIF IS_NOWACTNAME("厳しく脅す/お仕置きと宣言する/怒鳴る/不気味に笑う/罵倒")
+ELSEIF IS_NOWACTNAME("衣装の変更を要求する/合意を求める/押し倒す/ペニスバンド装着")
+ELSEIF IS_NOWACTNAME("放置プレイ")
+ELSEIF IS_NOWACTNAME("休ませる/栄養剤を飲ませる/治療する")
+ELSE
+	RETURN 0
+ENDIF
+;道具/プレイ解除の判定
+SIF ABLE_TOOL_ON()
+	RETURN 0
+;ボールギャグ
+SIF TEQUIP:ボールギャグ
+	RETURN 0
+RETURN 1
+;-------------------------------------------------
+;気力判定
+;-------------------------------------------------
+@COMABLEM1
+;LOCAL初期化
+VARSET LOCAL
+;消費気力量判定
+CALL COMABLE_CORRECTION("気弱く応答する", "積極_5/反抗_-10/活気_-20/好意_10/愛想_10/堕落_-10")
+LOCAL = RESULT
+RETURN LOCAL
+
+;────────────────────────────────────
+;無愛想に応答する
+;────────────────────────────────────
+@COMABLE2
+;-------------------------------------------------
+;可否判定
+;-------------------------------------------------
+;一括管理
+SIF GLOBAL_COMABLE(2)
+	RETURN RESULT
+;トリガーする行動や状況
+IF 0
+ELSEIF IS_NOWACTNAME("今の気分を聞く/自分への気持ちを聞く/性についての話をする/優しく慰める")
+ELSEIF IS_NOWACTNAME("厳しく脅す/お仕置きと宣言する/怒鳴る/不気味に笑う/罵倒")
+ELSEIF IS_NOWACTNAME("衣装の変更を要求する/合意を求める/押し倒す/ペニスバンド装着")
+ELSEIF IS_NOWACTNAME("休ませる/栄養剤を飲ませる/治療する")
+ELSE
+	RETURN 0
+ENDIF
+;道具/プレイ解除の判定
+SIF ABLE_TOOL_ON()
+	RETURN 0
+;ボールギャグ
+SIF TEQUIP:ボールギャグ
+	RETURN 0
+RETURN 1
+;-------------------------------------------------
+;気力判定
+;-------------------------------------------------
+@COMABLEM2
+;LOCAL初期化
+VARSET LOCAL
+;消費気力量判定
+CALL COMABLE_CORRECTION("無愛想に応答する", "積極_-10/反抗_20/活気_5/根気_-5/好意_-10/愛想_-20/堕落_-5")
+LOCAL = RESULT
+RETURN LOCAL
+
+;────────────────────────────────────
+;愛想よく応答する
+;────────────────────────────────────
+@COMABLE3
+;-------------------------------------------------
+;可否判定
+;-------------------------------------------------
+;一括管理
+SIF GLOBAL_COMABLE(3)
+	RETURN RESULT
+;トリガーする行動や状況
+IF 0
+ELSEIF IS_NOWACTNAME("今の気分を聞く/自分への気持ちを聞く/性についての話をする/優しく慰める")
+ELSEIF IS_NOWACTNAME("厳しく脅す/お仕置きと宣言する/罵倒")
+ELSEIF IS_NOWACTNAME("衣装の変更を要求する/合意を求める/押し倒す/ペニスバンド装着")
+ELSEIF IS_NOWACTNAME("放置プレイ")
+ELSEIF IS_NOWACTNAME("休ませる/栄養剤を飲ませる/治療する")
+ELSE
+	RETURN 0
+ENDIF
+;道具/プレイ解除の判定
+SIF ABLE_TOOL_ON()
+	RETURN 0
+;ボールギャグ
+SIF TEQUIP:ボールギャグ
+	RETURN 0
+RETURN 1
+;-------------------------------------------------
+;気力判定
+;-------------------------------------------------
+@COMABLEM3
+;LOCAL初期化
+VARSET LOCAL
+;消費気力量判定
+CALL COMABLE_CORRECTION("愛想よく応答する", "積極_10/反抗_-40/活気_20/好意_20/愛想_40/堕落_10")
+LOCAL = RESULT
+RETURN LOCAL
+
+;────────────────────────────────────
+;強気に応答する
+;────────────────────────────────────
+@COMABLE4
+;-------------------------------------------------
+;可否判定
+;-------------------------------------------------
+;一括管理
+SIF GLOBAL_COMABLE(4)
+	RETURN RESULT
+;トリガーする行動や状況
+IF 0
+ELSEIF IS_NOWACTNAME("今の気分を聞く/自分への気持ちを聞く/性についての話をする/優しく慰める")
+ELSEIF IS_NOWACTNAME("厳しく脅す/お仕置きと宣言する/怒鳴る/不気味に笑う/罵倒")
+ELSEIF IS_NOWACTNAME("衣装の変更を要求する/合意を求める/押し倒す/ペニスバンド装着")
+ELSEIF IS_NOWACTNAME("放置プレイ")
+ELSEIF IS_NOWACTNAME("休ませる/栄養剤を飲ませる/治療する")
+ELSE
+	RETURN 0
+ENDIF
+;道具/プレイ解除の判定
+SIF ABLE_TOOL_ON()
+	RETURN 0
+;ボールギャグ
+SIF TEQUIP:ボールギャグ
+	RETURN 0
+RETURN 1
+;-------------------------------------------------
+;気力判定
+;-------------------------------------------------
+@COMABLEM4
+;LOCAL初期化
+VARSET LOCAL
+;消費気力量判定
+CALL COMABLE_CORRECTION("強気に応答する", "積極_-20/反抗_20/活気_-30/根気_10/好意_-10/愛想_-10/堕落_-20")
+LOCAL = RESULT
+RETURN LOCAL
+
+;────────────────────────────────────
+;皮肉を言う
+;────────────────────────────────────
+@COMABLE5
+;-------------------------------------------------
+;可否判定
+;-------------------------------------------------
+;一括管理
+SIF GLOBAL_COMABLE(5)
+	RETURN RESULT
+;トリガーする行動や状況
+IF 0
+ELSEIF IS_NOWACTNAME("今の気分を聞く/自分への気持ちを聞く/優しく慰める")
+ELSEIF IS_NOWACTNAME("厳しく脅す/お仕置きと宣言する/罵倒")
+ELSEIF IS_NOWACTNAME("合意を求める")
+ELSEIF IS_NOWACTNAME("羞恥プレイ/野外プレイ/縄/アイマスク/ボールギャグ/三角木馬")
+ELSEIF IS_NOWACTNAME("休ませる/栄養剤を飲ませる/治療する/ペニスバンド装着")
+ELSE
+	RETURN 0
+ENDIF
+;道具/プレイ解除の判定
+SIF ABLE_TOOL_ON()
+	RETURN 0
+;ボールギャグ
+SIF TEQUIP:ボールギャグ
+	RETURN 0
+RETURN 1
+;-------------------------------------------------
+;気力判定
+;-------------------------------------------------
+@COMABLEM5
+;LOCAL初期化
+VARSET LOCAL
+;※知能によって補正値増減したいけど、あいにくそういうパラメータがない
+;消費気力量判定
+CALL COMABLE_CORRECTION("皮肉を言う", "積極_10/反抗_30/活気_10/根気_20/好意_-10/愛想_-20/堕落_-10")
+LOCAL = RESULT
+;消費気力代入
+RETURN LOCAL
+
+;────────────────────────────────────
+;もっとハードにして
+;────────────────────────────────────
+@COMABLE6
+;-------------------------------------------------
+;可否判定
+;-------------------------------------------------
+;一括管理
+SIF GLOBAL_COMABLE(6)
+	RETURN RESULT
+;トリガーする行動や状況
+IF 0
+ELSEIF IS_NOWACTNAME("今の気分を聞く/自分への気持ちを聞く/優しく慰める")
+ELSEIF IS_NOWACTNAME("お仕置きと宣言する")
+ELSEIF IS_NOWACTNAME("手で愛撫/胸愛撫/口で愛撫/キス")
+ELSEIF IS_NOWACTNAME("性器を擦り合う/パイズリする")
+ELSEIF IS_NOWACTNAME("Ｃ愛撫道具/ニプルキャップ")
+ELSEIF IS_NOWACTNAME("正常位")
+ELSEIF IS_NOWACTNAME("羞恥プレイ/野外プレイ/縄/アイマスク/ボールギャグ/三角木馬")
+ELSEIF IS_NOWACTNAME("スパンキング/放置プレイ/ペニスバンド装着")
+ELSEIF IS_NOWACTNAME("休ませる/栄養剤を飲ませる/治療する")
+ELSE
+	RETURN 0
+ENDIF
+;ボールギャグ
+SIF TEQUIP:ボールギャグ
+	RETURN 0
+RETURN 1
+;-------------------------------------------------
+;気力判定
+;-------------------------------------------------
+@COMABLEM6
+;LOCAL初期化
+VARSET LOCAL
+;快感・加虐が強いと困難に
+LOCAL = MAX((ABLE_KAIKAN() + ABLE_GYAKU()) / 200, 1)
+;消費気力量判定
+LOCALS = 積極_{15 * LOCAL}/反抗_-40/活気_{15 * LOCAL}/根気_{20 * LOCAL * MAX(8-ABL:MASTER:マゾっ気, 1)}/好意_40/愛想_{-5 * LOCAL}/堕落_{60 * LOCAL}
+CALL COMABLE_CORRECTION("もっとハードにして", LOCALS)
+LOCAL = RESULT
+;消費気力代入
+RETURN LOCAL
+
+;────────────────────────────────────
+;許しを乞う
+;────────────────────────────────────
+@COMABLE7
+;-------------------------------------------------
+;可否判定
+;-------------------------------------------------
+;一括管理
+SIF GLOBAL_COMABLE(7)
+	RETURN RESULT
+;トリガーする行動や状況
+IF 0
+ELSEIF IS_NOWACTNAME("今の気分を聞く/自分への気持ちを聞く/性についての話をする/優しく慰める")
+ELSEIF IS_NOWACTNAME("厳しく脅す/お仕置きと宣言する/怒鳴る/不気味に笑う")
+ELSEIF IS_NOWACTNAME("押し倒す")
+ELSEIF IS_NOWACTNAME("アナル愛撫/アナル舐め")
+ELSEIF IS_NOWACTNAME("アナルバイブ/アナルビーズ")
+ELSEIF IS_NOWACTNAME("後背位/背面座位/アナルセックス/逆レイプ")
+ELSEIF IS_NOWACTNAME("自慰/秘貝開帳")
+ELSEIF IS_NOWACTNAME("羞恥プレイ/野外プレイ/縄/アイマスク/三角木馬")
+ELSEIF IS_NOWACTNAME("放尿/浣腸セット") || (IS_NOWACTNAME("ペニスバンド装着") && !TFLAG:ACT派生) || IS_NOWACTNAME("ペニスバンド")
+ELSEIF IS_NOWACTNAME("足舐め強制")
+ELSEIF IS_NOWACTNAME("スパンキング/鞭/針/放置プレイ")
+ELSEIF IS_NOWACTNAME("フィストファック/アナルフィスト/両穴フィスト")
+ELSEIF IS_NOWACTNAME("公衆肉便器プレイ")
+ELSEIF IS_NOWACTNAME("休ませる/栄養剤を飲ませる/治療する")
+ELSE
+	RETURN 0
+ENDIF
+;ボールギャグ
+SIF TEQUIP:ボールギャグ
+	RETURN 0
+RETURN 1
+;-------------------------------------------------
+;気力判定
+;-------------------------------------------------
+@COMABLEM7
+;LOCAL初期化
+VARSET LOCAL
+;屈服していればより容易になる
+LOCAL = MAX(PALAM:MASTER:屈服 / 1000, 1)
+;消費気力量判定
+LOCALS = 積極_{-20 / LOCAL}/反抗_{-20 / LOCAL}/活気_{-20 / LOCAL}/根気_{-40 / LOCAL}/好意_{20 / LOCAL}/愛想_{40 / LOCAL}/堕落_{-10 / LOCAL}
+CALL COMABLE_CORRECTION("許しを乞う", LOCALS)
+LOCAL = RESULT
+RETURN LOCAL
+
+;────────────────────────────────────
+;気持ち良くして
+;────────────────────────────────────
+@COMABLE8
+;-------------------------------------------------
+;可否判定
+;-------------------------------------------------
+;一括管理
+SIF GLOBAL_COMABLE(8)
+	RETURN RESULT
+;トリガーする行動や状況
+IF 0
+ELSEIF IS_NOWACTNAME("今の気分を聞く/自分への気持ちを聞く/性についての話をする/優しく慰める")
+ELSEIF IS_NOWACTNAME("罵倒")
+ELSEIF IS_NOWACTNAME("合意を求める/押し倒す")
+ELSEIF IS_NOWACTNAME("自慰みせつけ/ペニスバンド装着/ペニスバンド")
+ELSEIF IS_NOWACTNAME("羞恥プレイ/野外プレイ")
+ELSEIF IS_NOWACTNAME("放尿")
+ELSEIF IS_NOWACTNAME("放置プレイ")
+ELSEIF IS_NOWACTNAME("休ませる/栄養剤を飲ませる/治療する")
+ELSE
+	RETURN 0
+ENDIF
+;ボールギャグ
+SIF TEQUIP:ボールギャグ
+	RETURN 0
+RETURN 1
+;-------------------------------------------------
+;気力判定
+;-------------------------------------------------
+@COMABLEM8
+;LOCAL初期化
+VARSET LOCAL
+;快感があると困難に
+LOCAL = MAX(ABLE_KAIKAN() / 200, 1)
+;消費気力量判定
+LOCALS = 積極_{20 * LOCAL}/反抗_{-15 * LOCAL}/活気_{5 * LOCAL}/根気_{-5 * LOCAL}/好意_{5 * LOCAL}/愛想_{10 * LOCAL}/堕落_100
+CALL COMABLE_CORRECTION("気持ち良くして", LOCALS)
+LOCAL = RESULT
+RETURN LOCAL
+
+;────────────────────────────────────
+;恥ずかしがる
+;────────────────────────────────────
+@COMABLE10
+;-------------------------------------------------
+;可否判定
+;-------------------------------------------------
+;一括管理
+SIF GLOBAL_COMABLE(10)
+	RETURN RESULT
+;性交中や挿入中に恥ずかしがっちゃいかんのか？
+;加虐中にだって恥ずかしがっていいだろう？@これみ
+[SKIPSTART]
+;性交実行や挿入中はなし
+SIF TFLAG:ACT分類 == 3 || TFLAG:ACT分類 == 10 || TEQUIP:性交中
+	RETURN 0
+;行動加虐はなし
+SIF TFLAG:ACT分類 == 6
+	RETURN 0
+[SKIPEND]
+RETURN 1
+
+;-------------------------------------------------
+;気力判定
+;-------------------------------------------------
+@COMABLEM10
+;LOCAL初期化
+VARSET LOCAL
+;恥ずかしがっていればより容易になる
+LOCAL = MAX(ABS(PALAM:MASTER:恥情-PALAM:MASTER:欲情) / 750, 1)
+;消費気力量判定
+LOCALS = 積極_{-30 / LOCAL}/活気_{-10 / LOCAL}/根気_{-30 / LOCAL}/好意_{10 / LOCAL}/愛想_{20 / LOCAL}/堕落_{-30 / LOCAL}
+CALL COMABLE_CORRECTION("恥ずかしがる", LOCALS)
+LOCAL = RESULT
+RETURN LOCAL
+
+;────────────────────────────────────
+;嫌がる
+;────────────────────────────────────
+@COMABLE11
+;-------------------------------------------------
+;可否判定
+;-------------------------------------------------
+;一括管理
+SIF GLOBAL_COMABLE(11)
+	RETURN RESULT
+RETURN 1
+
+;-------------------------------------------------
+;気力判定
+;-------------------------------------------------
+@COMABLEM11
+;LOCAL初期化
+VARSET LOCAL
+;反発していればより容易になる
+LOCAL = MAX(PALAM:MASTER:反抗 / 1000, 1)
+;消費気力量判定
+LOCALS = 積極_{-20 / LOCAL}/反抗_{60 / LOCAL}/活気_{20 / LOCAL}/根気_{40 / LOCAL}/好意_{-20 / LOCAL}/愛想_{-20 / LOCAL}/堕落_{-20 / LOCAL}
+CALL COMABLE_CORRECTION("嫌がる", LOCALS)
+LOCAL = RESULT
+RETURN LOCAL
+
+;────────────────────────────────────
+;下手だと罵る
+;────────────────────────────────────
+@COMABLE12
+;-------------------------------------------------
+;可否判定
+;-------------------------------------------------
+;一括管理
+SIF GLOBAL_COMABLE(12)
+	RETURN RESULT
+;調教者による快感じゃないと対象外
+SIF TFLAG:ACT分類 != 1 && TFLAG:ACT分類 != 3 
+	RETURN 0
+;ボールギャグ
+SIF TEQUIP:ボールギャグ
+	RETURN 0
+RETURN 1
+;-------------------------------------------------
+;気力判定
+;-------------------------------------------------
+@COMABLEM12
+;LOCAL初期化
+VARSET LOCAL
+;快感があると困難に
+LOCAL = MAX(ABLE_KAIKAN() / 200, 1)
+;消費気力量判定
+LOCALS = 積極_{5 * LOCAL}/反抗_{25 * LOCAL}/活気_{10 * LOCAL}/根気_{10 * LOCAL}/好意_{-10 * LOCAL}/愛想_{-5 * LOCAL}
+CALL COMABLE_CORRECTION("下手だと罵る", LOCALS)
+LOCAL = RESULT
+RETURN LOCAL
+
+;────────────────────────────────────
+;不敵に笑う
+;────────────────────────────────────
+@COMABLE13
+;-------------------------------------------------
+;可否判定
+;-------------------------------------------------
+;一括管理
+SIF GLOBAL_COMABLE(13)
+	RETURN RESULT
+;調教者の行動は奉仕じゃだめ
+SIF TFLAG:ACT分類 == 5
+	RETURN 0
+RETURN 1
+;-------------------------------------------------
+;気力判定
+;-------------------------------------------------
+@COMABLEM13
+;LOCAL初期化
+VARSET LOCAL
+;消費気力量判定
+CALL COMABLE_CORRECTION("不敵に笑う", "反抗_30/活気_40/根気_20/好意_-30/愛想_-30")
+LOCAL = RESULT
+RETURN LOCAL
+
+;────────────────────────────────────
+;快感を我慢する
+;────────────────────────────────────
+@COMABLE14
+;-------------------------------------------------
+;可否判定
+;-------------------------------------------------
+;一括管理
+SIF GLOBAL_COMABLE(14)
+	RETURN RESULT
+;イかせて選択後
+SIF TCVAR:MASTER:イかせて挙動制御用
+	RETURN 0
+;合意なしの騎乗位は受け入れない
+SIF CFLAG:合意 == 0 && IS_NOWACTNAME("騎乗位") && TALENT:MASTER:処女
+	RETURN 0
+;合意なしの性交奉仕は受け入れない
+SIF CFLAG:合意 == 0 && GET_ACTM(TFLAG:ACT) == 10 && !IS_NOWACTNAME("逆レイプ") && TALENT:MASTER:童貞
+	RETURN 0
+;快感がないとだめ
+SIF SOURCE:MASTER:快Ｃ == 0 && SOURCE:MASTER:快Ｖ == 0 && SOURCE:MASTER:快Ａ == 0 && SOURCE:MASTER:快Ｂ == 0
+	RETURN 0
+RETURN 1
+;-------------------------------------------------
+;気力判定
+;-------------------------------------------------
+@COMABLEM14
+;LOCAL初期化
+VARSET LOCAL
+;快感が強すぎる、または弱すぎると困難になる
+LOCAL = ABS(ABLE_KAIKAN() - 250) / 250 + 1
+;消費気力量判定
+LOCALS = 積極_{-5 * LOCAL}/反抗_{10 * LOCAL}/活気_{10 * LOCAL}/根気_{10 * LOCAL}/好意_{-5 * LOCAL}/愛想_{-5 * LOCAL}/堕落_{-10 * LOCAL}
+CALL COMABLE_CORRECTION("快感を我慢する", LOCALS)
+LOCAL = RESULT
+RETURN LOCAL
+
+;────────────────────────────────────
+;快感を受け入れる
+;────────────────────────────────────
+@COMABLE15
+;-------------------------------------------------
+;可否判定
+;-------------------------------------------------
+;一括管理
+SIF GLOBAL_COMABLE(15)
+	RETURN RESULT
+;合意なしの騎乗位は受け入れない
+SIF CFLAG:合意 == 0 && IS_NOWACTNAME("騎乗位") && TALENT:MASTER:処女
+	RETURN 0
+;合意なしの性交奉仕は受け入れない
+SIF CFLAG:合意 == 0 && GET_ACTM(TFLAG:ACT) == 10 && !IS_NOWACTNAME("逆レイプ") && TALENT:MASTER:童貞
+	RETURN 0
+;快感がないとだめ
+SIF SOURCE:MASTER:快Ｃ == 0 && SOURCE:MASTER:快Ｖ == 0 && SOURCE:MASTER:快Ａ == 0 && SOURCE:MASTER:快Ｂ == 0
+	RETURN 0
+RETURN 1
+;-------------------------------------------------
+;気力判定
+;-------------------------------------------------
+@COMABLEM15
+;LOCAL初期化
+VARSET LOCAL
+;快感が強いほど容易になる
+LOCAL = MIN(ABLE_KAIKAN()/2000+1, 3)
+;消費気力量判定
+LOCALS = 積極_{20 / LOCAL}/反抗_{-60 / LOCAL}/活気_{-10 / LOCAL}/根気_{-20 / LOCAL}/好意_{20 / LOCAL}/愛想_{20 / LOCAL}/堕落_{100 / LOCAL}
+CALL COMABLE_CORRECTION("快感を受け入れる", LOCALS)
+LOCAL = RESULT
+RETURN LOCAL
+
+;────────────────────────────────────
+;気持ち良い！
+;────────────────────────────────────
+@COMABLE16
+;-------------------------------------------------
+;可否判定
+;-------------------------------------------------
+;一括管理
+SIF GLOBAL_COMABLE(16)
+	RETURN RESULT
+;合意なしの騎乗位は受け入れない
+SIF CFLAG:合意 == 0 && IS_NOWACTNAME("騎乗位") && TALENT:MASTER:処女
+	RETURN 0
+;合意なしの性交奉仕は受け入れない
+SIF CFLAG:合意 == 0 && GET_ACTM(TFLAG:ACT) == 10 && !IS_NOWACTNAME("逆レイプ") && TALENT:MASTER:童貞
+	RETURN 0
+;快感がないとだめ
+SIF SOURCE:MASTER:快Ｃ == 0 && SOURCE:MASTER:快Ｖ == 0 && SOURCE:MASTER:快Ａ == 0 && SOURCE:MASTER:快Ｂ == 0
+	RETURN 0
+RETURN 1
+;-------------------------------------------------
+;気力判定
+;-------------------------------------------------
+@COMABLEM16
+;LOCAL初期化
+VARSET LOCAL
+;快感が強いほど容易になる
+LOCAL = MIN(ABLE_KAIKAN()/2000+1, 3)
+;消費気力量判定
+LOCALS = 積極_{70 / LOCAL}/反抗_{-60 / LOCAL}/活気_{70 / LOCAL}/根気_{40 / LOCAL}/好意_{70 / LOCAL}/愛想_{70 / LOCAL}/堕落_{40 / LOCAL}
+CALL COMABLE_CORRECTION("気持ち良い！", LOCALS)
+LOCAL = RESULT
+RETURN LOCAL
+
+;────────────────────────────────────
+;腰を振る
+;────────────────────────────────────
+@COMABLE20
+;-------------------------------------------------
+;可否判定
+;-------------------------------------------------
+;一括管理
+SIF GLOBAL_COMABLE(20)
+	RETURN RESULT
+;焦らし中は実行不可
+SIF TCVAR:MASTER:焦らし度 > 1
+	RETURN 0
+;ACT、状況制限
+;挿入してる/されてる/しようとしてる、追加;パイズリ,素股
+SIF TFLAG:ACT分類 != 3 && TFLAG:ACT分類 != 10 && !TEQUIP:性交中 && !TEQUIP:性交奉仕中 && !IS_NOWACTNAME("パイズリする/性器を擦り合う")
+	RETURN 0
+;パイズリする時、調教者が貧乳
+SIF IS_NOWACTNAME("パイズリする") && TALENT:貧乳
+	RETURN 0
+;合意なしの騎乗位は受け入れない
+SIF CFLAG:合意 == 0 && IS_NOWACTNAME("騎乗位") && TALENT:MASTER:処女
+	RETURN 0
+;合意なしの性交奉仕は受け入れない
+SIF CFLAG:合意 == 0 && GET_ACTM(TFLAG:ACT) == 10 && !IS_NOWACTNAME("逆レイプ") && TALENT:MASTER:童貞
+	RETURN 0
+RETURN 1
+;-------------------------------------------------
+;気力判定
+;-------------------------------------------------
+@COMABLEM20
+;LOCAL初期化
+VARSET LOCAL
+;快感があると容易に
+LOCAL = MAX(ABLE_KAIKAN() / 200, 1)
+;消費気力量判定
+LOCALS = 積極_{40 / LOCAL}/反抗_{-60 / LOCAL}/活気_{40 / LOCAL}/根気_{-20 / LOCAL}/好意_{60 / LOCAL}/愛想_{-20 / LOCAL}/堕落_{80 / LOCAL}
+CALL COMABLE_CORRECTION("腰を振る", LOCALS)
+LOCAL = RESULT
+RETURN LOCAL
+
+;────────────────────────────────────
+;中に出して！
+;────────────────────────────────────
+@COMABLE21
+;-------------------------------------------------
+;可否判定
+;-------------------------------------------------
+;一括管理
+SIF GLOBAL_COMABLE(21)
+	RETURN RESULT
+;挿入しないとだめ
+SIF (TFLAG:ACT分類 != 3 && (TEQUIP:性交中 == 0 || TEQUIP:性交中 == 6)) || !PENIS(TARGET)
+	RETURN 0
+[SKIPSTART]
+規制する理由が判らないので通すことに。理由があるのなら説明を求めたいところ@/L
+;オトコはだめ
+SIF TALENT:MASTER:オトコ
+	RETURN 0
+[SKIPEND]
+;いや、逆レイプでもありなんじゃないかな@これみ
+[SKIPSTART]
+;逆レイプはだめ
+SIF IS_NOWACTNAME("逆レイプ")
+	RETURN 0
+[SKIPEND]
+;ある程度の性知識がないとだめ
+SIF EXP:MASTER:性知識 < 10
+	RETURN 0
+;合意なしの騎乗位は受け入れない
+SIF CFLAG:合意 == 0 && IS_NOWACTNAME("騎乗位") && TALENT:MASTER:処女
+	RETURN 0
+;合意なしの性交奉仕は受け入れない
+SIF CFLAG:合意 == 0 && GET_ACTM(TFLAG:ACT) == 10 && !IS_NOWACTNAME("逆レイプ") && TALENT:MASTER:童貞
+	RETURN 0
+RETURN 1
+;-------------------------------------------------
+;気力判定
+;-------------------------------------------------
+@COMABLEM21
+;LOCAL初期化
+VARSET LOCAL
+;M→T好意があると容易になる
+LOCAL = MAX(CFLAG:M好意 / 1000 + TALENT:MASTER:恋慕 * 2, 1)
+;消費気力量判定
+LOCALS = 積極_{90 / LOCAL}/反抗_{-30 / LOCAL}/活気_{30 / LOCAL}/根気_{60 / LOCAL}/好意_{120 / LOCAL}/愛想_{30 / LOCAL}/堕落_{40 / LOCAL}
+CALL COMABLE_CORRECTION("中に出して！", LOCALS)
+LOCAL = RESULT
+RETURN LOCAL
+
+;────────────────────────────────────
+;中に出さないで！
+;────────────────────────────────────
+@COMABLE22
+;-------------------------------------------------
+;可否判定
+;-------------------------------------------------
+;一括管理
+SIF GLOBAL_COMABLE(22)
+	RETURN RESULT
+;挿入しないとだめ
+SIF (TFLAG:ACT分類 != 3 && (TEQUIP:性交中 == 0 || TEQUIP:性交中 == 6)) || !PENIS(TARGET)
+	RETURN 0
+[SKIPSTART]
+規制する理由が判らないので通すことに。理由があるのなら説明を求めたいところ@/L
+;オトコはだめ
+SIF TALENT:MASTER:オトコ
+	RETURN 0
+[SKIPEND]
+;逆レイプ時に中に出さないで！ってのもアリじゃないかなって。駄目？@これみ
+;逆レイプはだめ
+SIF IS_NOWACTNAME("逆レイプ")
+	RETURN 0
+;ある程度の性知識がないとだめ
+SIF EXP:MASTER:性知識 < 10
+	RETURN 0
+;合意なしの騎乗位は受け入れない
+SIF CFLAG:合意 == 0 && IS_NOWACTNAME("騎乗位") && TALENT:MASTER:処女
+	RETURN 0
+;合意なしの性交奉仕は受け入れない
+SIF CFLAG:合意 == 0 && GET_ACTM(TFLAG:ACT) == 10 && !IS_NOWACTNAME("逆レイプ") && TALENT:MASTER:童貞
+	RETURN 0
+RETURN 1
+;-------------------------------------------------
+;気力判定
+;-------------------------------------------------
+@COMABLEM22
+;LOCAL初期化
+VARSET LOCAL
+;M→T好意があると困難になる
+LOCAL = MAX(CFLAG:M好意 / 1000 + TALENT:MASTER:恋慕 * 2, 1)
+;消費気力量判定
+LOCALS = 積極_{-5 * LOCAL}/反抗_{10 * LOCAL}/活気_{5 * LOCAL}/根気_{5 * LOCAL}/好意_{-15 * LOCAL}/愛想_{-5 * LOCAL}}/堕落_{-20 * LOCAL}
+CALL COMABLE_CORRECTION("中に出さないで！", LOCALS)
+LOCAL = RESULT
+RETURN LOCAL
+
+;────────────────────────────────────
+;痛みを我慢する
+;────────────────────────────────────
+@COMABLE30
+;-------------------------------------------------
+;可否判定
+;-------------------------------------------------
+;一括管理
+SIF GLOBAL_COMABLE(30)
+	RETURN RESULT
+;痛みがないとだめ
+SIF SOURCE:MASTER:痛み == 0
+	RETURN 0
+RETURN 1
+;-------------------------------------------------
+;気力判定
+;-------------------------------------------------
+@COMABLEM30
+;LOCAL初期化
+VARSET LOCAL
+;痛みが強すぎる、または弱すぎると困難になる
+LOCAL = ABS(SOURCE:MASTER:痛み - 250) / 250 + 1
+;消費気力量判定
+LOCALS = 積極_-10/反抗_10/根気_{20 * LOCAL}/好意_-10/愛想_-10
+CALL COMABLE_CORRECTION("痛みを我慢する", LOCALS)
+LOCAL = RESULT
+RETURN LOCAL
+
+;────────────────────────────────────
+;悲鳴を上げる
+;────────────────────────────────────
+@COMABLE31
+;-------------------------------------------------
+;可否判定
+;-------------------------------------------------
+;一括管理
+SIF GLOBAL_COMABLE(31)
+	RETURN RESULT
+RETURN 1
+
+;-------------------------------------------------
+;気力判定
+;-------------------------------------------------
+@COMABLEM31
+;LOCAL初期化
+VARSET LOCAL
+;消費気力量判定
+CALL COMABLE_CORRECTION("悲鳴を上げる", "積極_-20/反抗_40/活気_40/根気_-10/好意_-50/愛想_-10")
+LOCAL = RESULT
+RETURN LOCAL
+
+;────────────────────────────────────
+;暴れる
+;────────────────────────────────────
+@COMABLE32
+;-------------------------------------------------
+;可否判定
+;-------------------------------------------------
+;一括管理
+SIF GLOBAL_COMABLE(32)
+	RETURN RESULT
+;木馬。実はこれでも暴れられるじゃないかなと思ったが追加の痛みなど処理が面倒なので
+SIF TEQUIP:三角木馬
+	RETURN 0
+RETURN 1
+;-------------------------------------------------
+;気力判定
+;-------------------------------------------------
+@COMABLEM32
+;LOCAL初期化
+VARSET LOCAL
+;消費気力量判定
+CALL COMABLE_CORRECTION("暴れる", "積極_30/反抗_40/活気_60/根気_20/好意_-50/愛想_-40/堕落_-20")
+LOCAL = RESULT
+RETURN LOCAL
+
+;────────────────────────────────────
+;怯える
+;────────────────────────────────────
+@COMABLE33
+;-------------------------------------------------
+;可否判定
+;-------------------------------------------------
+;一括管理
+SIF GLOBAL_COMABLE(33)
+	RETURN RESULT
+;トリガーする行動や状況
+IF 0
+;今の気分を聞く/自分への気持ちを聞く/性についての話をする
+ELSEIF IS_NOWACTNAME("今の気分を聞く/自分への気持ちを聞く/性についての話をする")
+;厳しく脅す/お仕置きと宣言する/怒鳴る/不気味に笑う/罵倒/ペニスバンド装着
+ELSEIF IS_NOWACTNAME("厳しく脅す/お仕置きと宣言する/怒鳴る/不気味に笑う/罵倒") || (IS_NOWACTNAME("ペニスバンド装着") && !TFLAG:ACT派生)
+;押し倒す
+ELSEIF IS_NOWACTNAME("押し倒す")
+;足コキする
+ELSEIF IS_NOWACTNAME("足コキする")
+;アナルバイブ/アナルビーズ
+ELSEIF IS_NOWACTNAME("アナルバイブ/アナルビーズ")
+;逆レイプ
+ELSEIF IS_NOWACTNAME("逆レイプ")
+;羞恥プレイ/野外プレイ/縄/アイマスク/ボールギャグ
+ELSEIF IS_NOWACTNAME("羞恥プレイ/野外プレイ/縄/アイマスク/ボールギャグ")
+;浣腸セット
+ELSEIF IS_NOWACTNAME("浣腸セット")
+;放置プレイ
+ELSEIF IS_NOWACTNAME("放置プレイ")
+;公衆肉便器プレイ
+ELSEIF IS_NOWACTNAME("公衆肉便器プレイ")
+ELSE
+	RETURN 0
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+;気力判定
+;-------------------------------------------------
+@COMABLEM33
+;LOCAL初期化
+VARSET LOCAL
+;恐怖を感じていると容易になる
+LOCAL = MAX(PALAM:MASTER:恐怖 / 1000, 1)
+;消費気力量判定
+LOCALS = 積極_{-20 / LOCAL}/反抗_{-20 / LOCAL}/活気_{-40 / LOCAL}/根気_{-20 / LOCAL}/好意_{-20 / LOCAL}/愛想_{-20 / LOCAL}
+CALL COMABLE_CORRECTION("怯える", LOCALS)
+LOCAL = RESULT
+RETURN LOCAL
+
+;────────────────────────────────────
+;拒否する
+;────────────────────────────────────
+@COMABLE40
+;-------------------------------------------------
+;可否判定
+;-------------------------------------------------
+;一括管理
+SIF GLOBAL_COMABLE(40)
+	RETURN RESULT
+;トリガーする行動
+IF 0
+;イラマチオ時禁止	APPLY2で拒絶できなくてよいとあるので逆レイプ禁止を追加@/L
+ELSEIF IS_NOWACTNAME("イラマチオ/逆レイプ")
+	RETURN 0
+;ACT分類が奉仕
+ELSEIF TFLAG:ACT分類 == 5
+;衣装の変更を要求する/合意を求める
+ELSEIF IS_NOWACTNAME("衣装の変更を要求する/合意を求める")
+;合意があれば騎乗位を受け入れる
+ELSEIF IS_NOWACTNAME("騎乗位") && CFLAG:合意 == 0 && TALENT:MASTER:処女
+;自慰
+ELSEIF IS_NOWACTNAME("自慰")
+;放尿
+ELSEIF IS_NOWACTNAME("放尿")
+;栄養剤を飲ませる
+ELSEIF IS_NOWACTNAME("栄養剤を飲ませる")
+;合意があれば性交奉仕を受け入れる
+ELSEIF GET_ACTM(TFLAG:ACT) == 10 && !IS_NOWACTNAME("逆レイプ") && CFLAG:合意 == 0 && TALENT:MASTER:童貞
+ELSE
+	RETURN 0
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+;気力判定
+;-------------------------------------------------
+@COMABLEM40
+;LOCAL初期化
+VARSET LOCAL
+;合意なしの騎乗位は消費気力激減
+LOCAL = (IS_NOWACTNAME("騎乗位") && CFLAG:合意 == 0 && TALENT:MASTER:処女) ? 5 # 1
+;消費気力量判定
+LOCALS = 積極_{-10 / LOCAL}/反抗_{30 / LOCAL}/活気_{-10 / LOCAL}/根気_{20 / LOCAL}/好意_{-10 / LOCAL}/愛想_{-10 / LOCAL}/堕落_{-10/LOCAL}
+CALL COMABLE_CORRECTION("拒否する", LOCALS)
+LOCAL = RESULT
+RETURN LOCAL
+
+;────────────────────────────────────
+;消極的やる
+;────────────────────────────────────
+@COMABLE41
+;-------------------------------------------------
+;可否判定
+;-------------------------------------------------
+;一括管理
+SIF GLOBAL_COMABLE(41)
+	RETURN RESULT
+;トリガーする行動
+IF 0
+;ACT分類が奉仕
+ELSEIF TFLAG:ACT分類 == 5
+;衣装の変更を要求する
+ELSEIF IS_NOWACTNAME("衣装の変更を要求する")
+;騎乗位
+ELSEIF IS_NOWACTNAME("騎乗位")
+;自慰
+ELSEIF IS_NOWACTNAME("自慰")
+;放尿
+ELSEIF IS_NOWACTNAME("放尿")
+;性交奉仕系
+ELSEIF GET_ACTM(TFLAG:ACT) == 10 && !IS_NOWACTNAME("逆レイプ")
+ELSE
+	RETURN 0
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+;気力判定
+;-------------------------------------------------
+@COMABLEM41
+;LOCAL初期化
+VARSET LOCAL
+;消費気力量判定
+CALL COMABLE_CORRECTION("消極的やる", "積極_-20/反抗_-5/活気_-10/根気_5/好意_5/愛想_-10/堕落_-10")
+LOCAL = RESULT
+RETURN LOCAL
+
+;────────────────────────────────────
+;積極的やる
+;────────────────────────────────────
+@COMABLE42
+;-------------------------------------------------
+;可否判定
+;-------------------------------------------------
+;一括管理
+SIF GLOBAL_COMABLE(42)
+	RETURN RESULT
+;トリガーする行動
+IF 0
+;ACT分類が奉仕
+ELSEIF TFLAG:ACT分類 == 5
+;衣装の変更を要求する
+ELSEIF IS_NOWACTNAME("衣装の変更を要求する")
+;騎乗位
+ELSEIF IS_NOWACTNAME("騎乗位")
+;性交奉仕系
+ELSEIF GET_ACTM(TFLAG:ACT) == 10 && !IS_NOWACTNAME("逆レイプ")
+;自慰
+ELSEIF IS_NOWACTNAME("自慰")
+;放尿
+ELSEIF IS_NOWACTNAME("放尿")
+ELSE
+	RETURN 0
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+;気力判定
+;-------------------------------------------------
+@COMABLEM42
+;LOCAL初期化
+VARSET LOCAL
+;消費気力量判定
+CALL COMABLE_CORRECTION("積極的やる", "積極_20/反抗_-60/活気_10/根気_10/好意_40/愛想_20/堕落_10")
+LOCAL = RESULT
+RETURN LOCAL
+
+;────────────────────────────────────
+;愛情を込めてやる
+;────────────────────────────────────
+@COMABLE43
+;-------------------------------------------------
+;可否判定
+;-------------------------------------------------
+;一括管理
+SIF GLOBAL_COMABLE(43)
+	RETURN RESULT
+;トリガーする行動
+IF 0
+;ACT分類が奉仕
+ELSEIF TFLAG:ACT分類 == 5
+;騎乗位
+ELSEIF IS_NOWACTNAME("騎乗位")
+;性交奉仕系
+ELSEIF GET_ACTM(TFLAG:ACT) == 10 && !IS_NOWACTNAME("逆レイプ")
+ELSE
+	RETURN 0
+ENDIF
+;好感度と調教レベルなどが必要
+SIF CFLAG:M好意 < 4000 - CFLAG:MASTER:調教レベル * 100 - TALENT:MASTER:恋慕 * 500
+	RETURN 0
+;反発刻印があるとだめ
+SIF MARK:反抗刻印 > 0
+	RETURN 0
+RETURN 1
+;-------------------------------------------------
+;気力判定
+;-------------------------------------------------
+@COMABLEM43
+;LOCAL初期化
+VARSET LOCAL
+;消費気力量判定
+CALL COMABLE_CORRECTION("愛情を込めてやる", "積極_20/反抗_-90/活気_10/根気_20/好意_90/愛想_90/堕落_10")
+LOCAL = RESULT
+RETURN LOCAL
+
+;────────────────────────────────────
+;平然とやる
+;────────────────────────────────────
+@COMABLE44
+;-------------------------------------------------
+;可否判定
+;-------------------------------------------------
+;一括管理
+SIF GLOBAL_COMABLE(44)
+	RETURN RESULT
+;トリガーする行動
+IF 0
+;ACT分類が奉仕
+ELSEIF TFLAG:ACT分類 == 5
+;衣装の変更を要求する
+ELSEIF IS_NOWACTNAME("衣装の変更を要求する")
+;騎乗位
+ELSEIF IS_NOWACTNAME("騎乗位")
+;性交奉仕系
+ELSEIF GET_ACTM(TFLAG:ACT) == 10 && !IS_NOWACTNAME("逆レイプ")
+;自慰
+ELSEIF IS_NOWACTNAME("自慰")
+;放尿
+ELSEIF IS_NOWACTNAME("放尿")
+ELSE
+	RETURN 0
+ENDIF
+RETURN 1
+
+;-------------------------------------------------
+;気力判定
+;-------------------------------------------------
+@COMABLEM44
+;LOCAL初期化
+VARSET LOCAL
+;消費気力量判定
+CALL COMABLE_CORRECTION("平然とやる", "積極_10/反抗_-30/活気_10/根気_20/好意_10/愛想_10/堕落_-10")
+LOCAL = RESULT
+RETURN LOCAL
+
+
+;────────────────────────────────────
+;自慰し始める
+;────────────────────────────────────
+@COMABLE50
+;-------------------------------------------------
+;可否判定
+;-------------------------------------------------
+;一括管理
+SIF GLOBAL_COMABLE(50)
+	RETURN RESULT
+;縄
+SIF TEQUIP:縄
+	RETURN 0
+;すでに自慰してる、性交中
+SIF GETBIT(TEQUIP:自慰中, 0) || TEQUIP:性交中 || TEQUIP:性交奉仕中
+	RETURN 0
+;トリガーする行動や状況
+IF 0
+;今の気分を聞く/自分への気持ちを聞く/性についての話をする
+ELSEIF IS_NOWACTNAME("今の気分を聞く/自分への気持ちを聞く/性についての話をする")
+;キス		違和感があるので規制してみる@/L
+;ELSEIF IS_NOWACTNAME("キス")
+;罵倒
+ELSEIF IS_NOWACTNAME("罵倒")
+;自慰みせつけ/ペニスバンド装着
+ELSEIF IS_NOWACTNAME("自慰みせつけ/ペニスバンド装着")
+;羞恥プレイ/野外プレイ
+ELSEIF IS_NOWACTNAME("羞恥プレイ/野外プレイ")
+;手で愛撫を強制/口で愛撫を強制/足舐め強制/胸愛撫強制
+ELSEIF IS_NOWACTNAME("手で愛撫を強制/口で愛撫を強制/足舐め強制/胸愛撫強制")
+;放置プレイ
+ELSEIF IS_NOWACTNAME("放置プレイ")
+;休ませる
+ELSEIF IS_NOWACTNAME("休ませる")
+ELSE
+	RETURN 0
+ENDIF
+;シックスナイン
+SIF TFLAG:ＳＰ行動 == 202
+	RETURN 0
+RETURN 1
+;-------------------------------------------------
+;気力判定
+;-------------------------------------------------
+@COMABLEM50
+;LOCAL初期化
+VARSET LOCAL
+;消費気力量判定
+CALL COMABLE_CORRECTION("自慰し始める", "積極_30/反抗_30/活気_30/根気_-50/愛想_-30/堕落_120")
+LOCAL = RESULT
+RETURN LOCAL
+
+;────────────────────────────────────
+;道具を外す
+;────────────────────────────────────
+@COMABLE51
+;-------------------------------------------------
+;可否判定
+;-------------------------------------------------
+;一括管理
+SIF GLOBAL_COMABLE(51)
+	RETURN RESULT
+;装備をつけられていないとだめ
+SIF TEQUIP:バイブ == 0 && TEQUIP:アナルバイブ == 0 && TEQUIP:アナルビーズ == 0 && TEQUIP:浣腸器＋プラグ == 0 && TEQUIP:クリキャップ == 0 && TEQUIP:オナホール == 0 && TEQUIP:ニプルキャップ == 0 && TEQUIP:アイマスク == 0 && TEQUIP:ボールギャグ == 0 && TEQUIP:ペニスバンド == 0
+	RETURN 0
+LOCAL:1 = 0
+;縄
+SIF TEQUIP:縄
+	RETURN 0
+;挿入中
+SIF TEQUIP:性交中
+	RETURN 0
+RETURN 1
+;-------------------------------------------------
+;気力判定
+;-------------------------------------------------
+@COMABLEM51
+;LOCAL初期化
+VARSET LOCAL
+;消費気力量判定
+CALL COMABLE_CORRECTION("道具を外す", "積極_10/反抗_30/活気_20/根気_50/好意_-10/堕落_-20")
+LOCAL = RESULT
+RETURN LOCAL
+
+;────────────────────────────────────
+;なすがまま
+;────────────────────────────────────
+@COMABLE52
+;-------------------------------------------------
+;可否判定
+;-------------------------------------------------
+;呼ばれれば無条件で成功
+RETURN 1
+
+;-------------------------------------------------
+;気力判定
+;-------------------------------------------------
+@COMABLEM52
+;消費気力代入(0固定)
+RETURN 0
+
+;────────────────────────────────────
+;イかせて！実行判定
+;────────────────────────────────────
+@COMABLE70
+;-------------------------------------------------
+;可否判定
+;-------------------------------------------------
+;一括管理
+SIF GLOBAL_COMABLE(70)
+	RETURN RESULT
+;上位判定(ここに該当した場合以後の判定を無視する)
+;焦らし中
+SIF TCVAR:MASTER:焦らし度
+	RETURN 0
+;イきそうならいろいろすっとばす
+IF TCVAR:MASTER:イきそう
+	RETURN 1
+ENDIF
+;トリガーする行動や状況
+IF 0
+;ACT分類が愛撫以外時禁止
+ELSEIF TFLAG:ACT分類 != 1
+	RETURN 0
+;手で愛撫/口で愛撫/性器を擦り合う/パイズリする/足コキする
+ELSEIF IS_NOWACTNAME("手で愛撫/口で愛撫/性器を擦り合う/パイズリする/足コキする")
+	;対応PALAMが逼迫していなければ禁止
+	SIF PALAM:MASTER:快Ｃ < 5000
+		RETURN 0
+;胸愛撫
+ELSEIF IS_NOWACTNAME("胸愛撫")
+	;対応PALAMが逼迫していなければ禁止
+	SIF PALAM:MASTER:快Ｂ < 5000
+		RETURN 0
+;アナル愛撫/アナル舐め
+ELSEIF IS_NOWACTNAME("アナル愛撫/アナル舐め")
+	;対応PALAMが逼迫していなければ禁止
+	SIF PALAM:MASTER:快Ａ < 5000
+		RETURN 0
+;キス時禁止
+ELSEIF IS_NOWACTNAME("キス")
+	RETURN 0
+;押し倒す時禁止
+ELSEIF IS_NOWACTNAME("押し倒す")
+	RETURN 0
+ELSE
+	RETURN 0
+ENDIF
+;射精する見込みがない場合
+SIF BASE:MASTER:射精 <= 0
+	RETURN 0
+RETURN 1
+;-------------------------------------------------
+;気力判定
+;-------------------------------------------------
+@COMABLEM70
+;LOCAL初期化
+VARSET LOCAL
+;消費気力量判定
+CALL COMABLE_CORRECTION("イかせて！", "積極_20/反抗_-40/活気_10/根気_-20/好意_20/愛想_-10/堕落_20")
+LOCAL = RESULT
+RETURN LOCAL
+
+;────────────────────────────────────
+;補正処理(一括補正)
+;────────────────────────────────────
+@COMABLE_CORRECTION(ARGS, ARGS:1)
+#LOCALSSIZE 10
+#DIM LCOUNT
+#DIM LTEMP
+#DIM 消費気力
+#DIMS LTURNS
+#DIMS 補正種
+
+;ターン進行時は再計算
+IF LTURNS != @"{FLAG:年数+1}/{FLAG:日数}/{TIME}/{TFLAG:調教時間}"
+	
+	LTURNS = {FLAG:年数+1}/{FLAG:日数}/{TIME}/{TFLAG:調教時間}
+	
+	補正種 = 積極/反抗/活気/根気/好意/愛想/堕落
+	;補正値の意味：対応する種別のCOM実行時に気力を要する
+	;(括弧内は一例。また基本的にCOMは二種以上の補正値に同時に影響される)
+	;	積極：積極的なもの  (積極的やる・腰を振る)
+	;	反抗：反抗的なもの  (嫌がる・不敵に笑う)
+	;	活気：活気の要るもの(強気に応答する・暴れる)
+	;	根気：根気の要るもの(痛みを我慢する・快感を我慢する)
+	;	好意：好意の要るもの(愛情を込めてやる・中に出して！)
+	;	愛想：愛想の要るもの(愛想よく応答する・恥ずかしがる)
+	;	堕落：快感を貪るもの(自慰し始める・快感を受け入れる)
+	;※補正値の対象とは真逆のCOMを選択した場合、補正値の効果も反転する
+	;  例：積極的なCOMに気力を要する状態では、消極的なCOMには気力を要さない
+	
+	CALL SET_CRI_VAR(補正種)
+
+;-------------------------------------------------
+;補正値影響度の決定
+;値が大きいほど影響が大きくなる
+;※これ自体は補正値ではないことに注意
+;-------------------------------------------------
+	CALL CHA_CRI_VAR, "筋書き"
+	;筋書き補正
+	;(現在は調教者が調教対象を無理やり調教していると仮定)
+	CALL ADD_CRI_VAR("積極", MAX(30-DAY*3, 0))
+	CALL ADD_CRI_VAR("反抗", -10)
+	CALL ADD_CRI_VAR("活気", 3)
+	CALL ADD_CRI_VAR("好意", 10)
+	CALL ADD_CRI_VAR("堕落", 5)
+	
+	CALL CHA_CRI_VAR, "抵抗不能"
+	;抵抗不能による補正
+	IF TFLAG:抵抗不能
+		CALL ADD_CRI_VAR("積極", 3)
+		CALL ADD_CRI_VAR("反抗", 3)
+		CALL ADD_CRI_VAR("活気", 3)
+		CALL ADD_CRI_VAR("根気", 3)
+		CALL ADD_CRI_VAR("愛想", 1)
+	ENDIF
+	
+	CALL CHA_CRI_VAR, "調教対象の素質"
+	;調教対象素質による補正
+	IF TALENT:MASTER:処女
+		CALL ADD_CRI_VAR("積極", 1)
+		CALL ADD_CRI_VAR("反抗", 1)
+		CALL ADD_CRI_VAR("活気", 1)
+		CALL ADD_CRI_VAR("根気", -1)
+		CALL ADD_CRI_VAR("好意", 1)
+		CALL ADD_CRI_VAR("愛想", 1)
+	ENDIF
+	IF TALENT:MASTER:童貞
+		CALL ADD_CRI_VAR("反抗", 1)
+		CALL ADD_CRI_VAR("好意", 1)
+		CALL ADD_CRI_VAR("愛想", 1)
+		CALL ADD_CRI_VAR("堕落", -1)
+	ENDIF
+	IF TALENT:MASTER:妊娠
+		CALL ADD_CRI_VAR("積極", 3)
+		CALL ADD_CRI_VAR("反抗", 3)
+		CALL ADD_CRI_VAR("活気", 5)
+		CALL ADD_CRI_VAR("根気", -3)
+		CALL ADD_CRI_VAR("愛想", 2)
+	ENDIF
+	IF TALENT:MASTER:母性
+		CALL ADD_CRI_VAR("反抗", -3)
+		CALL ADD_CRI_VAR("根気", -5)
+	ENDIF
+	IF TALENT:MASTER:臆病
+		CALL ADD_CRI_VAR("積極", 3)
+		CALL ADD_CRI_VAR("反抗", 2)
+		CALL ADD_CRI_VAR("活気", 1)
+		CALL ADD_CRI_VAR("好意", 2)
+		CALL ADD_CRI_VAR("愛想", 1)
+	ENDIF
+	IF TALENT:MASTER:反抗的
+		CALL ADD_CRI_VAR("反抗", -3)
+		CALL ADD_CRI_VAR("好意", 3)
+		CALL ADD_CRI_VAR("愛想", 2)
+	ENDIF
+	IF TALENT:MASTER:気丈
+		CALL ADD_CRI_VAR("反抗", -2)
+		CALL ADD_CRI_VAR("根気", -3)
+		CALL ADD_CRI_VAR("好意", 1)
+		CALL ADD_CRI_VAR("堕落", 2)
+	ENDIF
+	IF TALENT:MASTER:素直
+		CALL ADD_CRI_VAR("積極", -1)
+		CALL ADD_CRI_VAR("反抗", -1)
+		CALL ADD_CRI_VAR("活気", -1)
+		CALL ADD_CRI_VAR("根気", -1)
+		CALL ADD_CRI_VAR("好意", -3)
+		CALL ADD_CRI_VAR("愛想", 1)
+	ENDIF
+	IF TALENT:MASTER:大人しい
+		CALL ADD_CRI_VAR("積極", 3)
+		CALL ADD_CRI_VAR("反抗", 2)
+		CALL ADD_CRI_VAR("活気", 3)
+		CALL ADD_CRI_VAR("好意", 1)
+	ENDIF
+	IF TALENT:MASTER:プライド高い
+		CALL ADD_CRI_VAR("積極", 1)
+		CALL ADD_CRI_VAR("反抗", -2)
+		CALL ADD_CRI_VAR("活気", 1)
+		CALL ADD_CRI_VAR("根気", -1)
+		CALL ADD_CRI_VAR("好意", 1)
+		CALL ADD_CRI_VAR("愛想", 2)
+		CALL ADD_CRI_VAR("堕落", -1)
+	ENDIF
+	IF TALENT:MASTER:生意気
+		CALL ADD_CRI_VAR("反抗", -2)
+		CALL ADD_CRI_VAR("好意", 2)
+		CALL ADD_CRI_VAR("愛想", 3)
+	ENDIF
+	IF TALENT:MASTER:プライド低い
+		CALL ADD_CRI_VAR("積極", -1)
+		CALL ADD_CRI_VAR("活気", -1)
+		CALL ADD_CRI_VAR("好意", -1)
+		CALL ADD_CRI_VAR("愛想", -2)
+		CALL ADD_CRI_VAR("堕落", -1)
+	ENDIF
+	IF TALENT:MASTER:自制的
+		CALL ADD_CRI_VAR("積極", 3)
+		CALL ADD_CRI_VAR("反抗", 1)
+		CALL ADD_CRI_VAR("活気", 1)
+		CALL ADD_CRI_VAR("好意", 1)
+		CALL ADD_CRI_VAR("堕落", 3)
+	ENDIF
+	IF TALENT:MASTER:衝動的
+		CALL ADD_CRI_VAR("積極", -3)
+		CALL ADD_CRI_VAR("反抗", -2)
+		CALL ADD_CRI_VAR("活気", -2)
+		CALL ADD_CRI_VAR("好意", -1)
+		CALL ADD_CRI_VAR("愛想", -1)
+		CALL ADD_CRI_VAR("堕落", -1)
+	ENDIF
+	IF TALENT:MASTER:無関心
+		CALL ADD_CRI_VAR("積極", 3)
+		CALL ADD_CRI_VAR("反抗", 1)
+		CALL ADD_CRI_VAR("活気", 2)
+		CALL ADD_CRI_VAR("根気", 2)
+		CALL ADD_CRI_VAR("好意", 1)
+		CALL ADD_CRI_VAR("愛想", 1)
+	ENDIF
+	IF TALENT:MASTER:好奇心
+		CALL ADD_CRI_VAR("積極", -3)
+		CALL ADD_CRI_VAR("活気", -2)
+		CALL ADD_CRI_VAR("根気", -2)
+	ENDIF
+	IF TALENT:MASTER:感情乏しい
+		CALL ADD_CRI_VAR("積極", 3)
+		CALL ADD_CRI_VAR("反抗", 3)
+		CALL ADD_CRI_VAR("活気", 2)
+		CALL ADD_CRI_VAR("好意", 1)
+		CALL ADD_CRI_VAR("愛想", 2)
+		CALL ADD_CRI_VAR("堕落", 2)
+	ENDIF
+	IF TALENT:MASTER:情緒豊か
+		CALL ADD_CRI_VAR("積極", -1)
+		CALL ADD_CRI_VAR("反抗", -3)
+		CALL ADD_CRI_VAR("活気", -1)
+		CALL ADD_CRI_VAR("好意", -3)
+		CALL ADD_CRI_VAR("愛想", -1)
+	ENDIF
+	IF TALENT:MASTER:楽観的
+		CALL ADD_CRI_VAR("反抗", -2)
+		CALL ADD_CRI_VAR("活気", -1)
+		CALL ADD_CRI_VAR("根気", -1)
+		CALL ADD_CRI_VAR("好意", -2)
+		CALL ADD_CRI_VAR("愛想", -1)
+	ENDIF
+	IF TALENT:MASTER:悲観的
+		CALL ADD_CRI_VAR("積極", 3)
+		CALL ADD_CRI_VAR("反抗", 1)
+		CALL ADD_CRI_VAR("活気", 2)
+		CALL ADD_CRI_VAR("根気", 1)
+		CALL ADD_CRI_VAR("好意", 2)
+		CALL ADD_CRI_VAR("愛想", 1)
+	ENDIF
+	;一線越えない素質は恋慕・隷属時無効
+	;合意がなければ倍
+	IF TALENT:MASTER:一線越えない && !TALENT:MASTER:恋慕 && !TALENT:MASTER:隷属
+		CALL ADD_CRI_VAR("積極", (CFLAG:合意 + 1) * 3)
+		CALL ADD_CRI_VAR("反抗", (CFLAG:合意 + 1) * 3)
+		CALL ADD_CRI_VAR("根気", (CFLAG:合意 + 1) * -3)
+		CALL ADD_CRI_VAR("好意", (CFLAG:合意 + 1) * 3)
+		CALL ADD_CRI_VAR("堕落", (CFLAG:合意 + 1) * 3)
+	ENDIF
+	IF TALENT:MASTER:目立ちたがり
+		CALL ADD_CRI_VAR("積極", -3)
+		CALL ADD_CRI_VAR("反抗", -2)
+		CALL ADD_CRI_VAR("活気", -3)
+		CALL ADD_CRI_VAR("愛想", -2)
+		CALL ADD_CRI_VAR("堕落", -2)
+	ENDIF
+	;貞操観念素質は恋慕・隷属時無効
+	IF TALENT:MASTER:貞操観念 && !TALENT:MASTER:恋慕 && !TALENT:MASTER:隷属
+		CALL ADD_CRI_VAR("積極", 3)
+		CALL ADD_CRI_VAR("反抗", 3)
+		CALL ADD_CRI_VAR("根気", -3)
+		CALL ADD_CRI_VAR("好意", 3)
+		CALL ADD_CRI_VAR("堕落", 3)
+	ENDIF
+	;貞操無頓着素質は恋慕・隷属時無効
+	IF TALENT:MASTER:貞操無頓着 && !TALENT:MASTER:恋慕 && !TALENT:MASTER:隷属
+		CALL ADD_CRI_VAR("反抗", 2)
+		CALL ADD_CRI_VAR("活気", 1)
+		CALL ADD_CRI_VAR("根気", -1)
+		CALL ADD_CRI_VAR("好意", -1)
+		CALL ADD_CRI_VAR("愛想", 1)
+		CALL ADD_CRI_VAR("堕落", -1)
+	ENDIF
+	IF TALENT:MASTER:抑圧
+		CALL ADD_CRI_VAR("積極", 2)
+		CALL ADD_CRI_VAR("反抗", 1)
+		CALL ADD_CRI_VAR("活気", 2)
+		CALL ADD_CRI_VAR("根気", -2)
+		CALL ADD_CRI_VAR("好意", 2)
+		CALL ADD_CRI_VAR("堕落", 2)
+	ENDIF
+	IF TALENT:MASTER:解放
+		CALL ADD_CRI_VAR("積極", -3)
+		CALL ADD_CRI_VAR("反抗", -2)
+		CALL ADD_CRI_VAR("活気", -3)
+		CALL ADD_CRI_VAR("根気", 1)
+		CALL ADD_CRI_VAR("好意", -3)
+		CALL ADD_CRI_VAR("堕落", -2)
+	ENDIF
+	;恥じらい/恥薄いは苦痛過剰状態では考慮されない
+	IF TALENT:MASTER:恥じらい && (PALAM:MASTER:苦痛 < PALAM:MASTER:恥情)
+		CALL ADD_CRI_VAR("積極", 2)
+		CALL ADD_CRI_VAR("活気", 1)
+		CALL ADD_CRI_VAR("根気", -1)
+		CALL ADD_CRI_VAR("好意", 1)
+		CALL ADD_CRI_VAR("愛想", 2)
+	ENDIF
+	IF TALENT:MASTER:恥薄い && (PALAM:MASTER:苦痛 < PALAM:MASTER:恥情)
+		CALL ADD_CRI_VAR("積極", -2)
+		CALL ADD_CRI_VAR("反抗", -2)
+		CALL ADD_CRI_VAR("好意", -3)
+		CALL ADD_CRI_VAR("愛想", 1)
+		CALL ADD_CRI_VAR("堕落", -1)
+	ENDIF
+	IF TALENT:MASTER:好色
+		CALL ADD_CRI_VAR("積極", -2)
+		CALL ADD_CRI_VAR("反抗", 2)
+		CALL ADD_CRI_VAR("活気", -2)
+		CALL ADD_CRI_VAR("根気", 2)
+		CALL ADD_CRI_VAR("好意", -2)
+		CALL ADD_CRI_VAR("愛想", -2)
+		CALL ADD_CRI_VAR("堕落", -3)
+	ENDIF
+	IF TALENT:MASTER:清楚
+		CALL ADD_CRI_VAR("積極", 2)
+		CALL ADD_CRI_VAR("反抗", 2)
+		CALL ADD_CRI_VAR("根気", -2)
+		CALL ADD_CRI_VAR("好意", 2)
+		CALL ADD_CRI_VAR("愛想", -2)
+		CALL ADD_CRI_VAR("堕落", 3)
+	ENDIF
+	IF TALENT:MASTER:痛みに弱い
+		CALL ADD_CRI_VAR("積極", -1)
+		CALL ADD_CRI_VAR("反抗", 2)
+		CALL ADD_CRI_VAR("根気", 3)
+		CALL ADD_CRI_VAR("好意", -1)
+		CALL ADD_CRI_VAR("愛想", -1)
+		CALL ADD_CRI_VAR("堕落", -1)
+	ENDIF
+	IF TALENT:MASTER:痛みに強い
+		CALL ADD_CRI_VAR("反抗", -2)
+		CALL ADD_CRI_VAR("根気", -3)
+	ENDIF
+	IF TALENT:MASTER:濡れやすい
+		;!!!!!!!
+	ENDIF
+	IF TALENT:MASTER:濡れにくい
+		;!!!!!!!
+	ENDIF
+	IF TALENT:MASTER:自慰しやすい
+		;調教者行動補正にて判定
+	ENDIF
+	IF TALENT:MASTER:汚臭鈍感
+		;調教対象SOURCE補正にて判定
+	ENDIF
+	IF TALENT:MASTER:汚臭敏感
+		;調教対象SOURCE補正にて判定
+	ENDIF
+	IF TALENT:MASTER:献身的
+		CALL ADD_CRI_VAR("積極", -3)
+		CALL ADD_CRI_VAR("反抗", 2)
+		CALL ADD_CRI_VAR("活気", -1)
+		CALL ADD_CRI_VAR("根気", -3)
+		CALL ADD_CRI_VAR("好意", -3)
+		CALL ADD_CRI_VAR("愛想", -3)
+		CALL ADD_CRI_VAR("堕落", 2)
+	ENDIF
+	IF TALENT:MASTER:受け身
+		CALL ADD_CRI_VAR("積極", 3)
+		CALL ADD_CRI_VAR("反抗", 1)
+		CALL ADD_CRI_VAR("活気", 3)
+		CALL ADD_CRI_VAR("根気", 2)
+		CALL ADD_CRI_VAR("好意", 1)
+		CALL ADD_CRI_VAR("愛想", 1)
+		CALL ADD_CRI_VAR("堕落", -2)
+	ENDIF
+	IF TALENT:MASTER:快感に素直
+		CALL ADD_CRI_VAR("積極", -1)
+		CALL ADD_CRI_VAR("反抗", 1)
+		CALL ADD_CRI_VAR("活気", -1)
+		CALL ADD_CRI_VAR("根気", 1)
+		CALL ADD_CRI_VAR("好意", -2)
+		CALL ADD_CRI_VAR("堕落", -3)
+	ENDIF
+	IF TALENT:MASTER:快感の否定
+		CALL ADD_CRI_VAR("積極", 2)
+		CALL ADD_CRI_VAR("反抗", -2)
+		CALL ADD_CRI_VAR("根気", -2)
+		CALL ADD_CRI_VAR("好意", 2)
+		CALL ADD_CRI_VAR("堕落", 5)
+	ENDIF
+	IF TALENT:MASTER:淫核／淫茎 && COMABLE_MC()
+		CALL ADD_CRI_VAR("積極", -2)
+		CALL ADD_CRI_VAR("反抗", 3)
+		CALL ADD_CRI_VAR("活気", -2)
+		CALL ADD_CRI_VAR("根気", 2)
+		CALL ADD_CRI_VAR("好意", -2)
+		CALL ADD_CRI_VAR("愛想", -2)
+		CALL ADD_CRI_VAR("堕落", -2)
+	ENDIF
+	IF TALENT:MASTER:淫壷 && COMABLE_MV()
+		CALL ADD_CRI_VAR("積極", -2)
+		CALL ADD_CRI_VAR("反抗", 2)
+		CALL ADD_CRI_VAR("活気", -2)
+		CALL ADD_CRI_VAR("根気", 2)
+		CALL ADD_CRI_VAR("好意", -3)
+		CALL ADD_CRI_VAR("愛想", -2)
+		CALL ADD_CRI_VAR("堕落", -2)
+	ENDIF
+	IF TALENT:MASTER:淫尻 && COMABLE_MA()
+		CALL ADD_CRI_VAR("積極", -2)
+		CALL ADD_CRI_VAR("反抗", 2)
+		CALL ADD_CRI_VAR("活気", -2)
+		CALL ADD_CRI_VAR("根気", 3)
+		CALL ADD_CRI_VAR("好意", -2)
+		CALL ADD_CRI_VAR("愛想", -2)
+		CALL ADD_CRI_VAR("堕落", -2)
+	ENDIF
+	IF TALENT:MASTER:淫乱
+		CALL ADD_CRI_VAR("積極", -2)
+		CALL ADD_CRI_VAR("反抗", -3)
+		CALL ADD_CRI_VAR("根気", 1)
+		CALL ADD_CRI_VAR("好意", -2)
+		CALL ADD_CRI_VAR("愛想", -3)
+		CALL ADD_CRI_VAR("堕落", -2)
+	ENDIF
+	IF TALENT:MASTER:ドＭ
+		CALL ADD_CRI_VAR("反抗", -3)
+		CALL ADD_CRI_VAR("根気", -3)
+		CALL ADD_CRI_VAR("好意", 3)
+		CALL ADD_CRI_VAR("愛想", 3)
+		CALL ADD_CRI_VAR("堕落", -2)
+	ENDIF
+	IF TALENT:MASTER:恋慕
+		CALL ADD_CRI_VAR("積極", -2)
+		CALL ADD_CRI_VAR("反抗", 2)
+		CALL ADD_CRI_VAR("活気", -1)
+		CALL ADD_CRI_VAR("根気", -1)
+		CALL ADD_CRI_VAR("好意", -5)
+		CALL ADD_CRI_VAR("愛想", -3)
+		CALL ADD_CRI_VAR("堕落", -2)
+	ENDIF
+	IF TALENT:MASTER:隷属
+		CALL ADD_CRI_VAR("反抗", 5)
+		CALL ADD_CRI_VAR("根気", -1)
+		CALL ADD_CRI_VAR("好意", -3)
+		CALL ADD_CRI_VAR("愛想", -5)
+		CALL ADD_CRI_VAR("堕落", -3)
+	ENDIF
+	IF TALENT:MASTER:幼稚
+		CALL ADD_CRI_VAR("積極", -2)
+		CALL ADD_CRI_VAR("反抗", -2)
+		CALL ADD_CRI_VAR("活気", -2)
+		CALL ADD_CRI_VAR("根気", 3)
+		CALL ADD_CRI_VAR("好意", -2)
+		CALL ADD_CRI_VAR("愛想", 3)
+		CALL ADD_CRI_VAR("堕落", -2)
+	ENDIF
+	IF TALENT:MASTER:狂気
+		CALL ADD_CRI_VAR("積極", -5)
+		CALL ADD_CRI_VAR("活気", -5)
+	ENDIF
+	IF TALENT:MASTER:Ｃ敏感 && COMABLE_MC()
+		CALL ADD_CRI_VAR("積極", -1)
+		CALL ADD_CRI_VAR("活気", -1)
+		CALL ADD_CRI_VAR("根気", 2)
+		CALL ADD_CRI_VAR("好意", -2)
+		CALL ADD_CRI_VAR("愛想", 1)
+		CALL ADD_CRI_VAR("堕落", -2)
+	ENDIF
+	IF TALENT:MASTER:Ｃ鈍感 && COMABLE_MC()
+		CALL ADD_CRI_VAR("積極", 1)
+		CALL ADD_CRI_VAR("根気", -2)
+		CALL ADD_CRI_VAR("好意", 2)
+		CALL ADD_CRI_VAR("愛想", -1)
+		CALL ADD_CRI_VAR("堕落", 2)
+	ENDIF
+	IF TALENT:MASTER:Ｖ敏感 && COMABLE_MV()
+		CALL ADD_CRI_VAR("積極", -1)
+		CALL ADD_CRI_VAR("反抗", -1)
+		CALL ADD_CRI_VAR("活気", -1)
+		CALL ADD_CRI_VAR("根気", 2)
+		CALL ADD_CRI_VAR("好意", -2)
+		CALL ADD_CRI_VAR("愛想", 1)
+		CALL ADD_CRI_VAR("堕落", -2)
+	ENDIF
+	IF TALENT:MASTER:Ｖ鈍感 && COMABLE_MV()
+		CALL ADD_CRI_VAR("積極", 1)
+		CALL ADD_CRI_VAR("反抗", -1)
+		CALL ADD_CRI_VAR("根気", -2)
+		CALL ADD_CRI_VAR("好意", 2)
+		CALL ADD_CRI_VAR("愛想", -1)
+		CALL ADD_CRI_VAR("堕落", 2)
+	ENDIF
+	IF TALENT:MASTER:Ａ敏感 && COMABLE_MA()
+		CALL ADD_CRI_VAR("積極", -1)
+		CALL ADD_CRI_VAR("反抗", -1)
+		CALL ADD_CRI_VAR("活気", -1)
+		CALL ADD_CRI_VAR("根気", 3)
+		CALL ADD_CRI_VAR("好意", -1)
+		CALL ADD_CRI_VAR("愛想", 1)
+		CALL ADD_CRI_VAR("堕落", -2)
+	ENDIF
+	IF TALENT:MASTER:Ａ鈍感 && COMABLE_MA()
+		CALL ADD_CRI_VAR("積極", 1)
+		CALL ADD_CRI_VAR("反抗", -1)
+		CALL ADD_CRI_VAR("根気", -3)
+		CALL ADD_CRI_VAR("好意", 1)
+		CALL ADD_CRI_VAR("愛想", -1)
+		CALL ADD_CRI_VAR("堕落", 2)
+	ENDIF
+	IF TALENT:MASTER:小柄
+		CALL ADD_CRI_VAR("反抗", 2)
+		CALL ADD_CRI_VAR("根気", 2)
+		CALL ADD_CRI_VAR("愛想", -2)
+		CALL ADD_CRI_VAR("堕落", -2)
+	ENDIF
+	IF TALENT:MASTER:長身
+		CALL ADD_CRI_VAR("反抗", -2)
+		CALL ADD_CRI_VAR("根気", -2)
+		CALL ADD_CRI_VAR("愛想", 2)
+		CALL ADD_CRI_VAR("堕落", 2)
+	ENDIF
+	IF TALENT:MASTER:不死
+		CALL ADD_CRI_VAR("積極", -3)
+		CALL ADD_CRI_VAR("反抗", -5)
+		CALL ADD_CRI_VAR("活気", 3)
+		CALL ADD_CRI_VAR("根気", -5)
+	ENDIF
+
+	CALL CHA_CRI_VAR, "調教者の素質"
+	;調教者素質による補正
+	IF TALENT:威圧感
+		CALL ADD_CRI_VAR("積極", 3)
+		CALL ADD_CRI_VAR("反抗", 2)
+		CALL ADD_CRI_VAR("活気", 1)
+		CALL ADD_CRI_VAR("根気", 1)
+		CALL ADD_CRI_VAR("好意", 2)
+		CALL ADD_CRI_VAR("愛想", 2)
+	ENDIF
+	IF TALENT:魅惑
+		CALL ADD_CRI_VAR("積極", -2)
+		CALL ADD_CRI_VAR("反抗", 3)
+		CALL ADD_CRI_VAR("活気", -2)
+		CALL ADD_CRI_VAR("根気", -2)
+		CALL ADD_CRI_VAR("好意", -3)
+		CALL ADD_CRI_VAR("愛想", -2)
+		CALL ADD_CRI_VAR("堕落", -2)
+	ENDIF
+	IF TALENT:親しみやすい
+		CALL ADD_CRI_VAR("積極", -1)
+		CALL ADD_CRI_VAR("反抗", 2)
+		CALL ADD_CRI_VAR("好意", -3)
+		CALL ADD_CRI_VAR("堕落", -1)
+	ENDIF
+	IF TALENT:近寄り難い
+		CALL ADD_CRI_VAR("積極", 3)
+		CALL ADD_CRI_VAR("反抗", 1)
+		CALL ADD_CRI_VAR("活気", 1)
+		CALL ADD_CRI_VAR("好意", 2)
+		CALL ADD_CRI_VAR("愛想", -1)
+	ENDIF
+	
+	CALL CHA_CRI_VAR, "調教対象の能力"
+	;調教対象能力による補正
+	CALL ADD_CRI_VAR("積極", -ABL:MASTER:従順 / 2)
+	CALL ADD_CRI_VAR("反抗", ABL:MASTER:従順 / 2)
+	CALL ADD_CRI_VAR("好意", -ABL:MASTER:従順 / 2)
+	CALL ADD_CRI_VAR("愛想", -ABL:MASTER:従順 / 2)
+	CALL ADD_CRI_VAR("堕落", -ABL:MASTER:従順 / 2)
+	
+	CALL ADD_CRI_VAR("積極", -ABL:MASTER:欲望 / 2)
+	CALL ADD_CRI_VAR("反抗", ABL:MASTER:欲望 / 2)
+	CALL ADD_CRI_VAR("活気", -ABL:MASTER:欲望 / 2)
+	CALL ADD_CRI_VAR("根気", ABL:MASTER:欲望 / 2)
+	CALL ADD_CRI_VAR("好意", -ABL:MASTER:欲望 / 2)
+	CALL ADD_CRI_VAR("愛想", -ABL:MASTER:欲望 / 2)
+	CALL ADD_CRI_VAR("堕落", -ABL:MASTER:欲望 / 2)
+	
+	CALL ADD_CRI_VAR("積極", -ABL:MASTER:奉仕精神 / 2)
+	CALL ADD_CRI_VAR("反抗", ABL:MASTER:奉仕精神 / 2)
+	CALL ADD_CRI_VAR("根気", -ABL:MASTER:奉仕精神 / 2)
+	CALL ADD_CRI_VAR("愛想", -ABL:MASTER:奉仕精神 / 2)
+	
+	CALL ADD_CRI_VAR("積極", -ABL:MASTER:マゾっ気 / 2)
+	CALL ADD_CRI_VAR("反抗", -ABL:MASTER:マゾっ気 / 2)
+	CALL ADD_CRI_VAR("根気", -ABL:MASTER:マゾっ気 / 2)
+	CALL ADD_CRI_VAR("好意", ABL:MASTER:マゾっ気 / 2)
+	CALL ADD_CRI_VAR("愛想", ABL:MASTER:マゾっ気 / 2)
+	CALL ADD_CRI_VAR("堕落", ABL:MASTER:マゾっ気 / 2)
+	
+	CALL ADD_CRI_VAR("反抗", -ABL:MASTER:苦痛中毒 / 2)
+	CALL ADD_CRI_VAR("根気", -ABL:MASTER:苦痛中毒 / 2)
+	
+	CALL ADD_CRI_VAR("積極", ABL:MASTER:拘束中毒 / 2)
+	CALL ADD_CRI_VAR("反抗", -ABL:MASTER:拘束中毒 / 2)
+	CALL ADD_CRI_VAR("活気", ABL:MASTER:拘束中毒 / 2)
+	CALL ADD_CRI_VAR("根気", -ABL:MASTER:拘束中毒 / 2)
+	
+	CALL CHA_CRI_VAR, "調教対象の刻印"
+	;調教対象刻印による補正
+	CALL ADD_CRI_VAR("反抗", MARK:MASTER:苦痛刻印 / 3)
+	CALL ADD_CRI_VAR("活気", MARK:MASTER:苦痛刻印 / 3)
+	CALL ADD_CRI_VAR("好意", MARK:MASTER:苦痛刻印 / 3)
+	
+	CALL ADD_CRI_VAR("積極", MARK:屈服刻印 / 3)
+	CALL ADD_CRI_VAR("反抗", MARK:屈服刻印 / 3)
+	CALL ADD_CRI_VAR("活気", MARK:屈服刻印 / 3)
+	CALL ADD_CRI_VAR("根気", MARK:屈服刻印 / 3)
+	CALL ADD_CRI_VAR("好意", -MARK:屈服刻印 / 3)
+	CALL ADD_CRI_VAR("愛想", -MARK:屈服刻印 / 3)
+	CALL ADD_CRI_VAR("堕落", -MARK:屈服刻印 / 3)
+	
+	CALL ADD_CRI_VAR("堕落", -MARK:快楽刻印 / 3)
+	
+	CALL ADD_CRI_VAR("積極", MARK:反抗刻印 / 3)
+	CALL ADD_CRI_VAR("反抗", MARK:反抗刻印 / 3)
+	CALL ADD_CRI_VAR("好意", MARK:反抗刻印 / 3)
+	CALL ADD_CRI_VAR("愛想", MARK:反抗刻印 / 3)
+	CALL ADD_CRI_VAR("堕落", MARK:反抗刻印 / 3)
+	
+	LOCAL = MARK:MASTER:トラウマ * (CFLAG:MASTER:トラウマ == TFLAG:ACT ? 2 # 1)
+	CALL ADD_CRI_VAR("積極", LOCAL / 3)
+	CALL ADD_CRI_VAR("反抗", LOCAL / 3)
+	CALL ADD_CRI_VAR("活気", LOCAL / 3)
+	CALL ADD_CRI_VAR("根気", LOCAL / 3)
+	CALL ADD_CRI_VAR("好意", LOCAL / 3)
+	CALL ADD_CRI_VAR("愛想", LOCAL / 3)
+	CALL ADD_CRI_VAR("堕落", LOCAL / 3)
+	
+	CALL CHA_CRI_VAR, "調教対象のBASE"
+	;調教対象BASEによる補正
+	CALL ADD_CRI_VAR("活気", -BASE:MASTER:体力 / 200 + 3)
+	CALL ADD_CRI_VAR("根気", -BASE:MASTER:体力 / 1000)
+	
+	CALL ADD_CRI_VAR("積極", -BASE:MASTER:気力 / 1000)
+	CALL ADD_CRI_VAR("活気", -BASE:MASTER:気力 / 200 + 3)
+	CALL ADD_CRI_VAR("根気", -BASE:MASTER:気力 / 1000)
+	CALL ADD_CRI_VAR("愛想", -BASE:MASTER:気力 / 1000)
+	
+	CALL ADD_CRI_VAR("活気", BASE:MASTER:理性 / 1000)
+	CALL ADD_CRI_VAR("根気", -BASE:MASTER:理性 / 1000)
+	CALL ADD_CRI_VAR("愛想", -BASE:MASTER:理性 / 1000)
+	CALL ADD_CRI_VAR("堕落", -BASE:MASTER:理性 / 1000)
+	
+	CALL CHA_CRI_VAR, "調教対象の快感"
+	;調教対象快感による補正
+	LOCAL = ABLE_KAIKAN()
+	CALL ADD_CRI_VAR("積極", -LOCAL / 200)
+	CALL ADD_CRI_VAR("反抗", LOCAL / 200)
+	CALL ADD_CRI_VAR("活気", -LOCAL / 200)
+	CALL ADD_CRI_VAR("根気", LOCAL / 200)
+	CALL ADD_CRI_VAR("好意", -LOCAL / 500)
+	CALL ADD_CRI_VAR("愛想", -LOCAL / 200)
+	CALL ADD_CRI_VAR("堕落", -LOCAL / 200)
+	
+	CALL CHA_CRI_VAR, "調教対象の被虐"
+	;調教対象被虐による補正
+	LOCAL = ABLE_GYAKU()
+	CALL ADD_CRI_VAR("積極", LOCAL / 200)
+	CALL ADD_CRI_VAR("反抗", LOCAL / 200)
+	CALL ADD_CRI_VAR("活気", LOCAL / 200)
+	CALL ADD_CRI_VAR("根気", LOCAL / 200)
+	CALL ADD_CRI_VAR("好意", LOCAL / 200)
+	CALL ADD_CRI_VAR("愛想", -LOCAL / 200)
+	CALL ADD_CRI_VAR("堕落", -LOCAL / 300)
+	
+	CALL CHA_CRI_VAR, "調教対象のSOURCE"
+	;調教対象SOURCEによる補正
+	IF !TALENT:MASTER:汚れ無視
+		LOCAL = (SOURCE:MASTER:不潔 / 200) + ((TALENT:MASTER:汚臭敏感 - TALENT:MASTER:汚臭鈍感) * SOURCE:MASTER:不潔 / 500)
+		CALL ADD_CRI_VAR("積極", LOCAL)
+		CALL ADD_CRI_VAR("反抗", -LOCAL)
+		CALL ADD_CRI_VAR("活気", LOCAL)
+		CALL ADD_CRI_VAR("根気", LOCAL)
+		CALL ADD_CRI_VAR("好意", LOCAL)
+		CALL ADD_CRI_VAR("愛想", LOCAL)
+		CALL ADD_CRI_VAR("堕落", LOCAL)
+	ENDIF
+	
+	CALL ADD_CRI_VAR("積極", SOURCE:MASTER:中毒充足 / 1000)
+	CALL ADD_CRI_VAR("反抗", SOURCE:MASTER:中毒充足 / 1000)
+	CALL ADD_CRI_VAR("活気", SOURCE:MASTER:中毒充足 / 1000)
+	CALL ADD_CRI_VAR("堕落", -SOURCE:MASTER:中毒充足 / 1000)
+	
+	CALL CHA_CRI_VAR, "調教対象の好感度"
+	;調教対象好感度による補正
+	CALL ADD_CRI_VAR("積極", -CFLAG:M好意 / 1000)
+	CALL ADD_CRI_VAR("反抗", CFLAG:M好意 / 400)
+	CALL ADD_CRI_VAR("活気", -CFLAG:M好意 / 1000)
+	CALL ADD_CRI_VAR("根気", -CFLAG:M好意 / 1000)
+	CALL ADD_CRI_VAR("好意", -CFLAG:M好意 / 200)
+	CALL ADD_CRI_VAR("堕落", -CFLAG:M好意 / 600)
+	
+	CALL CHA_CRI_VAR, "調教対象のPALAM"
+	;調教対象状態による補正
+	CALL ADD_CRI_VAR("積極", -PALAM:MASTER:欲情 / 4000)
+	CALL ADD_CRI_VAR("反抗", PALAM:MASTER:欲情 / 4000)
+	CALL ADD_CRI_VAR("活気", -PALAM:MASTER:欲情 / 4000)
+	CALL ADD_CRI_VAR("根気", PALAM:MASTER:欲情 / 4000)
+	CALL ADD_CRI_VAR("好意", -PALAM:MASTER:欲情 / 4000)
+	CALL ADD_CRI_VAR("愛想", -PALAM:MASTER:欲情 / 4000)
+	CALL ADD_CRI_VAR("堕落", -PALAM:MASTER:欲情 / 4000)
+	
+	CALL ADD_CRI_VAR("積極", PALAM:MASTER:屈服 / 4000)
+	CALL ADD_CRI_VAR("反抗", PALAM:MASTER:屈服 / 4000)
+	CALL ADD_CRI_VAR("堕落", -PALAM:MASTER:屈服 / 4000)
+	
+	CALL ADD_CRI_VAR("積極", PALAM:MASTER:恐怖 / 4000)
+	CALL ADD_CRI_VAR("反抗", PALAM:MASTER:恐怖 / 4000)
+	CALL ADD_CRI_VAR("活気", PALAM:MASTER:恐怖 / 4000)
+	CALL ADD_CRI_VAR("好意", PALAM:MASTER:恐怖 / 4000)
+	CALL ADD_CRI_VAR("愛想", PALAM:MASTER:恐怖 / 4000)
+	CALL ADD_CRI_VAR("堕落", PALAM:MASTER:恐怖 / 4000)
+	
+	CALL ADD_CRI_VAR("積極", -PALAM:MASTER:恭順 / 4000)
+	CALL ADD_CRI_VAR("反抗", PALAM:MASTER:恭順 / 4000)
+	CALL ADD_CRI_VAR("好意", -PALAM:MASTER:恭順 / 4000)
+	
+	CALL ADD_CRI_VAR("積極", -PALAM:MASTER:反抗 / 4000)
+	CALL ADD_CRI_VAR("反抗", -PALAM:MASTER:反抗 / 4000)
+	CALL ADD_CRI_VAR("活気", -PALAM:MASTER:反抗 / 4000)
+	CALL ADD_CRI_VAR("根気", -PALAM:MASTER:反抗 / 4000)
+	CALL ADD_CRI_VAR("好意", PALAM:MASTER:反抗 / 4000)
+	CALL ADD_CRI_VAR("愛想", PALAM:MASTER:反抗 / 4000)
+	
+	CALL ADD_CRI_VAR("反抗", PALAM:MASTER:苦痛 / 4000)
+	CALL ADD_CRI_VAR("活気", PALAM:MASTER:苦痛 / 4000)
+	CALL ADD_CRI_VAR("根気", PALAM:MASTER:苦痛 / 4000)
+	CALL ADD_CRI_VAR("愛想", PALAM:MASTER:苦痛 / 4000)
+	
+	;恥情は苦痛過剰状態では考慮されない
+	IF PALAM:MASTER:苦痛 < PALAM:MASTER:恥情
+		CALL ADD_CRI_VAR("積極", PALAM:MASTER:恥情 / 4000)
+		CALL ADD_CRI_VAR("反抗", -PALAM:MASTER:恥情 / 4000)
+		CALL ADD_CRI_VAR("活気", PALAM:MASTER:恥情 / 4000)
+		CALL ADD_CRI_VAR("愛想", PALAM:MASTER:恥情 / 4000)
+		CALL ADD_CRI_VAR("堕落", -PALAM:MASTER:恥情 / 4000)
+	ENDIF
+	
+	CALL ADD_CRI_VAR("積極", PALAM:MASTER:不快 / 4000)
+	CALL ADD_CRI_VAR("反抗", PALAM:MASTER:不快 / 4000)
+	CALL ADD_CRI_VAR("活気", PALAM:MASTER:不快 / 4000)
+	CALL ADD_CRI_VAR("根気", -PALAM:MASTER:不快 / 4000)
+	CALL ADD_CRI_VAR("好意", PALAM:MASTER:不快 / 4000)
+	CALL ADD_CRI_VAR("愛想", PALAM:MASTER:不快 / 4000)
+	CALL ADD_CRI_VAR("堕落", PALAM:MASTER:不快 / 4000)
+	
+	CALL ADD_CRI_VAR("積極", PALAM:MASTER:抑鬱 / 4000)
+	CALL ADD_CRI_VAR("反抗", PALAM:MASTER:抑鬱 / 4000)
+	CALL ADD_CRI_VAR("活気", PALAM:MASTER:抑鬱 / 4000)
+	CALL ADD_CRI_VAR("愛想", PALAM:MASTER:抑鬱 / 4000)
+	CALL ADD_CRI_VAR("堕落", PALAM:MASTER:抑鬱 / 4000)
+	
+	CALL CHA_CRI_VAR, @"調教対象の状態(%CONDITION(TCVAR:MASTER:状態変化)%)"
+	;調教対象状態変化による補正
+	IF 0
+	ELSEIF M_COND("疲弊")
+		CALL ADD_CRI_VAR("積極", 2)
+		CALL ADD_CRI_VAR("反抗", 2)
+		CALL ADD_CRI_VAR("活気", 2)
+		CALL ADD_CRI_VAR("根気", 2)
+		CALL ADD_CRI_VAR("愛想", 2)
+	ELSEIF M_COND("衰弱")
+		CALL ADD_CRI_VAR("積極", 4)
+		CALL ADD_CRI_VAR("反抗", 4)
+		CALL ADD_CRI_VAR("活気", 4)
+		CALL ADD_CRI_VAR("根気", 4)
+		CALL ADD_CRI_VAR("愛想", 4)
+	ELSEIF M_COND("無気力")
+		CALL ADD_CRI_VAR("積極", 3)
+		CALL ADD_CRI_VAR("反抗", 3)
+		CALL ADD_CRI_VAR("活気", 3)
+		CALL ADD_CRI_VAR("根気", 3)
+		CALL ADD_CRI_VAR("好意", 3)
+		CALL ADD_CRI_VAR("愛想", 3)
+	ELSEIF M_COND("朦朧")
+		CALL ADD_CRI_VAR("積極", 3)
+		CALL ADD_CRI_VAR("反抗", 3)
+		CALL ADD_CRI_VAR("根気", 3)
+		CALL ADD_CRI_VAR("愛想", 3)
+	ELSEIF M_COND("情欲")
+		CALL ADD_CRI_VAR("積極", -3)
+		CALL ADD_CRI_VAR("反抗", 3)
+		CALL ADD_CRI_VAR("活気", -3)
+		CALL ADD_CRI_VAR("根気", 3)
+		CALL ADD_CRI_VAR("好意", -3)
+		CALL ADD_CRI_VAR("愛想", -3)
+		CALL ADD_CRI_VAR("堕落", -3)
+	ELSEIF M_COND("怒り")
+		CALL ADD_CRI_VAR("積極", -3)
+		CALL ADD_CRI_VAR("反抗", -3)
+		CALL ADD_CRI_VAR("活気", -3)
+		CALL ADD_CRI_VAR("根気", 3)
+		CALL ADD_CRI_VAR("好意", 3)
+		CALL ADD_CRI_VAR("愛想", 3)
+		CALL ADD_CRI_VAR("堕落", 3)
+	ELSEIF M_COND("退屈")
+		CALL ADD_CRI_VAR("積極", 3)
+		CALL ADD_CRI_VAR("活気", 3)
+		CALL ADD_CRI_VAR("根気", 3)
+		CALL ADD_CRI_VAR("愛想", 3)
+	ELSEIF M_COND("鬱屈")
+		CALL ADD_CRI_VAR("積極", -3)
+		CALL ADD_CRI_VAR("反抗", -3)
+		CALL ADD_CRI_VAR("活気", -3)
+		CALL ADD_CRI_VAR("根気", 3)
+		CALL ADD_CRI_VAR("好意", -3)
+		CALL ADD_CRI_VAR("愛想", 3)
+		CALL ADD_CRI_VAR("堕落", 3)
+	ENDIF
+	
+	CALL CHA_CRI_VAR, "調教対象の装備"
+	;装備による補正
+	IF TEQUIP:媚薬
+		CALL ADD_CRI_VAR("積極", -3)
+		CALL ADD_CRI_VAR("反抗", 3)
+		CALL ADD_CRI_VAR("活気", -3)
+		CALL ADD_CRI_VAR("根気", 3)
+		CALL ADD_CRI_VAR("好意", -3)
+		CALL ADD_CRI_VAR("愛想", -3)
+		CALL ADD_CRI_VAR("堕落", -3)
+	ENDIF
+	IF TEQUIP:縄
+		CALL ADD_CRI_VAR("反抗", 6)
+		CALL ADD_CRI_VAR("根気", -3)
+		CALL ADD_CRI_VAR("愛想", -3)
+	ENDIF
+	IF TEQUIP:アイマスク
+		CALL ADD_CRI_VAR("積極", 3)
+		CALL ADD_CRI_VAR("反抗", 3)
+		CALL ADD_CRI_VAR("活気", 3)
+		CALL ADD_CRI_VAR("根気", -3)
+		CALL ADD_CRI_VAR("好意", -3)
+		CALL ADD_CRI_VAR("愛想", -3)
+	ENDIF
+	IF TEQUIP:ボールギャグ
+		CALL ADD_CRI_VAR("反抗", 3)
+		CALL ADD_CRI_VAR("根気", 3)
+		CALL ADD_CRI_VAR("好意", 3)
+		CALL ADD_CRI_VAR("愛想", 6)
+	ENDIF
+	;羞恥系装着物は苦痛過剰状態では考慮されない
+	IF TEQUIP:野外プレイ && (PALAM:MASTER:苦痛 < PALAM:MASTER:恥情)
+		CALL ADD_CRI_VAR("積極", 3)
+		CALL ADD_CRI_VAR("反抗", 3)
+		CALL ADD_CRI_VAR("活気", 3)
+		CALL ADD_CRI_VAR("根気", 3)
+		CALL ADD_CRI_VAR("好意", 3)
+		CALL ADD_CRI_VAR("愛想", -3)
+		CALL ADD_CRI_VAR("堕落", -3)
+	ENDIF
+	IF TEQUIP:大鏡 && (PALAM:MASTER:苦痛 < PALAM:MASTER:恥情)
+		CALL ADD_CRI_VAR("積極", 3)
+		CALL ADD_CRI_VAR("反抗", -3)
+		CALL ADD_CRI_VAR("活気", 3)
+		CALL ADD_CRI_VAR("根気", -3)
+		CALL ADD_CRI_VAR("好意", 3)
+		CALL ADD_CRI_VAR("愛想", -3)
+		CALL ADD_CRI_VAR("堕落", -3)
+	ENDIF
+	IF TEQUIP:自慰中 && (PALAM:MASTER:苦痛 < PALAM:MASTER:恥情)
+		CALL ADD_CRI_VAR("積極", -3)
+		CALL ADD_CRI_VAR("反抗", 3)
+		CALL ADD_CRI_VAR("活気", 3)
+		CALL ADD_CRI_VAR("根気", -3)
+		CALL ADD_CRI_VAR("好意", 3)
+		CALL ADD_CRI_VAR("愛想", 3)
+		CALL ADD_CRI_VAR("堕落", -3)
+	ENDIF
+	
+	CALL CHA_CRI_VAR, "初手積極性補正"
+	;調教開始時補正
+	SIF TFLAG:経過時間 < 2
+		CALL ADD_CRI_VAR("積極", -3)
+	
+	;好奇心(新ACT、稀なACTに興味を持つ)
+	;TALENT:MASTER:無関心 * 7 - TALENT:MASTER:好奇心 * 7
+	
+	CALL CHA_CRI_VAR, "性交関連"
+	;性交関連状況による補正
+	
+	;※合意を求める関連処理は調教者行動補正にて判定
+	
+	;※性交拒否処理を用意する
+	
+	CALL CHA_CRI_VAR, "調教者の行動"
+	;調教者の行動による補正
+	IF 0
+	ELSEIF IS_NOWACTNAME("今の気分を聞く")
+		
+		CALL ADD_CRI_VAR("積極", 1)
+		CALL ADD_CRI_VAR("反抗", -2)
+		CALL ADD_CRI_VAR("活気", 1)
+		CALL ADD_CRI_VAR("好意", -3)
+		CALL ADD_CRI_VAR("愛想", -1)
+		CALL ADD_CRI_VAR("堕落", -1)
+		
+	ELSEIF IS_NOWACTNAME("自分への気持ちを聞く")
+		
+		CALL ADD_CRI_VAR("反抗", -2)
+		CALL ADD_CRI_VAR("好意", -3)
+		CALL ADD_CRI_VAR("愛想", -2)
+		CALL ADD_CRI_VAR("堕落", 1)
+		
+	ELSEIF IS_NOWACTNAME("性についての話をする")
+		
+		CALL ADD_CRI_VAR("積極", 1)
+		CALL ADD_CRI_VAR("好意", 1)
+		CALL ADD_CRI_VAR("堕落", -2)
+		
+	ELSEIF IS_NOWACTNAME("優しく慰める")
+		
+		CALL ADD_CRI_VAR("積極", 1)
+		CALL ADD_CRI_VAR("反抗", 2)
+		CALL ADD_CRI_VAR("活気", 2)
+		CALL ADD_CRI_VAR("好意", -2)
+		CALL ADD_CRI_VAR("堕落", 1)
+		
+	ELSEIF IS_NOWACTNAME("厳しく脅す")
+		
+		CALL ADD_CRI_VAR("積極", 2)
+		CALL ADD_CRI_VAR("反抗", 2)
+		CALL ADD_CRI_VAR("活気", 2)
+		CALL ADD_CRI_VAR("好意", 2)
+		CALL ADD_CRI_VAR("愛想", 1)
+		CALL ADD_CRI_VAR("堕落", 3)
+		
+	ELSEIF IS_NOWACTNAME("衣装の変更を要求する")
+		
+		;脱衣時
+		IF TFLAG:ACT派生 == 1
+			CALL ADD_CRI_VAR("積極", 1 - ABL:MASTER:露出癖)
+			CALL ADD_CRI_VAR("反抗", -2 + ABL:MASTER:露出癖)
+			CALL ADD_CRI_VAR("活気", 1 - ABL:MASTER:露出癖)
+			CALL ADD_CRI_VAR("好意", 1 - ABL:MASTER:露出癖)
+			CALL ADD_CRI_VAR("堕落", 0 - ABL:MASTER:露出癖)
+		;着衣時
+		ELSE
+			CALL ADD_CRI_VAR("積極", -1 + ABL:MASTER:露出癖)
+			CALL ADD_CRI_VAR("反抗", 2 - ABL:MASTER:露出癖)
+			CALL ADD_CRI_VAR("活気", -1 + ABL:MASTER:露出癖)
+			CALL ADD_CRI_VAR("好意", -1 + ABL:MASTER:露出癖)
+			CALL ADD_CRI_VAR("堕落", 1 - ABL:MASTER:露出癖)
+		ENDIF
+		
+	ELSEIF IS_NOWACTNAME("合意を求める")
+		
+		;合意難易度(合意が難しければ数値が大きくなる)
+		LOCAL = 3 + TALENT:MASTER:一線越えない + TALENT:MASTER:貞操観念 - TALENT:MASTER:貞操無頓着 + TALENT:MASTER:抑圧 - TALENT:MASTER:解放 - TALENT:MASTER:好色 + TALENT:MASTER:清楚
+		;恋慕・隷属時難易度0に、また難易度は負にならない
+		SIF LOCAL < 0 || TALENT:MASTER:恋慕 || TALENT:MASTER:隷属
+			LOCAL = 0
+		CALL ADD_CRI_VAR("反抗", -2 * LOCAL)
+		CALL ADD_CRI_VAR("好意", 2 * LOCAL)
+		CALL ADD_CRI_VAR("愛想", 3)
+		
+	ELSEIF IS_NOWACTNAME("お仕置きと宣言する")
+		
+		CALL ADD_CRI_VAR("積極", 1 - TALENT:MASTER:ドＭ * 2)
+		CALL ADD_CRI_VAR("反抗", 1 - TALENT:MASTER:ドＭ * 2)
+		CALL ADD_CRI_VAR("活気", 1 - TALENT:MASTER:ドＭ * 2)
+		CALL ADD_CRI_VAR("好意", 2 - TALENT:MASTER:ドＭ * 2)
+		CALL ADD_CRI_VAR("堕落", 0 - TALENT:MASTER:ドＭ * 2)
+		
+	ELSEIF IS_NOWACTNAME("怒鳴る")
+		
+		CALL ADD_CRI_VAR("積極", 2)
+		CALL ADD_CRI_VAR("反抗", 2)
+		CALL ADD_CRI_VAR("活気", 1)
+		CALL ADD_CRI_VAR("好意", 2)
+		CALL ADD_CRI_VAR("愛想", 1)
+		
+	ELSEIF IS_NOWACTNAME("不気味に笑う")
+		
+		CALL ADD_CRI_VAR("積極", 1)
+		CALL ADD_CRI_VAR("反抗", 1)
+		CALL ADD_CRI_VAR("活気", 1)
+		CALL ADD_CRI_VAR("根気", 1)
+		CALL ADD_CRI_VAR("好意", 1)
+		CALL ADD_CRI_VAR("愛想", 1)
+		
+	ELSEIF IS_NOWACTNAME("キス")
+		
+		CALL ADD_CRI_VAR("積極", -1)
+		CALL ADD_CRI_VAR("反抗", -2)
+		CALL ADD_CRI_VAR("活気", 1)
+		CALL ADD_CRI_VAR("好意", -3)
+		CALL ADD_CRI_VAR("愛想", -2)
+		
+	ELSEIF IS_NOWACTNAME("足コキする")
+		
+		CALL ADD_CRI_VAR("積極", -3)
+		CALL ADD_CRI_VAR("反抗", -2)
+		CALL ADD_CRI_VAR("活気", -2)
+		CALL ADD_CRI_VAR("根気", 2)
+		CALL ADD_CRI_VAR("愛想", 1)
+		CALL ADD_CRI_VAR("堕落", -3)
+		
+	ELSEIF IS_NOWACTNAME("ローター")
+		
+		CALL ADD_CRI_VAR("活気", 1)
+		CALL ADD_CRI_VAR("根気", 2)
+		CALL ADD_CRI_VAR("堕落", -3)
+		
+	ELSEIF IS_NOWACTNAME("アナルバイブ")
+		
+		CALL ADD_CRI_VAR("積極", 2)
+		CALL ADD_CRI_VAR("反抗", 2)
+		CALL ADD_CRI_VAR("活気", 2)
+		CALL ADD_CRI_VAR("根気", 1)
+		CALL ADD_CRI_VAR("好意", 2)
+		CALL ADD_CRI_VAR("愛想", 2)
+		CALL ADD_CRI_VAR("堕落", -2)
+		
+	ELSEIF IS_NOWACTNAME("アナルビーズ")
+		
+		CALL ADD_CRI_VAR("積極", 3)
+		CALL ADD_CRI_VAR("反抗", 2)
+		CALL ADD_CRI_VAR("活気", 3)
+		CALL ADD_CRI_VAR("根気", 1)
+		CALL ADD_CRI_VAR("好意", 2)
+		CALL ADD_CRI_VAR("愛想", 2)
+		CALL ADD_CRI_VAR("堕落", -2)
+		
+	ELSEIF IS_NOWACTNAME("押し倒す") && TFLAG:ACT派生 != 1
+		
+		CALL ADD_CRI_VAR("積極", 3)
+		CALL ADD_CRI_VAR("反抗", 3)
+		CALL ADD_CRI_VAR("活気", 3)
+		CALL ADD_CRI_VAR("根気", 1)
+		CALL ADD_CRI_VAR("好意", 2)
+		CALL ADD_CRI_VAR("愛想", 2)
+		CALL ADD_CRI_VAR("堕落", -1)
+		
+	ELSEIF IS_NOWACTNAME("正常位")
+		
+		CALL ADD_CRI_VAR("積極", 2 - CFLAG:合意 * 3)
+		CALL ADD_CRI_VAR("反抗", 1 + CFLAG:合意 * 3)
+		CALL ADD_CRI_VAR("活気", 2 - CFLAG:合意 * 3)
+		CALL ADD_CRI_VAR("根気", + CFLAG:合意 * 3)
+		CALL ADD_CRI_VAR("好意", 2 - CFLAG:合意 * 3)
+		CALL ADD_CRI_VAR("愛想", -2 - CFLAG:合意 * 3)
+		CALL ADD_CRI_VAR("堕落", -2 - CFLAG:合意 * 3)
+		
+	ELSEIF IS_NOWACTNAME("騎乗位")
+		
+		CALL ADD_CRI_VAR("積極", -2 - CFLAG:合意 * 3)
+		CALL ADD_CRI_VAR("反抗", 3 + CFLAG:合意 * 5)
+		CALL ADD_CRI_VAR("活気", -2 - CFLAG:合意 * 3)
+		CALL ADD_CRI_VAR("根気", -2 + CFLAG:合意 * 3)
+		CALL ADD_CRI_VAR("好意", -3 - CFLAG:合意 * 3)
+		CALL ADD_CRI_VAR("愛想", -2 - CFLAG:合意 * 3)
+		CALL ADD_CRI_VAR("堕落", -2 - CFLAG:合意 * 3)
+		
+	ELSEIF IS_NOWACTNAME("アナルセックス")
+		
+		CALL ADD_CRI_VAR("積極", 3)
+		CALL ADD_CRI_VAR("反抗", 3)
+		CALL ADD_CRI_VAR("活気", 2)
+		CALL ADD_CRI_VAR("根気", 1)
+		CALL ADD_CRI_VAR("好意", 2)
+		CALL ADD_CRI_VAR("愛想", 3)
+		CALL ADD_CRI_VAR("堕落", -2)
+		
+	ELSEIF IS_NOWACTNAME("自慰") && TFLAG:ACT派生 != 1
+		
+		LOCAL = TALENT:MASTER:自慰しやすい * 2 + ABL:MASTER:自慰中毒
+		CALL ADD_CRI_VAR("積極", 2 - LOCAL)
+		CALL ADD_CRI_VAR("反抗", -2 + LOCAL)
+		CALL ADD_CRI_VAR("活気", 2 - LOCAL)
+		CALL ADD_CRI_VAR("根気", LOCAL)
+		CALL ADD_CRI_VAR("好意", 2 - LOCAL)
+		CALL ADD_CRI_VAR("愛想", 1 - LOCAL)
+		CALL ADD_CRI_VAR("堕落", -1 - LOCAL)
+		
+	ELSEIF IS_NOWACTNAME("秘貝開帳")
+		
+		CALL ADD_CRI_VAR("積極", -3)
+		CALL ADD_CRI_VAR("反抗", -2)
+		CALL ADD_CRI_VAR("根気", -1)
+		CALL ADD_CRI_VAR("好意", 1)
+		
+	ELSEIF IS_NOWACTNAME("自慰みせつけ")
+		
+		CALL ADD_CRI_VAR("積極", 2)
+		CALL ADD_CRI_VAR("反抗", -1)
+		CALL ADD_CRI_VAR("活気", 1)
+		CALL ADD_CRI_VAR("好意", 2)
+		CALL ADD_CRI_VAR("愛想", 1)
+		CALL ADD_CRI_VAR("堕落", 1)
+		
+	ELSEIF IS_NOWACTNAME("羞恥プレイ")
+		
+		CALL ADD_CRI_VAR("積極", 2)
+		CALL ADD_CRI_VAR("反抗", -1)
+		CALL ADD_CRI_VAR("活気", 1)
+		CALL ADD_CRI_VAR("愛想", -3)
+		CALL ADD_CRI_VAR("堕落", -1)
+		
+	ELSEIF IS_NOWACTNAME("野外プレイ")
+		
+		CALL ADD_CRI_VAR("積極", 3)
+		CALL ADD_CRI_VAR("反抗", 3)
+		CALL ADD_CRI_VAR("活気", 3)
+		CALL ADD_CRI_VAR("根気", -2)
+		CALL ADD_CRI_VAR("好意", 2)
+		CALL ADD_CRI_VAR("愛想", -1)
+		CALL ADD_CRI_VAR("堕落", -2)
+		
+	ELSEIF IS_NOWACTNAME("放尿")
+		
+		CALL ADD_CRI_VAR("積極", 3)
+		CALL ADD_CRI_VAR("反抗", -3)
+		CALL ADD_CRI_VAR("活気", 3)
+		CALL ADD_CRI_VAR("根気", 1)
+		CALL ADD_CRI_VAR("好意", 2)
+		CALL ADD_CRI_VAR("愛想", 2)
+		CALL ADD_CRI_VAR("堕落", -1)
+		
+	ELSEIF IS_NOWACTNAME("手で愛撫を強制")
+		
+		CALL ADD_CRI_VAR("積極", -1)
+		CALL ADD_CRI_VAR("反抗", -2)
+		CALL ADD_CRI_VAR("活気", -1)
+		
+	ELSEIF IS_NOWACTNAME("パイズリ")
+		
+		CALL ADD_CRI_VAR("積極", 1 + TALENT:MASTER:貧乳 * 2)
+		CALL ADD_CRI_VAR("反抗", -2 - TALENT:MASTER:貧乳 * 2)
+		CALL ADD_CRI_VAR("活気", 1 + TALENT:MASTER:貧乳 * 2)
+		CALL ADD_CRI_VAR("根気", - TALENT:MASTER:貧乳 * 2)
+		CALL ADD_CRI_VAR("好意", + TALENT:MASTER:貧乳 * 2)
+		CALL ADD_CRI_VAR("愛想", + TALENT:MASTER:貧乳 * 2)
+		
+	ELSEIF IS_NOWACTNAME("素股")
+		
+		CALL ADD_CRI_VAR("反抗", -1)
+		CALL ADD_CRI_VAR("根気", -1)
+		CALL ADD_CRI_VAR("好意", -1)
+		CALL ADD_CRI_VAR("堕落", -1)
+		
+	ELSEIF IS_NOWACTNAME("足舐め強制")
+		
+		CALL ADD_CRI_VAR("積極", 1 - TALENT:MASTER:倒錯的 * 2)
+		CALL ADD_CRI_VAR("反抗", -2 + TALENT:MASTER:倒錯的 * 2)
+		CALL ADD_CRI_VAR("活気", 1 - TALENT:MASTER:倒錯的 * 2)
+		CALL ADD_CRI_VAR("根気", -2 + TALENT:MASTER:倒錯的 * 2)
+		CALL ADD_CRI_VAR("好意", 2 - TALENT:MASTER:倒錯的 * 2)
+		CALL ADD_CRI_VAR("愛想", -2 - TALENT:MASTER:倒錯的 * 2)
+		
+	ELSEIF IS_NOWACTNAME("イラマチオ")
+		
+		CALL ADD_CRI_VAR("積極", 3)
+		CALL ADD_CRI_VAR("反抗", 1)
+		CALL ADD_CRI_VAR("活気", 3)
+		CALL ADD_CRI_VAR("根気", 2)
+		CALL ADD_CRI_VAR("好意", 3)
+		CALL ADD_CRI_VAR("愛想", 3)
+		
+	ELSEIF IS_NOWACTNAME("鞭")
+		
+		CALL ADD_CRI_VAR("積極", 1)
+		CALL ADD_CRI_VAR("反抗", 2)
+		CALL ADD_CRI_VAR("活気", 2)
+		CALL ADD_CRI_VAR("根気", 1)
+		CALL ADD_CRI_VAR("好意", 3)
+		CALL ADD_CRI_VAR("愛想", -1)
+		CALL ADD_CRI_VAR("堕落", -1)
+		
+	ELSEIF IS_NOWACTNAME("針")
+		
+		CALL ADD_CRI_VAR("積極", 3)
+		CALL ADD_CRI_VAR("反抗", 3)
+		CALL ADD_CRI_VAR("活気", 3)
+		CALL ADD_CRI_VAR("根気", -1)
+		CALL ADD_CRI_VAR("好意", 3)
+		
+	ELSEIF IS_NOWACTNAME("縄")
+		
+		CALL ADD_CRI_VAR("積極", 2)
+		CALL ADD_CRI_VAR("反抗", 2)
+		CALL ADD_CRI_VAR("活気", 1)
+		CALL ADD_CRI_VAR("根気", -3)
+		CALL ADD_CRI_VAR("好意", 1)
+		
+	ELSEIF IS_NOWACTNAME("アイマスク")
+		
+		CALL ADD_CRI_VAR("積極", 3)
+		CALL ADD_CRI_VAR("反抗", 2)
+		CALL ADD_CRI_VAR("活気", 2)
+		CALL ADD_CRI_VAR("根気", -3)
+		CALL ADD_CRI_VAR("愛想", 1)
+		
+	ELSEIF IS_NOWACTNAME("ボールギャグ")
+		
+		CALL ADD_CRI_VAR("積極", 3)
+		CALL ADD_CRI_VAR("反抗", 1)
+		CALL ADD_CRI_VAR("好意", 2)
+		CALL ADD_CRI_VAR("愛想", 3)
+		
+	ELSEIF IS_NOWACTNAME("罵倒")
+		
+		CALL ADD_CRI_VAR("積極", 2 - TALENT:MASTER:ドＭ * 2)
+		CALL ADD_CRI_VAR("反抗", 2 - TALENT:MASTER:ドＭ * 2)
+		CALL ADD_CRI_VAR("活気", 2 - TALENT:MASTER:ドＭ * 2)
+		CALL ADD_CRI_VAR("好意", 2 - TALENT:MASTER:ドＭ * 2)
+		CALL ADD_CRI_VAR("愛想", 1)
+		CALL ADD_CRI_VAR("堕落", -1 - TALENT:MASTER:ドＭ * 2)
+		
+	ELSEIF IS_NOWACTNAME("三角木馬") && TFLAG:ACT派生 != 1
+		
+		CALL ADD_CRI_VAR("積極", 3)
+		CALL ADD_CRI_VAR("反抗", 5)
+		CALL ADD_CRI_VAR("活気", 5)
+		CALL ADD_CRI_VAR("根気", 3)
+		CALL ADD_CRI_VAR("好意", 5)
+		CALL ADD_CRI_VAR("愛想", 3)
+		
+	ELSEIF IS_NOWACTNAME("浣腸セット") && TFLAG:ACT派生 != 1
+		
+		CALL ADD_CRI_VAR("積極", 2)
+		CALL ADD_CRI_VAR("反抗", 3)
+		CALL ADD_CRI_VAR("活気", 2)
+		CALL ADD_CRI_VAR("根気", -3)
+		CALL ADD_CRI_VAR("好意", 3)
+		CALL ADD_CRI_VAR("愛想", 3)
+		
+	ELSEIF IS_NOWACTNAME("フィストファック")
+		
+		CALL ADD_CRI_VAR("積極", 2)
+		CALL ADD_CRI_VAR("反抗", 3)
+		CALL ADD_CRI_VAR("活気", 2)
+		CALL ADD_CRI_VAR("好意", 1)
+		CALL ADD_CRI_VAR("堕落", 1)
+		
+	ELSEIF IS_NOWACTNAME("アナルフィスト")
+		
+		CALL ADD_CRI_VAR("積極", 2)
+		CALL ADD_CRI_VAR("反抗", 3)
+		CALL ADD_CRI_VAR("活気", 2)
+		CALL ADD_CRI_VAR("根気", 1)
+		CALL ADD_CRI_VAR("好意", 2)
+		CALL ADD_CRI_VAR("愛想", 2)
+		CALL ADD_CRI_VAR("堕落", 2)
+		
+	ELSEIF IS_NOWACTNAME("両穴フィスト")
+		
+		CALL ADD_CRI_VAR("積極", 3)
+		CALL ADD_CRI_VAR("反抗", 5)
+		CALL ADD_CRI_VAR("活気", 5)
+		CALL ADD_CRI_VAR("根気", 1)
+		CALL ADD_CRI_VAR("好意", 5)
+		CALL ADD_CRI_VAR("愛想", 3)
+		CALL ADD_CRI_VAR("堕落", 3)
+		
+	ELSEIF IS_NOWACTNAME("放置プレイ")
+		
+		CALL ADD_CRI_VAR("積極", 2)
+		CALL ADD_CRI_VAR("活気", 2)
+		CALL ADD_CRI_VAR("根気", -3)
+		CALL ADD_CRI_VAR("好意", 2)
+		CALL ADD_CRI_VAR("愛想", 2)
+		CALL ADD_CRI_VAR("堕落", 1)
+		
+	ELSEIF IS_NOWACTNAME("公衆肉便器プレイ")
+		
+		CALL ADD_CRI_VAR("積極", 3)
+		CALL ADD_CRI_VAR("反抗", -3)
+		CALL ADD_CRI_VAR("活気", 5)
+		CALL ADD_CRI_VAR("根気", 5)
+		CALL ADD_CRI_VAR("好意", 5)
+		
+	ELSEIF IS_NOWACTNAME("ペニスバンド装着") && !TFLAG:ACT派生
+		
+		CALL ADD_CRI_VAR("積極", TALENT:MASTER:処女 * 2)
+		CALL ADD_CRI_VAR("反抗", -2 - TALENT:MASTER:処女 * 2)
+		CALL ADD_CRI_VAR("活気", TALENT:MASTER:処女 * 2)
+		CALL ADD_CRI_VAR("根気", 1 - TALENT:MASTER:処女 * 2)
+		CALL ADD_CRI_VAR("好意", 2 + TALENT:MASTER:処女 * 2)
+		CALL ADD_CRI_VAR("愛想", -2 + TALENT:MASTER:処女 * 2)
+		CALL ADD_CRI_VAR("堕落", -2 + TALENT:MASTER:処女 * 2)
+		
+	ELSEIF IS_NOWACTNAME("休ませる")
+		
+		CALL ADD_CRI_VAR("積極", 3)
+		CALL ADD_CRI_VAR("反抗", 2)
+		CALL ADD_CRI_VAR("活気", 3)
+		CALL ADD_CRI_VAR("好意", -2)
+		CALL ADD_CRI_VAR("愛想", -2)
+		CALL ADD_CRI_VAR("堕落", 2)
+		
+	ELSEIF IS_NOWACTNAME("栄養剤を飲ませる")
+		
+		CALL ADD_CRI_VAR("積極", 1)
+		CALL ADD_CRI_VAR("反抗", 1)
+		CALL ADD_CRI_VAR("活気", 3)
+		CALL ADD_CRI_VAR("好意", -2)
+		CALL ADD_CRI_VAR("愛想", -1)
+		CALL ADD_CRI_VAR("堕落", 2)
+		
+	ELSEIF IS_NOWACTNAME("治療する")
+		
+		CALL ADD_CRI_VAR("積極", 3)
+		CALL ADD_CRI_VAR("反抗", 3)
+		CALL ADD_CRI_VAR("活気", 3)
+		CALL ADD_CRI_VAR("好意", -2)
+		CALL ADD_CRI_VAR("愛想", -3)
+		CALL ADD_CRI_VAR("堕落", 2)
+		
+	ELSEIF IS_NOWACTNAME("逆レイプ")
+		
+		CALL ADD_CRI_VAR("積極", -3)
+		CALL ADD_CRI_VAR("反抗", -3)
+		CALL ADD_CRI_VAR("活気", -3)
+		CALL ADD_CRI_VAR("根気", -1)
+		CALL ADD_CRI_VAR("好意", -1)
+		CALL ADD_CRI_VAR("愛想", 1)
+		CALL ADD_CRI_VAR("堕落", -2)
+		
+	ENDIF
+	
+;-------------------------------------------------
+;補正値影響度を消費気力に反映
+;-------------------------------------------------
+	;LOCAL初期化
+	VARSET LOCAL
+	;補正値影響度確定
+	CALL DEF_CRI_VAR()
+	;基準値種数取得
+	LTEMP = GET_CRI_VAR("基準値種数")
+	;累計取得
+	CALLF GET_CRI_VAR("累計")
+	;結果を保存
+	FOR LCOUNT, 0, LTEMP
+		LOCAL:LCOUNT = RESULT:LCOUNT
+		;関数に保存
+		CALLF GET_COMCOR(GET_COMCORNAME(LCOUNT), LOCAL:LCOUNT)
+	NEXT
+ENDIF
+;消費気力初期化
+消費気力 = 0
+;基準値種名取得
+SPLIT 補正種, "/", LOCALS
+;補正種すべてについて処理
+FOR LCOUNT, 0, RESULT
+	;消費気力初期値が指定されていれば
+	LTEMP = STRFINDU(ARGS:1, LOCALS:LCOUNT)
+	;そこから消費気力計算。無ければ気力消費なし
+	IF LTEMP != -1
+		;消費気力初期値を取得
+		LTEMP = TOINT(SUBSTRINGU(ARGS:1, LTEMP + 3, STRFINDU(ARGS:1, "/", LTEMP) - LTEMP - 3))
+		;初期値補正
+		LTEMP *= 30
+		;連続実行補正（気力消費が増えるのは不自然なので、加算処理だけオミットする）
+		;LTEMP = LTEMP * COMABLE_CONT(ARGS) / 100
+		;消費気力を生成
+		IF SIGN(LOCAL:LCOUNT) == SIGN(LTEMP)
+			LTEMP = LTEMP * (10 + ABS(LOCAL:LCOUNT))
+		ELSE
+			LTEMP = LTEMP* MAX(10 - ABS(LOCAL:LCOUNT), 0)
+		ENDIF
+		;消費気力を加算
+		消費気力 += ABS(LTEMP / 100)
+	ENDIF
+NEXT
+
+;調教レベルによって消費気力を乗除算
+;(調教対象調教レベルが上回ると消費気力が下がる)
+;一度オミットする
+;消費気力 = 消費気力 * (CFLAG:調教レベル + 5) / (CFLAG:MASTER:調教レベル + 5)
+
+;消費気力を返す
+;SANDBOX限定処理
+IF FLAG:モード == 1
+	RETURN MAX(消費気力/3, 0)
+ELSE
+	RETURN MAX(消費気力, 0)
+ENDIF
+
+;────────────────────────────────────
+;連続処理
+;同一COMを連続で実行しようとすると気力消費量上昇
+;(消費量はすぐには戻らない)
+;
+;ARGS: COM名称
+;ARG : -1 = 初期化, 0 = 指定取得, 1 = 指定更新
+;────────────────────────────────────
+@COMABLE_CONT(ARGS, ARG = 0)
+#FUNCTION
+#LOCALSIZE 10
+#LOCALSSIZE 10
+#DIM LCOUNT
+#DIM LTEMP
+#DIMS 初期化
+
+;新たな調教のたびに初期化を行う(初期化指定時も初期化)
+IF 初期化 != @"{FLAG:年数+1}/{FLAG:日数}/{TIME}" || ARG == -1
+	VARSET LOCAL
+	VARSET LOCALS
+ENDIF
+
+;調教回を保持
+初期化 = {FLAG:年数+1}/{FLAG:日数}/{TIME}
+
+;初期化指定時は処理終了
+SIF ARG == -1
+	RETURNF 0
+
+;指定更新時
+IF ARG == 1
+	;指定が存在する場合、指定を倍にする
+	LTEMP = FINDELEMENT(LOCALS, ARGS)
+	IF LTEMP > -1
+		LOCAL:LTEMP *= 2
+	;指定が存在しない場合、新たに作り出す
+	;無指定時は追加なし
+	ELSEIF ARGS != ""
+		ARRAYSHIFT LOCAL, 1, 100
+		ARRAYSHIFT LOCALS, 1, ARGS
+	ENDIF
+	;全指定に対して走査
+	FOR LCOUNT, 0, VARSIZE("LOCAL")
+		;指定が無くなると終了
+		SIF LOCALS:LCOUNT == ""
+			BREAK
+		;今回指定対象なら処理しない
+		SIF LOCALS:LCOUNT == ARGS
+			CONTINUE
+		;指定から100を引く
+		LOCAL:LCOUNT -= 100
+		;指定が100を下回ったら捨てる
+		IF LOCAL:LCOUNT < 100
+			ARRAYREMOVE LOCAL, LCOUNT, 1
+			ARRAYREMOVE LOCALS, LCOUNT, 1
+		ENDIF
+	NEXT
+ENDIF
+
+;指定が存在すればそれの倍を、存在しなければ100を返す
+LTEMP = FINDELEMENT(LOCALS, ARGS)
+RETURNF LTEMP == -1 ? 100 # LOCAL:LTEMP * 2
+
+;────────────────────────────────────
+;限界処理
+;気力が限界を突破すると、突破した消費気力が消費体力に流れる
+;流れきらなかった場合、COMは実行不能となる
+;────────────────────────────────────
+@COMABLE_LIMIT(ARGS)
+
+;気力消費量取得
+LOCAL = COM_VITALITY(, ARGS)
+;ランキングに入ってない場合は除く
+SIF LOCAL == -1
+	RETURN 0
+;限界瞬間気力消費を突破すると実行不可
+SIF COM_LIM_INS() < LOCAL
+	RETURN 0
+;抵抗不能の場合、消費30以下のCOMでないと実行不可
+SIF TFLAG:抵抗不能 && 30 < LOCAL
+	RETURN 0
+;気力に余裕があれば実行可能
+SIF BASE:MASTER:気力 >= LOCAL
+	RETURN 1
+;体力を消費して実行可能かを判断
+LOCAL = (LOCAL - BASE:MASTER:気力)
+SIF LOCAL <= COM_LIM_VIT() && LOCAL <= BASE:MASTER:体力
+	RETURN 1
+;不可能であれば実行不可
+RETURN 0
+
+
+;────────────────────────────────────
+;限界瞬間気力消費
+;1回のCOMで消費できる気力の最大値
+;────────────────────────────────────
+@COM_LIM_INS()
+#FUNCTION
+LOCAL = TALENT:MASTER:好奇心 - TALENT:MASTER:無関心 + TALENT:MASTER:楽観的 - TALENT:MASTER:悲観的 + TALENT:MASTER:目立ちたがり + TALENT:MASTER:解放 - TALENT:MASTER:抑圧 + TALENT:MASTER:献身的 + TALENT:MASTER:短気 - TALENT:MASTER:慎重
+LOCAL = LOCAL < 0 ? 500 / (5 - LOCAL) # 100 + LOCAL * 20
+
+;SANDBOX限定処理
+IF FLAG:モード == 1
+	RETURNF MIN(MAXBASE:MASTER:気力 * LOCAL / 1000, MAXBASE:MASTER:気力/3)
+ELSE
+	RETURNF MIN(MAXBASE:MASTER:気力 * LOCAL / 500, MAXBASE:MASTER:気力/2)
+ENDIF
+
+;────────────────────────────────────
+;気力代替体力消費
+;気力の代わりに使える体力の最大値
+;────────────────────────────────────
+@COM_LIM_VIT()
+#FUNCTION
+LOCAL = TALENT:MASTER:痛みに強い - TALENT:MASTER:痛みに弱い + TALENT:MASTER:ドＭ + TALENT:MASTER:回復早い - TALENT:MASTER:回復遅い + TALENT:MASTER:不死
+LOCAL = LOCAL < 0 ? 500 / (5 - LOCAL) # 100 + LOCAL * 20
+RETURNF MAXBASE:MASTER:体力 * LOCAL / 4000
+
+;────────────────────────────────────
+;関連式中関数
+;────────────────────────────────────
+;-------------------------------------------------
+;調教対象C考慮条件
+;-------------------------------------------------
+@COMABLE_MC
+#FUNCTION
+RETURNF IS_NOWACTNAME("性器を擦り合う/パイズリする/正常位させる/後背位させる/対面座位させる/背面座位させる/アナルセックスさせる/逆レイプ") || TEQUIP:性交奉仕中
+;-------------------------------------------------
+;調教対象V考慮条件
+;-------------------------------------------------
+@COMABLE_MV
+#FUNCTION
+RETURNF IS_NOWACTNAME("正常位/後背位/騎乗位/対面座位/背面座位") || TEQUIP:性交中 < 6
+;-------------------------------------------------
+;調教対象A考慮条件
+;-------------------------------------------------
+@COMABLE_MA
+#FUNCTION
+RETURNF IS_NOWACTNAME("アナルセックス") || TEQUIP:性交中 == 6
+

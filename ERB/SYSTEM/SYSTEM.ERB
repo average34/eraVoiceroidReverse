@@ -1,0 +1,146 @@
+﻿;────────────────────────────────────
+;新しいゲームの処理
+;────────────────────────────────────
+@EVENTFIRST
+#DIM LCOUNT
+
+;GLOBAL変数からアニメーション設定を読み込む
+LOADGLOBAL
+CALLF ANIME_CONFIG("SET", GLOBAL)
+SAVEGLOBAL
+LOADGLOBAL
+;キャラクター役割変数を初期化
+TARGET = -1
+ASSI = -1
+ASSI:1 = -1
+ASSI:2 = -1
+ASSI:3 = -1
+;諸変数を初期化
+FLAG:モード = 0
+FLAG:TXT頻度 = 1
+FLAG:追加調教者数 = 0
+
+;テスト用記述。いつでも消していいよ
+;CALL GET_REVISION_SQRT_PROP_TEST(, 1, 5, 12, 50)
+;PRINTVL LINE_CALC(-2000, "-2000→-12,2000→0,LIMIT/-12～0")
+;PRINTV IS_NOWACTNAME("くそがっ")
+;CALL MAKE_CSV
+;SKIPDISP 1
+;CALL INPUTINT(0, 1, 2, 3, 4)
+;SKIPDISP 0
+
+;プレイ時間の初期化  →SYSTEM_DATAMENU.ERB
+CALLF PLAYTIME("SET")
+
+;「あなた」以外のキャラクターの総数。
+DO
+	FLAG:Cha総数++
+LOOP EXISTCSV(FLAG:Cha総数 + 1, 0)
+;登場フラグをセット
+VARSET FLAG, 1, 100, 100 + FLAG:Cha総数
+;バリアント主の意向で霖之助を撤去
+FLAG:155 = 0
+;モード選択
+PRINTL ★★モードを選択してください★★
+;PRINTL [ 0]NORMAL  ―― キャラメイキングからはじめる、通常のゲームモード
+;PRINTL [ 1]SANDBOX ―― NORMAL + 試験的に導入された新機能(動作保障なし)
+PRINTL [ 9]EXTRA   ―― ストーリーのない、好きなキャラで調教されるモード
+PRINTL [-1]戻る
+;CALL INPUTINT(0, 1, 9, -1)
+CALL INPUTINT(9, -1)
+;オプションを設定
+FLAG:素質表示方法 = 1
+FLAG:日常 = 1
+FLAG:AI自由度 = 15
+;モード確定
+FLAG:モード = RESULT
+;NORMALならゆかりんにお呼ばれ
+;IF FLAG:モード == 0
+;	CALL CHARA_MAKER
+;	;調教対象の衣装設定
+;	CALL CLOTHES_SETUP(MASTER)
+;SANDBOX、EXTRAなら主人公(調教対象)選択
+;ELSEIF FLAG:モード == 1 || FLAG:モード == 9
+IF FLAG:モード == 9
+	DELCHARA 0
+	CALL START_CHARA_SELECT
+;ニューゲームするつもりじゃなかったならタイトルへ戻る
+ELSE
+	RESETDATA
+	BEGIN TITLE
+ENDIF
+
+;CALL CONFIGURE
+
+;eraVoiceroidЯeverseには口上がまだないので消す
+KOJOOFF = 1 
+CALL START_CHARA_SELECT_T
+CALL BASE_TRAINER_SETUP
+
+;ご主人様認定
+TALENT:ご主人様 = 1
+FLAG:ご主人様 = TARGET
+
+CFLAG:MASTER:処女喪失済み = !TALENT:MASTER:処女
+CFLAG:MASTER:童貞喪失済み = !TALENT:MASTER:童貞
+
+CFLAG:処女喪失済み = !TALENT:処女
+CFLAG:童貞喪失済み = !TALENT:童貞
+
+ITEM:505 = 1
+FLAG:口上 = 1
+PRINTL 
+DRAWLINE
+;オープニング
+CALL KOJO_EVENT(1)
+;オープニングがない場合は汎用
+IF !RESULT
+	CALL WAIT_3
+	PRINTFORMW どれくらい眠っていただろうか。
+	PRINTL 
+	CALL CHARA_CUTIN(CSTR:二つ名, CSTR:登場名, CSTR:ローマ字)
+	PRINTL 
+	PRINTFORMW 目を覚ました%CALLNAME:MASTER%を迎えたのは、%CALLNAME%の笑顔だった。
+	PRINTL 
+	PRINTFORMW ――%CNAME()%を、調教する。
+	PRINTL 
+	PRINTFORMW %CALLNAME%は静かにそう告げると、説明を続けた。
+	PRINTFORMW なんでも、%CALLNAME:MASTER%が性的に感じたり、絶頂したりした際に放出される精力――
+	PRINTFORMW それが、%CALLNAME%にとって貴重な魔力になるらしい。
+	PRINTFORMW その魔力を使って、さまざまな術や儀式が行えるのだそうだ。
+	PRINTL 
+	PRINTFORMW 脱出の見込みはない。
+	PRINTFORMW %CALLNAME%がこの馬鹿げた実験に飽きて、%CALLNAME:MASTER%を解放してくれるまで。
+;	CALL BGM_CUTIN(CSTR:曲１)
+	PRINTL 
+	PRINTFORMW %CALLNAME:MASTER%は、ただ耐えるだけの哀れな奴隷なのだ――。
+	PRINTL 
+ENDIF
+
+REDRAW 0
+SETFONT "ＭＳ 明朝"
+FONTSTYLE 3
+
+;RESULTが2ならロゴをスキップ
+IF RESULT != 2
+	;ネタ。タイトルロゴ
+	CALL FULLCUTIN(40, 17, "eraVoiceroidЯeverse――","　","　","　　　　　　――調教が、始まる")
+ENDIF
+FOR LOCAL, 0, 100
+	PRINTL
+NEXT
+CALL DAY_EFFECT
+CLEARLINE 100
+;Emueraをデバッグモードで起動した場合にのみ表示するように
+;と思ったけど、デバッグ時には普通に[777]が表示されるのでやはり要らないと判断@/L
+[SKIPSTART]
+[IF_DEBUG]
+PRINTL 
+PRINTL 
+PRINTW SHOP画面777入力でデバッグモードとなり情報の出力、TARGETの行動指定、MASTERの素質変更などを行うことが出来ます
+[ENDIF]
+[SKIPEND]
+;データベース初期化
+CALL DATABASE_INPUT_INIT
+BEGIN SHOP
+

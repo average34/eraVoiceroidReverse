@@ -1,0 +1,1498 @@
+﻿[SKIPSTART]
+;────────────────────────────────────
+;MASTERの体勢
+@MASTER_POSE
+;姿勢関連のTCVARを初期化する
+;eratohoぱ。等の実装と違って、前の姿勢を考慮はしない路線
+;　　だったのですが、メッセージ表示の上でのみ考慮することに変更
+;────────────────────────────────────
+
+;-------------------------------------------------
+;ACT前姿勢変化処理
+;-------------------------------------------------
+
+;強制脱衣が発生していれば姿勢を補正
+IF TFLAG:強制脱衣
+	;前回の姿勢によって補正
+	SELECTCASE TCVAR:MASTER:姿勢
+		;四つん這いは自由に戻す
+		CASE 3
+			CALL SET_POSE(MASTER, "自由")
+		;膝立ちは座らせる
+		CASE 10
+			CALL SET_POSE(MASTER, "座る")
+	ENDSELECT
+		;他は継続する
+ENDIF
+
+;自主脱衣が発生していれば位置をリセット
+IF TFLAG:自主脱衣
+	CALL SET_POSE(TARGET, "自由", "無効", "無効")
+ENDIF
+
+;-------------------------------------------------
+;ACT直前処理
+;-------------------------------------------------
+
+;現在の位置情報を前回の位置へ格納
+TCVAR:MASTER:前回の姿勢 = TCVAR:MASTER:姿勢
+TCVAR:MASTER:前回の位置前後 = TCVAR:MASTER:位置前後
+TCVAR:MASTER:前回の位置上下 = TCVAR:MASTER:位置上下
+
+;一度初期化する
+CALL SET_POSE(MASTER, "自由")
+CALL SET_POSE(TARGET, "自由", "無効", "無効")
+TCVAR:MASTER:REACT姿勢変化 = 0
+
+;-------------------------------------------------
+;ACT直前処理
+;-------------------------------------------------
+
+;体力限界なら仰向け
+IF BASE:MASTER:体力 <= 0
+	CALL SET_POSE(MASTER, "仰向")
+	CALL CONDITION_POSE("体力", MASTER, "仰向")
+ENDIF
+
+;調教対象自慰中
+IF GETBIT(TEQUIP:自慰中, 0)
+	CALL SET_USE(MASTER, "Ｐ", MASTER, "手")
+	CALL CONDITION_USE("M自慰", MASTER, "Ｐ", MASTER, "手")
+ENDIF
+
+;顔面騎乗中
+IF TEQUIP:顔面騎乗
+	CALL SET_USE(MASTER, "口", TARGET, "Ｖ")
+	CALL CONDITION_USE("TM顔面騎乗V", MASTER, "口", TARGET, "Ｖ")
+	CALL SET_POSE(MASTER, "仰向")
+	CALL CONDITION_POSE("TM顔面騎乗V", MASTER, "仰向")
+ENDIF
+IF TEQUIP:顔面騎乗アナル
+	CALL SET_USE(MASTER, "口", TARGET, "Ａ")
+	CALL CONDITION_USE("TM顔面騎乗A", MASTER, "口", TARGET, "Ｖ")
+	CALL SET_POSE(MASTER, "仰向")
+	CALL CONDITION_POSE("TM顔面騎乗A", MASTER, "仰向")
+ENDIF
+
+;Ｃ愛撫
+IF TEQUIP:調教対象Ｃ使用 == 1
+	CALL SET_USE(MASTER, "Ｐ", TARGET, "手")
+	CALL CONDITION_USE("TM顔面騎乗A", MASTER, "Ｐ", TARGET, "手")
+ENDIF
+IF TEQUIP:調教対象Ｃ使用 == 2
+	CALL SET_USE(MASTER, "Ｐ", TARGET, "口")
+	CALL CONDITION_USE("TM顔面騎乗A", MASTER, "Ｐ", TARGET, "口")
+ENDIF
+
+;ACTごとのPOSE情報を呼ぶ
+;※要修正
+;ACTごとにACTABLE、MESSAGE、POSEを収めたファイルにするとかいいと思う。まずは関数化から始めます
+TRYCALLFORM MASTER_POSE_ACT{TFLAG:ACT}
+
+;とは言うけど関数化しないほうが設定しやすいんですよねここ…
+;以下姿勢の設定　ぱ。追加部分
+
+;顔面騎乗、押し倒しによる強制仰向け
+IF TEQUIP:顔面騎乗 || TEQUIP:顔面騎乗アナル || TEQUIP:押し倒し中 || IS_NOWACTNAME("押し倒す")
+	CALL SET_POSE(MASTER, "仰向")
+	SIF TEQUIP:顔面騎乗 || TEQUIP:顔面騎乗アナル
+		CALL SET_POSE(TARGET, "座る", "継続", "上位")
+	SIF TEQUIP:押し倒し中 || IS_NOWACTNAME("押し倒す")
+		CALL SET_POSE(TARGET, "座る", "対面", "上位")
+;性交・性奉系ACTは先に処理
+ELSEIF MENU(GET_ACTM(TFLAG:ACT)) == "性交" || MENU(GET_ACTM(TFLAG:ACT)) == "性奉"
+	;体位による設定
+	SELECTCASE TFLAG:ACT
+		;正常位
+		CASE 30
+			CALL SET_POSE(MASTER, "仰向")
+			CALL SET_POSE(TARGET, "座る", "対面", "上位")
+		;後背位、アナルセックス
+		CASE 31, 35
+			CALL SET_POSE(MASTER, "四這")
+			CALL SET_POSE(TARGET, "膝立", "背後", "無効")
+		;騎乗位
+		CASE 32
+			CALL SET_POSE(MASTER, "膝立")
+			CALL SET_POSE(TARGET, "仰向", "無効", "下位")
+		;対面座位
+		CASE 33
+			CALL SET_POSE(MASTER, "座る")
+			CALL SET_POSE(TARGET, "座る", "対面", "無効")
+		;背面座位
+		CASE 34
+			CALL SET_POSE(MASTER, "座る")
+			CALL SET_POSE(TARGET, "座る", "背後", "無効")
+		;性交奉仕
+		;正常位
+		CASE 95
+			CALL SET_POSE(MASTER, "座る")
+			CALL SET_POSE(TARGET, "仰向", "対面", "下位")
+		;後背位、アナルセックス
+		CASE 96, 99
+			CALL SET_POSE(MASTER, "膝立")
+			CALL SET_POSE(TARGET, "四這", "前面", "無効")
+		;騎乗位（逆レイプ）
+		CASE 103
+			CALL SET_POSE(MASTER, "仰向")
+			CALL SET_POSE(TARGET, "膝立", "無効", "上位")
+		;対面座位
+		CASE 97
+			CALL SET_POSE(MASTER, "座る")
+			CALL SET_POSE(TARGET, "座る", "対面", "無効")
+		;背面座位
+		CASE 98
+			CALL SET_POSE(MASTER, "座る")
+			CALL SET_POSE(TARGET, "座る", "前面", "無効")
+	ENDSELECT
+;性交中
+ELSEIF TEQUIP:性交中
+	;体位による設定
+	SELECTCASE TEQUIP:性交中
+		;正常位
+		CASE 1
+			CALL SET_POSE(MASTER, "仰向")
+			CALL SET_POSE(TARGET, "座る", "対面", "上位")
+		;後背位、アナルセックス
+		CASE 2, 6
+			CALL SET_POSE(MASTER, "四這")
+			CALL SET_POSE(TARGET, "膝立", "背後", "無効")
+		;騎乗位
+		CASE 3
+			CALL SET_POSE(MASTER, "膝立")
+			CALL SET_POSE(TARGET, "仰向", "無効", "下位")
+		;対面座位
+		CASE 4
+			CALL SET_POSE(MASTER, "座る")
+			CALL SET_POSE(TARGET, "座る", "対面", "無効")
+		;背面座位
+		CASE 5
+			CALL SET_POSE(MASTER, "座る")
+			CALL SET_POSE(TARGET, "座る", "背後", "無効")
+	ENDSELECT
+;性交奉仕中
+ELSEIF TEQUIP:性交奉仕中
+	;体位による設定
+	SELECTCASE TEQUIP:性交奉仕中
+		;正常位
+		CASE 1
+			CALL SET_POSE(MASTER, "座る")
+			CALL SET_POSE(TARGET, "仰向", "対面", "下位")
+		;後背位、アナルセックス
+		CASE 2, 6
+			CALL SET_POSE(MASTER, "膝立")
+			CALL SET_POSE(TARGET, "四這", "前面", "無効")
+		;騎乗位（逆レイプ）
+		CASE 3
+			CALL SET_POSE(MASTER, "仰向")
+			CALL SET_POSE(TARGET, "膝立", "無効", "上位")
+		;対面座位
+		CASE 4
+			CALL SET_POSE(MASTER, "座る")
+			CALL SET_POSE(TARGET, "座る", "対面", "無効")
+		;背面座位
+		CASE 5
+			CALL SET_POSE(MASTER, "座る")
+			CALL SET_POSE(TARGET, "座る", "前面", "無効")
+	ENDSELECT
+;ACTごとの姿勢情報を代入
+;ただしCOM次第では変更になる（暴れるなど）
+ELSE
+	;ACT分類による設定
+	SELECTCASE MENU(GET_ACTM(TFLAG:ACT))
+		CASE "愛撫", "道具"
+			;どこを愛撫しているか
+			SELECTCASE CARESS_SPOT(TARGET)
+				;Ａ
+				CASE 3
+					;口でしている
+					IF MA_PLAYER(1) == 1
+						;すでに仰向けの場合（難易度高い気がするが）
+						IF TFLAG:仰向け
+							CALL SET_POSE(MASTER, "仰向")
+							CALL SET_POSE(TARGET, "四這", "無効", "上位")
+						;そうでなければ四つん這い
+						ELSE
+							CALL SET_POSE(MASTER, "四這")
+							CALL SET_POSE(TARGET, "四這", "無効", "下位")
+						ENDIF
+					;手など
+					ELSE
+						;すでに仰向けの場合
+						IF TFLAG:仰向け
+							CALL SET_POSE(MASTER, "仰向")
+							CALL SET_POSE(TARGET, "膝立", "無効", "上位")
+						ELSE
+							;前回の姿勢によって補正
+							;口と違い、前後・上下の指定はありません
+							SELECTCASE TCVAR:MASTER:前回の姿勢
+								;起立・膝立ち
+								CASE 4, 10
+									;3/4で継続
+									IF RAND:4
+										CALL SET_POSE(MASTER, "前回")
+										CALL SET_POSE(TARGET, "前回", "前回", "前回")
+									;そうでなければ四つん這い
+									ELSE
+										CALL SET_POSE(MASTER, "四這")
+										CALL SET_POSE(TARGET, "膝立", "無効", "下位")
+									ENDIF
+								;座り
+								CASE 2
+									;3/4で膝立ちに変化する
+									IF RAND:4
+										CALL SET_POSE(MASTER, "膝立")
+									;そうでなければ四つん這い
+									ELSE
+										CALL SET_POSE(MASTER, "四這")
+										CALL SET_POSE(TARGET, "膝立", "無効", "下位")
+									ENDIF
+								;それ以外は四つん這い
+								CASEELSE
+									CALL SET_POSE(MASTER, "四這")
+									CALL SET_POSE(TARGET, "膝立", "無効", "下位")
+							ENDSELECT
+						ENDIF
+					ENDIF
+				;Ｃ、Ｖ
+				CASE 1, 2
+					;性器同士でしている
+					IF GROUPMATCH(MC_PLAYER(1), 3, 8) || GROUPMATCH(MV_PLAYER(1), 3, 8)
+						;すでに仰向けの場合
+						IF TFLAG:仰向け
+							CALL SET_POSE(MASTER, "仰向")
+							CALL SET_POSE(TARGET, "座る", "対面", "上位")
+						;素股の場合、仰向けでなければ後背位準拠
+						ELSEIF PENIS(MASTER) && MC_PLAYER(1) == 8
+							CALL SET_POSE(MASTER, "膝立")
+							CALL SET_POSE(TARGET, "四這", "前面", "無効")
+						ELSE
+							;前回の姿勢によって補正
+							SELECTCASE TCVAR:MASTER:前回の姿勢
+								;仰向けは継続
+								CASE 1
+									CALL SET_POSE(MASTER, "仰向")
+									CALL SET_POSE(TARGET, "座る", "対面", "上位")
+								;それ以外
+								CASEELSE
+									;Ｃでイった直後は1/2で仰向けに変化する
+									IF NOWEX:MASTER:Ｃ絶頂 && RAND:2
+										CALL SET_POSE(MASTER, "仰向")
+										CALL SET_POSE(TARGET, "座る", "対面", "上位")
+									;そうでなければ座り
+									ELSE
+										CALL SET_POSE(MASTER, "座る")
+										CALL SET_POSE(TARGET, "座る", "対面", "無効")
+									ENDIF
+							ENDSELECT
+						ENDIF
+					;胸でしている
+					ELSEIF MC_PLAYER(1) == 6 || MV_PLAYER(1) == 6
+						;すでに仰向けの場合
+						IF TFLAG:仰向け
+							CALL SET_POSE(MASTER, "仰向")
+							CALL SET_POSE(TARGET, "座る", "対面", "上位")
+						ELSE
+							;前回の姿勢によって補正
+							SELECTCASE TCVAR:MASTER:前回の姿勢
+								;仰向けは継続
+								CASE 1
+									CALL SET_POSE(MASTER, "仰向")
+									CALL SET_POSE(TARGET, "座る", "対面", "上位")
+								;それ以外
+								CASEELSE
+									;Ｃでイった直後は1/2で仰向けに変化する
+									IF NOWEX:MASTER:Ｃ絶頂 && RAND:2
+										CALL SET_POSE(MASTER, "仰向")
+										CALL SET_POSE(TARGET, "座る", "対面", "上位")
+									;そうでなければ膝立ち
+									ELSE
+										CALL SET_POSE(MASTER, "膝立")
+										CALL SET_POSE(TARGET, "仰向", "対面", "下位")
+									ENDIF
+							ENDSELECT
+						ENDIF
+					;足でしている
+					ELSEIF MC_PLAYER(1) == 7 || MV_PLAYER(1) == 7
+						;すでに仰向けの場合
+						IF TFLAG:仰向け
+							CALL SET_POSE(MASTER, "仰向")
+							CALL SET_POSE(TARGET, "起立", "対面", "無効")
+						ELSE
+							;前回の姿勢によって補正
+							SELECTCASE TCVAR:MASTER:前回の姿勢
+								;仰向けは継続
+								CASE 1
+									CALL SET_POSE(MASTER, "仰向")
+									CALL SET_POSE(TARGET, "起立", "対面", "無効")
+								;それ以外
+								CASEELSE
+									;Ｃでイった直後は1/2で仰向けに変化する
+									IF NOWEX:MASTER:Ｃ絶頂 && RAND:2
+										CALL SET_POSE(MASTER, "仰向")
+										CALL SET_POSE(TARGET, "起立", "対面", "無効")
+									;そうでなければ座り
+									ELSE
+										CALL SET_POSE(MASTER, "座る")
+										CALL SET_POSE(TARGET, "座る", "対面", "無効")
+									ENDIF
+							ENDSELECT
+						ENDIF
+					;口でしている
+					ELSEIF MC_PLAYER(1) == 1 || MV_PLAYER(1) == 1
+						;すでに仰向けの場合
+						IF TFLAG:仰向け
+							CALL SET_POSE(MASTER, "仰向")
+							;シックスナインは顔面騎乗に流れているはず
+							CALL SET_POSE(TARGET, "座る", "対面", "無効")
+						ELSE
+							;前回の姿勢によって補正
+							SELECTCASE TCVAR:MASTER:前回の姿勢
+								;仰向け
+								CASE 1
+									;イきそうなら3/4で座りに変化する
+									IF TCVAR:MASTER:イきそう && RAND:4
+										CALL SET_POSE(MASTER, "座る")
+										CALL SET_POSE(TARGET, "座る", "対面", "無効")
+									;1/4で座りに変化する
+									ELSEIF !RAND:4
+										CALL SET_POSE(MASTER, "座る")
+										CALL SET_POSE(TARGET, "座る", "対面", "無効")
+									;そうでなければ継続
+									ELSE
+										CALL SET_POSE(MASTER, "仰向")
+										CALL SET_POSE(TARGET, "座る", "対面", "無効")
+									ENDIF
+								;座り、自由
+								CASE 2, 0
+									;イきそうなら3/4で膝立ちに変化する
+									IF TCVAR:MASTER:イきそう && RAND:4
+										CALL SET_POSE(MASTER, "膝立")
+										CALL SET_POSE(TARGET, "座る", "対面", "無効")
+									;Ｃでイった直後は1/2で仰向けに変化する
+									ELSEIF NOWEX:MASTER:Ｃ絶頂 && RAND:2
+										CALL SET_POSE(MASTER, "仰向")
+										CALL SET_POSE(TARGET, "座る", "対面", "無効")
+									;そうでなければ座り
+									ELSE
+										CALL SET_POSE(MASTER, "座る")
+										CALL SET_POSE(TARGET, "座る", "対面", "無効")
+									ENDIF
+								;四つん這い
+								CASE 3
+									;3/4で座りに変化する
+									IF RAND:4
+										CALL SET_POSE(MASTER, "座る")
+										CALL SET_POSE(TARGET, "座る", "対面", "無効")
+									;そうでなければ仰向け
+									ELSE
+										CALL SET_POSE(MASTER, "仰向")
+										CALL SET_POSE(TARGET, "座る", "対面", "無効")
+									ENDIF
+								;起立
+								CASE 4
+									;Ｃでイった直後は膝立ちに変化する
+									IF NOWEX:MASTER:Ｃ絶頂
+										CALL SET_POSE(MASTER, "膝立")
+										CALL SET_POSE(TARGET, "座る", "対面", "無効")
+									;そうでなければ継続
+									ELSE
+										CALL SET_POSE(MASTER, "起立")
+										CALL SET_POSE(TARGET, "膝立", "対面", "無効")
+									ENDIF
+								;膝立ち
+								CASE 10
+									;Ｃでイった直後は座りに変化する
+									IF NOWEX:MASTER:Ｃ絶頂
+										CALL SET_POSE(MASTER, "座る")
+										CALL SET_POSE(TARGET, "座る", "対面", "無効")
+									;そうでなければ継続
+									ELSE
+										CALL SET_POSE(MASTER, "膝立")
+										CALL SET_POSE(TARGET, "座る", "対面", "無効")
+									ENDIF
+							ENDSELECT
+						ENDIF
+					;手・道具類など
+					ELSE
+						;すでに仰向けの場合
+						IF TFLAG:仰向け
+							CALL SET_POSE(MASTER, "仰向")
+							CALL SET_POSE(TARGET, "座る", "対面", "無効")
+						ELSE
+							;前回の姿勢によって補正
+							;口と違い、前後・上下の指定はありません
+							SELECTCASE TCVAR:MASTER:前回の姿勢
+								;仰向け
+								CASE 1
+									;イきそうなら3/4で座りに変化する
+									IF TCVAR:MASTER:イきそう && RAND:4
+										CALL SET_POSE(MASTER, "座る")
+									;1/4で座りに変化する
+									ELSEIF !RAND:4
+										CALL SET_POSE(MASTER, "座る")
+									;そうでなければ継続
+									ELSE
+										CALL SET_POSE(MASTER, "仰向")
+										CALL SET_POSE(TARGET, "座る", "対面", "無効")
+									ENDIF
+								;座り、自由
+								CASE 2, 0
+									;イきそうなら3/4で膝立ちに変化する
+									IF TCVAR:MASTER:イきそう && RAND:4
+										CALL SET_POSE(MASTER, "膝立")
+									;Ｃでイった直後は1/2で仰向けに変化する
+									ELSEIF NOWEX:MASTER:Ｃ絶頂 && RAND:2
+										CALL SET_POSE(MASTER, "仰向")
+										CALL SET_POSE(TARGET, "座る", "対面", "無効")
+									;そうでなければ座り
+									ELSE
+										CALL SET_POSE(MASTER, "座る")
+									ENDIF
+								;四つん這い
+								CASE 3
+									;位置が前でない場合、2/3で後ろから継続
+									IF TCVAR:MASTER:位置前後 != 1 && RAND:3
+										CALL SET_POSE(MASTER, "四這")
+										CALL SET_POSE(TARGET, "座る", "背後", "無効")
+									;そうでなければ座りに変化する
+									ELSE
+										CALL SET_POSE(MASTER, "座る")
+									ENDIF
+								;起立
+								CASE 4
+									;Ｃでイった直後は膝立ちに変化する
+									IF NOWEX:MASTER:Ｃ絶頂
+										CALL SET_POSE(MASTER, "膝立")
+									;そうでなければ継続
+									ELSE
+										CALL SET_POSE(MASTER, "起立")
+									ENDIF
+								;膝立ち
+								CASE 10
+									;Ｃでイった直後は座りに変化する
+									IF NOWEX:MASTER:Ｃ絶頂
+										CALL SET_POSE(MASTER, "座る")
+									;そうでなければ継続
+									ELSE
+										CALL SET_POSE(MASTER, "膝立")
+									ENDIF
+							ENDSELECT
+						ENDIF
+					ENDIF
+				;Ｂ
+				CASE 4
+					;口でしている、or 乳の揉み合い
+					IF MB_PLAYER(1) == 1 || TB_PLAYER(0) == 1
+						;すでに仰向けの場合
+						IF TFLAG:仰向け
+							CALL SET_POSE(MASTER, "仰向")
+							CALL SET_POSE(TARGET, "四這", "無効", "上位")
+						ELSE
+							;前回の姿勢によって補正
+							SELECTCASE TCVAR:MASTER:前回の姿勢
+								;仰向け
+								CASE 1
+									;1/4で座りに変化する
+									IF !RAND:4
+										CALL SET_POSE(MASTER, "座る")
+										CALL SET_POSE(TARGET, "座る", "対面", "無効")
+									;そうでなければ継続
+									ELSE
+										CALL SET_POSE(MASTER, "仰向")
+										CALL SET_POSE(TARGET, "四這", "無効", "上位")
+									ENDIF
+								;座り、自由
+								CASE 2, 0
+									;Ｂでイった直後は1/2で仰向けに変化する
+									IF NOWEX:MASTER:Ｂ絶頂 && RAND:2
+										CALL SET_POSE(MASTER, "仰向")
+										CALL SET_POSE(TARGET, "四這", "無効", "上位")
+									;そうでなければ座り
+									ELSE
+										CALL SET_POSE(MASTER, "座る")
+										CALL SET_POSE(TARGET, "座る", "対面", "無効")
+									ENDIF
+								;四つん這い
+								CASE 3
+									;3/4で座りに変化する
+									IF RAND:4
+										CALL SET_POSE(MASTER, "座る")
+										CALL SET_POSE(TARGET, "座る", "対面", "無効")
+									;そうでなければ仰向け
+									ELSE
+										CALL SET_POSE(MASTER, "仰向")
+										CALL SET_POSE(TARGET, "四這", "対面", "無効")
+									ENDIF
+								;起立
+								CASE 4
+									;Ｂでイった直後は膝立ちに変化する
+									IF NOWEX:MASTER:Ｂ絶頂
+										CALL SET_POSE(MASTER, "膝立")
+										CALL SET_POSE(TARGET, "座る", "対面", "無効")
+									;そうでなければ継続
+									ELSE
+										CALL SET_POSE(MASTER, "起立")
+										CALL SET_POSE(TARGET, "膝立", "対面", "無効")
+									ENDIF
+								;膝立ち
+								CASE 10
+									;Ｂでイった直後は座りに変化する
+									IF NOWEX:MASTER:Ｂ絶頂
+										CALL SET_POSE(MASTER, "座る")
+										CALL SET_POSE(TARGET, "座る", "対面", "無効")
+									;そうでなければ継続
+									ELSE
+										CALL SET_POSE(MASTER, "膝立")
+										CALL SET_POSE(TARGET, "座る", "対面", "無効")
+									ENDIF
+							ENDSELECT
+						ENDIF
+					;手など
+					ELSE
+						;すでに仰向けの場合
+						IF TFLAG:仰向け
+							CALL SET_POSE(MASTER, "仰向")
+							CALL SET_POSE(TARGET, "座る", "対面", "上位")
+						ELSE
+							;前回の姿勢によって補正
+							;口と違い、前後・上下の指定はありません
+							SELECTCASE TCVAR:MASTER:前回の姿勢
+								;仰向け
+								CASE 1
+									;1/4で座りに変化する
+									IF !RAND:4
+										CALL SET_POSE(MASTER, "座る")
+									;そうでなければ継続
+									ELSE
+										CALL SET_POSE(MASTER, "仰向")
+										CALL SET_POSE(TARGET, "座る", "対面", "上位")
+									ENDIF
+								;座り、自由
+								CASE 2, 0
+									;Ｂでイった直後は1/2で仰向けに変化する
+									IF NOWEX:MASTER:Ｃ絶頂 && RAND:2
+										CALL SET_POSE(MASTER, "仰向")
+										CALL SET_POSE(TARGET, "座る", "対面", "上位")
+									;そうでなければ座り
+									ELSE
+										CALL SET_POSE(MASTER, "座る")
+									ENDIF
+								;四つん這い
+								CASE 3
+									;位置が前でない場合、2/3で後ろから継続
+									IF TCVAR:MASTER:位置前後 != 1 && RAND:3
+										CALL SET_POSE(MASTER, "四這")
+										CALL SET_POSE(TARGET, "座る", "背後", "無効")
+									;そうでなければ座りに変化する
+									ELSE
+										CALL SET_POSE(MASTER, "座る")
+									ENDIF
+								;起立
+								CASE 4
+									;Ｂでイった直後は膝立ちに変化する
+									IF NOWEX:MASTER:Ｂ絶頂
+										CALL SET_POSE(MASTER, "膝立")
+									;そうでなければ継続
+									ELSE
+										CALL SET_POSE(MASTER, "起立")
+									ENDIF
+								;膝立ち
+								CASE 10
+									;Ｂでイった直後は座りに変化する
+									IF NOWEX:MASTER:Ｂ絶頂
+										CALL SET_POSE(MASTER, "座る")
+									;そうでなければ継続
+									ELSE
+										CALL SET_POSE(MASTER, "膝立")
+									ENDIF
+							ENDSELECT
+						ENDIF
+					ENDIF
+			ENDSELECT
+		CASE "奉仕"
+			;すでに仰向けの場合（やりにくいと思うけど…）
+			IF TFLAG:仰向け
+				CALL SET_POSE(MASTER, "仰向")
+				CALL SET_POSE(TARGET, "座る", "無効", "上位")
+			ELSE
+				;前回の姿勢によって補正
+				SELECTCASE TCVAR:MASTER:前回の姿勢
+					;仰向け…下から触る
+					CASE 1
+						CALL SET_POSE(MASTER, "仰向")
+						CALL SET_POSE(TARGET, "座る", "無効", "上位")
+					;他…座って前から
+					;手の場合、COMで積極的従うことで後ろに回ることがある
+					CASEELSE
+						CALL SET_POSE(MASTER, "座る")
+						CALL SET_POSE(TARGET, "座る", "対面", "無効")
+				ENDSELECT
+			ENDIF
+		;その他
+		CASEELSE
+			;すでに仰向けの場合
+			IF TFLAG:仰向け
+				CALL SET_POSE(MASTER, "仰向")
+			ELSE
+				;個別の設定
+				SELECTCASE TFLAG:ACT
+					;キス
+					CASE 15
+						;自由の場合座らせる
+						IF TCVAR:MASTER:前回の姿勢 == 0
+							CALL SET_POSE(MASTER, "座る")
+						ELSE
+							CALL SET_POSE(MASTER, "前回")
+						ENDIF
+						;自由の場合前に
+						IF TCVAR:MASTER:前回の位置前後 == 0
+							CALL SET_POSE(TARGET, "前回", "対面", "前回")
+						ELSE
+							CALL SET_POSE(TARGET, "前回", "前回", "前回")
+						ENDIF
+					;自慰、放尿
+					CASE 40, 45
+						;自由の場合座らせる
+						IF TCVAR:MASTER:前回の姿勢 == 0
+							CALL SET_POSE(MASTER, "座る")
+						ELSE
+							CALL SET_POSE(MASTER, "前回")
+						ENDIF
+						CALL SET_POSE(TARGET, "前回", "前回", "前回")
+					;秘貝開帳
+					CASE 41
+						;座り対面
+						CALL SET_POSE(MASTER, "座る")
+						CALL SET_POSE(TARGET, "座る", "対面", "無効")
+					;自慰見せつけ、ペニスバンド装着
+					CASE 42, 75
+						;対面
+						CALL SET_POSE(TARGET, "座る", "対面", "無効")
+					;大鏡、野外プレイ、コスプレ、休憩、栄養剤
+					CASE 43, 44, 46, 90, 91
+						;リセット
+						CALL SET_POSE(MASTER, "自由")
+						CALL SET_POSE(TARGET, "自由", "無効", "無効")
+					;放置プレイ、公衆便所プレイ
+					CASE 45, 74
+						;位置リセット、姿勢1/2で自由、1/2で継続
+						CALL SET_POSE(MASTER, RAND:2 ? "自由" # "前回")
+						CALL SET_POSE(TARGET, "自由", "無効", "無効")
+					;スパンキング、鞭、フィスト類
+					CASE 60, 61, 70, 71, 72
+						;四つん這い・後ろ
+						CALL SET_POSE(MASTER, "四這")
+						CALL SET_POSE(TARGET, "起立", "背後", "無効")
+					;縄・目隠し・ボールギャグ、治療
+					CASE 63, 64, 65, 92
+						;座り・後ろ
+						CALL SET_POSE(MASTER, "座る")
+						CALL SET_POSE(TARGET, "起立", "背後", "無効")
+					;三角木馬
+					CASE 67
+						;膝立ち、位置リセット
+						CALL SET_POSE(MASTER, "膝立")
+						CALL SET_POSE(TARGET, "起立", "無効", "無効")
+				ENDSELECT
+			ENDIF
+	ENDSELECT
+ENDIF
+
+;フェラ継続中の場合、前後位置を前に固定
+SIF TEQUIP:調教対象Ｃ使用 == 2
+	CALL SET_POSE(TARGET, "継続", "対面", "無効")
+
+;ここまでで自由姿勢だった場合
+IF !TCVAR:MASTER:姿勢
+	;性交中・Ｐ使用中・自慰中ならば前回の姿勢・位置を踏襲
+	IF TEQUIP:性交中 || TEQUIP:性交奉仕中 || TEQUIP:調教対象Ｃ使用 || GETBIT(TEQUIP:自慰中, 0)
+		CALL SET_POSE(MASTER, "前回")
+		CALL SET_POSE(TARGET, "前回", "前回", "前回")
+	ENDIF
+ENDIF
+
+;ここまでで自由前後位置だった場合
+IF !TCVAR:MASTER:位置前後 && !TCVAR:MASTER:位置上下
+	;愛撫系・道具系ACTならば前回の位置を踏襲
+	;前回が自由なら前と後ろにランダムで振る
+	IF GROUPMATCH(GET_ACTM(TFLAG:ACT), 1, 2)
+		IF RANGE(TCVAR:MASTER:位置前後, 1, 2)
+			CALL SET_POSE(TARGET, "継続", "継続", "前回")
+		ELSE
+			CALL SET_POSE(TARGET, "継続", "継続", RAND:2 ? "対面" # "背後")
+		ENDIF
+	ENDIF
+ENDIF
+
+;助手の性交をキャンセル
+IF TFLAG:Ｐ使用中 || TFLAG:Ｐ挿入中
+	TFLAG:助手に挿入中 = 0
+	TFLAG:助手連続交合 = 0
+ENDIF
+
+@MASTER_POSE_ASSI, ARG
+;助手行動
+;手淫
+IF TCVAR:ARG:助手ACT == 7
+	SIF TFLAG:仰向け
+		TFLAG:仰向け = 2
+	TFLAG:Ｐ使用中 += 1
+;クンニ,フェラ
+ELSEIF TCVAR:ARG:助手ACT == 1
+	SIF TFLAG:仰向け
+		TFLAG:仰向け = 2
+	TFLAG:Ｐ使用中 += 1
+;貝あわせ,素股
+ELSEIF TCVAR:ARG:助手ACT == 2
+	SIF TFLAG:仰向け
+		TFLAG:仰向け = 2
+	TFLAG:Ｐ使用中 += 1
+;パイズリ
+ELSEIF TCVAR:ARG:助手ACT == 3
+	SIF TFLAG:仰向け
+		TFLAG:仰向け = 2
+	TFLAG:Ｐ使用中 += 1
+;足コキ
+ELSEIF TCVAR:ARG:助手ACT == 4
+	SIF TFLAG:仰向け == 0
+		TFLAG:仰向け = 2
+	TFLAG:Ｐ使用中 += 1
+;ローター, オナホール
+ELSEIF TCVAR:ARG:助手ACT == 5
+	TFLAG:Ｐ使用中 += 1
+;逆レイプ
+ELSEIF TCVAR:ARG:助手ACT == 6
+	SIF TFLAG:仰向け
+		TFLAG:仰向け = 2
+	TFLAG:Ｐ挿入中 = 1
+;アナル愛撫
+ELSEIF TCVAR:ARG:助手ACT == 10
+	TFLAG:Ａ使用中 = 2
+;アナル舐め
+ELSEIF TCVAR:ARG:助手ACT == 11
+	TFLAG:Ａ使用中 = 2
+;アナルローター
+ELSEIF TCVAR:ARG:助手ACT == 12
+	TFLAG:Ａ使用中 = 2
+;アナルバイブ
+ELSEIF TCVAR:ARG:助手ACT == 13
+	TFLAG:Ａ使用中 = 2
+;胸愛撫
+ELSEIF TCVAR:ARG:助手ACT == 20
+	TFLAG:胸使用中 = 1
+
+;乳首舐め
+ELSEIF TCVAR:ARG:助手ACT == 21
+	TFLAG:胸使用中 = 1
+;乳首ローター
+ELSEIF TCVAR:ARG:助手ACT == 22
+	TFLAG:胸使用中 = 1
+;指挿入
+ELSEIF TCVAR:ARG:助手ACT == 30
+	TFLAG:Ｖ使用中 = 2
+;バイブ
+ELSEIF TCVAR:ARG:助手ACT == 31
+	TFLAG:Ｖ使用中 = 2
+;性交
+ELSEIF TCVAR:ARG:助手ACT == 32
+	SIF TFLAG:仰向け
+		TFLAG:仰向け = 2
+	TFLAG:Ｖ使用中 = 1
+;キス
+ELSEIF TCVAR:ARG:助手ACT == 40
+	SIF TFLAG:仰向け
+		TFLAG:仰向け = 2
+	TFLAG:口使用中 += 1
+;顔面騎乗
+ELSEIF TCVAR:ARG:助手ACT == 41
+	SIF TFLAG:仰向け
+		TFLAG:仰向け = 2
+	TFLAG:口使用中 = 2
+;足を舐めさせる
+ELSEIF TCVAR:ARG:助手ACT == 42
+	TFLAG:口使用中 = 2
+ENDIF
+
+
+;────────────────────────────────────
+;ACTごとのPOSE情報。主にMASTERについて
+;現状MASTER側だけが情報を持っています。拡張性のためTCVARを利用
+;どれも、=0は情報なし・自由ということで。会話とかそんな感じです
+;
+;結局、口上くらいしかこれらを参照していませんが…そのうち役に立つ？
+;
+;※要修正
+;＠TCVAR:MASTER:1（姿勢）
+;	姿勢情報を格納するらしい。TFLAG:仰向け（仰向け）はそのうちこちらに移植されるべきか？
+;	一応、現在はTFLAG:仰向け=2から１ターンでは起き上がれないという要素があるので残しつつこちらにも記録することに。
+;	ほとんどこのTCVARは参照されていませんが、ここでデータだけは入れておいてもいいよね。
+;	(0=自由 1=仰向け 2=座る 3=四つん這い 4=起立 10=膝立ち)
+;
+;＠TCVAR:MASTER:2（位置前後）
+;	MASTERとTARGETの前後位置情報だけ格納。現状MASTER側だけが持っています
+;	=0は自由
+;	=1で対面（Ｍ→←Ｔ）
+;	=2でMASTERの背後（Ｔ→Ｍ→）
+;	=3でMASTERが背後（Ｍ→Ｔ→）
+;
+;＠TCVAR:MASTER:3（位置上下）
+;	MASTERとTARGETの上下位置情報。現状MASTER側だけが持っています
+;	=1で正位（MASTERが組み敷かれている）
+;	=2で逆位（MASTERがTARGETを組み敷いている）
+
+;これでとりあえず、大まかには表せます。
+;────────────────────────────────────
+;010,愛撫/手淫する（Ｓ/Ｎ/Ｈ）（快Ｃ、快Ｂ、接触、情愛、性行動、不潔）
+;────────────────────────────────────
+@MASTER_POSE_ACT10
+	SIF RAND:(10 + ABL:欲望 + ABL:技巧) > RAND:(10 + ABL:MASTER:技巧)
+		TFLAG:仰向け = 2
+	TFLAG:Ｐ使用中 += 1
+
+;────────────────────────────────────
+;011,胸愛撫/乳首吸い/乳の揉み合い（Ｓ/Ｎ/Ｈ）（快Ｂ、接触、情愛、性行動、痛み、不潔）
+;────────────────────────────────────
+@MASTER_POSE_ACT11
+	TFLAG:胸使用中 = 1
+	;乳首吸い、乳の揉み合いは対面
+	SIF GROUPMATCH(TFLAG:ACT派生, 1, 2)
+		CALL SET_POSE(TARGET, "継続", "対面", "無効")
+
+;────────────────────────────────────
+;012,クンニ/フェラする（Ｓ/Ｎ/Ｈ）（快Ｃ、接触、情愛、性行動、痛み、不潔）
+;────────────────────────────────────
+@MASTER_POSE_ACT12
+	SIF RAND:(10 + ABL:欲望 + ABL:技巧) > RAND:(10 + ABL:MASTER:技巧)
+		TFLAG:仰向け = 2
+	TFLAG:Ｐ使用中 += 1
+	SIF !PENIS(MASTER)
+		TFLAG:Ｖ使用中 = 2
+	;対面
+	CALL SET_POSE(TARGET, "継続", "対面", "無効")
+;────────────────────────────────────
+;013,アナル愛撫（Ｎ/Ｈ）[罰]（快Ａ、接触、性行動、痛み、不潔、逸脱）
+;────────────────────────────────────
+@MASTER_POSE_ACT13
+	TFLAG:Ａ使用中 += 1
+;────────────────────────────────────
+;014,アナル舐め（Ｎ/Ｈ）[罰]（快Ａ、接触、性行動、痛み、不潔、逸脱）
+;────────────────────────────────────
+@MASTER_POSE_ACT14
+	TFLAG:Ａ使用中 += 1
+	;背後
+	CALL SET_POSE(TARGET, "継続", "背後", "無効")
+;────────────────────────────────────
+;015,キス（Ｓ/Ｎ）（接触、情愛、性行動、痛み、不潔）
+;────────────────────────────────────
+@MASTER_POSE_ACT15
+	SIF RAND:(10 + ABL:欲望 + ABL:技巧) > RAND:(10 + ABL:MASTER:技巧)
+		TFLAG:仰向け = 2
+	TFLAG:口使用中 += 1
+;────────────────────────────────────
+;016,貝あわせ/素股する（Ｓ/Ｎ）（快Ｃ、接触、情愛、性行動、不潔、快ｃ）
+;────────────────────────────────────
+@MASTER_POSE_ACT16
+	SIF RAND:(10 + ABL:欲望 + ABL:技巧) > RAND:(10 + ABL:MASTER:技巧)
+		TFLAG:仰向け = 2
+	TFLAG:Ｐ使用中 += 1
+	TFLAG:Ｖ使用中 = 2
+	;対面
+	CALL SET_POSE(TARGET, "継続", "対面", "無効")
+;────────────────────────────────────
+;017,パイズリする（Ｓ/Ｎ）（快Ｃ、接触、情愛、痛み、性行動、不潔、快ｂ）
+;────────────────────────────────────
+@MASTER_POSE_ACT17
+	SIF RAND:(10 + ABL:欲望 + ABL:技巧) > RAND:(10 + ABL:MASTER:技巧)
+		TFLAG:仰向け = 2
+	TFLAG:Ｐ使用中 += 1
+	;対面
+	CALL SET_POSE(TARGET, "継続", "対面", "無効")
+;────────────────────────────────────
+;018,足コキする（Ｓ/Ｎ/Ｈ）[罰]（快Ｃ、接触、情愛、性行動、不潔、逸脱）
+;────────────────────────────────────
+@MASTER_POSE_ACT18
+	SIF RAND:(10 + ABL:欲望 + ABL:技巧) > RAND:(10 + ABL:MASTER:技巧)
+		TFLAG:仰向け = 2
+	TFLAG:Ｐ使用中 += 1
+	;対面
+	CALL SET_POSE(TARGET, "継続", "対面", "無効")
+;────────────────────────────────────
+;018,指挿入れ
+;────────────────────────────────────
+@MASTER_POSE_ACT19
+	TFLAG:Ｖ使用中 += 1
+;────────────────────────────────────
+;020,ローター（Ｓ/Ｎ）（快Ｃ、中毒充足）
+;────────────────────────────────────
+@MASTER_POSE_ACT20
+	TFLAG:Ｐ使用中 = 6
+;────────────────────────────────────
+;021,バイブ（Ｓ/Ｎ/Ｈ）[罰]（快Ｖ、痛み、逸脱、中毒充足、トラウマ）
+;────────────────────────────────────
+@MASTER_POSE_ACT21
+	TFLAG:Ｖ使用中 = 2
+;────────────────────────────────────
+;022,アナルバイブ（Ｎ/Ｈ）[罰]（快Ａ、痛み、逸脱、中毒充足）
+;────────────────────────────────────
+@MASTER_POSE_ACT22
+	TFLAG:Ａ使用中 = 2
+;────────────────────────────────────
+;023,アナルビーズ（Ｓ/Ｎ/Ｈ）（快Ａ、痛み、逸脱、中毒充足）
+;────────────────────────────────────
+@MASTER_POSE_ACT23
+	TFLAG:Ａ使用中 = 2
+;────────────────────────────────────
+;024,クリキャップ/オナホール（Ｓ/Ｎ）（快Ｃ、中毒充足）
+;────────────────────────────────────
+@MASTER_POSE_ACT24
+	TFLAG:Ｐ使用中 = 5
+;────────────────────────────────────
+;025,ニプルキャップ
+;────────────────────────────────────
+@MASTER_POSE_ACT25
+	TFLAG:胸使用中 = 1
+;────────────────────────────────────
+;026,ペニスバンド
+;────────────────────────────────────
+@MASTER_POSE_ACT26
+	TFLAG:Ｐ使用中 = 6
+	TFLAG:Ａ使用中 = 2
+	TFLAG:Ｖ使用中 = 1
+	;対面
+	CALL SET_POSE(TARGET, "継続", "対面", "無効")
+;────────────────────────────────────
+;030,正常位（Ｓ/Ｎ）（快Ｖ、接触、情愛、性行動、痛み、中毒充足、トラウマ、快ｃ）
+;────────────────────────────────────
+@MASTER_POSE_ACT30
+	TFLAG:仰向け = 2
+	TFLAG:Ｖ使用中 = 1
+	;対面
+	CALL SET_POSE(TARGET, "継続", "対面", "無効")
+;────────────────────────────────────
+;031,後背位（Ｎ/Ｈ）[罰]（快Ｖ、接触、情愛、性行動、痛み、中毒充足、トラウマ、快ｃ）
+;────────────────────────────────────
+@MASTER_POSE_ACT31
+	TFLAG:仰向け = 0
+	TFLAG:Ｖ使用中 = 1
+	;背後
+	CALL SET_POSE(TARGET, "継続", "背後", "無効")
+;────────────────────────────────────
+;032,騎乗位（Ｓ/Ｎ）（快Ｖ、接触、情愛、性行動、痛み、中毒充足、トラウマ、快ｃ）
+;────────────────────────────────────
+@MASTER_POSE_ACT32
+	TFLAG:仰向け = 0
+	TFLAG:Ｖ使用中 = 1
+	;対面
+	CALL SET_POSE(TARGET, "継続", "対面", "無効")
+;────────────────────────────────────
+;033,対面座位（Ｓ/Ｎ/Ｈ）（快Ｖ、接触、情愛、性行動、痛み、中毒充足、トラウマ、快ｃ）
+;────────────────────────────────────
+@MASTER_POSE_ACT33
+	TFLAG:仰向け = 0
+	TFLAG:Ｖ使用中 = 1
+	;対面
+	CALL SET_POSE(TARGET, "継続", "対面", "無効")
+;────────────────────────────────────
+;034,背面座位（Ｎ/Ｈ）（快Ｖ、接触、情愛、性行動、痛み、露出、中毒充足、トラウマ、快ｃ）
+;────────────────────────────────────
+@MASTER_POSE_ACT34
+	TFLAG:仰向け = 0
+	TFLAG:Ｖ使用中 = 1
+	;背後
+	CALL SET_POSE(TARGET, "継続", "背後", "無効")
+;────────────────────────────────────
+;035,アナルセックス（Ｎ/Ｈ/Ａ）[罰]（快Ａ、接触、情愛、性行動、痛み、逸脱、中毒充足、トラウマ、快ｃ）
+;────────────────────────────────────
+@MASTER_POSE_ACT35
+	TFLAG:Ａ使用中 = 2
+	;背後
+	CALL SET_POSE(TARGET, "継続", "背後", "無効")
+;────────────────────────────────────
+;103,逆レイプ（Ｎ/Ｈ/Ａ）[罰]（快Ｃ、接触、情愛、性行動、痛み、逸脱、中毒充足、トラウマ、快ｖ）
+;────────────────────────────────────
+@MASTER_POSE_ACT103
+	TFLAG:仰向け = 2
+	TFLAG:Ｐ挿入中 = 1
+	;対面
+	CALL SET_POSE(TARGET, "継続", "対面", "無効")
+;────────────────────────────────────
+;041,秘貝開帳（Ｓ/Ｎ/Ｈ）（快Ｃ、露出、逸脱）
+;────────────────────────────────────
+@MASTER_POSE_ACT41
+	TFLAG:Ｖ使用中 = 2
+	;対面
+	CALL SET_POSE(TARGET, "継続", "対面", "無効")
+;────────────────────────────────────
+;045,放尿（Ｎ/Ｈ/Ａ）[罰]（露出、逸脱、トラウマ）
+;────────────────────────────────────
+@MASTER_POSE_ACT45
+	TFLAG:Ｐ使用中 = 3
+	TFLAG:Ｖ使用中 = 2
+;────────────────────────────────────
+;050,手淫/愛撫強制（Ｓ/Ｎ）（不潔）
+;────────────────────────────────────
+;奉仕系の行動は拒否できるので、反応が出るまで身体の接触がないようにしておきます
+@MASTER_POSE_ACT50
+	TFLAG:足使用中 += 1
+	;対面（助手に事前に前を開けさせるため）
+	CALL SET_POSE(TARGET, "継続", "対面", "無効")
+;────────────────────────────────────
+;051,フェラチオ/クンニ強制（Ｓ/Ｎ/Ｈ）（不潔）
+;────────────────────────────────────
+@MASTER_POSE_ACT51
+	SIF TFLAG:仰向け
+		TFLAG:仰向け = 2
+	SIF RAND:(10 + ABL:欲望 + ABL:技巧) > RAND:(10 + ABL:MASTER:技巧)
+		TFLAG:仰向け = 2
+	SIF TEQUIP:調教対象Ｃ使用 == 1 || TEQUIP:調教対象Ｃ使用 == 2 || TEQUIP:調教対象Ｃ使用 == 4
+		TFLAG:仰向け = 2
+	TFLAG:口使用中 = 2
+	;対面
+	CALL SET_POSE(TARGET, "継続", "対面", "無効")
+;────────────────────────────────────
+;052,パイズリ（Ｓ/Ｎ/Ｈ）（不潔）
+;────────────────────────────────────
+@MASTER_POSE_ACT52
+	SIF RAND:(10 + ABL:欲望 + ABL:技巧) > RAND:(10 + ABL:MASTER:技巧)
+		TFLAG:仰向け = 2
+	TFLAG:胸使用中 = 1
+	;対面
+	CALL SET_POSE(TARGET, "継続", "対面", "無効")
+;────────────────────────────────────
+;053,素股（Ｓ/Ｎ/Ｈ）（不潔）
+;────────────────────────────────────
+@MASTER_POSE_ACT53
+	TFLAG:Ｐ使用中 = 4
+	TFLAG:Ｖ使用中 = 2
+	;対面
+	CALL SET_POSE(TARGET, "継続", "対面", "無効")
+;────────────────────────────────────
+;055,足舐め強制（Ｎ/Ｈ/Ａ）[罰]（不潔、逸脱、トラウマ）
+;────────────────────────────────────
+@MASTER_POSE_ACT55
+	TFLAG:口使用中 = 2
+	;対面
+	CALL SET_POSE(TARGET, "継続", "対面", "無効")
+;────────────────────────────────────
+;056,イラマチオ（Ｈ/Ａ）[罰]（接触、情愛逆、性行動、痛み、拘束<=頭を掴む事、不潔、逸脱、トラウマ、快ｃ）
+;────────────────────────────────────
+@MASTER_POSE_ACT56
+	TFLAG:口使用中 = 2
+	;対面
+	CALL SET_POSE(TARGET, "継続", "対面", "無効")
+
+;────────────────────────────────────
+;070,フィストファック（Ｈ/Ａ）[罰]（快Ｖ、接触、痛み、逸脱、中毒充足、トラウマ）
+;────────────────────────────────────
+@MASTER_POSE_ACT70
+	TFLAG:Ｖ使用中 = 2
+	;対面
+	CALL SET_POSE(TARGET, "継続", "対面", "無効")
+;────────────────────────────────────
+;071,アナルフィスト（Ｈ/Ａ）[罰]（快Ａ、接触、痛み、逸脱、中毒充足、トラウマ）
+;────────────────────────────────────
+@MASTER_POSE_ACT71
+	TFLAG:Ａ使用中 = 2
+	;背後
+	CALL SET_POSE(TARGET, "継続", "背後", "無効")
+;────────────────────────────────────
+;072,両穴フィスト（Ａ）[罰]（快Ｖ、快Ａ、接触、痛み、逸脱、中毒充足、トラウマ）
+;────────────────────────────────────
+@MASTER_POSE_ACT72
+	TFLAG:Ａ使用中 = 2
+	TFLAG:Ｖ使用中 = 2
+	;対面
+	CALL SET_POSE(TARGET, "継続", "対面", "無効")
+;────────────────────────────────────
+;095,正常位させる（Ｎ/Ｈ/Ａ）[接触]（快Ｃ、接触、情愛、性行動、中毒充足、達成、悦楽、快ｖ）
+;────────────────────────────────────
+@MASTER_POSE_ACT95
+	TFLAG:仰向け = 0
+	TFLAG:Ｐ挿入中 = 1
+	;対面
+	CALL SET_POSE(TARGET, "継続", "対面", "無効")
+;────────────────────────────────────
+;096,後背位させる（Ｎ/Ｈ/Ａ）[接触]（快Ｃ、接触、情愛、性行動、中毒充足、達成、悦楽、快ｖ）
+;────────────────────────────────────
+@MASTER_POSE_ACT96
+	TFLAG:仰向け = 0
+	TFLAG:Ｐ挿入中 = 1
+	;背面
+	CALL SET_POSE(TARGET, "継続", "四這", "無効")
+;────────────────────────────────────
+;097,対面座位させる（Ｎ/Ｈ/Ａ）[接触]（快Ｃ、接触、情愛、性行動、中毒充足、達成、悦楽、快ｖ、快ｃ）
+;────────────────────────────────────
+@MASTER_POSE_ACT97
+	TFLAG:仰向け = 0
+	TFLAG:Ｐ挿入中 = 1
+	;対面
+	CALL SET_POSE(TARGET, "継続", "対面", "無効")
+;────────────────────────────────────
+;098,背面座位させる（Ｎ/Ｈ/Ａ）[接触]（快Ｃ、接触、情愛、性行動、中毒充足、達成、悦楽、快ｖ、快ｃ、快ｂ）
+;────────────────────────────────────
+@MASTER_POSE_ACT98
+	TFLAG:仰向け = 0
+	TFLAG:Ｐ挿入中 = 1
+	;背面
+	CALL SET_POSE(TARGET, "継続", "四這", "無効")
+;────────────────────────────────────
+;099,アナルセックスさせる（Ｎ/Ｈ/Ａ）[接触]（快Ｃ、接触、情愛、性行動、中毒充足、達成、悦楽、快ｖ、快ｃ、快ｂ）
+;────────────────────────────────────
+@MASTER_POSE_ACT99
+	IF	TFLAG:仰向け == 0
+		SIF RAND:2 == 0
+			TFLAG:仰向け = 2
+	ELSE
+		TFLAG:仰向け = 2
+	ENDIF
+	TFLAG:Ｐ挿入中 = 1
+	;背面
+	CALL SET_POSE(TARGET, "継続", "四這", "無効")
+
+;※要修正
+;↑ここまであんまり弄ってないです。Ｐ使用中フラグの代入とかだいぶ変ですが現状では実害ないので放置
+;そのうち直すタスクということで
+
+;────────────────────────────────────
+;300,Ｗ手淫
+;────────────────────────────────────
+@MASTER_POSE_ACT300
+	;仰向け判定は手淫と同じ
+	SIF RAND:(10 + ABL:欲望 + ABL:技巧) > RAND:(10 + ABL:MASTER:技巧)
+		TFLAG:仰向け = 2
+	;ＷでＰ使用中
+	TFLAG:Ｐ使用中 += 2
+	;対面
+	CALL SET_POSE(TARGET, "継続", "対面", "無効")
+;────────────────────────────────────
+;301,Ｗフェラ
+;────────────────────────────────────
+@MASTER_POSE_ACT301
+	SIF RAND:(10 + ABL:欲望 + ABL:技巧) > RAND:(10 + ABL:MASTER:技巧)
+		TFLAG:仰向け = 2
+	TFLAG:Ｐ使用中 += 2
+	;対面
+	CALL SET_POSE(TARGET, "継続", "対面", "無効")
+;────────────────────────────────────
+;302,Ｗキス
+;────────────────────────────────────
+@MASTER_POSE_ACT302
+	SIF RAND:(10 + ABL:欲望 + ABL:技巧) > RAND:(10 + ABL:MASTER:技巧)
+		TFLAG:仰向け = 2
+	TFLAG:口使用中 += 2
+	;対面
+	CALL SET_POSE(TARGET, "継続", "対面", "無効")
+;────────────────────────────────────
+;303,Ｗ素股
+;────────────────────────────────────
+@MASTER_POSE_ACT303
+	TFLAG:Ｐ使用中 += 2
+	TFLAG:Ｖ使用中 += 2
+	;対面
+	CALL SET_POSE(TARGET, "継続", "対面", "無効")
+;────────────────────────────────────
+;304,Ｗパイズリ
+;────────────────────────────────────
+@MASTER_POSE_ACT304
+	SIF RAND:(10 + ABL:欲望 + ABL:技巧) > RAND:(10 + ABL:MASTER:技巧)
+		TFLAG:仰向け = 2
+	TFLAG:Ｐ使用中 += 2
+	;対面
+	CALL SET_POSE(TARGET, "継続", "対面", "無効")
+;────────────────────────────────────
+;305,Ｗ足コキ
+;────────────────────────────────────
+@MASTER_POSE_ACT305
+	SIF RAND:(10 + ABL:欲望 + ABL:技巧) > RAND:(10 + ABL:MASTER:技巧)
+		TFLAG:仰向け = 2
+	TFLAG:Ｐ使用中 += 2
+	;対面
+	CALL SET_POSE(TARGET, "継続", "対面", "無効")
+;────────────────────────────────────
+;306,騎乗二穴責め
+;────────────────────────────────────
+@MASTER_POSE_ACT306
+	TFLAG:仰向け = 0
+	TFLAG:Ｖ使用中++
+	TFLAG:Ａ使用中++
+	;対面
+	CALL SET_POSE(TARGET, "継続", "対面", "無効")
+;────────────────────────────────────
+;307,対面二穴責め
+;────────────────────────────────────
+@MASTER_POSE_ACT307
+	TFLAG:仰向け = 0
+	TFLAG:Ｖ使用中++
+	TFLAG:Ａ使用中++
+	;対面
+	CALL SET_POSE(TARGET, "継続", "対面", "無効")
+;────────────────────────────────────
+;308,変則乱れ牡丹
+;────────────────────────────────────
+@MASTER_POSE_ACT308
+	TFLAG:仰向け = 0
+	TFLAG:Ｖ使用中++
+	;背後
+	CALL SET_POSE(TARGET, "継続", "背後", "無効")
+;────────────────────────────────────
+;309,アナル二穴責め
+;────────────────────────────────────
+@MASTER_POSE_ACT309
+	TFLAG:仰向け = 0
+	TFLAG:Ｖ使用中++
+	TFLAG:Ａ使用中++
+	;背後
+	CALL SET_POSE(TARGET, "継続", "背後", "無効")
+;────────────────────────────────────
+;310,Ｗ逆レイプ
+;────────────────────────────────────
+@MASTER_POSE_ACT310
+	TFLAG:仰向け = 2
+	TFLAG:Ｐ挿入中 += 2
+	;対面
+	CALL SET_POSE(TARGET, "継続", "対面", "無効")
+;────────────────────────────────────
+;311,谷渡り
+;────────────────────────────────────
+@MASTER_POSE_ACT311
+	TFLAG:仰向け = 0
+	TFLAG:Ｐ挿入中 += 2
+	;背面
+	CALL SET_POSE(TARGET, "継続", "四這", "無効")
+
+;-------------------------------------------------
+;使用状態変更関数
+;ARG:0,1は対象者1,2
+;ARGS:0,1は使用状態を変更する部位1,2
+;	部位     Ｐ(ペニス)/Ｖ(ヴァギナ)/Ａ(アヌス)/Ｂ(胸/バスト)/Ｍ(口/マウス)/Ｈ(手/ハンド)/Ｆ(足/フット/フィート)
+;-------------------------------------------------
+@SET_USE(ARG:0, ARGS:0, ARG:1 = -1, ARGS:1)
+#LOCALSSIZE 2
+#DIM LCOUNT
+FOR LCOUNT, 0, 2
+	;互換性のための一時処理！！！！！
+	IF ARG:LCOUNT == MASTER
+		SELECTCASE ARGS:LCOUNT
+			CASE "Ｐ", "ペニス"
+				SIF GROUPMATCH(ARGS:(!LCOUNT), "Ｖ", "ヴァギナ", "Ａ", "アヌス")
+					TFLAG:Ｐ挿入中++
+				TFLAG:Ｐ使用中++
+			CASE "Ｖ", "ヴァギナ"
+				TFLAG:Ｖ使用中++
+			CASE "Ａ", "アヌス"
+				TFLAG:Ａ使用中++
+			CASE "Ｂ", "胸", "バスト"
+				TFLAG:胸使用中++
+			CASE "Ｍ", "口", "マウス"
+				TFLAG:口使用中++
+			CASE "Ｈ", "手", "ハンド"
+				TFLAG:手使用中++
+			CASE "Ｆ", "足", "フット", "フィート"
+				TFLAG:足使用中++
+		ENDSELECT
+	ENDIF
+NEXT
+
+;-------------------------------------------------
+;姿勢変更関数
+;ARGは対象者
+;ARGS:0は現在の姿勢
+;	TCVER:姿勢     0=自由/1=仰向(仰向け)/2=座る/3=四這(四つん這い)/4=起立/10=膝立(膝立ち)
+;ARGS:1はMASTERとの前後関係
+;	TCVER:位置前後 0=無効/1=対面/2=背後(MASTERの背後)/3=前面(MASTERが背後)
+;ARGS:2はMASTERとの上下関係
+;	TCVER:位置上下 0=無効/1=上位(正位)/2=下位(逆位)
+;-------------------------------------------------
+@SET_POSE(ARG, ARGS:0, ARGS:1, ARGS:2)
+#LOCALSSIZE 2
+#DIM LCOUNT
+;互換性のための一時処理！！！！！
+IF ARG == MASTER
+	;姿勢セット
+	;セットしない場合は無効な文字列を指定("", "継続" など)
+	SELECTCASE ARGS:0
+		CASE "自由"
+			TCVAR:ARG:姿勢 = 0
+		CASE "仰向", "仰向け"
+			TCVAR:ARG:姿勢 = 1
+			;仰向け処理もついでにやっちゃう
+			TFLAG:仰向け = 2
+		CASE "座る"
+			TCVAR:ARG:姿勢 = 2
+		CASE "四這", "四つん這い"
+			TCVAR:ARG:姿勢 = 3
+		CASE "起立"
+			TCVAR:ARG:姿勢 = 4
+		CASE "膝立", "膝立ち"
+			TCVAR:ARG:姿勢 = 10
+		CASE "前回"
+			TCVAR:ARG:姿勢 = TCVAR:ARG:前回の姿勢
+	ENDSELECT
+ENDIF
+;互換性のための一時処理！！！！！
+ARG = MASTER
+;前後関係セット
+;セットしない場合は無効な文字列を指定("", "継続" など)
+SELECTCASE ARGS:1
+	CASE "無効"
+		TCVAR:ARG:位置前後 = 0
+	CASE "対面"
+		TCVAR:ARG:位置前後 = 1
+	CASE "背後", "MASTERの背後"
+		TCVAR:ARG:位置前後 = 2
+	CASE "前面", "MASTERが背後"
+		TCVAR:ARG:位置前後 = 3
+	CASE "前回"
+		TCVAR:ARG:位置前後 = TCVAR:ARG:前回の位置前後
+ENDSELECT
+;上下関係セット
+;セットしない場合は無効な文字列を指定("", "継続" など)
+SELECTCASE ARGS:2
+	CASE "無効"
+		TCVAR:ARG:位置上下 = 0
+	CASE "上位", "正位"
+		TCVAR:ARG:位置上下 = 1
+	CASE "下位", "逆位"
+		TCVAR:ARG:位置上下 = 2
+	CASE "前回"
+		TCVAR:ARG:位置上下 = TCVAR:ARG:前回の位置上下
+ENDSELECT
+
+;-------------------------------------------------
+;使用状態条件関数
+;L種別 は種別を示す文字列
+;ARG:0,1は対象者1,2
+;ARGS:0,1は使用状態を変更する部位1,2
+;-------------------------------------------------
+@CONDITION_USE(L種別, ARG:0, ARGS:0, ARG:1 = -1, ARGS:1)
+#DIMS L種別
+
+;-------------------------------------------------
+;姿勢条件関数
+;L種別 は種別を示す文字列
+;ARGは対象者
+;ARGS:0は現在の姿勢
+;ARGS:1はMASTERとの前後関係
+;ARGS:2はMASTERとの上下関係
+;-------------------------------------------------
+@CONDITION_POSE(L種別, ARG, ARGS:0, ARGS:1, ARGS:2)
+#DIMS L種別
+
+
+;-------------------------------------------------
+;姿勢制限関数
+;接触部位を渡すことにより、
+;1,許容される姿勢と位置が存在するかを返す
+;2,許容される姿勢と位置以外を禁止する
+;L処理    は処理内容 "存在", "禁止"
+;L対象:0,1はそれぞれ対象となる者
+;L部位:0,1はそれぞれ接触し合う部位
+;-------------------------------------------------
+@LIMIT_POSE(L対象:0, L部位:0, L対象:1, L部位:1)
+#DIM L対象, 2
+#DIMS L部位, 2
+
+;CALL LIMIT_POSE_PD(LPOSE, ARGS:0, ARGS:1)
+IF RESULT == 0
+	;CALL LIMIT_POSE_PD(LPOSE, ARGS:1, ARGS:0)
+	;逆転処理
+ENDIF
+;穴埋め処理
+
+;A⇔V は V⇔A を逆転すれば生成できるので、
+;A⇔V は記述せず、V⇔A のみ記述する
+@LIMIT_POSE_PD(LPOSE, ARGS:0, ARGS:1)
+#DIMS REF LPOSE, 0, 0
+#DIM LCOUNT
+
+LCOUNT = 0
+;調教対象部位
+SELECTCASE ARGS:0
+	CASE "Ｖ"
+		;調教者部位
+		SELECTCASE ARGS:1
+			CASE "Ｖ"
+				;CALL LIMIT_POSE_F(LPOSE, ARGS:0, ARGS:1)
+			CASE "Ａ"
+			
+			CASE "Ｂ"
+			
+			CASE "Ｍ"
+			
+			CASE "Ｈ"
+			
+			CASE "Ｆ"
+			
+			;同一の組み合わせが既に記述されている
+			CASEELSE
+				RETURN 0
+		ENDSELECT
+	CASE "Ａ"
+		;調教者部位
+		SELECTCASE ARGS:1
+			CASE "Ａ"
+			
+			CASE "Ｂ"
+			
+			CASE "Ｍ"
+			
+			CASE "Ｈ"
+			
+			CASE "Ｆ"
+			
+			;同一の組み合わせが既に記述されている
+			CASEELSE
+				RETURN 0
+		ENDSELECT
+	CASE "Ｂ"
+		;調教者部位
+		SELECTCASE ARGS:1
+			CASE "Ｂ"
+			
+			CASE "Ｍ"
+			
+			CASE "Ｈ"
+			
+			CASE "Ｆ"
+			
+			;同一の組み合わせが既に記述されている
+			CASEELSE
+				RETURN 0
+		ENDSELECT
+	CASE "Ｍ"
+		;調教者部位
+		SELECTCASE ARGS:1
+			CASE "Ｍ"
+			
+			CASE "Ｈ"
+			
+			CASE "Ｆ"
+			
+			;同一の組み合わせが既に記述されている
+			CASEELSE
+				RETURN 0
+		ENDSELECT
+	CASE "Ｈ"
+		;調教者部位
+		SELECTCASE ARGS:1
+			CASE "Ｈ"
+			
+			CASE "Ｆ"
+			
+			;同一の組み合わせが既に記述されている
+			CASEELSE
+				RETURN 0
+		ENDSELECT
+	CASE "Ｆ"
+		;調教者部位
+		SELECTCASE ARGS:1
+			CASE "Ｆ"
+			
+			;同一の組み合わせが既に記述されている
+			CASEELSE
+				RETURN 0
+		ENDSELECT
+ENDSELECT
+RETURN 1
+[SKIPEND]

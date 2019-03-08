@@ -1,0 +1,688 @@
+﻿;────────────────────────────────────
+;加虐 (平手60/むち61/はり62/なわ63/目隠64/口枷65/罵倒66/木馬67/浣腸68/イラ56)
+;────────────────────────────────────
+@ACT_M6(ARG = 0)
+;1以上なら判定を行わない
+#DIM LCOUNT, 1
+
+;関数初期化
+CALL ACT_M_INIT(6)
+
+;処理開始
+
+LOCALS = ACT_ACTM6
+
+CALL CHA_CRI_VAR, "基準値"
+CALLFORM %LOCALS%_REFERENCE
+
+CALL CHA_CRI_VAR, @"今回の方針(%POLICY("今")%)"
+CALLFORM %LOCALS%_COURCE
+
+CALL CHA_CRI_VAR, "調教者の素質"
+CALLFORM %LOCALS%_TALENT_T
+
+CALL CHA_CRI_VAR, "調教対象の素質"
+CALLFORM %LOCALS%_TALENT_M
+
+CALL CHA_CRI_VAR, "調教者の能力"
+CALLFORM %LOCALS%_ABL_T
+
+CALL CHA_CRI_VAR, "調教対象の能力"
+CALLFORM %LOCALS%_ABL_M
+
+CALL CHA_CRI_VAR, "調教対象の反抗"
+CALLFORM %LOCALS%_RESISTANCE_M
+
+CALL CHA_CRI_VAR, "調教者の罪悪感"
+CALLFORM %LOCALS%_SIN_T
+
+CALL CHA_CRI_VAR, "調教者のALI"
+CALLFORM %LOCALS%_ALI_T
+
+CALL CHA_CRI_VAR, "調教対象の体力"
+CALLFORM %LOCALS%_PHYSICAL_M
+
+CALL CHA_CRI_VAR, "調教対象の気力"
+CALLFORM %LOCALS%_MENTAL_M
+
+CALL CHA_CRI_VAR, "調教対象の消耗"
+CALLFORM %LOCALS%_EXHAUSTION_M
+
+CALL CHA_CRI_VAR, "調教者の体力"
+CALLFORM %LOCALS%_PHYSICAL_T
+
+CALL CHA_CRI_VAR, "調教者の気力"
+CALLFORM %LOCALS%_MENTAL_T
+
+CALL CHA_CRI_VAR, "調教者の苛立ち"
+CALLFORM %LOCALS%_IRRITATION_T
+
+CALL CHA_CRI_VAR, @"調教者の状態(%CONDITION(TCVAR:状態変化)%)"
+CALLFORM %LOCALS%_CONDITION_T
+
+CALL CHA_CRI_VAR, "既出の話題"
+CALLFORM %LOCALS%_ALREADY_TALKED
+
+CALL CHA_CRI_VAR, "暴れる"
+CALLFORM %LOCALS%_VIOLENT
+
+CALL CHA_CRI_VAR, "道具をはずされた"
+CALLFORM %LOCALS%_BE_TAKEN_OFF_TOOLS
+
+CALL CHA_CRI_VAR, "道具をはずした"
+CALLFORM %LOCALS%_TAKE_OFF_TOOLS
+
+CALL CHA_CRI_VAR, "調教対象自慰中"
+CALLFORM %LOCALS%_MASTURBATION_M
+
+CALL CHA_CRI_VAR, "調教者自慰中"
+CALLFORM %LOCALS%_MASTURBATION_T
+
+CALL CHA_CRI_VAR, "挿入補正"
+CALLFORM %LOCALS%_INSERT
+
+CALL CHA_CRI_VAR, "お仕置き"
+CALLFORM %LOCALS%_OSHIOKI
+
+CALL CHA_CRI_VAR, "調教対象の衣服"
+CALLFORM %LOCALS%_CLOTH_M
+
+CALL CHA_CRI_VAR, "連続行動補正"
+CALLFORM %LOCALS%_PREV
+
+CALL CHA_CRI_VAR, "口上補正値"
+CALL ACT_ACTM_KOJO_CORRECTION_T, 6
+
+CALL CHA_CRI_VAR, "ACT補正値"
+CALLFORM %LOCALS%_CORRECTION(ARG)
+
+;ARGが1以上なら処理中断
+SIF ARG
+	RETURN RESULT
+
+CALL CHA_CRI_VAR, "実行判定"
+CALLFORM %LOCALS%_ABLE
+
+;────────────────────────────────────
+;最終判定
+;────────────────────────────────────
+CALL DEF_CRI_VAR("最大前者")
+LOCAL = GET_CRI_VAR("決定")
+IF LOCAL == -1
+	SIF FLAG:デバッグ
+		PRINTL (加虐ACT分類に実行可能なACTが存在しません)
+	TFLAG:ACT = -1
+	CALL ACT_MENU_RESULT(2, "加虐")
+ELSE
+	TFLAG:ACT = GET_ACTNUM(RESULTS)
+ENDIF
+CALL ANA_CRI_VAR()
+
+;-------------------------------------------------------------------------
+;基準値
+;-------------------------------------------------------------------------
+@ACT_ACTM6_REFERENCE
+
+;要らないかもと思ったので試しに無効化@これみ
+[SKIPSTART]
+CALL ADD_CRI_VAR("スパンキング", 15)
+CALL ADD_CRI_VAR("鞭", 12)
+CALL ADD_CRI_VAR("針", 6)
+CALL ADD_CRI_VAR("縄", 8)
+CALL ADD_CRI_VAR("アイマスク", 8)
+CALL ADD_CRI_VAR("ボールギャグ", 8)
+CALL ADD_CRI_VAR("罵倒", 5)
+CALL ADD_CRI_VAR("三角木馬", 5)
+CALL ADD_CRI_VAR("浣腸セット", 5)
+CALL ADD_CRI_VAR("イラマチオ", 5)
+[SKIPEND]
+
+;------------------------------------------
+;今回の調教方針
+;------------------------------------------
+@ACT_ACTM6_COURCE
+
+;調教方針(1=休憩/2=ソフト/3=ノーマル/4=ハード/5=異常)
+
+;調教方針がハード
+IF IS_POLICY("今", "ハード")
+	CALL ADD_CRI_VAR("浣腸セット", 5)
+	SIF TEQUIP:縄 == 0
+		CALL ADD_CRI_VAR("縄", 7)
+	SIF TEQUIP:アイマスク == 0
+		CALL ADD_CRI_VAR("アイマスク", 5)
+	SIF TEQUIP:ボールギャグ == 0
+		CALL ADD_CRI_VAR("ボールギャグ", 5)
+ENDIF
+
+;調教方針が異常
+SIF IS_POLICY("今", "異常")
+	CALL ADD_CRI_VAR("三角木馬", 5)
+
+;-------------------------------------------------------------------------
+;調教者の素質を参照
+;-------------------------------------------------------------------------
+@ACT_ACTM6_TALENT_T
+
+;調教者が臆病/気丈
+IF TALENT:臆病
+	CALL ADD_CRI_VAR("アイマスク", , TEQUIP:アイマスク ? 0 # 4)
+ELSEIF TALENT:気丈
+	CALL ADD_CRI_VAR("罵倒", , 4)
+	CALL ADD_CRI_VAR("三角木馬", , TEQUIP:三角木馬 ? 0 # 5)
+	CALL ADD_CRI_VAR("浣腸セット", , 5)
+ENDIF
+
+;調教者がプライド高い/低い
+IF TALENT:プライド高い
+	CALL ADD_CRI_VAR("罵倒", 2, 2)
+ELSEIF TALENT:プライド低い
+	CALL ADD_CRI_VAR("罵倒", -2, -2)
+ENDIF
+
+;調教者が一線越えないで三角木馬未装着
+SIF TALENT:一線越えない && !TEQUIP:三角木馬
+	CALL ADD_CRI_VAR("三角木馬", -5)
+
+;調教者が目立ちたがり
+SIF TALENT:目立ちたがり
+	CALL ADD_CRI_VAR("イラマチオ", , 6)
+
+;調教者が抑圧/解放
+IF TALENT:抑圧
+	CALL ADD_CRI_VAR("アイマスク", TEQUIP:アイマスク ? 0 # 3)
+	CALL ADD_CRI_VAR("浣腸セット", -5)
+ELSEIF TALENT:解放
+	CALL ADD_CRI_VAR("アイマスク", TEQUIP:アイマスク ? 0 # -3)
+	CALL ADD_CRI_VAR("浣腸セット", , 7)
+ENDIF
+
+;調教者が恥じらいでアイマスク未装着
+SIF TALENT:恥じらい && !TEQUIP:アイマスク
+	CALL ADD_CRI_VAR("アイマスク", 5)
+
+;調教者が痛みに弱い
+SIF TALENT:痛みに弱い
+	CALL ADD_CRI_VAR("スパンキング", -5)
+
+;調教者が針さばき
+SIF TALENT:針さばき
+	CALL ADD_CRI_VAR("針", 5)
+
+;調教者が縛り上手で縄未装着
+SIF TALENT:縛り上手 && !TEQUIP:縄
+	CALL ADD_CRI_VAR("縄", 5)
+
+;調教者が道具使い
+SIF TALENT:道具使い
+	CALL ADD_CRI_VAR("浣腸セット", 5)
+
+;調教者が汚臭敏感
+SIF TALENT:汚臭敏感
+	CALL ADD_CRI_VAR("浣腸セット", -8)
+
+;調教者がサド
+IF TALENT:サド
+	CALL ADD_CRI_VAR("鞭", , 2)
+	CALL ADD_CRI_VAR("針", , 4)
+	CALL ADD_CRI_VAR("縄", , TEQUIP:縄 ? 0 # 2)
+	CALL ADD_CRI_VAR("アイマスク", , TEQUIP:アイマスク ? 0 # 2)
+	CALL ADD_CRI_VAR("ボールギャグ", , TEQUIP:ボールギャグ ? 0 # 4)
+	CALL ADD_CRI_VAR("罵倒", , 6)
+	CALL ADD_CRI_VAR("三角木馬", , TEQUIP:三角木馬 ? 0 # 6)
+	CALL ADD_CRI_VAR("浣腸セット", , 4)
+ENDIF
+
+;調教者が慎重/短気
+IF TALENT:慎重
+	CALL ADD_CRI_VAR("縄", , TEQUIP:縄 ? 0 # 4)
+	CALL ADD_CRI_VAR("三角木馬", TEQUIP:三角木馬 ? 0 # -1, TEQUIP:三角木馬 ? 0 # -4)
+ELSEIF TALENT:短気
+	CALL ADD_CRI_VAR("縄", , TEQUIP:縄 ? 0 # -4)
+	CALL ADD_CRI_VAR("三角木馬", TEQUIP:三角木馬 ? 0 # 1, TEQUIP:三角木馬 ? 0 # 4)
+ENDIF
+
+;調教者が意地悪/心根優しい
+IF TALENT:意地悪
+	CALL ADD_CRI_VAR("アイマスク", , TEQUIP:アイマスク ? 0 # 4)
+	CALL ADD_CRI_VAR("ボールギャグ", , TEQUIP:ボールギャグ ? 0 # 4)
+	CALL ADD_CRI_VAR("罵倒", , 4)
+ELSEIF TALENT:心根優しい
+	CALL ADD_CRI_VAR("アイマスク", , TEQUIP:アイマスク ? 0 # -4)
+	CALL ADD_CRI_VAR("ボールギャグ", , TEQUIP:ボールギャグ ? 0 # -4)
+	CALL ADD_CRI_VAR("罵倒", , -4)
+	CALL ADD_CRI_VAR("三角木馬", TEQUIP:三角木馬 ? 10 # 0)
+ENDIF
+
+;調教者が幼稚
+SIF TALENT:幼稚
+	CALL ADD_CRI_VAR("スパンキング", 1, 4)
+
+;調教者が狂気
+IF TALENT:狂気
+	CALL ADD_CRI_VAR("三角木馬", , TEQUIP:三角木馬 ? 0 # 12)
+	CALL ADD_CRI_VAR("浣腸セット", , 10)
+	CALL ADD_CRI_VAR("イラマチオ", , 10)
+ENDIF
+
+;調教者がＣ敏感
+SIF TALENT:Ｃ敏感
+	CALL ADD_CRI_VAR("イラマチオ", 2, 4)
+
+;-------------------------------------------------------------------------
+;調教対象の素質を参照
+;-------------------------------------------------------------------------
+@ACT_ACTM6_TALENT_M
+
+;調教対象が反抗的/素直
+IF TALENT:MASTER:反抗的
+	CALL ADD_CRI_VAR("縄", TEQUIP:縄 ? 0 # 2, TEQUIP:縄 ? 0 # 4)
+	CALL ADD_CRI_VAR("アイマスク", , TEQUIP:アイマスク ? 0 # 8)
+	CALL ADD_CRI_VAR("ボールギャグ", , TEQUIP:ボールギャグ ? 0 # 8)
+ELSEIF TALENT:MASTER:素直
+	CALL ADD_CRI_VAR("縄", TEQUIP:縄 ? 0 # -2)
+	CALL ADD_CRI_VAR("アイマスク", , TEQUIP:アイマスク ? 0 # -4)
+	CALL ADD_CRI_VAR("ボールギャグ", , TEQUIP:ボールギャグ ? 0 # -4)
+ENDIF
+
+;調教対象が大人しい/生意気
+IF TALENT:MASTER:生意気
+	CALL ADD_CRI_VAR("縄", , TEQUIP:縄 ? 0 # 4)
+	CALL ADD_CRI_VAR("アイマスク", , TEQUIP:アイマスク ? 0 # 4)
+	CALL ADD_CRI_VAR("ボールギャグ", TEQUIP:ボールギャグ ? 0 # 2, TEQUIP:ボールギャグ ? 0 # 4)
+ELSEIF TALENT:MASTER:大人しい
+	CALL ADD_CRI_VAR("縄", , TEQUIP:縄 ? 0 # -4)
+	CALL ADD_CRI_VAR("アイマスク", , TEQUIP:アイマスク ? 0 # -4)
+	CALL ADD_CRI_VAR("ボールギャグ", TEQUIP:ボールギャグ ? 0 # -2)
+ENDIF
+
+;調教対象がプライド高い/低い
+IF TALENT:MASTER:プライド高い
+	CALL ADD_CRI_VAR("ボールギャグ", , TEQUIP:ボールギャグ ? 0 # 4)
+ELSEIF TALENT:MASTER:プライド低い
+	CALL ADD_CRI_VAR("ボールギャグ", , TEQUIP:ボールギャグ ? 0 # -4)
+ENDIF
+
+;調教対象が恥じらい/恥薄い
+IF TALENT:MASTER:恥じらい
+	CALL ADD_CRI_VAR("罵倒", 2, 4)
+ELSEIF TALENT:MASTER:恥薄い
+	CALL ADD_CRI_VAR("罵倒", -2, -4)
+ENDIF
+
+;調教対象が痛みに弱い/強い
+IF TALENT:MASTER:痛みに弱い
+	CALL ADD_CRI_VAR("スパンキング", 2, 2)
+	CALL ADD_CRI_VAR("鞭", 3, 3)
+	CALL ADD_CRI_VAR("針", 2, 6)
+ELSEIF TALENT:MASTER:痛みに強い
+	CALL ADD_CRI_VAR("スパンキング", -3)
+	CALL ADD_CRI_VAR("鞭", -4)
+	CALL ADD_CRI_VAR("針", -4)
+ENDIF
+
+;────────────────────────────────────
+;能力、パラメーターによる変動
+;────────────────────────────────────
+;-------------------------------------------------------------------------
+;調教者の能力を参照
+;-------------------------------------------------------------------------
+@ACT_ACTM6_ABL_T
+
+;調教者の技巧が[0→0, 3→3～5, 6→0]を加算(0～5)
+CALL ADD_CRI_VAR("鞭", LINE_CALC(ABL:技巧, "0→0,3→3,6→0,LIMIT/0～3"), LINE_CALC(ABL:技巧, "0→0,3→2,6→0,LIMIT/0～2"))
+;調教者の技巧が[0→0, 5→3～5]を加算(0～5)
+CALL ADD_CRI_VAR("針", LINE_CALC(ABL:技巧, "0→0,5→3,LIMIT/0～3"), LINE_CALC(ABL:技巧, "0→0,5→2,LIMIT/0～2"))
+
+;調教者のＣ感覚が[0→0, 5→3～5]を加算(0～5)
+CALL ADD_CRI_VAR("イラマチオ", LINE_CALC(ABL:Ｃ感覚, "0→0,5→3,LIMIT/0～3"), LINE_CALC(ABL:Ｃ感覚, "0→0,5→2,LIMIT/0～2"))
+
+;調教者の会話が[0→0, 5→3～5]を加算(0～5)
+CALL ADD_CRI_VAR("罵倒", LINE_CALC(ABL:会話, "0→0,5→3,LIMIT/0～3"), LINE_CALC(ABL:会話, "0→0,5→2,LIMIT/0～2"))
+
+;調教者の道具が[0→0, 5→3～5]を加算(0～5)
+CALL ADD_CRI_VAR("浣腸セット", LINE_CALC(ABL:道具, "0→0,5→3,LIMIT/0～3"), LINE_CALC(ABL:道具, "0→0,5→2,LIMIT/0～2"))
+
+;調教者の奉仕が[0→0, 5→3～5]を加算(0～5)
+CALL ADD_CRI_VAR("イラマチオ", LINE_CALC(ABL:奉仕, "0→0,5→3,LIMIT/0～3"), LINE_CALC(ABL:奉仕, "0→0,5→2,LIMIT/0～2"))
+
+;-------------------------------------------------------------------------
+;調教対象の能力を参照
+;-------------------------------------------------------------------------
+@ACT_ACTM6_ABL_M
+
+;調教対象の奉仕精神が[0→0, 5→3～7]を加算(0～7)
+CALL ADD_CRI_VAR("イラマチオ", LINE_CALC(ABL:MASTER:奉仕精神, "0→0,5→3,LIMIT/0～3"), LINE_CALC(ABL:MASTER:奉仕精神, "0→0,5→4,LIMIT/0～4"))
+
+;調教対象の苦痛中毒が[0→0, 3→2～6, 6→0]を加算(0～6)
+CALL ADD_CRI_VAR("スパンキング", LINE_CALC(ABL:MASTER:苦痛中毒, "0→0,3→2,6→0,LIMIT/0～2"), LINE_CALC(ABL:MASTER:苦痛中毒, "0→0,3→4,6→0,LIMIT/0～4"))
+;調教対象の苦痛中毒が[0→0, 4→2～7, 5→1～5]を加算(0～7)
+CALL ADD_CRI_VAR("鞭", LINE_CALC(ABL:MASTER:苦痛中毒, "0→0,4→2,5→1,LIMIT/0～2"), LINE_CALC(ABL:MASTER:苦痛中毒, "0→0,4→5,5→4,LIMIT/0～5"))
+;調教対象の苦痛中毒が[0→0, 5→3～8]を加算(0～8)
+CALL ADD_CRI_VAR("針", LINE_CALC(ABL:MASTER:苦痛中毒, "0→0,5→3,LIMIT/0～3"), LINE_CALC(ABL:MASTER:苦痛中毒, "0→0,5→5,LIMIT/0～5"))
+;※キャンセルに補正は付かない
+;調教対象の苦痛中毒が[0→0, 5→2～10]を加算(0～10)
+SIF !TEQUIP:三角木馬
+	CALL ADD_CRI_VAR("三角木馬", LINE_CALC(ABL:MASTER:苦痛中毒, "0→0,5→2,LIMIT/0～2"), LINE_CALC(ABL:MASTER:苦痛中毒, "0→0,5→8,LIMIT/0～8"))
+
+;※キャンセルに補正は付かない
+;調教対象の拘束中毒が[0→0, 5→5～9]を加算(0～9)
+SIF !TEQUIP:縄
+	CALL ADD_CRI_VAR("縄", LINE_CALC(ABL:MASTER:拘束中毒, "0→0,5→5,LIMIT/0～5"), LINE_CALC(ABL:MASTER:拘束中毒, "0→0,5→4,LIMIT/0～4"))
+;調教対象の拘束中毒が[0→0, 5→3～7]を加算(0～7)
+SIF !TEQUIP:アイマスク
+	CALL ADD_CRI_VAR("アイマスク", LINE_CALC(ABL:MASTER:拘束中毒, "0→0,5→3,LIMIT/0～3"), LINE_CALC(ABL:MASTER:拘束中毒, "0→0,5→4,LIMIT/0～4"))
+;調教対象の拘束中毒が[0→0, 5→2～10]を加算(0～10)
+SIF !TEQUIP:ボールギャグ
+	CALL ADD_CRI_VAR("ボールギャグ", LINE_CALC(ABL:MASTER:拘束中毒, "0→0,5→2,LIMIT/0～2"), LINE_CALC(ABL:MASTER:拘束中毒, "0→0,5→8,LIMIT/0～8"))
+
+;-------------------------------------
+;調教対象の反抗
+;-------------------------------------
+@ACT_ACTM6_RESISTANCE_M
+
+;調教対象の反抗が[0→0, 7500→5～7]を加算(0～7)
+SIF !TEQUIP:縄
+	CALL ADD_CRI_VAR("縄", LINE_CALC(PALAM:MASTER:反抗, "0→0,5→5,LIMIT/0～5"), LINE_CALC(PALAM:MASTER:反抗, "0→0,5→2,LIMIT/0～2"))
+;調教対象の反抗が[0→0, 7500→4～7]を加算(0～7)
+SIF !TEQUIP:アイマスク
+	CALL ADD_CRI_VAR("アイマスク", LINE_CALC(PALAM:MASTER:反抗, "0→0,5→4,LIMIT/0～4"), LINE_CALC(PALAM:MASTER:反抗, "0→0,5→3,LIMIT/0～3"))
+;調教対象の反抗が[0→0, 7500→3～4]を加算(0～4)
+SIF !TEQUIP:ボールギャグ
+	CALL ADD_CRI_VAR("ボールギャグ", LINE_CALC(PALAM:MASTER:反抗, "0→0,5→3,LIMIT/0～3"), LINE_CALC(PALAM:MASTER:反抗, "0→0,5→1,LIMIT/0～1"))
+
+;-------------------------------------
+;調教者の罪悪感
+;-------------------------------------
+@ACT_ACTM6_SIN_T
+
+;調教者の罪悪感が[80→0, 100→-1]を加算(-1～0)
+CALL ADD_CRI_VAR("針", LINE_CALC(CFLAG:罪悪感, "80→0,100→-1,LIMIT/-1～0"))
+;調教者の罪悪感が[60→0, 100→-2]を加算(-2～0)
+CALL ADD_CRI_VAR("ボールギャグ", LINE_CALC(CFLAG:罪悪感, "60→0,100→-2,LIMIT/-2～0"))
+;調教者の罪悪感が[40→0, 100→-3]を加算(-3～0)
+CALL ADD_CRI_VAR("浣腸セット", LINE_CALC(CFLAG:罪悪感, "40→0,100→-3,LIMIT/-3～0"))
+;調教者の罪悪感が[0→0, 100→-5]を加算(-5～0)
+CALL ADD_CRI_VAR("三角木馬", LINE_CALC(CFLAG:罪悪感, "0→0,100→-5,LIMIT/-5～0"))
+
+;-------------------------------------
+;調教者のALI
+;-------------------------------------
+@ACT_ACTM6_ALI_T
+
+;アライメントが[-50→-3, 50→3]を加算(-3～3)
+CALL ADD_CRI_VAR("スパンキング", LINE_CALC(CFLAG:アライメント, "-50→-3,50→3,LIMIT/-3～3"))
+;アライメントが[-50→3, 50→-3]を加算(-3～3)
+CALL ADD_CRI_VAR("三角木馬", LINE_CALC(CFLAG:アライメント, "-50→3,50→-3,LIMIT/-3～3"))
+;アライメントが[0→0, 50→2]を加算(0～2)
+CALL ADD_CRI_VAR("罵倒", LINE_CALC(CFLAG:アライメント, "0→0,50→2,LIMIT/0～2"))
+;アライメントが[-50→3, 0→0]を加算(0～3)
+CALL ADD_CRI_VAR("浣腸セット", LINE_CALC(CFLAG:アライメント, "-50→3,0→0,LIMIT/0～3"))
+
+;────────────────────────────────────
+;ゲージや状態による変動
+;────────────────────────────────────
+;-------------------------------------
+;調教対象の体力
+;-------------------------------------
+@ACT_ACTM6_PHYSICAL_M
+
+;調教対象の体力が[0→-1, 300→0]を加算(-1～0)
+CALL ADD_CRI_VAR("スパンキング", LINE_CALC(BASE:MASTER:体力, "0→-1,300→0,LIMIT/-1～0"))
+;調教対象の体力が[0→-3, 600→0]を加算(-3～0)
+CALL ADD_CRI_VAR("鞭", LINE_CALC(BASE:MASTER:体力, "0→-3,600→0,LIMIT/-3～0"))
+;調教対象の体力が[0→-3, 900→0]を加算(-3～0)
+CALL ADD_CRI_VAR("イラマチオ", LINE_CALC(BASE:MASTER:体力, "0→-3,900→0,LIMIT/-3～0"))
+;調教対象の体力が[0→-4, 900→0]を加算(-4～0)
+CALL ADD_CRI_VAR("針", LINE_CALC(BASE:MASTER:体力, "0→-4,900→0,LIMIT/-4～0"))
+;※キャンセル時は正の補正
+;調教対象の体力が[0→4/-4, 900→0]を加算(-4～4)
+LOCAL = TEQUIP:三角木馬 ? 1 # -1
+CALL ADD_CRI_VAR("三角木馬", LOCAL * LINE_CALC(BASE:MASTER:体力, "0→4,900→0,LIMIT/0～4"))
+;調教対象の体力が[0→0～8/-4, 900→0]を加算(-4～8)
+IF TEQUIP:浣腸器＋プラグ
+	CALL ADD_CRI_VAR("浣腸セット", , LINE_CALC(BASE:MASTER:体力, "0→8,900→0,LIMIT/0～8"))
+ELSE
+	CALL ADD_CRI_VAR("浣腸セット", LINE_CALC(BASE:MASTER:体力, "0→-4,900→0,LIMIT/-4～0"))
+ENDIF
+
+;-------------------------------------
+;調教対象の気力
+;-------------------------------------
+@ACT_ACTM6_MENTAL_M
+
+;※キャンセル時は負の補正
+;調教対象の気力が[0→0, 800→0～4/-8]を加算(-8～4)
+IF TEQUIP:縄
+	CALL ADD_CRI_VAR("縄", LINE_CALC(BASE:MASTER:気力, "0→0,800→-8,LIMIT/-8～0"))
+ELSE
+	CALL ADD_CRI_VAR("縄", , LINE_CALC(BASE:MASTER:気力, "0→0,800→4,LIMIT/0～4"))
+ENDIF
+IF TEQUIP:アイマスク
+	CALL ADD_CRI_VAR("アイマスク", LINE_CALC(BASE:MASTER:気力, "0→0,800→-8,LIMIT/-8～0"))
+ELSE
+	CALL ADD_CRI_VAR("アイマスク", , LINE_CALC(BASE:MASTER:気力, "0→0,800→4,LIMIT/0～4"))
+ENDIF
+IF TEQUIP:ボールギャグ
+	CALL ADD_CRI_VAR("ボールギャグ", LINE_CALC(BASE:MASTER:気力, "0→0,800→-8,LIMIT/-8～0"))
+ELSE
+	CALL ADD_CRI_VAR("ボールギャグ", , LINE_CALC(BASE:MASTER:気力, "0→0,800→4,LIMIT/0～4"))
+ENDIF
+
+;-------------------------------------
+;調教対象の消耗
+;-------------------------------------
+@ACT_ACTM6_EXHAUSTION_M
+
+;疲弊で拘束などを解く(調教対象の消耗)
+IF TFLAG:消耗度
+	CALL ADD_CRI_VAR("縄", TEQUIP:縄 ? 4 + TFLAG:消耗度 / 2 # -3 - TFLAG:消耗度 / 4)
+	CALL ADD_CRI_VAR("アイマスク", TEQUIP:アイマスク ? 2 + TFLAG:消耗度 / 3 # -1 - TFLAG:消耗度 / 6)
+	CALL ADD_CRI_VAR("ボールギャグ", TEQUIP:ボールギャグ ? 3 + TFLAG:消耗度 / 3 # -2 - TFLAG:消耗度 / 5)
+	CALL ADD_CRI_VAR("三角木馬", TEQUIP:三角木馬 ? 9 + TFLAG:消耗度 # -9 - TFLAG:消耗度)
+ENDIF
+
+;-------------------------------------
+;調教者の体力
+;-------------------------------------
+@ACT_ACTM6_PHYSICAL_T
+
+;調教者の体力が[0→-3, 1500→0]を加算(-3～0)
+CALL ADD_CRI_VAR("スパンキング", LINE_CALC(BASE:体力, "0→-3,1500→0,LIMIT/-3～0"))
+CALL ADD_CRI_VAR("鞭", LINE_CALC(BASE:体力, "0→-3,1500→0,LIMIT/-3～0"))
+
+;-------------------------------------
+;調教者の気力
+;-------------------------------------
+@ACT_ACTM6_MENTAL_T
+
+;調教者の気力が[0→-1, 250→0]を加算(-1～0)
+CALL ADD_CRI_VAR("スパンキング", LINE_CALC(BASE:気力, "0→-1,250→0,LIMIT/-1～0"))
+CALL ADD_CRI_VAR("鞭", LINE_CALC(BASE:気力, "0→-1,250→0,LIMIT/-1～0"))
+CALL ADD_CRI_VAR("針", LINE_CALC(BASE:気力, "0→-1,250→0,LIMIT/-1～0"))
+CALL ADD_CRI_VAR("浣腸セット", LINE_CALC(BASE:気力, "0→-1,250→0,LIMIT/-1～0"))
+;調教者の気力が[0→-2, 500→0]を加算(-2～0)
+CALL ADD_CRI_VAR("イラマチオ", LINE_CALC(BASE:気力, "0→-2,500→0,LIMIT/-2～0"))
+;調教者の気力が[0→-3, 750→0]を加算(-3～0)
+CALL ADD_CRI_VAR("罵倒", LINE_CALC(BASE:気力, "0→-3,750→0,LIMIT/-3～0"))
+
+;-------------------------------------
+;調教者の苛立ち
+;-------------------------------------
+@ACT_ACTM6_IRRITATION_T
+
+;調教者の苛立ちが[0→0, 800→6]を加算(0～6)
+CALL ADD_CRI_VAR("スパンキング", LINE_CALC(BASE:苛立ち, "0→0,800→6,LIMIT/0～6"))
+;調教者の苛立ちが[0→0, 800→10]を加算(0～10)
+CALL ADD_CRI_VAR("鞭", LINE_CALC(BASE:苛立ち, "0→0,800→10,LIMIT/0～10"))
+;調教者の苛立ちが[0→0, 800→8]を加算(0～8)
+CALL ADD_CRI_VAR("針", LINE_CALC(BASE:苛立ち, "0→0,800→8,LIMIT/0～8"))
+;調教者の苛立ちが[0→0, 800→-6]を加算(-6～0)
+CALL ADD_CRI_VAR("罵倒", LINE_CALC(BASE:苛立ち, "0→0,800→-6,LIMIT/-6～0"))
+
+;-------------------------------------
+;調教者の状態
+;-------------------------------------
+@ACT_ACTM6_CONDITION_T
+
+;調教者の状態(0=通常/1=疲弊/2=衰弱/3=無気力/4=朦朧/5=情欲/6=怒り/7=退屈/8=鬱屈)
+SELECTCASE GET_CONDITION(TARGET)
+	CASE "情欲"
+		CALL ADD_CRI_VAR("イラマチオ", , 4)
+	CASE "怒り"
+		CALL ADD_CRI_VAR("罵倒", , 4)
+	CASE "鬱屈"
+		CALL ADD_CRI_VAR("三角木馬", 2, 8)
+ENDSELECT
+
+
+;────────────────────────────────────
+;前回の行動や状況による変動
+;────────────────────────────────────
+;-------------------------------------
+;そんな話はもう終わったフラグ(1=好意,2=知識,4=慰め,8=脅す,16=合意,32=嗤う,64=罵倒)
+;-------------------------------------
+@ACT_ACTM6_ALREADY_TALKED
+
+;罵倒の話はした
+SIF TFLAG:既出の話題 & 64
+	CALL ADD_CRI_VAR("罵倒", LIMIT(ABL:会話 / 2 - 5, -5, 0))
+
+;-------------------------------------
+;暴れる
+;-------------------------------------
+@ACT_ACTM6_VIOLENT
+
+IF IS_NOWCOMNAME("暴れる")
+	CALL ADD_CRI_VAR("針", -2)
+	CALL ADD_CRI_VAR("縄", TEQUIP:縄 ? 0 # 10)
+	CALL ADD_CRI_VAR("アイマスク", TEQUIP:アイマスク ? 0 # 6)
+	CALL ADD_CRI_VAR("三角木馬", TEQUIP:ボールギャグ ? 0 # 3)
+ENDIF
+
+;-------------------------------------
+;勝手に道具をはずされた
+;-------------------------------------
+@ACT_ACTM6_BE_TAKEN_OFF_TOOLS
+
+;勝手に道具をはずされた＆縄未装着
+SIF IS_NOWCOMNAME("道具を外す") && !TEQUIP:縄
+	CALL ADD_CRI_VAR("縄", 5)
+
+;-------------------------------------
+;要求されて道具をはずした
+;-------------------------------------
+@ACT_ACTM6_TAKE_OFF_TOOLS
+
+;キャンセルに応じて装着を躊躇
+SIF !TEQUIP:縄
+	CALL ADD_CRI_VAR("縄", -CANCEL_TEQUIP_COUNT("拘束") / 20)
+SIF !TEQUIP:アイマスク
+	CALL ADD_CRI_VAR("アイマスク", -CANCEL_TEQUIP_COUNT("拘束") / 20)
+SIF !TEQUIP:ボールギャグ
+	CALL ADD_CRI_VAR("ボールギャグ", -CANCEL_TEQUIP_COUNT("拘束") / 20)
+SIF !TEQUIP:三角木馬
+	CALL ADD_CRI_VAR("三角木馬", -CANCEL_TEQUIP_COUNT("三角木馬") / 20)
+
+;※二人自慰中なら両方の補正が有効となる
+;-------------------------------------
+;調教対象自慰中
+;-------------------------------------
+@ACT_ACTM6_MASTURBATION_M
+
+SIF GETBIT(TEQUIP:自慰中, 0)
+	CALL ADD_CRI_VAR("罵倒", , 10)
+
+;-------------------------------------
+;調教者自慰中
+;-------------------------------------
+@ACT_ACTM6_MASTURBATION_T
+
+SIF GETBIT(TEQUIP:自慰中, 1)
+	CALL ADD_CRI_VAR("罵倒", , 5)
+
+;-------------------------------------
+;挿入
+;-------------------------------------
+@ACT_ACTM6_INSERT
+
+IF TEQUIP:性交中 || TEQUIP:性交奉仕中
+	;騎乗位/背面座位/逆レイプ/後背位させる
+	SIF TEQUIP:性交中 == 3 || TEQUIP:性交中 == 5 || TEQUIP:性交奉仕中 == 3 || TEQUIP:性交奉仕中 == 2
+		CALL ADD_CRI_VAR("スパンキング", -5)
+	;後背位中は叩いて欲しい
+	SIF TEQUIP:性交中 == 2
+		CALL ADD_CRI_VAR("スパンキング", 5)
+	CALL ADD_CRI_VAR("針", -5)
+	CALL ADD_CRI_VAR("浣腸セット", -5)
+	CALL ADD_CRI_VAR("イラマチオ", -5)
+ENDIF
+
+;-------------------------------------
+;お仕置き中
+;-------------------------------------
+@ACT_ACTM6_OSHIOKI
+
+IF TFLAG:お仕置きフラグ
+	CALL ADD_CRI_VAR("三角木馬", , 9)
+	CALL ADD_CRI_VAR("浣腸セット", 1, 6)
+	CALL ADD_CRI_VAR("イラマチオ", 3, 3)
+ENDIF
+
+;-------------------------------------
+;調教対象の衣服
+;-------------------------------------
+@ACT_ACTM6_CLOTH_M
+
+;調教対象の下半身上着に妨害されるとき
+IF CLOTHESTYPE(1, 1) ==2
+	CALL ADD_CRI_VAR("三角木馬", -5)
+	CALL ADD_CRI_VAR("浣腸セット", -2)
+ENDIF
+
+;調教対象の下半身下着があるとき
+SIF CLOTHESTYPE(1, 0)
+	CALL ADD_CRI_VAR("三角木馬", -2)
+
+;調教対象の上半身上着があるとき
+IF CLOTHESTYPE(1, 3)
+	CALL ADD_CRI_VAR("鞭", -5)
+	CALL ADD_CRI_VAR("針", -5)
+ENDIF
+
+;────────────────────────────────────
+;同じ行動連続実行の確率をダウンします
+;────────────────────────────────────
+@ACT_ACTM6_PREV
+
+SELECTCASE TFLAG:前ACT
+	CASE 56, 60 TO 68
+		CALL ADD_CRI_VAR(GET_ACTNAME(TFLAG:前ACT), -3 * TFLAG:同一行動ボーナス, -4 * TFLAG:同一行動ボーナス)
+ENDSELECT
+
+;────────────────────────────────────
+;補正値計算
+;────────────────────────────────────
+@ACT_ACTM6_CORRECTION(ARG)
+#DIM LCOUNT
+
+;ARGが0以外なら補正値を計算し、以後の処理を行わない
+IF ARG
+	;56に関してはここで計算しない
+	FOR LCOUNT, 60, 69
+		CALL ACT_M_RES_CALC(LCOUNT, GET_CRI_VAR(GET_ACTNAME(LCOUNT) + "累計"))
+	NEXT
+ELSE
+	;補正値を判定値に加算する
+	CALL ACT_ACTM_CORRECTION(6)
+ENDIF
+
+;────────────────────────────────────
+;その他変動や実行不可能の判定
+;────────────────────────────────────
+@ACT_ACTM6_ABLE
+#DIM LCOUNT
+
+;不可能判定
+CALL ACT_ACTM_ABLE(6)
+

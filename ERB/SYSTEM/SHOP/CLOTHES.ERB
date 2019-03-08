@@ -1,0 +1,181 @@
+﻿;衣装関連の処理
+;────────────────────────────────────
+;調教者の衣装初期化。勝手に拝借したものなので作者さんに最高の敬意を
+
+;とはいうけどこれcsvにすべきよね。つーわけでcsvにしました
+;────────────────────────────────────
+@CLOTHES_SETUP(ARG)
+;衣装未設定（デフォ全裸）の場合のみここで設定します
+IF !(EQUIP:ARG:アクセサリ+EQUIP:ARG:靴下+EQUIP:ARG:下半身下着+EQUIP:ARG:上半身下着+EQUIP:ARG:下半身上着+EQUIP:ARG:上半身上着+EQUIP:ARG:全身上着)
+	;脚があればソックス
+	SIF !TALENT:ARG:足無し
+		EQUIP:ARG:靴下 = 1
+	;オトコの場合、トランクス・ズボン・Ｔシャツ・上着
+	IF TALENT:ARG:オトコ
+		EQUIP:ARG:下半身下着 = 3
+		EQUIP:ARG:上半身下着 = 4
+		EQUIP:ARG:下半身上着 = 3
+		EQUIP:ARG:上半身上着 = 1
+	;貧乳の場合、パンティ・キャミソール・ワンピース
+	ELSEIF TALENT:ARG:貧乳
+		EQUIP:ARG:下半身下着 = 2
+		EQUIP:ARG:上半身下着 = 2
+		EQUIP:ARG:全身上着 = 3
+	;それ以外の場合、パンティ・ブラジャー・スカート・上着
+	ELSE
+		EQUIP:ARG:下半身下着 = 2
+		EQUIP:ARG:上半身下着 = 1
+		EQUIP:ARG:下半身上着 = 1
+		EQUIP:ARG:上半身上着 = 1
+	ENDIF
+	;ふたなりの場合ドロワーズに（パンティに入らない気がするので）
+	SIF TALENT:ARG:ふたなり
+		EQUIP:ARG:下半身下着 = 1
+ENDIF
+
+;────────────────────────────────────
+;ショップメニューでの服装セッティング
+;────────────────────────────────────
+@CLOTHES_SETTING
+PRINTFORM %CALLNAME:MASTER%の衣装：
+SIF CFLAG:MASTER:衣装 == 0
+	PRINTFORM \@ EQUIP:MASTER:全身上着 ? [%DRESS(MASTER)%] # \@\@ EQUIP:MASTER:上半身上着 ? [%OUTER_T(MASTER)%] # \@\@ EQUIP:MASTER:下半身上着 ? [%OUTER_B(MASTER)%] # \@
+SELECTCASE CFLAG:MASTER:衣装
+	CASE IS < 2
+		PRINTFORM \@ EQUIP:MASTER:上半身下着 ? [%INNER_T(MASTER)%] # \@\@ EQUIP:MASTER:下半身下着 ? [%INNER_B(MASTER)%] # \@\@ EQUIP:MASTER:靴下 ? [%SOCKS(MASTER)%] # \@\@ EQUIP:MASTER:アクセサリ ? [%GLOVES(MASTER)%] # \@
+	CASE 2
+		PRINT [全裸]
+	CASEELSE
+		PRINTFORM \@ EQUIP:MASTER:コスプレ ? [%COSPLAY(MASTER)%] # \@
+ENDSELECT
+PRINTL 
+
+IF TARGET >= 0
+	PRINTFORM %CALLNAME:TARGET%の衣装：
+	SIF CFLAG:TARGET:衣装 == 0
+		PRINTFORM \@ EQUIP:TARGET:全身上着 ? [%DRESS(TARGET)%] # \@\@ EQUIP:TARGET:上半身上着 ? [%OUTER_T(TARGET)%] # \@\@ EQUIP:TARGET:下半身上着 ? [%OUTER_B(TARGET)%] # \@
+	SELECTCASE CFLAG:TARGET:衣装
+		CASE IS < 2
+			PRINTFORM \@ EQUIP:TARGET:上半身下着 ? [%INNER_T(TARGET)%] # \@\@ EQUIP:TARGET:下半身下着 ? [%INNER_B(TARGET)%] # \@\@ EQUIP:TARGET:靴下 ? [%SOCKS(TARGET)%] # \@\@ EQUIP:TARGET:アクセサリ ? [%GLOVES(TARGET)%] # \@
+		CASE 2
+			PRINT [全裸]
+		CASEELSE
+			PRINTFORM \@ EQUIP:TARGET:コスプレ ? [%COSPLAY(TARGET)%] # \@
+	ENDSELECT
+	PRINTL 
+ENDIF
+
+DRAWLINE
+PRINTL  [ 0] 戻ります
+PRINTFORML  [ 1] %CALLNAME:MASTER%の服装を[通常]に設定します
+PRINTFORML  [ 2] %CALLNAME:MASTER%の服装を[半裸]に設定します
+PRINTFORML  [ 3] %CALLNAME:MASTER%の服装を[全裸]に設定します
+IF TARGET >= 0
+	PRINTFORML  [51] %CALLNAME:TARGET%の服装を[通常]に設定します
+	PRINTFORML  [52] %CALLNAME:TARGET%の服装を[半裸]に設定します
+	PRINTFORML  [53] %CALLNAME:TARGET%の服装を[全裸]に設定します
+ENDIF
+
+$INPUT_LOOPC
+INPUT
+IF RESULT == 0
+	RETURN 0
+ELSEIF RESULT == 1
+	IF CFLAG:MASTER:衣装 == 0
+		PRINTFORMW %CALLNAME:MASTER%の衣装はすでに[通常]に設定されています
+		PRINTL 
+		CALL KOJO_EVENT(101, 1000)
+		GOTO INPUT_LOOPC
+	ELSE
+		CFLAG:MASTER:衣装 = 0
+		PRINTFORMW %CALLNAME:MASTER%の衣装を[通常]に設定しました
+		PRINTL 
+		CALL KOJO_EVENT(101, 1001)
+	ENDIF
+	RESTART
+ELSEIF RESULT == 2
+	IF CFLAG:MASTER:衣装 == 1
+		PRINTFORMW %CALLNAME:MASTER%の衣装はすでに[半裸]に設定されています
+		PRINTL 
+		CALL KOJO_EVENT(101, 1010)
+	ELSEIF TALENT:MASTER:抑圧 * 3 - TALENT:MASTER:解放 * 2 + TALENT:MASTER:恥じらい * 2 - TALENT:MASTER:恥薄い + 2 > CFLAG:MASTER:調教レベル / 2 + ABL:MASTER:欲望
+		PRINTFORMW %CALLNAME:MASTER%は恥ずかしくて[半裸]にできません
+		PRINTL 
+		CALL KOJO_EVENT(101, 1012)
+	ELSEIF TALENT:MASTER:反抗的 * 3 - TALENT:MASTER:素直 * 2 + MARK:反抗刻印 - MARK:屈服刻印 + 2 > CFLAG:MASTER:調教レベル / 2 + ABL:MASTER:従順 + ABL:MASTER:欲望
+		PRINTFORMW %CALLNAME:MASTER%は嫌がって[半裸]になりません
+		PRINTL 
+		CALL KOJO_EVENT(101, 1013)
+	ELSE
+		CFLAG:MASTER:衣装 = 1
+		PRINTFORMW %CALLNAME:MASTER%の衣装を[半裸]に設定しました
+		PRINTL 
+		CALL KOJO_EVENT(101, 1011)
+	ENDIF
+	RESTART
+ELSEIF RESULT == 3
+	IF CFLAG:MASTER:衣装 == 2
+		PRINTFORMW %CALLNAME:MASTER%の衣装はすでに[全裸]に設定されています
+		PRINTL 
+		CALL KOJO_EVENT(101, 1020)
+	ELSEIF TALENT:MASTER:抑圧 * 3 - TALENT:MASTER:解放 * 2 + TALENT:MASTER:恥じらい * 2 - TALENT:MASTER:恥薄い + 5 > CFLAG:MASTER:調教レベル / 2 + ABL:MASTER:欲望
+		PRINTFORMW %CALLNAME:MASTER%は恥ずかしくて[全裸]にできません
+		PRINTL 
+		CALL KOJO_EVENT(101, 1022)
+	ELSEIF TALENT:MASTER:反抗的 * 3 - TALENT:MASTER:素直 * 2 + MARK:反抗刻印 - MARK:屈服刻印 + 4 > CFLAG:MASTER:調教レベル / 2 + ABL:MASTER:従順 + ABL:MASTER:欲望
+		PRINTFORMW %CALLNAME:MASTER%は嫌がって[全裸]になりません
+		PRINTL 
+		CALL KOJO_EVENT(101, 1023)
+	ELSE
+		CFLAG:MASTER:衣装 = 2
+		PRINTFORMW %CALLNAME:MASTER%の衣装を[全裸]に設定しました
+		PRINTL 
+		CALL KOJO_EVENT(101, 1021)
+	ENDIF
+	RESTART
+ELSEIF RESULT == 51
+	IF CFLAG:TARGET:衣装 == 0
+		PRINTFORMW %CALLNAME:TARGET%の衣装はすでに[通常]に設定されています
+		PRINTL 
+		CALL KOJO_EVENT(101, 0)
+	ELSE
+		CFLAG:TARGET:衣装 = 0
+		PRINTFORMW %CALLNAME:TARGET%の衣装を[通常]に設定しました
+		PRINTL 
+		CALL KOJO_EVENT(101, 1)
+	ENDIF
+	RESTART
+ELSEIF RESULT == 52
+	IF CFLAG:TARGET:衣装 == 1
+		PRINTFORMW %CALLNAME:TARGET%の衣装はすでに[半裸]に設定されています
+		PRINTL 
+		CALL KOJO_EVENT(101, 10)
+	ELSEIF TALENT:抑圧 * 3 - TALENT:解放 * 2 + TALENT:恥じらい * 2 - TALENT:恥薄い + 2 > CFLAG:調教レベル / 2 + ABL:欲望
+		PRINTFORMW %CALLNAME:TARGET%は恥ずかしくて[半裸]にできません
+		PRINTL 
+		CALL KOJO_EVENT(101, 12)
+	ELSE
+		CFLAG:TARGET:衣装 = 1
+		PRINTFORMW %CALLNAME:TARGET%の衣装を[半裸]に設定しました
+		PRINTL 
+		CALL KOJO_EVENT(101, 11)
+	ENDIF
+	RESTART
+ELSEIF RESULT == 53
+	IF CFLAG:TARGET:衣装 == 2
+		PRINTFORMW %CALLNAME:TARGET%の衣装はすでに[全裸]に設定されています
+		PRINTL 
+		CALL KOJO_EVENT(101, 20)
+	ELSEIF TALENT:抑圧 * 3 - TALENT:解放 * 2 + TALENT:恥じらい * 2 - TALENT:恥薄い + 5 > CFLAG:調教レベル / 2 + ABL:欲望
+		PRINTFORMW %CALLNAME:TARGET%は恥ずかしくて[全裸]にできません
+		PRINTL 
+		CALL KOJO_EVENT(101, 22)
+	ELSE
+		CFLAG:TARGET:衣装 = 2
+		PRINTFORMW %CALLNAME:TARGET%の衣装を[全裸]に設定しました
+		PRINTL 
+		CALL KOJO_EVENT(101, 21)
+	ENDIF
+	RESTART
+ENDIF
+RESTART

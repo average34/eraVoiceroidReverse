@@ -1,0 +1,1954 @@
+﻿;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+;		愛撫系メッセージ
+
+;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+
+;────────────────────────────────────
+;010,愛撫/手淫する
+;────────────────────────────────────
+;★リアクション前★
+@TRAIN_MESSAGE_10
+IF TCVAR:MASTER:位置前後 == 1           ;前から愛撫
+	SELECTCASE TFLAG:ACT派生
+		CASE 1                ;ACT派生が手淫
+			IF TCVAR:MASTER:イきそう              ;調教対象がイきそう
+				SELECTCASE TCVAR:MASTER:焦らし度
+					CASE IS > 1                             ;焦らし中
+						IF TEQUIP:顔面騎乗 || TEQUIP:顔面騎乗アナル   ;顔面騎乗中
+							PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の顔面に\@ TEQUIP:顔面騎乗 ? 性器をこすりつけ # アヌスを押し付け \@ながら
+						ELSE                                          ;その他
+							PRINTFORML %CALLNAME:TARGET%は腰を浮かせて快感をせがむ%CALLNAME:MASTER%を上目遣いに見ながら
+						ENDIF
+						PRINTFORML びくびくと痙攣する陰茎を手で弄んでいる…
+					CASE 1                                  ;焦らし終了
+						IF TEQUIP:顔面騎乗 || TEQUIP:顔面騎乗アナル   ;顔面騎乗中
+							PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の顔面に\@ TEQUIP:顔面騎乗 ? 性器をこすりつけ # アヌスを押し付け \@ながら
+						ELSE                                          ;その他
+							PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の顔を見つめながら、
+						ENDIF
+						PRINTFORML 激しく男性器をしごきあげ\@ PANTSCHECK(1) ? 、窮屈な布の中での # \@射精へと導いた…
+					CASEELSE                                ;焦らし無し
+						IF TEQUIP:顔面騎乗 || TEQUIP:顔面騎乗アナル   ;顔面騎乗中
+							PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の顔面に\@ TEQUIP:顔面騎乗 ? 性器をこすりつけ # アヌスを押し付け \@ながら
+							PRINTFORML 激しく男性器をしごきあげ\@ PANTSCHECK(1) ? 、無粋な布を自ら汚す # 射精の \@瞬間を待った…
+						ELSE                                          ;その他
+							PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の絶頂が近いことを察すると、
+							PRINTFORML 激しく男性器をしごきあげながら\@ PANTSCHECK(1) ? 、無粋な布を自ら汚す # 射精の \@瞬間を待った…
+						ENDIF
+				ENDSELECT
+			ELSEIF TFLAG:ACT == TFLAG:前ACT       ;連続実行
+				PRINTFORM %CALLNAME:TARGET%は
+				IF TEQUIP:顔面騎乗 || TEQUIP:顔面騎乗アナル           ;顔面騎乗中
+					PRINTFORML \@ TEQUIP:顔面騎乗 ? 濡れた女性器を%CALLNAME:MASTER%の顔面にグチュグチュとこすりつけ # 自身のアヌスを%CALLNAME:MASTER%の口元に押し付け \@ながら
+				ELSE                                                  ;その他
+					IF RAND:2 && TALENT:MASTER:オトコ
+						PRINTFORML %CALLNAME:MASTER%の陰嚢を優しく揉みながら、
+					ELSE
+						PRINTFORML 期待に満ちた表情で%CALLNAME:MASTER%の目を見つめながら、
+					ENDIF
+				ENDIF
+				SIF PANTSCHECK(1, 1)                        ;下半身服装が要押し退け
+					PRINTFORM \@ TALENT:壁抜け ? 服をすり抜ける手で # 布地で擦るように \@
+				PRINTFORML 丁寧に男性器をしごきあげた…
+			ELSE                                  ;通常
+				PRINTFORM %CALLNAME:TARGET%は
+				SIF TEQUIP:顔面騎乗 || TEQUIP:顔面騎乗アナル          ;顔面騎乗中
+					PRINTFORML %CALLNAME:MASTER%に\@ TEQUIP:顔面騎乗 ? 秘唇 # アヌス \@を舐めさせながら
+				PRINTFORML %PENIS_DESCRIPTION(MASTER)%%CALLNAME:MASTER%の男性器を
+				SIF PANTSCHECK(1)                           ;下半身服装が邪魔
+					PRINTFORM \@ TALENT:壁抜け ? 布地をすり抜けて直接 # 布越しに \@
+				PRINTFORML 愛撫し始めた…
+			ENDIF
+		CASE 2                ;ACT派生がペニスバンド手淫
+			IF TFLAG:ACT == TFLAG:前ACT           ;連続実行
+				PRINTFORM %CALLNAME:TARGET%は
+				IF TEQUIP:顔面騎乗 || TEQUIP:顔面騎乗アナル           ;顔面騎乗中
+					PRINTFORML \@ TEQUIP:顔面騎乗 ? 濡れた女性器を%CALLNAME:MASTER%の顔面にグチュグチュとこすりつけ # 自身のアヌスを%CALLNAME:MASTER%の口元に押し付け \@ながら
+				ELSE                                                  ;その他
+					PRINTFORML 興奮した面持ちで%CALLNAME:MASTER%の目を見つめながら、
+				ENDIF
+				PRINTFORML 作り物の男根を握り、前後に大きく動かした…
+			ELSE                                  ;通常
+				PRINTFORM %CALLNAME:TARGET%は
+				SIF TEQUIP:顔面騎乗 || TEQUIP:顔面騎乗アナル          ;顔面騎乗中
+					PRINTFORML %CALLNAME:MASTER%に\@ TEQUIP:顔面騎乗 ? 秘唇 # アヌス \@を舐めさせながら
+				PRINTFORML %CALLNAME:MASTER%の膣内から股間に生えたペニスバンドを
+				PRINTFORML 手で大きく扱きはじめた…
+			ENDIF
+		CASEELSE              ;ACT派生が愛撫
+			IF TCVAR:MASTER:イきそう              ;調教対象がイきそう
+				SELECTCASE TCVAR:MASTER:焦らし度
+					CASE IS > 1                             ;焦らし中
+						IF TEQUIP:顔面騎乗 || TEQUIP:顔面騎乗アナル   ;顔面騎乗中
+							PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の顔面に\@ TEQUIP:顔面騎乗 ? 性器をこすりつけ # アヌスを押し付け \@ながら
+						ELSE                                          ;その他
+							PRINTFORML %CALLNAME:TARGET%は腰を浮かせて快感をせがむ%CALLNAME:MASTER%を上目遣いに見て
+						ENDIF
+						PRINTFORML ぷりぷりと紅色にぬめる陰核を指先で弄んでいる…
+					CASE 1                                  ;焦らし終了
+						IF TEQUIP:顔面騎乗 || TEQUIP:顔面騎乗アナル   ;顔面騎乗中
+							PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の顔面に\@ TEQUIP:顔面騎乗 ? 性器をこすりつけ # アヌスを押し付け \@ながら
+						ELSE                                          ;その他
+							PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の顔を見つめながら、
+						ENDIF
+						PRINTFORML 勃起した陰核をリズミカルに擦り、絶頂へと導いた…
+					CASEELSE                                ;焦らし無し
+						IF TEQUIP:顔面騎乗 || TEQUIP:顔面騎乗アナル   ;顔面騎乗中
+							PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の顔面に\@ TEQUIP:顔面騎乗 ? 性器をこすりつけ # アヌスを押し付け \@ながら
+							PRINTFORML 愛液をまぶした指で陰核を揉み潰し、屈服の瞬間を待った…
+						ELSE                                          ;その他
+							PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の絶頂が近いことを察すると、
+							PRINTFORML 愛液をまぶした指で陰核を揉み潰し、屈服の瞬間を待った…
+						ENDIF
+				ENDSELECT
+			ELSEIF TFLAG:ACT == TFLAG:前ACT       ;連続実行
+				PRINTFORM %CALLNAME:TARGET%は
+				IF TEQUIP:顔面騎乗 || TEQUIP:顔面騎乗アナル           ;顔面騎乗中
+					PRINTFORML \@ TEQUIP:顔面騎乗 ? 濡れた女性器を%CALLNAME:MASTER%の顔面にグチュグチュとこすりつけ # 自身のアヌスを%CALLNAME:MASTER%の口元に押し付け \@ながら
+				ELSE                                                  ;その他
+					PRINTFORML 可愛いものを見る表情で%CALLNAME:MASTER%の目を見つめながら、
+				ENDIF
+				SIF PANTSCHECK(1, 1)                        ;下半身服装が要押し退け
+					PRINTFORM \@ TALENT:壁抜け ? 服をすり抜ける手で # 布地で擦るように \@
+				PRINTFORML %CALLNAME:MASTER%の陰核を丁寧に磨いた…
+			ELSE                                  ;通常
+				PRINTFORM %CALLNAME:TARGET%は%CALLNAME:MASTER%の
+				IF PANTSCHECK(1, 1)                         ;下半身服装が要押し退け
+					IF TALENT:壁抜け                                  ;調教者が壁抜け素質を持っている
+						PRINTFORM 服を易々とすり抜けて、
+					ELSEIF PANTSCHECK(1)                              ;下半身服装が邪魔
+						PRINTFORM 服越しに、
+					;その他
+					ELSE                                              ;その他
+						SIF LOWERJACKET(1) == 1                                 ;下半身上着が要押し退け
+							PRINTFORM %OUTER_B(MASTER, 0, 1)%の裾から手を入れ、
+						SIF LOWERUNDER(1) == 1                                  ;下半身下着が要押し退け
+							PRINTFORM 下着をずらして、
+					ENDIF
+					PRINTFORML 
+					PRINTFORML 陰核と全身の性感帯を\@ TALENT:器用な指先 ? 鍵盤を弾くように繊細に # 指先でくすぐるように \@愛撫し始めた…
+					TEQUIP:着衣露出 |= 4                              ;調教対象性器露出
+				ELSE                                        ;その他
+					PRINTFORML 陰核と全身の性感帯を\@ TALENT:器用な指先 ? 鍵盤を弾くように繊細に # 指先でくすぐるように \@愛撫し始めた…
+				ENDIF
+			ENDIF
+	ENDSELECT
+ELSE                          ;後ろから愛撫
+	SELECTCASE TFLAG:ACT派生
+		CASE 1                ;ACT派生が手淫
+			IF TCVAR:MASTER:イきそう              ;調教対象がイきそう
+				SELECTCASE TCVAR:MASTER:焦らし度
+					CASE IS > 1                             ;焦らし中
+						PRINTFORML %CALLNAME:TARGET%は腰を引いて快楽を求める%CALLNAME:MASTER%を背後から抱きすくめ
+						PRINTFORML 腰から回した手でびくびくと痙攣する陰茎を弄んでいる…
+					CASE 1                                  ;焦らし終了
+						PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の耳元に吐息をかけながら、
+						PRINTFORML 激しく男性器をしごきあげ\@ PANTSCHECK(1) ? 、窮屈な布の中での # \@射精へと導いた…
+					CASEELSE                                ;焦らし無し
+						PRINTFORML %CALLNAME:TARGET%は逃げられないよう%CALLNAME:MASTER%の腰を抱きすくめ、
+						PRINTFORML 激しく男性器をしごきあげながら\@ PANTSCHECK(1) ? 、無粋な布を自ら汚す # 射精の \@瞬間を待った…
+				ENDSELECT
+			ELSEIF TFLAG:ACT == TFLAG:前ACT       ;連続実行
+				PRINTFORM %CALLNAME:TARGET%は
+				IF RAND:2 && TALENT:MASTER:オトコ
+					PRINTFORML 股を通した手で%CALLNAME:MASTER%の陰嚢を転がしながら、
+				ELSE
+					PRINTFORML %CALLNAME:MASTER%の肩越しに頬に吐息を当てながら、
+				ENDIF
+				SIF PANTSCHECK(1, 1)                        ;下半身服装が要押し退け
+					PRINTFORM \@ TALENT:壁抜け ? 服をすり抜ける手で # 布地で擦るように \@
+				PRINTFORML 丁寧に男性器をしごきあげた…
+			ELSE                                  ;通常
+				PRINTFORML %CALLNAME:TARGET%は後ろから、%PENIS_DESCRIPTION(MASTER)%%CALLNAME:MASTER%の男性器を
+				SIF PANTSCHECK(1)                           ;下半身服装が邪魔
+					PRINTFORM \@ TALENT:壁抜け ? 布地をすり抜けて直接 # 布越しに \@
+				PRINTFORML 腰を抱くような姿勢で愛撫し始めた…
+			ENDIF
+		CASE 2                ;ACT派生がペニスバンド手淫
+			IF TFLAG:ACT == TFLAG:前ACT           ;連続実行
+				PRINTFORM %CALLNAME:TARGET%は%CALLNAME:MASTER%の肩越しに頬に吐息を当てながら、
+				PRINTFORML 作り物の男根を握り、前後に大きく動かした…
+			ELSE                                  ;通常
+				PRINTFORM %CALLNAME:TARGET%は後ろから、%CALLNAME:MASTER%の膣内から股間に生えたペニスバンドを
+				PRINTFORML 腰を抱くような姿勢で、手で大きく扱きはじめた…
+			ENDIF
+		CASEELSE              ;ACT派生が愛撫
+			IF TCVAR:MASTER:イきそう              ;調教対象がイきそう
+				SELECTCASE TCVAR:MASTER:焦らし度
+					CASE IS > 1                             ;焦らし中
+						PRINTFORML %CALLNAME:TARGET%は腰を引いて快楽を求める%CALLNAME:MASTER%を背後から抱きすくめ
+						PRINTFORML 腰から回した手でぷりぷりと紅色にぬめる陰核を弄んでいる…
+					CASE 1                                  ;焦らし終了
+						PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の耳元に吐息をかけながら、
+						PRINTFORML 勃起した陰核をリズミカルに擦り、絶頂へと導いた…
+					CASEELSE                                ;焦らし無し
+						PRINTFORML %CALLNAME:TARGET%は逃げられないよう%CALLNAME:MASTER%の腰を抱きすくめ、
+						PRINTFORML 愛液をまぶした指で陰核を揉み潰し、屈服の瞬間を待った…
+				ENDSELECT
+			ELSEIF TFLAG:ACT == TFLAG:前ACT       ;連続実行
+				PRINTFORM %CALLNAME:TARGET%は%CALLNAME:MASTER%の肩越しに頬に吐息を当てながら、
+				SIF PANTSCHECK(1, 1)                        ;下半身服装が要押し退け
+					PRINTFORM \@ TALENT:壁抜け ? 服をすり抜ける手で # 布地で擦るように \@
+				PRINTFORML %CALLNAME:MASTER%の陰核を丁寧に磨いた…
+			ELSE                                  ;通常
+				PRINTFORM %CALLNAME:TARGET%は%CALLNAME:MASTER%を背後から抱きすくめ、
+				IF PANTSCHECK(1, 1)                         ;下半身服装が要押し退け
+					IF TALENT:壁抜け                                  ;調教者が壁抜け素質を持っている
+						PRINTFORM 服を易々とすり抜けて、
+					ELSEIF PANTSCHECK(1)                              ;下半身服装が邪魔
+						PRINTFORM 服越しに、
+					ELSE                                              ;その他
+						SIF LOWERJACKET(1) == 1                                 ;下半身上着が要押し退け
+							PRINTFORM %OUTER_B(MASTER, 0, 1)%の裾から手を入れ、
+						SIF LOWERUNDER(1) == 1                                  ;下半身下着が要押し退け
+							PRINTFORM 下着をずらして、
+					ENDIF
+					PRINTFORML 陰核と全身の性感帯を\@ TALENT:器用な指先 ? 鍵盤を弾くように繊細に # 指先でくすぐるように \@愛撫し始めた…
+					TEQUIP:着衣露出 |= 4                              ;調教対象性器露出
+				ELSE                                        ;その他
+					PRINTFORML 
+					PRINTFORML 陰核と全身の性感帯を\@ TALENT:器用な指先 ? 鍵盤を弾くように繊細に # 指先でくすぐるように \@愛撫し始めた…
+				ENDIF
+			ENDIF
+	ENDSELECT
+ENDIF
+
+;☆リアクション後☆
+@TRAIN_MESSAGE2_10
+IF TFLAG:ACT派生 == 1                   ;ACT派生が手淫
+	;REACT分類が受け入れるの場合か、オナホール装備中
+	IF IS_COMGRONAME("受け入れる") || (TEQUIP:オナホール && !IS_COMGRONAME("暴れる"))
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%の手淫にだらしなく溺れ、
+				PRINTFORML 一切抵抗せずに快感を受け入れ、切なく喘いでいる…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:MASTER%は快感に喘ぎながら%CALLNAME:TARGET%の手淫に身を任せている…
+			CASE "無理をした行動"
+				PRINTFORML %CALLNAME:MASTER%が辛さを紛らわすように手淫の快楽に身を任せると、
+				PRINTFORML 目を背けていた屈服の快感が頭の中を白く染め上げていく…
+		ENDSELECT
+		RETURN 2
+	ELSEIF IS_COMGRONAME("積極的従う")
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:TARGET%が%CALLNAME:MASTER%のペニスを握って愛撫すると、
+				PRINTFORML %CALLNAME:MASTER%の腰が自然にくいくい動き出した…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%の手淫に身を任せている…
+			CASE "無理をした行動"
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%にペニスを差し出し、
+				PRINTFORML ゆっくり息を吐きながら愛撫を受けている…
+		ENDSELECT
+		RETURN 2
+	ELSEIF IS_COMGRONAME("平然と従う")
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:TARGET%が%CALLNAME:MASTER%のペニスを握って強めに愛撫したが、
+				PRINTFORML %CALLNAME:MASTER%は顔色一つ変えずにそれを受け入れた…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:MASTER%はねちっこい手淫を施す%CALLNAME:TARGET%を、
+				PRINTFORML 規則的に呼吸をしながら見つめている…
+			CASE "無理をした行動"
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%の掌に男性器を弄ばれ、
+				PRINTFORML ときおり眉間に皺を寄せ、長い息を吐いている…
+		ENDSELECT
+		RETURN 2
+	ELSEIF IS_COMGRONAME("許しを乞う")
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:TARGET%は情けなく懇願する%CALLNAME:MASTER%のペニスに先走りを塗りつけ、
+				PRINTFORML 亀頭にキスをしながら追い詰めるように愛撫した…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:TARGET%は卑猥な言葉をささやきながら、
+				PRINTFORML %CALLNAME:MASTER%の亀頭からにじみ出る先走りを舐めとっている…
+			CASE "無理をした行動"
+				PRINTFORML 許しを乞う%CALLNAME:MASTER%の内心を見透かしたように
+				PRINTFORML %CALLNAME:TARGET%は淡々とペニスに快楽を送り込み、屈服させようとしている…
+		ENDSELECT
+		RETURN 2
+	ELSEIF IS_COMGRONAME("消極的従う")
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:TARGET%は目を閉じて耐えようとする%CALLNAME:MASTER%の下半身を押さえつけ、
+				PRINTFORML 繰り返し弄ぶように陰茎のくびれを擦り上げた…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:TARGET%は身をよじる%CALLNAME:MASTER%の下半身を無理やり押さえつけ
+				PRINTFORML 敏感な部分を中心に責めたてた…
+			CASE "無理をした行動"
+				IF COMCOR_POSI()                  ;実は気持ちいい
+					PRINTFORML %CALLNAME:MASTER%はペニスからこみ上げる快感と焦燥を必死に隠し我慢するが、
+					PRINTFORML %CALLNAME%はそれを見透かし、ひたすら責め続けた…
+				ELSE                              ;実は嫌
+					PRINTFORML %CALLNAME:MASTER%は%CALLNAME%に身を任せ、屈辱に耐えようとした。
+					PRINTFORML %CALLNAME%の手は快楽を与えるために遠慮なく陰茎を弄び続ける…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+	ENDIF
+ELSEIF TFLAG:ACT派生 == 2               ;ACT派生がペニスバンド手淫
+	SELECTCASE COMGRONAME(TFLAG:REACT分類)
+		CASE "受け入れる"
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行動"
+					PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%の握ったペニスバンドに膣内を嬲られ、
+					PRINTFORML 一切抵抗せずに快感を受け入れ、切なく喘いでいる…
+				CASE "無理のない行動"
+					PRINTFORML %CALLNAME:MASTER%はペニスバンド越しに膣内を擦り上げられ、
+					PRINTFORML 本物のペニスを握られたように、%CALLNAME:TARGET%の手淫に身を任せている…
+				CASE "無理をした行動"
+					PRINTFORML %CALLNAME:MASTER%が屈辱を紛らわすために膣内の擦れる感覚を受け入れると、
+					PRINTFORML 目を背けていた屈服の快感が頭の中を白く染め上げていく…
+			ENDSELECT
+			RETURN 2
+		CASE "積極的従う"
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行動"
+					PRINTFORML %CALLNAME:TARGET%が%CALLNAME:MASTER%の着けている張り型を握ると、
+					PRINTFORML %CALLNAME:MASTER%の腰が自然にくいくい動き出した…
+				CASE "無理のない行動"
+					PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%の愛撫に身を任せている…
+				CASE "無理をした行動"
+					PRINTFORML %CALLNAME:MASTER%は偽の男根を着けた下半身を%CALLNAME:TARGET%に差し出し、
+					PRINTFORML ゆっくり息を吐きながら膣内の張り型を感じている…
+			ENDSELECT
+			RETURN 2
+		CASE "平然と従う"
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行動"
+					PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の張り型を握って強めに愛撫したが、
+					PRINTFORML %CALLNAME:MASTER%は顔色一つ変えずにそれを受け入れた…
+				CASE "無理のない行動"
+					PRINTFORML %CALLNAME:MASTER%は奇妙な間接愛撫を続ける%CALLNAME:TARGET%を、
+					PRINTFORML 規則的に呼吸をしながら見つめている…
+				CASE "無理をした行動"
+					PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%が握った張り型に内側まで弄ばれ、
+					PRINTFORML ときおり眉間に皺を寄せ、長い息を吐いている…
+			ENDSELECT
+			RETURN 2
+		CASE "許しを乞う"
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行動"
+					PRINTFORML %CALLNAME:TARGET%は情けなく懇願する%CALLNAME:MASTER%に微笑みかけると、
+					PRINTFORML 黒光りする張型を握り、内側をえぐり追い詰めるように愛撫した…
+				CASE "無理のない行動"
+					PRINTFORML %CALLNAME:TARGET%は卑猥な言葉をささやきながら、
+					PRINTFORML %CALLNAME:MASTER%の作り物の亀頭を握り弄んでいる…
+				CASE "無理をした行動"
+					PRINTFORML 許しを乞う%CALLNAME:MASTER%の内心を見透かしたように
+					PRINTFORML %CALLNAME:TARGET%は強く握った張型で膣内を擦り、屈服させようとしている…
+			ENDSELECT
+			RETURN 2
+		CASE "消極的従う"
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行動"
+					PRINTFORML %CALLNAME:TARGET%は目を閉じて耐えようとする%CALLNAME:MASTER%の下半身を押さえつけ、
+					PRINTFORML 根元に隠れたクリトリスを揉み潰すように、握った張型を上下に動かした…
+				CASE "無理のない行動"
+					PRINTFORML %CALLNAME:TARGET%は身をよじる%CALLNAME:MASTER%の下半身を無理やり押さえつけ
+					PRINTFORML 内側の突起で膣内が擦れるように、角度をつけて責めたてた…
+				CASE "無理をした行動"
+					IF COMCOR_POSI()                  ;実は気持ちいい
+						PRINTFORML %CALLNAME:MASTER%は装具の下の女性器からこみ上げる快感と焦燥を必死に隠し我慢するが、
+						PRINTFORML %CALLNAME%はそれを見透かし、ひたすら責め続けた…
+					ELSE                              ;実は嫌
+						PRINTFORML %CALLNAME:MASTER%は%CALLNAME%に身を任せ、屈辱に耐えようとした。
+						PRINTFORML %CALLNAME%の手は快楽を与えるために遠慮なく玩具を握り弄び続ける…
+					ENDIF
+			ENDSELECT
+			RETURN 2
+	ENDSELECT
+ELSE                                    ;ACT派生が愛撫
+	SELECTCASE COMGRONAME(TFLAG:REACT分類)
+		CASE "受け入れる"
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行動"
+					PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%の愛撫にだらしなく溺れ、
+					PRINTFORML 一切抵抗せずに快感を受け入れ、切なく喘いでいる…
+				CASE "無理のない行動"
+					PRINTFORML %CALLNAME:MASTER%は快感に喘ぎながら%CALLNAME:TARGET%の愛撫に身を任せている…
+				CASE "無理をした行動"
+					PRINTFORML %CALLNAME:MASTER%が辛さを紛らわすように%CALLNAME:TARGET%のもたらす快楽に身を任せると、
+					PRINTFORML 目を背けていた屈服の快感が頭の中を白く染め上げていく…
+			ENDSELECT
+			RETURN 2
+		CASE "積極的従う"
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行動"
+					PRINTFORML %CALLNAME:TARGET%が%CALLNAME:MASTER%の陰核をくりくりとくすぐると、
+					PRINTFORML %CALLNAME:MASTER%の腰が自然にくいくい動き出した…
+				CASE "無理のない行動"
+					PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%の愛撫に身を任せている…
+				CASE "無理をした行動"
+					PRINTFORML %CALLNAME:MASTER%は下半身から力を抜いて%CALLNAME:TARGET%に差し出し、
+					PRINTFORML ゆっくり息を吐きながら指による愛撫を感じている…
+			ENDSELECT
+			RETURN 2
+		CASE "平然と従う"
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行動"
+					PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%のクリトリスを指で執拗に愛撫したが、
+					PRINTFORML %CALLNAME:MASTER%は顔色一つ変えずにそれを受け入れた…
+				CASE "無理のない行動"
+					PRINTFORML %CALLNAME:MASTER%は自分の股間をねちっこく弄り続ける%CALLNAME:TARGET%を、
+					PRINTFORML 規則的に呼吸をしながら見つめている…
+				CASE "無理をした行動"
+					PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%の指に敏感な突起を弄ばれ、
+					PRINTFORML ときおり眉間に皺を寄せ、長い息を吐いている…
+			ENDSELECT
+			RETURN 2
+		CASE "許しを乞う"
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行動"
+					PRINTFORML %CALLNAME:TARGET%は情けなく懇願する%CALLNAME:MASTER%の陰核に愛液を塗りつけ、
+					PRINTFORML 太腿や背中をくすぐりながら追い詰めるように愛撫した…
+				CASE "無理のない行動"
+					PRINTFORML %CALLNAME:TARGET%は卑猥な言葉をささやきながら、
+					PRINTFORML 耳や脇腹をくすぐって%CALLNAME:MASTER%を弄んでいる…
+				CASE "無理をした行動"
+					PRINTFORML 許しを乞う%CALLNAME:MASTER%の内心を見透かしたように
+					PRINTFORML %CALLNAME:TARGET%は淡々とクリトリスに快楽を送り込み、屈服させようとしている…
+			ENDSELECT
+			RETURN 2
+		CASE "消極的従う"
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行動"
+					PRINTFORML %CALLNAME:TARGET%は目を閉じて耐えようとする%CALLNAME:MASTER%の下半身を押さえつけ、
+					PRINTFORML 繰り返し弄ぶように陰核の先端を撫で回した…
+				CASE "無理のない行動"
+					PRINTFORML %CALLNAME:TARGET%は身をよじる%CALLNAME:MASTER%の下半身を無理やり押さえつけ
+					PRINTFORML 敏感な部分を中心に責めたてた…
+				CASE "無理をした行動"
+					IF COMCOR_POSI()              ;実は気持ちいい
+						PRINTFORML %CALLNAME:MASTER%は女性器からこみ上げる快感と焦燥を必死に隠し我慢するが、
+						PRINTFORML %CALLNAME%はそれを見透かし、ひたすら責め続けた…
+					ELSE                          ;実は嫌
+						PRINTFORML %CALLNAME:MASTER%は%CALLNAME%に身を任せ、屈辱に耐えようとした。
+						PRINTFORML %CALLNAME%の手は快楽を与えるために遠慮なく陰核を弄び続ける…
+					ENDIF
+			ENDSELECT
+			RETURN 2
+	ENDSELECT
+ENDIF
+
+;────────────────────────────────────
+;011,胸愛撫/乳首吸い/乳の揉み合い
+;────────────────────────────────────
+;★リアクション前★
+@TRAIN_MESSAGE_11
+SELECTCASE TFLAG:ACT派生
+	CASE 1                    ;ACT派生が乳首吸い
+		PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の胸に近づき、
+		IF BRACHECK(1, 1)
+			PRINTFORM \@ TALENT:壁抜け ? そのまま服をすり抜けて # 服をまくり上げて \@
+		ENDIF
+		PRINTFORML %TARGET_DESCRIPTION("たまま")%乳首を吸い始めた…
+	CASE 2                     ;ACT派生が揉み合い
+		PRINTFORM %CALLNAME:TARGET%は
+		IF BRACHECK(1, 1)               ;上半身服装が要押し退け
+			IF TALENT:壁抜け                      ;調教者が壁抜け素質を持っている
+				PRINTFORML 布地をすり抜けて%CALLNAME:MASTER%の胸を揉みながら、
+			ELSEIF BRACHECK(1)                    ;上半身服装が邪魔
+				PRINTFORML 布地越しにかぶせた手で%CALLNAME:MASTER%の胸を揉みながら、
+			ELSEIF UPPERJACKET(1) == 1            ;上半身上着が要押し退け
+				PRINTFORML %OUTER_T(MASTER, 0, 1)%\@ UPPERUNDER(1) == 1 ? と%INNER_T(MASTER)% # \@をまくり上げ
+				PRINTFORM %CALLNAME:MASTER%の胸を揉みながら、
+			ELSEIF UPPERUNDER(1) == 1             ;上半身下着が要押し退け
+				PRINTFORML %INNER_T(MASTER)%の裾から忍ばせた手で%CALLNAME:MASTER%の胸を揉みながら、
+			ENDIF
+		ELSE                            ;その他
+			PRINTFORML %CALLNAME:MASTER%の胸を揉みながら、
+		ENDIF
+		PRINTFORML %TARGET_DESCRIPTION("たまま")%%CALLNAME:MASTER%の手を握って自分の胸に重ねた…
+	CASE 3                    ;ACT派生が乳首責め
+		PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("たまま")%%CALLNAME:MASTER%の\@ TCVAR:MASTER:位置前後 == 2 ? 背後から手を回し、 #  \@ツンと尖った乳首を
+		IF BRACHECK(1, 1)               ;上半身服装が要押し退け
+			IF TALENT:壁抜け                      ;調教者が壁抜け素質を持っている
+				PRINTFORM 布地をすり抜けた
+			ELSE                                  ;その他
+				SIF UPPERJACKET(1) == 1                     ;上半身上着が要押し退け
+					PRINTFORM %OUTER_T(MASTER, 0, 1)%の裾から手を入れ、
+				SIF UPPERUNDER(1) == 1                      ;上半身下着が要押し退け
+					PRINTFORM %INNER_T(MASTER)%の薄い布地越しに
+			ENDIF
+		ENDIF
+		PRINTFORML 指でつねって、いじくり出した…
+	CASEELSE                  ;ACT派生が通常
+		PRINTFORM %CALLNAME:TARGET%は%TARGET_DESCRIPTION("たまま")%%CALLNAME:MASTER%\@ TCVAR:MASTER:位置前後 == 2 ? の背後から手を回し、 # の正面から、 \@
+		IF BRACHECK(1, 1)               ;上半身服装が要押し退け
+			IF TALENT:壁抜け                      ;調教者が壁抜け素質を持っている
+				PRINTFORML 布地をすり抜ける指と掌で
+			ELSEIF BRACHECK(1)                    ;上半身服装が邪魔
+				PRINTFORML 布地越しにかぶせた手で
+			ENDIF
+		ENDIF
+		PRINTFORML %CALLNAME:MASTER%の胸を愛撫し始めた…
+ENDSELECT
+
+;☆リアクション後☆
+@TRAIN_MESSAGE2_11
+IF TFLAG:ACT派生 == 2         ;ACT派生が乳の揉み合い
+	SELECTCASE COMGRONAME(TFLAG:REACT分類)
+		CASE "消極的従う"               ;REACT分類が消極的従うの場合
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行動"
+					PRINTFORML %CALLNAME:MASTER%は乳房を揉まれて湧きあがる感覚に追い立てられるように、
+					PRINTFORML 控えめな動きで%CALLNAME%の胸を愛撫した…
+				CASE "無理のない行動"
+					PRINTFORML 胸を揉まれた%CALLNAME:MASTER%は仕方なく%CALLNAME:TARGET%の要求に応じて、彼女の胸を愛撫した…
+				CASE "無理をした行動"
+					IF COMCOR_POSI()              ;実は気持ちいい
+						PRINTFORML %CALLNAME:MASTER%は乳房を愛撫し合うという状況に恥じらいつつ、
+						PRINTFORML 乱れる吐息を隠して控えめに奉仕した…
+					ELSE                          ;実は嫌
+						PRINTFORML %CALLNAME:MASTER%は悔しそうに%CALLNAME%を睨みつけたが、
+						PRINTFORML やがてその手はゆっくりと%CALLNAME%の胸を揉み始めた…
+					ENDIF
+			ENDSELECT
+		CASE "平然と従う"               ;REACT分類が平然と従うの場合
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行動"
+					PRINTFORML %CALLNAME:MASTER%は%CALLNAME%の反応を確かめるように、
+					PRINTFORML 顔を覗き込みながら%CALLNAME%の乳房を愛撫した…
+				CASE "無理のない行動"
+					PRINTFORML %CALLNAME:MASTER%と%CALLNAME:TARGET%は競い合うように、
+					PRINTFORML 互いの乳房を愛撫し合った…
+				CASE "無理をした行動"
+					PRINTFORML %CALLNAME:MASTER%は努めて平静を装いながら、
+					PRINTFORML 淡々と%CALLNAME%の胸を揉み返した…
+			ENDSELECT
+		CASE "積極的従う"               ;REACT分類が積極的従うの場合
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行動"
+					PRINTFORML %CALLNAME:MASTER%は胸を突き出すようにして愛撫を受け入れながら、
+					PRINTFORML 貪るように%CALLNAME%の乳房を掌で捏ね回した…
+				CASE "無理のない行動"
+					PRINTFORML 胸を揉まれながら、%CALLNAME:MASTER%は積極的に%CALLNAME:TARGET%の胸を愛撫した…
+				CASE "無理をした行動"
+					PRINTFORML %CALLNAME:MASTER%は%CALLNAME%を喜ばせようと、
+					PRINTFORML できるだけ積極的に%CALLNAME%の胸を揉み返した…
+			ENDSELECT
+		CASE "受け入れる"               ;REACT分類が受け入れるの場合
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行動"
+					PRINTFORML %CALLNAME:MASTER%は命令通りに%CALLNAME%の乳房に掌を当てたが、
+					PRINTFORML 胸から湧き上がる快感に翻弄されてなかなか上手く揉むことができない…
+				CASE "無理のない行動"
+					PRINTFORML %CALLNAME:MASTER%は胸を愛撫される快感に腰砕けになり、
+					PRINTFORML すがりつくように辛うじて%CALLNAME:TARGET%の胸を揉み返した…
+				CASE "無理をした行動"
+					PRINTFORML %CALLNAME:MASTER%は言われるままに%CALLNAME%の胸を揉み返しながら、
+					PRINTFORML 胸からの感覚に集中することで気持ちを紛らわせた…
+			ENDSELECT
+		CASEELSE                        ;その他のREACT分類の場合
+			IF PALAM:MASTER:恥情 > PALAM:MASTER:反抗                  ;恥情先行
+				PRINTFORML %CALLNAME:MASTER%は恥ずかしくて%CALLNAME:TARGET%の胸を触れず、愛撫を続けている%CALLNAME:TARGET%は不満そうだ…
+			ELSE                                                      ;反抗先行
+				PRINTFORML %CALLNAME:MASTER%は嫌がって%CALLNAME:TARGET%の要求に応じなかった。愛撫を続けている%CALLNAME:TARGET%は不満そうだ…
+			ENDIF
+	ENDSELECT
+	RETURN 2
+ELSE                          ;その他ACT派生時
+	IF IS_COMGRONAME("受け入れる")      ;REACT分類が受け入れるの場合
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:MASTER%はこりこりに勃起した乳首を愛撫される甘い感覚に、
+				PRINTFORML 脚をもじもじさせながら存分に悶えた…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%のもたらす快楽に、思わず嬌声を上げた…
+			CASE "無理をした行動"
+				PRINTFORML %CALLNAME:MASTER%は胸元から湧き上がる奇妙な快感に興味をもち、
+				PRINTFORML 少しだけ素直に受け入れてみた…
+		ENDSELECT
+		RETURN 2
+	ELSEIF IS_COMGRONAME("積極的従う")  ;REACT分類が積極的従うの場合
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME%が愛撫しやすいように、
+				PRINTFORML 胸を張るようにしてツンと勃起した乳首を突き出している…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%の愛撫に身を任せている…
+			CASE "無理をした行動"
+				PRINTFORML %CALLNAME:MASTER%はあえて腕を後ろで組み、邪魔をしてしまわないようにしてから
+				PRINTFORML 胸元を突き出して%CALLNAME%の好きにさせてみた…
+		ENDSELECT
+		RETURN 2
+	ELSEIF IS_COMGRONAME("平然と従う")  ;REACT分類が平然と従うの場合
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の乳首がこりこりに膨らむまで念入りに愛撫した…
+				PRINTFORML %CALLNAME:MASTER%はくすぐったそうにしている…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%に乳首を執拗に責め続けられ、
+				PRINTFORML くすぐったさに呻くような声を漏らしている…
+			CASE "無理をした行動"
+				PRINTFORML %CALLNAME:TARGET%が%CALLNAME:MASTER%の乳首を丹念に愛撫すると、
+				PRINTFORML くすぐったそうに鼻に掛かった声が%CALLNAME:MASTER%の口から漏れ出した…
+		ENDSELECT
+		RETURN 2
+	;REACT分類が許しを乞う、もしくはACT派生が乳首責めの場合
+	ELSEIF IS_COMGRONAME("許しを乞う") || (TFLAG:ACT派生 == 3 && !IS_COMGRONAME("暴れる"))
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME%の\@ TFLAG:ACT派生 == 1 ? 舌 # 指 \@で乳首を執拗に責められ、
+				PRINTFORML 許しを願い身をよじって悶えている…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:MASTER%は痛みを伴う刺激に身をよじったが、
+				PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%にかまわずしつこく乳首をいじっている…
+			CASE "無理をした行動"
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME%に乳首を執拗に愛撫されて、
+				PRINTFORML 小さな声で許してと言ってみた…
+		ENDSELECT
+		RETURN 2
+	ELSEIF IS_COMGRONAME("消極的従う")  ;REACT分類が消極的従うの場合
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME%の\@ TFLAG:ACT派生 == 1 ? 舌 # 指 \@に乳首を愛撫されて
+				PRINTFORML 恥ずかしさに頬を染めながら堪えている…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%にかまわずしつこく乳首をいじっている…
+			CASE "無理をした行動"
+				IF COMCOR_POSI()                  ;実は気持ちいい
+					PRINTFORML %CALLNAME:MASTER%は唇を結んで乳首から湧き上がる甘い感覚を我慢した…
+				ELSE                              ;実は嫌
+					PRINTFORML %CALLNAME:MASTER%は悔しそうに%CALLNAME%を睨みつけたが、
+					PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%にかまわずしつこく乳首をいじっている…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+	ENDIF
+ENDIF
+
+;────────────────────────────────────
+;012,クンニ/フェラする
+;────────────────────────────────────
+;★リアクション前★
+@TRAIN_MESSAGE_12
+SELECTCASE TFLAG:ACT派生
+	CASE 1                    ;ACT派生がフェラ
+		IF TCVAR:MASTER:イきそう                  ;調教対象がイきそう
+			SELECTCASE TCVAR:MASTER:焦らし度
+				CASE IS > 1                                 ;焦らし中
+					IF TEQUIP:顔面騎乗 || TEQUIP:顔面騎乗アナル       ;顔面騎乗中
+						PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の顔面に\@ TEQUIP:顔面騎乗 ? 性器をこすりつけ # アヌスを押し付け \@ながら
+					ELSE                                              ;その他
+						PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の睾丸を優しくもみほぐしながら、
+					ENDIF
+					PRINTFORML 亀頭をチロチロと舌で刺激し間欠的に噴き上がる先走りを舐めとっている…
+				CASE 1                                      ;焦らし終了
+					IF TEQUIP:顔面騎乗 || TEQUIP:顔面騎乗アナル       ;顔面騎乗中
+						PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の顔面に\@ TEQUIP:顔面騎乗 ? 性器をこすりつけ # アヌスを押し付け \@ながら
+						PRINTFORML 一滴でも多く射精させようと一心不乱にペニスに吸いついている…
+					ELSE                                              ;その他
+						PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の腰を掴んでペニスを根元まで飲み込むと
+						PRINTFORML 一滴でも多く射精させようと一心不乱に吸いあげている…
+					ENDIF
+					IF TALENT:MASTER:ふたなり                         ;調教対象がふたなり
+						PRINTFORML 同時に秘唇に指を突き入れ、激しく動かし始めた！…
+					ELSEIF CFLAG:アライメント < 0 || TALENT:サド      ;調教者がアライメント負かサド素質
+						PRINTFORML 同時に陰嚢をつかむと精液を搾り出すように強く握りしめた！…
+					ELSE                                              ;その他
+						PRINTFORML 同時に陰嚢に手を伸ばし睾丸をヤワヤワと愛撫している…
+					ENDIF
+				CASEELSE                                    ;焦らし無し
+					IF TEQUIP:顔面騎乗 || TEQUIP:顔面騎乗アナル       ;顔面騎乗中
+						PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の顔面に\@ TEQUIP:顔面騎乗 ? 性器をこすりつけ # アヌスを押し付け \@ながら
+						PRINTFORML 丁寧にペニスに舌を這わせ射精を促した…
+					ELSE                                              ;その他
+						PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%を上目遣いで見つめながら、
+						PRINTFORML 丁寧に舌を這わせ射精を促した…
+					ENDIF
+			ENDSELECT
+		ELSEIF TFLAG:ACT == TFLAG:前ACT           ;連続実行
+			PRINTFORM %CALLNAME:TARGET%は
+			SIF TEQUIP:顔面騎乗 || TEQUIP:顔面騎乗アナル    ;顔面騎乗中
+				PRINTFORML \@ TEQUIP:顔面騎乗 ? 濡れた女性器を%CALLNAME:MASTER%の顔面にグチュグチュとこすりつけ # 自身のアヌスを%CALLNAME:MASTER%の口元に押し付け \@ながら
+			SIF PANTSCHECK(1, 1)                            ;下半身服装が要押し退け
+				PRINTFORM \@ TALENT:壁抜け ? 布地をすり抜けた内側で、 #  \@
+			IF IS_CONDITION(TARGET, "情欲")                 ;調教者が情欲状態
+				PRINTFORML ぱっくりとくわえ込んだペニスを激しく吸引し%CALLNAME:MASTER%を高めていった…
+			ELSE                                            ;その他
+				PRINTFORML すぼめた唇で亀頭をしごきあげている…
+			ENDIF
+		ELSE                                      ;通常
+			PRINTFORM %CALLNAME:TARGET%は
+			SIF TEQUIP:顔面騎乗 || TEQUIP:顔面騎乗アナル    ;顔面騎乗中
+				PRINTFORML %CALLNAME:MASTER%に\@ TEQUIP:顔面騎乗 ? 秘唇 # アヌス \@を舐めさせながら体を前に倒すと
+			PRINTFORM %CALLNAME:MASTER%の
+			IF LOWERUNDER(1) == 1 && !TALENT:壁抜け         ;下半身下着が要押し退け、かつ調教者に壁抜け素質無し
+				PRINTFORM 下着をずらし
+			ELSE                                            ;その他
+				PRINTFORM 股間に顔を埋めて
+			ENDIF
+			PRINTFORML %PENIS_DESCRIPTION(MASTER)%男性器を\@ PANTSCHECK(1) && TALENT:壁抜け ? 布地をすり抜けた # \@口で愛撫し始めた…
+			TEQUIP:着衣露出 |= 4                            ;調教対象性器露出
+		ENDIF
+	CASEELSE                  ;ACT派生がクンニ
+		IF TCVAR:MASTER:イきそう        ;調教対象がイきそう
+			SELECTCASE TCVAR:MASTER:焦らし度
+				CASE IS > 1                                 ;焦らし中
+					IF TEQUIP:顔面騎乗 || TEQUIP:顔面騎乗アナル       ;顔面騎乗中
+						PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の顔面に\@ TEQUIP:顔面騎乗 ? 性器をこすりつけ # アヌスを押し付け \@ながら
+					ELSE                                              ;その他
+						PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の秘唇を指で押し開きながら、
+					ENDIF
+					PRINTFORML 陰核をチロチロと舌で刺激し間欠的に噴き上がる愛液を舐めとっている…
+				CASE 1                                      ;焦らし終了
+					IF TEQUIP:顔面騎乗 || TEQUIP:顔面騎乗アナル       ;顔面騎乗中
+						PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の顔面に\@ TEQUIP:顔面騎乗 ? 性器をこすりつけ # アヌスを押し付け \@ながら
+					ELSE                                              ;その他
+						PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の脚の付け根を大きく左右に開かせると、
+					ENDIF
+					IF CFLAG:アライメント < 0 || TALENT:サド          ;調教者がアライメント負かサド素質
+						PRINTFORML 同時に陰核に歯を立て、コリッと噛み潰した！…
+					ELSE                                              ;その他
+						PRINTFORML 同時に陰核に吸い付いて舌で潰すように舐め始めた…
+					ENDIF
+				CASEELSE                                    ;焦らし無し
+					IF TEQUIP:顔面騎乗 || TEQUIP:顔面騎乗アナル       ;顔面騎乗中
+						PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の顔面に\@ TEQUIP:顔面騎乗 ? 性器をこすりつけ # アヌスを押し付け \@ながら
+					ELSE                                              ;その他
+						PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%を上目遣いで見つめながら、
+					ENDIF
+					PRINTFORML 包皮を剥いた陰核の根元に舌を這わせ絶頂を促した…
+			ENDSELECT
+		ELSEIF TFLAG:ACT == TFLAG:前ACT           ;連続実行
+			PRINTFORM %CALLNAME:TARGET%は
+			SIF TEQUIP:顔面騎乗 || TEQUIP:顔面騎乗アナル    ;顔面騎乗中
+				PRINTFORML \@ TEQUIP:顔面騎乗 ? 濡れた女性器を%CALLNAME:MASTER%の顔面にグチュグチュとこすりつけ # 自身のアヌスを%CALLNAME:MASTER%の口元に押し付け \@ながら
+			SIF PANTSCHECK(1, 1)                            ;下半身服装が要押し退け
+				PRINTFORM \@ TALENT:壁抜け ? 布地をすり抜けた内側で、 #  \@
+			IF IS_CONDITION(TARGET, "情欲")                 ;調教者が情欲状態
+				PRINTFORML 唇で吸い付いた突起を激しく吸引し%CALLNAME:MASTER%を高めていった…
+			ELSE                                            ;その他
+				PRINTFORML すぼめた唇で陰核に何度もキスをしている…
+			ENDIF
+		ELSE                                      ;通常
+			PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の股間に顔を埋め、
+			IF PANTSCHECK(1, 1)                             ;下半身服装が要押し退け
+				IF TALENT:壁抜け                                      ;調教者が壁抜け素質を持っている
+					PRINTFORM 布地をすり抜ける舌先で、
+				ELSE                                                  ;その他
+					SIF LOWERJACKET(1) == 1                                     ;下半身上着が要押し退け
+						PRINTFORM %OUTER_B(MASTER, 0, 1)%をまくり上げ、
+					SIF LOWERUNDER(1) == 1                                      ;下半身下着が要押し退け
+						PRINTFORM 下着をずらして
+				ENDIF
+			ENDIF
+			PRINTFORML 秘唇を舐め始めた…
+			TEQUIP:着衣露出 |= 4                            ;調教対象性器露出
+		ENDIF
+ENDSELECT
+
+;☆リアクション後☆
+@TRAIN_MESSAGE2_12
+IF TFLAG:ACT派生              ;ACT派生がフェラ
+	SELECTCASE COMGRONAME(TFLAG:REACT分類)
+		CASE "受け入れる"
+			IF TCVAR:MASTER:イきそう    ;イきそう状態
+				IF TCVAR:MASTER:焦らし度 > 1      ;焦らし中
+					SELECTCASE GET_COM_RANK()
+						CASE "自然な行動"
+							PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%の口淫に心まで犯されているような気分になり、
+							PRINTFORML 亀頭が張り詰め、精液が限界まで込み上げてくるのを感じた…
+						CASE "無理のない行動"
+							PRINTFORML %CALLNAME:MASTER%は精液が限界まで込み上げてくるのを感じながら、
+							PRINTFORML %CALLNAME:TARGET%のねっとりとした口淫になすがままになっている…
+						CASE "無理をした行動"
+							PRINTFORML %CALLNAME:MASTER%は屈辱と快楽に耐えるように歯を食い縛ったが、
+							PRINTFORML 射精間近のペニスは%CALLNAME:TARGET%の舌がもたらす妖しい感覚に歓喜している…
+					ENDSELECT
+				ELSE                              ;焦らし終了・焦らし無し
+					SELECTCASE GET_COM_RANK()
+						CASE "自然な行動"
+							PRINTFORML %CALLNAME:MASTER%が上擦った声で射精を訴えると、%CALLNAME:TARGET%はペニスを深く咥え込み、
+							PRINTFORML 喉奥と頬、舌をまとわりつかせ、蕩けるような射精感を煽り始めた…
+						CASE "無理のない行動"
+							PRINTFORML %CALLNAME:MASTER%が射精することを告げると%CALLNAME:TARGET%は精液をこぼさないよう亀頭を咥え直した…
+							PRINTFORML %CALLNAME:TARGET%の口内では高速で舌が動き%CALLNAME:MASTER%の射精を促している…
+						CASE "無理をした行動"
+							PRINTFORML %CALLNAME:MASTER%が射精の欲に負け快楽に屈したのを見て取ると、%CALLNAME:TARGET%は亀頭を咥え直し、
+							PRINTFORML 舌を小刻みに動かして射精を促し、至福の快楽を刻み込もうとした…
+					ENDSELECT
+				ENDIF
+			ELSE                        ;その他の場合（イきそう状態以外）
+				SELECTCASE GET_COM_RANK()
+					CASE "自然な行動"
+						PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%にペニスを舐められる妖しい悦楽に浸りきってしまい、
+						PRINTFORML 夢心地でそれを受け入れた…
+					CASE "無理のない行動"
+						PRINTFORML %CALLNAME:TARGET%は腰を浮かせて快感をねだる%CALLNAME:MASTER%の姿に満足し、
+						PRINTFORML 口淫を続けた…
+					CASE "無理をした行動"
+						PRINTFORML %CALLNAME:TARGET%は快楽を受け入れつつある%CALLNAME:MASTER%を見て満足した…
+						PRINTFORML 抵抗する気力が、快感と期待に溶けていく…
+				ENDSELECT
+			ENDIF
+			RETURN 2
+		CASE "積極的従う"
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行動"
+					PRINTFORML %CALLNAME:MASTER%は%CALLNAME%に亀頭をちろちろと舐め上げられながら、
+					PRINTFORML 投げ出すように脚を開いて協力的に振る舞っている…
+				CASE "無理のない行動"
+					PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%が舐めやすいように腰を浮かした…
+				CASE "無理をした行動"
+					PRINTFORML %CALLNAME:MASTER%は閉じそうになる自分の膝を両手で掴み、
+					PRINTFORML %CALLNAME%がペニスをしゃぶる邪魔をしないようにした…
+			ENDSELECT
+			RETURN 2
+		CASE "平然と従う"
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行動"
+					;態度でかいCOMです
+					PRINTFORML %CALLNAME:MASTER%は自分のペニスを舐めている%CALLNAME:TARGET%の髪を指で軽く弄った。
+					PRINTFORML %CALLNAME%は複雑そうな視線でこちらを見ている…
+				CASE "無理のない行動"
+					PRINTFORML %CALLNAME:MASTER%はフェラチオを続ける%CALLNAME:TARGET%を静かに\@ !TFLAG:仰向け || !TEQUIP:押し倒し中 ? 見下ろし # 見つめ \@ている…
+					PRINTFORML ぴちゃぴちゃという水音が響くと、%CALLNAME:MASTER%の表情が少し歪んだ…
+				CASE "無理をした行動"
+					PRINTFORML %CALLNAME:MASTER%は平静を装った顔に多少快感の表情を浮かべつつ、
+					PRINTFORML %CALLNAME:TARGET%の情熱的なフェラチオを受け続けている…
+			ENDSELECT
+			RETURN 2
+		CASE "許しを乞う"
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行動"
+					PRINTFORML %CALLNAME:TARGET%は情けなく懇願する%CALLNAME:MASTER%の亀頭をぱっくり咥え、
+					PRINTFORML 磨くように全体を舐め回し、ゆっくり頭を前後に動かした…
+				CASE "無理のない行動"
+					PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の下半身を抱え込み
+					PRINTFORML 敏感な部分を中心に責めたてた…
+				CASE "無理をした行動"
+					PRINTFORML 許しを乞う%CALLNAME:MASTER%の内心を見透かしたように
+					PRINTFORML %CALLNAME:TARGET%は唇を窄めて前後に動かし、射精へ導こうとしている…
+			ENDSELECT
+			RETURN 2
+		CASE "消極的従う"
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行動"
+					PRINTFORML %CALLNAME:TARGET%は息を止めて顔を背ける%CALLNAME:MASTER%の下半身を抱え込み、
+					PRINTFORML 雁首を唇で包み、声が漏れるまで執拗に裏筋を舐め上げた…
+				CASE "無理のない行動"
+					PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の下半身を抱え込み、
+					PRINTFORML ペニスに舌を這わせている…
+				CASE "無理をした行動"
+					IF COMCOR_POSI()                        ;実は気持ちいい
+						PRINTFORML %CALLNAME:MASTER%はこみ上げる妖しい快感に必死に耐えようとしたが、
+						PRINTFORML %CALLNAME%はそれを見透かし、膨張した亀頭をひたすらしゃぶり続けた…
+					ELSE                                    ;実は嫌
+						PRINTFORML %CALLNAME:MASTER%は膝と腰に力を入れ、屈辱に耐えようとしたが、
+						PRINTFORML %CALLNAME%は意に介さずねっとりと口淫を施した…
+					ENDIF
+			ENDSELECT
+			RETURN 2
+	ENDSELECT
+ELSE                          ;ACT派生がクンニ
+	SELECTCASE COMGRONAME(TFLAG:REACT分類)
+		CASE "受け入れる"
+			IF TCVAR:MASTER:イきそう    ;イきそう状態
+				IF TCVAR:MASTER:焦らし度 > 1      ;焦らし中
+					SELECTCASE GET_COM_RANK()
+						CASE "自然な行動"
+							PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%の舌がもたらす快楽に存分に甘え、
+							PRINTFORML 背筋を這い上がる絶頂の波に乗ろうと腰を浮かせて押し付けた…
+						CASE "無理のない行動"
+							PRINTFORML %CALLNAME:MASTER%は絶頂の予兆が腰を昇ってくるのを感じながら、
+							PRINTFORML %CALLNAME:TARGET%のねっとりとした口淫になすがままになっている…
+						CASE "無理をした行動"
+							PRINTFORML %CALLNAME:MASTER%は屈辱と快楽に耐えるように歯を食い縛ったが、
+							PRINTFORML 絶頂寸前のヴァギナは%CALLNAME:TARGET%の舌を歓迎してひくついている…
+					ENDSELECT
+				ELSE                              ;焦らし終了・焦らし無し
+					SELECTCASE GET_COM_RANK()
+						CASE "自然な行動"
+							PRINTFORML %CALLNAME:MASTER%が甘ったるい声で絶頂を訴えると、%CALLNAME:TARGET%は陰核に吸い付き、
+							PRINTFORML ぷちゅぷちゅ音を立ててしゃぶり、より深い快楽で絶頂へ導いた…
+						CASE "無理のない行動"
+							PRINTFORML %CALLNAME:MASTER%がイきそうと告げると%CALLNAME:TARGET%はかぶりつくように女陰に吸い付いた…
+							PRINTFORML %CALLNAME:TARGET%の口内では高速で舌が動き%CALLNAME:MASTER%の絶頂を促している…
+						CASE "無理をした行動"
+							PRINTFORML %CALLNAME:MASTER%がイきたい欲に負け快楽に屈したのを見て取ると、%CALLNAME:TARGET%は陰核に吸い付き、
+							PRINTFORML 舌を小刻みに動かして絶頂を促し、至福の快楽を刻み込もうとした…
+					ENDSELECT
+				ENDIF
+			ELSE                        ;その他の場合（イきそう状態以外）
+				SELECTCASE GET_COM_RANK()
+					CASE "自然な行動"
+						PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%にクリトリスを舐められる妖しい悦楽に浸りきってしまい、
+						PRINTFORML 夢心地でそれを受け入れた…
+					CASE "無理のない行動"
+						PRINTFORML %CALLNAME:TARGET%は腰を浮かせて快感をねだる%CALLNAME:MASTER%の姿に満足し、
+						PRINTFORML 口淫を続けた…
+					CASE "無理をした行動"
+						PRINTFORML %CALLNAME:TARGET%は快楽を受け入れつつある%CALLNAME:MASTER%を見て満足した…
+						PRINTFORML 抵抗する気力が、快感と期待に溶けていく…
+				ENDSELECT
+			ENDIF
+			RETURN 2
+		CASE "積極的従う"
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行動"
+					PRINTFORML %CALLNAME:MASTER%は%CALLNAME%に陰核をちろちろと舐め上げられながら、
+					PRINTFORML 投げ出すように脚を開いて協力的に振る舞っている…
+				CASE "無理のない行動"
+					PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%が舐めやすいように腰を浮かした…
+				CASE "無理をした行動"
+					PRINTFORML %CALLNAME:MASTER%は閉じそうになる自分の膝を両手で掴み、
+					PRINTFORML %CALLNAME%が女性器を舐める邪魔をしないようにした…
+			ENDSELECT
+			RETURN 2
+		CASE "平然と従う"
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行動"
+					;態度でかいCOMです
+					PRINTFORML %CALLNAME:MASTER%は自分のクリトリスを舐めている%CALLNAME:TARGET%の髪を指で軽く弄った。
+					PRINTFORML %CALLNAME%は複雑そうな視線でこちらを見ている…
+				CASE "無理のない行動"
+					PRINTFORML %CALLNAME:MASTER%はクンニを続ける%CALLNAME:TARGET%を静かに\@ !TFLAG:仰向け || !TEQUIP:押し倒し中 ? 見下ろし # 見つめ \@ている…
+					PRINTFORML ぴちゃぴちゃという水音が響くと、%CALLNAME:MASTER%の表情が少し歪んだ…
+				CASE "無理をした行動"
+					PRINTFORML %CALLNAME:MASTER%は平静を装った顔に多少快感の表情を浮かべつつ、
+					PRINTFORML %CALLNAME:TARGET%の情熱的なクンニリングスを受け続けている…
+			ENDSELECT
+			RETURN 2
+		CASE "許しを乞う"
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行動"
+					PRINTFORML %CALLNAME:TARGET%は情けなく懇願する%CALLNAME:MASTER%の陰核にしゃぶりつき、
+					PRINTFORML 磨くように全体を舐め回し、何度も先端にキスをした…
+				CASE "無理のない行動"
+					PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の下半身を抱え込み
+					PRINTFORML 敏感な部分を中心に責めたてた…
+				CASE "無理をした行動"
+					PRINTFORML 許しを乞う%CALLNAME:MASTER%の内心を見透かしたように
+					PRINTFORML %CALLNAME:TARGET%はクリトリスの先端を小刻みに舐め、絶頂へ導こうとしている…
+			ENDSELECT
+			RETURN 2
+		CASE "消極的従う"
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行動"
+					PRINTFORML %CALLNAME:TARGET%は息を止めて顔を背ける%CALLNAME:MASTER%の下半身を抱え込み、
+					PRINTFORML 雁首を唇で包み、声が漏れるまで執拗に裏筋を舐め上げた…
+				CASE "無理のない行動"
+					PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の下半身を抱え込み、
+					PRINTFORML ペニスに舌を這わせている…
+				CASE "無理をした行動"
+					IF COMCOR_POSI()                        ;実は気持ちいい
+						PRINTFORML %CALLNAME:MASTER%はこみ上げる妖しい快感に必死に耐えようとしたが、
+						PRINTFORML %CALLNAME%はそれを見透かし、膨張した陰核をひたすらしゃぶり続けた…
+					ELSE                                    ;実は嫌
+						PRINTFORML %CALLNAME:MASTER%は膝と腰に力を入れ、屈辱に耐えようとしたが、
+						PRINTFORML %CALLNAME%は意に介さずねっとりと口淫を施した…
+					ENDIF
+			ENDSELECT
+			RETURN 2
+	ENDSELECT
+ENDIF
+
+;────────────────────────────────────
+;013,アナル愛撫
+;────────────────────────────────────
+;★リアクション前★
+@TRAIN_MESSAGE_13
+SELECTCASE TFLAG:ACT派生
+	CASE 1                              ;ACT派生が前立腺刺激
+		PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("たまま、")%%CALLNAME:MASTER%の直腸内に
+		SIF PANTSCHECK(1, 1) && TALENT:壁抜け     ;下半身服装が要押し退けかつ調教者に壁抜け素質有り
+			PRINTFORM 布地を無視して
+		PRINTFORML 指を進入させ前立腺を直接刺激した…
+		PRINTFORML %CALLNAME:MASTER%のペニスが強制的に勃起させられる…
+	CASE 2                              ;ACT派生がアナルバイブ出し入れ
+		PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("たまま、")%%CALLNAME:MASTER%のアヌスが咥えこんだバイブを掴むと、
+		SIF TALENT:MASTER:オトコ                  ;オトコ限定
+			PRINTFORM 前立腺を
+		PRINTFORML 抉るように激しく動かした…
+	CASEELSE                            ;その他のACT派生
+		PRINTFORM %CALLNAME:TARGET%は
+		SIF TEQUIP:顔面騎乗 || TEQUIP:顔面騎乗アナル        ;顔面騎乗中
+			PRINTFORML %CALLNAME:MASTER%に\@ TEQUIP:顔面騎乗 ? 秘唇 # アヌス \@を舐めさせながら体を前に倒すと
+		PRINTFORM %TARGET_DESCRIPTION("ながら")%
+		IF PANTSCHECK(1, 1)                                 ;下半身服装が要押し退け
+			IF TALENT:壁抜け                                          ;調教者が壁抜け素質を持っている
+				PRINTFORM 布地をすり抜けて直接、
+			ELSE                                                      ;その他
+				SIF LOWERJACKET(1) == 1                                         ;下半身上着が要押し退け
+					PRINTFORM %OUTER_B(MASTER, 0, 1)%をまくり上げ、
+				SIF LOWERUNDER(1)                                               ;下半身下着が要押し退け
+					PRINTFORM %INNER_B(MASTER)%越しに
+			ENDIF
+		ENDIF
+		PRINTFORML %CALLNAME:MASTER%のアヌスを愛撫し始めた…
+ENDSELECT
+
+;☆リアクション後☆
+@TRAIN_MESSAGE2_13
+IF 0
+ELSEIF TFLAG:ACT派生 == 2                         ;ACT派生がアナルバイブ出し入れの場合
+	IF TALENT:MASTER:オトコ
+		PRINTFORML 直腸から前立腺をこねくり回される感覚に%CALLNAME:MASTER%の男性器は膨張し、
+		PRINTFORML 渦を巻くような強烈な射精感がこみ上げてくる…
+	ELSE
+		PRINTFORML %CALLNAME:MASTER%は便意のような異様な快感に悶えた…
+	ENDIF
+	RETURN 2
+ELSEIF TFLAG:ACT派生 == 1                         ;ACT派生が前立腺刺激の場合
+	PRINTFORML 直腸から前立腺をこねくり回される感覚に%CALLNAME:MASTER%の男性器は膨張し、
+	PRINTFORML 渦を巻くような強烈な射精感がこみ上げてくる…
+	RETURN 2
+ELSEIF IS_COMGRONAME("受け入れる")                ;REACT分類が受け入れるの場合
+	SELECTCASE GET_COM_RANK()
+		CASE "自然な行動"
+			PRINTFORML %CALLNAME:MASTER%は肛門から明らかな性的快感を得てしまっている…
+			PRINTFORML 独特の深い悦楽にどっぷり浸かり、それを貪ることしか考えられない…
+		CASE "無理のない行動"
+			PRINTFORML %CALLNAME:MASTER%のアヌスは快感にひくつきながら、
+			PRINTFORML %CALLNAME:TARGET%の愛撫を受け入れている…
+		CASE "無理をした行動"
+			PRINTFORML %CALLNAME:MASTER%は肛内の異物感に耐えることを諦め、
+			PRINTFORML 屈辱とともに快楽として受け入れた…
+	ENDSELECT
+	RETURN 2
+ELSEIF IS_COMGRONAME("積極的従う/平然と従う")     ;REACT分類が積極的従う/平然と従うの場合
+	SELECTCASE GET_COM_RANK()
+		CASE "自然な行動"
+			PRINTFORML %CALLNAME:MASTER%はアヌスへの愛撫に素直に応じた…
+		CASE "無理のない行動"
+			PRINTFORML %CALLNAME:MASTER%は肛門の力を抜いて%CALLNAME%の指を迎えた…
+		CASE "無理をした行動"
+			PRINTFORML %CALLNAME:MASTER%は一瞬、アヌスへの愛撫に抵抗があるような表情を見せたが、
+			PRINTFORML %CALLNAME%が弄りやすいように体勢を変えて応じた…
+	ENDSELECT
+	RETURN 2
+ELSEIF IS_COMGRONAME("許しを乞う")                ;REACT分類が許しを乞うの場合
+	SELECTCASE GET_COM_RANK()
+		CASE "自然な行動"
+			PRINTFORML 肛門を嬲られた%CALLNAME:MASTER%は苦痛と快楽の区別もつかないまま、
+			PRINTFORML もうやめてと懇願した…
+		CASE "無理のない行動"
+			PRINTFORML %CALLNAME:MASTER%は痛みと快感のため朦朧としながら、
+			PRINTFORML %CALLNAME:TARGET%の愛撫を我慢している…
+		CASE "無理をした行動"
+			;実は気持ちいい
+			IF COMCOR_POSI()                                ;実は気持ちいい
+				PRINTFORML %CALLNAME:MASTER%は不浄の穴を弄ばれる恥辱に耐えられず、
+				PRINTFORML 小さな声でもう許してと言い出した…
+			;実は嫌
+			ELSE                                            ;実は嫌
+				PRINTFORML %CALLNAME:MASTER%はアヌスの奇妙な感覚に耐えられず、
+				PRINTFORML 屈辱に震えながら許しを乞い願った…
+			ENDIF
+	ENDSELECT
+	RETURN 2
+ELSEIF IS_COMGRONAME("消極的従う")                          ;REACT分類が消極的従うの場合
+	SELECTCASE GET_COM_RANK()
+		CASE "自然な行動"
+			PRINTFORML %CALLNAME:MASTER%は排泄感に似た奇妙な感覚に戸惑いながら、
+			PRINTFORML 必死にそれを我慢した…
+		CASE "無理のない行動"
+			PRINTFORML %CALLNAME:MASTER%は異物感にうめき声を上げたが、
+			PRINTFORML %CALLNAME:TARGET%はそれにかまわず責め続けた…
+		CASE "無理をした行動"
+			;実は気持ちいい
+			IF COMCOR_POSI()                                          ;実は気持ちいい
+				PRINTFORML %CALLNAME:MASTER%は力が抜けるような肛虐の快楽を必死に我慢した…
+			;実は嫌
+			ELSE                                                      ;実は嫌
+				PRINTFORML %CALLNAME:MASTER%は恐怖と屈辱に小さく震えながら、
+				PRINTFORML %CALLNAME%にアヌスをほじられる奇妙な感覚に耐えている…
+			ENDIF
+	ENDSELECT
+	RETURN 2
+ENDIF
+
+;────────────────────────────────────
+;014,アナル舐め
+;────────────────────────────────────
+;★リアクション前★
+@TRAIN_MESSAGE_14
+PRINTFORM %CALLNAME:TARGET%は%TARGET_DESCRIPTION("たまま、")%
+IF PANTSCHECK(1, 1)           ;下半身服装が要押し退け
+	IF TALENT:壁抜け                    ;調教者が壁抜け素質を持っている
+		PRINTFORML 布地をすり抜ける舌先で、
+	ELSE
+		SIF LOWERJACKET(1) == 1                   ;下半身上着が要押し退け
+			PRINTFORML %OUTER_B(MASTER, 0, 1)%をまくり上げ、
+		SIF LOWERUNDER(1)                         ;下半身下着が要押し退け
+			PRINTFORML %INNER_B(MASTER)%越しに
+	ENDIF
+ENDIF
+PRINTFORML %CALLNAME:MASTER%のアヌスを丁寧に舐めはじめた…
+
+;★リアクション後★
+@TRAIN_MESSAGE2_14
+SELECTCASE COMGRONAME(TFLAG:REACT分類)
+	CASE "受け入れる"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:MASTER%は肛門を舐められるゾクゾクした快感を
+				PRINTFORML うっとりと目を細めて受け入れた…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:MASTER%のアヌスは快感にひくつきながら、
+				PRINTFORML もっと強い刺激を求めている…
+			CASE "無理をした行動"
+				PRINTFORML %CALLNAME:MASTER%は不浄の穴を舐められ続ける感覚を堪えられず、
+				PRINTFORML 快楽として受け入れてしまい、情けない声を漏らした…
+		ENDSELECT
+		RETURN 2
+	CASE "積極的従う"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME%の顔に尻を押し付けるようにして応じた…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%が舐めやすいように太腿を開いた…
+			CASE "無理をした行動"
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME%の行為の邪魔をしないようにした…
+		ENDSELECT
+		RETURN 2
+	CASE "平然と従う"
+		PRINTFORML %CALLNAME:MASTER%は意外そうな顔をしたが、素直に%CALLNAME%へ尻を差し出した…
+		IF GET_COM_RANK() == "無理をした行動"
+			PRINTFORML 排泄の穴を舐める行為に%CALLNAME:MASTER%はやや困惑している…
+		ELSE
+			PRINTFORML %CALLNAME:MASTER%は%CALLNAME%の行動を奇妙に思っている…
+		ENDIF
+		RETURN 2
+	CASE "許しを乞う"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML 肛門を舐められるたびに%CALLNAME:MASTER%の全身から力が抜け、
+				PRINTFORML 恥ずかしさのあまり許しを願う言葉が口からこぼれた…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:TARGET%の舌がアヌスに侵入するたびに%CALLNAME:MASTER%の口から嬌声がこぼれた…
+				PRINTFORML 首を振って許しを乞うが、%CALLNAME%は聞き入れようとしない…
+			CASE "無理をした行動"
+				IF COMCOR_POSI()                  ;実は気持ちいい
+					PRINTFORML %CALLNAME:MASTER%は不浄の穴を弄ばれる恥辱に耐えられず、
+					PRINTFORML 小さな声でもう許してと言い出した…
+				ELSE                              ;実は嫌
+					PRINTFORML %CALLNAME:MASTER%はアヌスの奇妙な感覚に耐えられず、
+					PRINTFORML 屈辱に震えながら許しを乞い願った…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+	CASE "消極的従う"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:MASTER%は肛門から湧き上がる寒気のような奇妙な感覚を、
+				PRINTFORML 唇を噛んで堪えた…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:MASTER%はアヌスへの異様な感触に思わず眉をひそめた…
+			CASE "無理をした行動"
+				IF COMCOR_POSI()                  ;実は気持ちいい
+					PRINTFORML %CALLNAME:MASTER%はアヌスを舐められ力の入らない身体で、
+					PRINTFORML 背筋を昇ってくる異様な快感を必死に我慢した…
+				ELSE                              ;実は嫌
+					PRINTFORML %CALLNAME:MASTER%は屈辱と恥辱に肩を震わせ、
+					PRINTFORML 肛門から這い上がる異様な感覚を我慢した…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+ENDSELECT
+
+;────────────────────────────────────
+;015,キス
+;────────────────────────────────────
+;★リアクション前★
+@TRAIN_MESSAGE_15
+IF TEQUIP:ボールギャグ && TALENT:壁抜け ;ボールギャグ貫通
+	PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("たまま")%%CALLNAME:MASTER%に顔を近づけると
+	PRINTFORML 軋む口枷をすり抜けて直接唇を奪った…
+ELSEIF TEQUIP:性交中                    ;性交中(調教者挿入)
+	SELECTCASE TEQUIP:性交中                      ;体位によって分岐
+		CASE 1                                              ;正常位
+			PRINTFORML %CALLNAME:TARGET%は腰を振りながら%CALLNAME:MASTER%に覆いかぶさると
+			PRINTFORML %CALLNAME:MASTER%の頭をつかんで情熱的なキスをした…
+		CASE 2                                              ;後背位
+			;小柄体型はどうしようか、出来ない気がする
+			PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%に突き込みながら後ろから覆いかぶさると
+			PRINTFORML %CALLNAME:MASTER%を振り向かせ唇を奪った…
+		CASE 3                                              ;騎乗位
+			PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%を抱き寄せると、下から突き上げながら
+			PRINTFORML 情熱的に口づけした…
+		CASE 4                                              ;対面座位
+			PRINTFORML %CALLNAME:TARGET%は貫いたまま%CALLNAME:MASTER%をぎゅっと抱きしめると
+			PRINTFORML そのまま唇を奪った…
+		CASE 5                                              ;背面座位
+			PRINTFORML %CALLNAME:TARGET%は後ろから貫いたまま%CALLNAME:MASTER%を振り向かせ
+			PRINTFORML そのまま唇を奪った…
+		CASE 6                                              ;アナルセックス
+			PRINTFORML %CALLNAME:TARGET%はアヌスを犯しながら%CALLNAME:MASTER%に
+			PRINTFORML キスしてきた…
+	ENDSELECT
+ELSEIF TEQUIP:性交奉仕中                ;性交中(調教対象挿入)
+	SELECTCASE TCVAR:MASTER:焦らし度              ;焦らし度によって分岐
+		CASE IS > 1                                         ;焦らし中
+			PRINTFORML %CALLNAME:TARGET%は\@ A_SEX(MASTER) ? 腸内 # 膣内 \@の\@ TEQUIP:ペニスバンド ? 張り型 # ペニス \@をねっとりとした腰使いで焦らしながら
+			PRINTFORML %CALLNAME:MASTER%の唇を奪った…
+		CASE 1                                              ;焦らし終了
+			PRINTFORML %CALLNAME:TARGET%はつながったまま%CALLNAME:MASTER%に口づけし、舌を絡ませてきた…
+			IF TEQUIP:ペニスバンド                                    ;調教対象がペニスバンド装着中
+				PRINTFORML %CALLNAME:TARGET%は\@ A_SEX(MASTER) ? 腸内 # 膣内 \@に張り型を根元までくわえ込んだまま腰を押し付け
+				PRINTFORML ペニスバンドの中で熟れた%CALLNAME:MASTER%の陰核を押しつぶしている…
+				
+			ELSE                                                      ;その他
+				PRINTFORML %CALLNAME:TARGET%の\@ A_SEX(MASTER) ? 腸内 # 膣内 \@はペニスを根元までくわえ込んだまま蠕動し
+				PRINTFORML %CALLNAME:MASTER%に射精を促している…
+			ENDIF
+		CASEELSE                                            ;焦らし無し
+			PRINTFORML %CALLNAME:TARGET%は激しく腰を振りながら%CALLNAME:MASTER%に口づけし、
+			PRINTFORML 舌を絡ませてきた…
+	ENDSELECT
+ELSE                                    ;その他
+	PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("たまま")%%CALLNAME:MASTER%の顔に近づき、
+	PRINTFORML 唇に唇を重ねた…
+ENDIF
+
+;☆リアクション後☆
+@TRAIN_MESSAGE2_15
+SELECTCASE COMGRONAME(TFLAG:REACT分類)
+	CASE "積極的従う"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:MASTER%は\@ TEQUIP:性交奉仕中 || TEQUIP:性交中 ? 腰の動きを止めることなく # \@%CALLNAME:TARGET%の口付けに応じ、
+				PRINTFORML 負けじと自分から舌を挿し入れた…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:MASTER%は\@ TEQUIP:性交奉仕中 || TEQUIP:性交中 ? 腰の動きを止めることなく # \@%CALLNAME:TARGET%と舌を絡ませ合った…
+			CASE "無理をした行動"
+				PRINTFORML %CALLNAME:MASTER%は\@ TEQUIP:性交奉仕中 || TEQUIP:性交中 ? 腰を止めることもできずに # \@%CALLNAME:TARGET%に唇を奪われ、
+				PRINTFORML こみ上げる感情に逆らえず、涙を散らして情熱的にキスを返した…
+		ENDSELECT
+		RETURN 2
+	CASE "受け入れる"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:MASTER%は\@ TEQUIP:性交奉仕中 || TEQUIP:性交中 ? 腰の動きを止めることなく # \@%CALLNAME:TARGET%の口付けに応じ、
+				PRINTFORML 餌をねだる雛鳥のように唇に吸い付き、舌を迎え入れた…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:MASTER%は\@ TEQUIP:性交奉仕中 || TEQUIP:性交中 ? 腰の動きを止めることなく # \@%CALLNAME:TARGET%とキスをして、
+				PRINTFORML ゾクゾクした快感が背筋に何度も走っていくのを感じた…
+			CASE "無理をした行動"
+				PRINTFORML %CALLNAME:MASTER%は\@ TEQUIP:性交奉仕中 || TEQUIP:性交中 ? 腰を止めることもできずに # \@%CALLNAME:TARGET%に唇を奪われ、
+				PRINTFORML 望まない幸福感に心が満たされるのを感じ、目に涙を浮かべた…
+		ENDSELECT
+		RETURN 2
+	CASE "平然と従う"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:MASTER%は求めに応じ、悪戯っぽく笑いつつ自分からキスを返した…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%とのキスに応じ、舌を絡めあった…
+			CASE "無理をした行動"
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%に唇を奪われ、一瞬驚いたが
+				PRINTFORML やがて自分からも舌を絡ませた…
+		ENDSELECT
+		RETURN 2
+	CASE "許しを乞う"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:MASTER%は諦めたように固く結んだ唇を緩めると、
+				PRINTFORML %CALLNAME:TARGET%の舌が侵入するに任せ、背筋を震わせた…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:MASTER%の口に%CALLNAME:TARGET%の舌が侵入してくると、
+				PRINTFORML %CALLNAME:MASTER%はおずおずとそれに応じた…
+			CASE "無理をした行動"
+				PRINTFORML %CALLNAME:MASTER%は渦巻いた感情を押し殺し、
+				PRINTFORML %CALLNAME:TARGET%のキスをただ黙って受け入れた…
+		ENDSELECT
+		RETURN 2
+	CASE "消極的従う"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%の舌が口内を嬲るのに身を任せ、
+				PRINTFORML 鼻で弱々しく呼吸しながら、キスが終わるのを待った…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:TARGET%は強引に%CALLNAME:MASTER%の唇を奪うと
+				PRINTFORML %CALLNAME:MASTER%の口内を舌で蹂躙した…
+			CASE "無理をした行動"
+				IF COMCOR_POSI()                  ;実は気持ちいい
+					PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%の唇に吸い付きたくなる気持ちに自制をかけ、
+					PRINTFORML 黙って舌と唇を捧げた…
+				ELSE                              ;実は嫌
+					PRINTFORML %CALLNAME:MASTER%は内心で抵抗しつつも、
+					PRINTFORML %CALLNAME:TARGET%に唇を貪られるまま我慢した…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+ENDSELECT
+
+;────────────────────────────────────
+;016,貝あわせ/素股する
+;────────────────────────────────────
+;★リアクション前★
+@TRAIN_MESSAGE_16
+;四つん這いか仰向け（TFLAG:仰向け）か、それが問題だ。
+SELECTCASE TFLAG:ACT派生      ;ACT派生によって分岐
+	CASE 1                              ;ACT派生が素股
+		IF TCVAR:MASTER:イきそう                  ;調教対象がイきそう
+			SELECTCASE TCVAR:MASTER:焦らし度                ;焦らし度によって分岐
+				CASE IS > 1                                           ;焦らし中
+					PRINTFORML %CALLNAME:TARGET%は陰唇で%CALLNAME:MASTER%のペニスを挟んだまま腰をゆっくりと大きく前後させ
+					PRINTFORML %CALLNAME:MASTER%が喘ぐ姿を微笑みながら見下ろしている…
+				CASE 1                                                ;焦らし終了
+					PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の亀頭を膣口に密着させると、
+					PRINTFORML グチュグチュと腰を前後させ射精へと導いた…
+				CASEELSE                                              ;焦らし無し
+					PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%に射精の瞬間を見せ付けるため、
+					PRINTFORML 腰を浮かせて陰唇をこすり付けている…
+			ENDSELECT
+		ELSEIF TFLAG:ACT == TFLAG:前ACT           ;連続実行
+			IF TFLAG:仰向け                                 ;仰向け
+				PRINTFORML %CALLNAME:TARGET%は快感にあえぐ%CALLNAME:MASTER%の上で、
+				PRINTFORML 性器が触れ合う感触を楽しんでいる…
+			ELSE                                            ;四つん這い
+				PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の男性器を太ももではさんだまま
+				PRINTFORML そのまま続けるように促している…
+			ENDIF
+		ELSE                                      ;通常
+			IF TFLAG:仰向け                                 ;仰向け
+				IF TEQUIP:MASTER:下半身下着                           ;調教対象が下半身下着を着ている
+					IF TALENT:壁抜け                                            ;調教者が壁抜け素質を持っている
+						PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%に馬乗りになり、服をすり抜けて
+						PRINTFORML 布地の下で性器どうしをこすり合わせた…
+					ELSE                                                        ;その他
+						PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%\@ TEQUIP:着衣露出 & 4 ? に馬乗りになり、 # の下着をずらすと、馬乗りになって \@
+						PRINTFORML 露出した性器どうしをこすり合わせた…
+						TEQUIP:着衣露出 |= 4                                              ;調教対象性器露出
+					ENDIF
+				ELSE                                                  ;その他
+					PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%に馬乗りになり、性器どうしをこすり合わせた…
+				ENDIF
+			ELSE                                            ;四つん這い
+				PRINTFORML %CALLNAME:TARGET%は%PENIS_DESCRIPTION(MASTER)%%CALLNAME:MASTER%の男性器を太ももではさんで
+				PRINTFORML 擦り始めた…
+			ENDIF
+		ENDIF
+	CASE 2                              ;ACT派生がペニスバンド素股
+		IF TFLAG:ACT == TFLAG:前ACT               ;連続実行
+			IF TFLAG:仰向け                                 ;仰向け
+				PRINTFORML %CALLNAME:TARGET%は快感にあえぐ%CALLNAME:MASTER%の上で、
+				PRINTFORML 玩具と性器を擦り合わせる感触を楽しんでいる…
+			ELSE                                            ;四つん這い
+				PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の偽りの男性器を太ももではさんだまま
+				PRINTFORML そのまま続けるように促している…
+			ENDIF
+		ELSE                                      ;通常
+			IF TFLAG:仰向け                                 ;仰向け
+				PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%に馬乗りになり、自分の性器を
+				PRINTFORML 黒光りするペニスバンドに擦りつけ始めた…
+			ELSE                                            ;四つん這い
+				PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の身に着けたペニスバンドを太ももではさんで
+				PRINTFORML 擦り始めた…
+			ENDIF
+		ENDIF
+	CASEELSE                            ;ACT派生が貝合わせ
+		IF TCVAR:MASTER:イきそう                  ;調教対象がイきそう
+			SELECTCASE TCVAR:MASTER:焦らし度                ;焦らし度によって分岐
+				CASE IS > 1                                           ;焦らし中
+					PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%を組み敷く姿勢で腰を大きく前後させ
+					PRINTFORML %CALLNAME:MASTER%が喘ぐ姿を微笑みながら見下ろしている…
+				CASE 1                                                ;焦らし終了
+					PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の陰核を膣口で捉えると、
+					PRINTFORML グチュグチュと腰を前後させ絶頂へと導いた…
+				CASEELSE                                              ;焦らし無し
+					PRINTFORML %CALLNAME:TARGET%は腹が密着するほど%CALLNAME:MASTER%に覆い被さり
+					PRINTFORML 絶頂の瞬間の表情を間近で見つめようとしている…
+			ENDSELECT
+		ELSEIF TFLAG:ACT == TFLAG:前ACT           ;連続実行
+			IF TFLAG:仰向け                                 ;仰向け
+				PRINTFORML %CALLNAME:TARGET%は快感にあえぐ%CALLNAME:MASTER%の上で、
+				PRINTFORML 性器が触れ合う感触を楽しんでいる…
+			ELSE                                            ;四つん這い
+				PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%と性器を密着させて
+				PRINTFORML そのまま続けるように促している…
+			ENDIF
+		ELSE                                      ;通常
+			IF TFLAG:仰向け                                 ;仰向け
+				IF PANTSCHECK(1, 1)                                   ;下半身服装が要押し退け
+					IF TALENT:壁抜け                                            ;調教者が壁抜け素質を持っている
+						PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%に馬乗りになり、服をすり抜けて
+						PRINTFORML 布地の下で性器どうしをこすり合わせた…
+					ELSEIF LOWERUNDER(1) == 1                                   ;下半身下着が要押し退け
+						PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%\@ TEQUIP:着衣露出 & 4 ? に馬乗りになり、 # の下着をずらすと、馬乗りになって \@
+						PRINTFORML 露出した性器どうしをこすり合わせた…
+						TEQUIP:着衣露出 |= 4                                              ;調教対象性器露出
+					ELSE                                                        ;その他
+						PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%に馬乗りになり、性器どうしをこすり合わせた…
+					ENDIF
+				ELSE                                                  ;その他
+					PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%に馬乗りになり、性器どうしをこすり合わせた…
+				ENDIF
+			ELSE                                            ;四つん這い
+				IF PANTSCHECK(1, 1) && TALENT:壁抜け                  ;下半身服装が要押し退けかつ調教者に壁抜け素質有り
+					PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の服をすり抜けて
+					PRINTFORML 布地の下で性器どうしをこすり合わせた…
+				ELSE                                                  ;その他
+					PRINTFORML %CALLNAME:TARGET%は二人の女性器をぴったり重ねて
+					PRINTFORML 擦りつけ始めた…
+				ENDIF
+			ENDIF
+		ENDIF
+ENDSELECT
+
+;☆リアクション後☆
+@TRAIN_MESSAGE2_16
+SELECTCASE COMGRONAME(TFLAG:REACT分類)
+	CASE "受け入れる"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%と情熱的な性交をしているかのように、
+				PRINTFORML 互いの性器を熱心に擦り合い、快楽を貪り高まっていった…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:MASTER%は性器が深く擦れるように腰を前後させ、
+				PRINTFORML %CALLNAME:TARGET%の与える快楽を自らも求めた…
+			CASE "無理をした行動"
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%と性器同士を摩擦する行為に快感を覚え
+				PRINTFORML 性交の代わりにするように自らそれを求めた…
+		ENDSELECT
+		RETURN 2
+	CASE "積極的従う"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%と情熱的な性交をしているかのように、
+				PRINTFORML 互いの性器を熱心に擦り合い、快楽の喘ぎを漏らした…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:MASTER%は自らも積極的に腰を前後させ、
+				PRINTFORML %CALLNAME:TARGET%の与える快楽に応じた…
+			CASE "無理をした行動"
+				;オトコ奴隷の素股もまあ犯されると言っていいやと
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%に犯されることを考え、今の状況を諦めたように
+				PRINTFORML 求められるままに応じて腰を擦り合わせた…
+		ENDSELECT
+		RETURN 2
+	CASE "平然と従う"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME%に指示される通りの動きで応じた…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:MASTER%は命令通りに性器同士を押し当てるように腰を揺すった…
+			CASE "無理をした行動"
+				IF COMCOR_POSI()                  ;実は気持ちいい
+					PRINTFORML %CALLNAME:MASTER%は擬似性交に過ぎない行為に多少の物足りなさを感じながらも、
+					PRINTFORML とりあえず我慢して%CALLNAME%の命令通りに従った…
+				ELSE                              ;実は気持ちいい
+					PRINTFORML %CALLNAME:MASTER%は本当に性交するよりはまだ良い方だと思い、
+					PRINTFORML %CALLNAME:TARGET%との擬似性交に自分から応じて見せた…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+	CASE "許しを乞う"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:MASTER%は犯されているような恐怖に囚われ、怯えたように顔を背けた…
+				PRINTFORML それを見て取った%CALLNAME%は、わざとらしく音を立てて腰を大きく動かしていく…
+			CASE "無理のない行動"
+				PRINTFORML 快感にもだえる%CALLNAME:MASTER%が顔を背けると
+				PRINTFORML %CALLNAME:TARGET%はわざと音を立てながら腰を揺すった…
+			CASE "無理をした行動"
+				IF COMCOR_POSI()                  ;実は気持ちいい
+					PRINTFORML %CALLNAME:MASTER%はこの行為に若干物足りなさを感じながらも、
+					PRINTFORML 恥ずかしくて口には出せなかった…
+				ELSE                              ;実は嫌
+					PRINTFORML %CALLNAME:MASTER%は性交を連想する姿勢に怯えて顔を背けたが、
+					PRINTFORML %CALLNAME:TARGET%は構わず性器同士を擦る動きを繰り返した…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+	CASE "消極的従う"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME%に言われるままに腰を前に出し、
+				PRINTFORML おずおずと控えめに動き始めた…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:TARGET%は恥ずかしがる%CALLNAME:MASTER%の上で行為を続けている…
+			CASE "無理をした行動"
+				IF COMCOR_POSI()                  ;実は気持ちいい
+					PRINTFORML %CALLNAME:MASTER%はこの行為に若干物足りなさを感じながらも、
+					PRINTFORML 恥ずかしくて口には出せなかった…
+				ELSE                              ;実は嫌
+					PRINTFORML %CALLNAME:MASTER%は性交を連想する姿勢を嫌がり顔を背けたが、
+					PRINTFORML %CALLNAME:TARGET%は構わず性器同士を擦る動きを繰り返した…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+ENDSELECT
+
+;────────────────────────────────────
+;017,パイズリする
+;────────────────────────────────────
+;★リアクション前★
+@TRAIN_MESSAGE_17
+IF TCVAR:MASTER:イきそう                ;調教対象がイきそう
+	SELECTCASE TCVAR:MASTER:焦らし度              ;焦らし度によって分岐
+		CASE IS > 1                                         ;焦らし中
+			IF TALENT:巨乳                                            ;調教者が巨乳
+				PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%のペニスを手にとると
+				PRINTFORML 豊満な乳房で押し包み、やわやわと揉み焦らし始めた…
+			ELSEIF TALENT:貧乳                                        ;調教者が貧乳
+				PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%のペニスを手にとると
+				PRINTFORML %OPPAI_DESCRIPTION(TARGET)%の先で亀頭をくすぐり、焦らしている…
+			ELSE                                                      ;その他
+				PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%が自ら胸の谷間に突き込むのを制し、
+				PRINTFORML 亀頭を舌でくすぐっている…
+			ENDIF
+		CASE 1                                              ;焦らし終了
+			IF TALENT:巨乳                                            ;調教者が巨乳
+				PRINTFORML %CALLNAME:TARGET%は%OPPAI_DESCRIPTION(TARGET)%からかろうじて顔をのぞかせた%CALLNAME:MASTER%の亀頭に
+				PRINTFORML 口づけし、射精の瞬間を待ち構えた…
+			ELSEIF TALENT:貧乳                                        ;調教者が貧乳
+				PRINTFORML %CALLNAME:TARGET%は両手で胸を寄せささやかな谷間を作ると
+				PRINTFORML %CALLNAME:MASTER%のペニス挟んで射精を促した…
+			ELSE                                                      ;その他
+				PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%のペニスを%OPPAI_DESCRIPTION(TARGET)%で優しく包みこむと
+				PRINTFORML %CALLNAME:MASTER%に自分から突き込むように促した…
+			ENDIF
+		CASEELSE                                            ;焦らし無し
+			IF TALENT:巨乳                                            ;調教者が巨乳
+				PRINTFORML %CALLNAME:TARGET%はびくびくと震える%CALLNAME:MASTER%のペニスを
+				PRINTFORML %OPPAI_DESCRIPTION(TARGET)%ですっぽりと包み込み射精を促した…
+			ELSEIF TALENT:貧乳                                        ;調教者が貧乳
+				PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%のペニスを手にとると
+				PRINTFORML %OPPAI_DESCRIPTION(TARGET)%にこすりつけ射精を促した…
+			ELSE                                                      ;その他
+				PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%のペニスを%OPPAI_DESCRIPTION(TARGET)%で挟み込み
+				PRINTFORML 鈴口の前で口をあけ射精の瞬間を待った…
+			ENDIF
+	ENDSELECT
+ELSEIF TFLAG:ACT == TFLAG:前ACT         ;連続実行
+	IF TALENT:巨乳                                ;調教者が巨乳
+		PRINTFORML %CALLNAME:MASTER%のペニスは%CALLNAME:TARGET%の巨乳に包み込まれ、
+		PRINTFORML かろうじて亀頭の先端だけが外に露出している…
+	ELSEIF TALENT:貧乳                            ;調教者が貧乳
+		PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%のペニスに薄い胸をこすりつけている…
+	ELSE                                          ;その他
+		PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%のペニスを胸で挟んだまま時折舌で先走りを舐めとっては
+		PRINTFORML 激しく上半身を揺さぶっている…
+	ENDIF
+ELSE                                    ;通常
+	;-------------------------------------------------
+	;衣装制限の結果呼ばれなくなった分岐が多いかも
+	;めんどくさいから残しとく
+	;-------------------------------------------------
+	LOCALS = \@ TALENT:貧乳 ? に押し付け # ではさんで \@
+	LOCALS = \@ TALENT:巨乳 ? で包み込み # %LOCALS% \@
+	;干渉する衣服が存在する時
+	IF TEQUIP:上半身下着 || TEQUIP:上半身上着 || TEQUIP:全身上着 || (TEQUIP:MASTER:下半身下着 && !TALENT:壁抜け) || CFLAG:衣装 == 3
+		SELECTCASE TEQUIP:着衣露出 & 6            ;露出状況により分岐
+			CASE 6                                          ;干渉箇所全露出時
+				PRINTFORML %CALLNAME:TARGET%は%PENIS_DESCRIPTION(MASTER)%%CALLNAME:MASTER%の男性器をはだけた胸%LOCALS%こすり始めた…
+			CASE 4                                          ;調教対象性器露出時
+				PRINTFORML %CALLNAME:TARGET%は胸をはだけると%PENIS_DESCRIPTION(MASTER)%%CALLNAME:MASTER%の男性器を胸%LOCALS%こすり始めた…
+			CASE 2                                          ;調教者胸露出時
+				PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の下着から%PENIS_DESCRIPTION(MASTER)%男性器を取り出すと胸%LOCALS%こすり始めた…
+			CASEELSE                                        ;干渉箇所非露出時
+				PRINTFORML %CALLNAME:TARGET%は胸をはだけ%CALLNAME:MASTER%の下着から%PENIS_DESCRIPTION(MASTER)%男性器を取り出すと胸%LOCALS%こすり始めた…
+		ENDSELECT
+		TEQUIP:着衣露出 |= 6                                          ;調教者胸、調教対象性器露出
+	ELSE                                          ;その他
+		PRINTFORML %CALLNAME:TARGET%は%PENIS_DESCRIPTION(MASTER)%%CALLNAME:MASTER%の男性器を
+		SIF PANTSCHECK(1, 1) && TALENT:壁抜け               ;下半身服装が要押し退けかつ調教者に壁抜け素質有り
+			PRINTFORM 布地をすり抜けて
+		PRINTFORML %OPPAI_DESCRIPTION(TARGET)%%LOCALS%こすり始めた…
+	ENDIF
+ENDIF
+
+;☆リアクション後☆
+@TRAIN_MESSAGE2_17
+IF IS_NOWCOMNAME("腰を振る")                      ;リアクションが腰を振るの場合
+	IF TCVAR:MASTER:イきそう && TCVAR:MASTER:焦らし度 < 2   ;イきそう状態で焦らし終了/無し
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME%の胸に包まれる快楽の虜になっている…
+				PRINTFORML 頭の中は射精することだけで埋め尽くされ、ひたすら腰を振り続けた…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME%が先走りでヌルヌルになった両胸をギュっと中央に寄せると
+				PRINTFORML %CALLNAME:MASTER%は射精へと向かって自ら腰の動きを早めていった…
+			CASE "無理をした行動"
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME%の胸でイかされる恥辱を堪えようとしたが、
+				PRINTFORML 舌先で先端をちろちろと舐められ、自ら絶頂へ向かう腰を止めることができない…
+		ENDSELECT
+	ELSE                                                    ;その他
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME%の乳房にペニスを挟まれ、
+				PRINTFORML まるで性交をしているように快楽のまま腰を振り続けた…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%に促され、ペニスを胸に挟まれたまま
+				PRINTFORML 性交するかのようにかくかくと腰を振った…
+			CASE "無理をした行動"
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME%の目の前で自ら動こうとする腰を止めようとしたが、
+				PRINTFORML 柔らかな快楽を意識してしまい、かくかく前後に動くのを止められなかった…
+		ENDSELECT
+	ENDIF
+	RETURN 2
+ELSEIF IS_COMGRONAME("受け入れる")                ;RAECT分類が受け入れるの場合
+	SELECTCASE GET_COM_RANK()
+		CASE "自然な行動"
+			PRINTFORML %CALLNAME:MASTER%は%CALLNAME%の乳房の柔らかさにすっかり魅了され、
+			PRINTFORML 快楽を求めてだらしなく腰をくねらせた…
+		CASE "無理のない行動"
+			PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%の胸の谷間にペニスを挟んでもらい、
+			PRINTFORML その柔らかさと快感を存分に味わった…
+		CASE "無理をした行動"
+			PRINTFORML %CALLNAME%の乳房で%CALLNAME:MASTER%のペニスが包まれると、
+			PRINTFORML 一緒に融けてしまうかのような快楽がたちまち湧き上がり、抵抗する気力を奪っていった…
+	ENDSELECT
+	RETURN 2
+ELSEIF IS_COMGRONAME("積極的従う")                ;RAECT分類が積極的従うの場合
+	SELECTCASE GET_COM_RANK()
+		CASE "自然な行動"
+			PRINTFORML %CALLNAME:MASTER%は%CALLNAME%が乳房を押さえる動きに併せて腰を使い、
+			PRINTFORML 胸を使った性交に没頭した…
+		CASE "無理のない行動"
+			PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%の胸の谷間に自らペニスを突き入れている…
+		CASE "無理をした行動"
+			PRINTFORML %CALLNAME%の乳房で%CALLNAME:MASTER%のペニスが包まれると、
+			PRINTFORML 温かく柔らかい感触を求め、自然に腰が動き出した…
+	ENDSELECT
+	RETURN 2
+ELSEIF IS_COMGRONAME("平然と従う")                ;RAECT分類が平然と従うの場合
+	SELECTCASE GET_COM_RANK()
+		CASE "自然な行動"
+			PRINTFORML %CALLNAME:MASTER%は奉仕を受ける気分で%CALLNAME%にパイズリをされた…
+		CASE "無理のない行動"
+			PRINTFORML 抵抗しない%CALLNAME:MASTER%のペニスを%CALLNAME%は思う存分胸で愛撫した…
+		CASE "無理をした行動"
+			IF COMCOR_POSI()                                ;実は気持ちいい
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME%のパイズリに快感を与えられつつも、
+				PRINTFORML なるべく表情には出さずに受け入れた…
+			ELSE                                            ;実は嫌
+				PRINTFORML %CALLNAME:MASTER%は恋人同士の戯れのような行為に違和感を覚えたが、
+				PRINTFORML 抵抗はせずに%CALLNAME:TARGET%にされるに任せた…
+			ENDIF
+	ENDSELECT
+	RETURN 2
+ELSEIF IS_COMGRONAME("許しを乞う")                ;REACT分類が許しを乞うの場合
+	SELECTCASE GET_COM_RANK()
+		CASE "自然な行動"
+			PRINTFORML %CALLNAME:MASTER%は快感を堪えようと身体を強張らせるが、
+			PRINTFORML %CALLNAME%は構わず乳房でペニスを挟み、慈しむように上下に動かした…
+		CASE "無理のない行動"
+			PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の下半身を身体ごと押さえつけ、
+			PRINTFORML 抵抗できない%CALLNAME:MASTER%のペニスを乳房で揉みほぐした…
+		CASE "無理をした行動"
+			IF COMCOR_POSI()                                ;実は気持ちいい
+				PRINTFORML %CALLNAME:MASTER%は快感にひくつくペニスを%CALLNAME%に間近に見つめられ、
+				PRINTFORML 恥ずかしさと快楽のあまり首を振って激しく悶えた…
+			ELSE                                            ;実は嫌
+				PRINTFORML %CALLNAME:MASTER%は乳房に挟まれ快楽を与えられるペニスを間近に見つめられ、
+				PRINTFORML 羞恥と屈辱と快感を必死に堪えようと歯を食い縛った…
+			ENDIF
+	ENDSELECT
+	RETURN 2
+ELSEIF IS_COMGRONAME("消極的従う")                ;REACT分類が消極的従うの場合
+	SELECTCASE GET_COM_RANK()
+		CASE "自然な行動"
+			PRINTFORML %CALLNAME:MASTER%は%CALLNAME%にされるままペニスを乳房に挟み込まれ、
+			PRINTFORML 亀頭が甘く蕩けるような責めを丹念に施された…
+		CASE "無理のない行動"
+			PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の下半身を身体ごと押さえつけ、
+			PRINTFORML 抵抗できない%CALLNAME:MASTER%のペニスを乳房で揉みほぐした…
+		CASE "無理をした行動"
+			IF COMCOR_POSI()                                ;実は気持ちいい
+				PRINTFORML %CALLNAME:MASTER%は乳房に犯されるペニスを%CALLNAME%に間近に見つめられ、
+				PRINTFORML 恥ずかしさと快感を必死に我慢している…
+			ELSE                                            ;実は嫌
+				PRINTFORML %CALLNAME:MASTER%は乳房に挟まれ快楽を与えられるペニスを間近に見つめられ、
+				PRINTFORML 羞恥と屈辱と快感を必死に堪えようと歯を食い縛った…
+			ENDIF
+	ENDSELECT
+	RETURN 2
+ENDIF
+
+;────────────────────────────────────
+;018,足コキする
+;────────────────────────────────────
+;★リアクション前★
+@TRAIN_MESSAGE_18
+;調教対象がイきそう且つ連続実行ではない
+IF TCVAR:MASTER:イきそう && TFLAG:ACT != TFLAG:前ACT
+	PRINTFORML %CALLNAME:TARGET%は今にもイきそうな%CALLNAME:MASTER%の状態を見透かしたかのように、
+	PRINTFORML その両足で、ビクビクと脈打つ%CALLNAME:MASTER%のペニスを荒々しくしごいてきた…
+;連続実行
+ELSEIF TFLAG:ACT == TFLAG:前ACT
+	PRINTFORML %CALLNAME:TARGET%は愉快そうに%CALLNAME:MASTER%を見下ろしながら、
+	PRINTFORML \@ TCVAR:MASTER:イきそう? 今にも暴発しそうな # \@ペニスをぐりぐりと踏みつけている…
+;通常
+ELSE
+	PRINTFORML %CALLNAME:TARGET%は%PENIS_DESCRIPTION(MASTER)%%CALLNAME:MASTER%の男性器を\@ TALENT:美脚 ? スラリとした足で # \@\@ TALENT:サド || IS_CONDITION(TARGET, "怒り") ? 踏みつぶし # 踏みつけ \@
+	SIF PANTSCHECK(1);下半身服装が邪魔
+		PRINTFORM \@ TALENT:壁抜け ? 布をすり抜けて直接 # 布越しに \@
+	PRINTFORML こすり始めた…
+ENDIF
+
+;☆リアクション後☆
+@TRAIN_MESSAGE2_18
+SELECTCASE COMGRONAME(TFLAG:REACT分類)
+	CASE "受け入れる"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME%の脚に性器を嬲られ、興奮と快感に浸った…
+				PRINTFORML 今の%CALLNAME:MASTER%にとっては、蔑む視線さえも快楽になっている…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:TARGET%は快感に喘ぐ%CALLNAME:MASTER%に卑猥な言葉を投げかけながら、
+				PRINTFORML 愛撫を続けた…
+			CASE "無理をした行動"
+				PRINTFORML %CALLNAME:TARGET%の足から紛れもない快感を感じてしまっていることに気付き、
+				PRINTFORML %CALLNAME:MASTER%は羞恥と快楽に震えた…
+		ENDSELECT
+		RETURN 2
+	CASE "積極的従う", "平然と従う"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME%に踏みにじられるペニスをじっと見ていた…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME%は抵抗しない%CALLNAME:MASTER%のペニスを足の指で弄んだ…
+			CASE "無理をした行動"
+				IF COMCOR_POSI()                  ;実は気持ちいい
+					PRINTFORML %CALLNAME:MASTER%は%CALLNAME%の足で感じてしまっていることを認めず、
+					PRINTFORML 表情では平静を装った…
+				ELSE                              ;実は嫌
+					PRINTFORML %CALLNAME:MASTER%は%CALLNAME%からの屈辱的な行為にあえてムキにならず、
+					PRINTFORML 平然と受け流すことで応じた…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+	CASE "許しを乞う"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:MASTER%は屈辱的な責めを受け、許してと懇願した…
+				PRINTFORML %CALLNAME%は笑いながら、足での愛撫をより強くしていく…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:TARGET%は抵抗しない%CALLNAME:MASTER%に卑猥な言葉を投げかけながら、
+				PRINTFORML 愛撫を続けた…
+			CASE "無理をした行動"
+				IF COMCOR_POSI()                  ;実は気持ちいい
+					PRINTFORML %CALLNAME:MASTER%は性器を踏まれることで快感を得ていることを意識してしまい、
+					PRINTFORML 哀願の視線を%CALLNAME%に向けた…
+				ELSE                              ;実は嫌
+					PRINTFORML %CALLNAME:MASTER%は%CALLNAME%に性器を踏まれる耐えがたい屈辱に、
+					PRINTFORML 呻き交じりに小さくやめてと言った…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+	CASE "消極的従う"
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME%にされるままペニスを足先で踏みにじられ、
+				PRINTFORML 屈辱と苦痛と、奇妙な快感に顔を歪めた…
+			CASE "無理のない行動"
+				PRINTFORML %CALLNAME:MASTER%が抵抗すると%CALLNAME:TARGET%は%CALLNAME:MASTER%の性器に体重をかけ、
+				PRINTFORML おとなしくするように脅した…
+			CASE "無理をした行動"
+				IF COMCOR_POSI()                  ;実は気持ちいい
+					PRINTFORML %CALLNAME:MASTER%は性器を踏まれることで快感を得ていることを意識してしまい、
+					PRINTFORML 羞恥と屈辱のあまり%CALLNAME%のことを直視できなかった…
+				ELSE                              ;実は嫌
+					PRINTFORML %CALLNAME:MASTER%は%CALLNAME%に性器を踏まれる耐えがたい屈辱に、
+					PRINTFORML 抵抗する気力が失われていくのを感じた…
+				ENDIF
+		ENDSELECT
+		RETURN 2
+ENDSELECT
+
+;────────────────────────────────────
+;019,指挿入れ
+;────────────────────────────────────
+;リアクション前
+@TRAIN_MESSAGE_19
+SELECTCASE TFLAG:ACT派生
+	CASE 1                                        ;ACT派生がＧスポット刺激
+		PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("つつ")%\@ TCVAR:MASTER:位置前後 == 2 ? 後ろから腰を抱き # \@%CALLNAME:MASTER%の膣内に
+		SIF PANTSCHECK(1, 1) && TALENT:壁抜け               ;下半身服装が要押し退けかつ調教者に壁抜け素質有り
+			PRINTFORM 布地を無視して
+		PRINTFORML 指を進入させＧスポットを直接刺激した…
+		SIF PENIS(MASTER)
+			PRINTFORML %CALLNAME:MASTER%のペニスが強制的に勃起させられる…
+	CASE 2                                        ;ACT派生がバイブ出し入れ
+		PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%の膣が咥えこんだバイブを掴むと、
+		PRINTFORML %TARGET_DESCRIPTION("ながら、")%Ｇスポットを抉るように激しく動かした…
+	CASEELSE                                      ;その他のACT派生
+		PRINTFORM %CALLNAME:TARGET%は%TARGET_DESCRIPTION("つつ")%\@ TCVAR:MASTER:位置前後 == 2 ? 後ろから腰を抱き、 # \@
+		SIF TEQUIP:顔面騎乗 || TEQUIP:顔面騎乗アナル        ;顔面騎乗中
+			PRINTFORML %CALLNAME:MASTER%に\@ TEQUIP:顔面騎乗 ? 秘唇 # アヌス \@を舐めさせながら体を前に倒すと
+		IF PANTSCHECK(1, 1)                                 ;下半身服装が要押し退け
+			IF TALENT:壁抜け                                          ;調教者が壁抜け素質を持っている
+				PRINTFORM 布地をすり抜けて直接、
+			ELSE                                                      ;その他
+				SIF LOWERJACKET(1) == 1                                         ;下半身上着が要押し退け
+					PRINTFORM %OUTER_B(MASTER, 0, 1)%をまくり上げ、
+				SIF LOWERUNDER(1)                                               ;下半身上着が要押し退け
+					PRINTFORM %INNER_B(MASTER)%をずらして
+			ENDIF
+		ENDIF
+		PRINTFORML %CALLNAME:MASTER%の膣口に指先をあてがい、そっと奥へ押し込んだ…
+ENDSELECT
+
+;☆リアクション後☆
+@TRAIN_MESSAGE2_19
+IF TFLAG:ACT派生 == 2                             ;ACT派生がバイブ出し入れ
+	IF TALENT:MASTER:ふたなり
+		PRINTFORML 膣内から前立腺をこねくり回される感覚に%CALLNAME:MASTER%の男性器は膨張し、
+		PRINTFORML 渦を巻くような強烈な射精感がこみ上げてくる…
+	ELSE
+		PRINTFORML %CALLNAME:MASTER%はＧスポットをバイブにえぐられる感覚に
+		PRINTFORML 髪を振り乱して悶えた…
+	ENDIF
+	RETURN 2
+ELSEIF TFLAG:ACT派生 == 1                         ;ACT派生がＧスポット刺激
+	IF TALENT:MASTER:ふたなり
+		PRINTFORML 膣内から前立腺をこねくり回される感覚に%CALLNAME:MASTER%の男性器は膨張し、
+		PRINTFORML 渦を巻くような強烈な射精感がこみ上げてくる…
+	ELSE
+		PRINTFORML %CALLNAME:MASTER%はＧスポットを指でえぐられる感覚に
+		PRINTFORML 髪を振り乱して悶えた…
+	ENDIF
+	RETURN 2
+ELSEIF IS_COMGRONAME("受け入れる")                ;REACT分類が受け入れる
+	SELECTCASE GET_COM_RANK()
+		CASE "自然な行動"
+			PRINTFORML %CALLNAME:MASTER%はぽってり充血した膣襞を%CALLNAME%にかき回され、
+			PRINTFORML 腰を浮かせて快楽に悶えた…
+		CASE "無理のない行動"
+			PRINTFORML %CALLNAME:MASTER%の膣襞は快感にひくつきながら、
+			PRINTFORML %CALLNAME:TARGET%の愛撫を受け入れている…
+		CASE "無理をした行動"
+			PRINTFORML %CALLNAME%の指に膣内を優しく愛撫されて湧き上がる女の快感と多幸感が、
+			PRINTFORML 張り詰めていた%CALLNAME:MASTER%の気力をとろとろに溶かしていく…
+	ENDSELECT
+	RETURN 2
+ELSEIF IS_COMGRONAME("積極的従う")                ;RAECT分類が積極的従う
+	SELECTCASE GET_COM_RANK()
+		CASE "自然な行動"
+			PRINTFORML %CALLNAME:MASTER%は%CALLNAME%の指を歓迎するように膣内で締め付けた…
+		CASE "無理のない行動"
+			PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%が愛撫しやすいように腰の角度を変えた…
+		CASE "無理をした行動"
+			PRINTFORML 膣内を傷つけないように、%CALLNAME:MASTER%は%CALLNAME%が愛撫しやすいような
+			PRINTFORML 協力的な姿勢で応じた…
+	ENDSELECT
+	RETURN 2
+ELSEIF IS_COMGRONAME("平然と従う")                ;REACT分類が平然と従う
+	SELECTCASE GET_COM_RANK()
+		;自然な行動
+		CASE "自然な行動"
+			PRINTFORML %CALLNAME:MASTER%はあまり表情を変えずに膣内の指を感じている…
+		;無理のない行動
+		CASE "無理のない行動"
+			PRINTFORML ペニスより細い指と思い、%CALLNAME:MASTER%は膣内への愛撫を素直に受けた…
+		;無理をした行動
+		CASE "無理をした行動"
+			IF COMCOR_POSI()                                ;実は気持ちいい
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME%の指で膣内を揉み解される感覚に、
+				PRINTFORML 堪えきれずに思わず甘い声を漏らした…
+			ELSE                                            ;実は嫌
+				PRINTFORML %CALLNAME:MASTER%は膣内に指を受け入れることに抵抗を覚えたが、
+				PRINTFORML ひとまず%CALLNAME%のしたいようにさせてみた…
+			ENDIF
+	ENDSELECT
+	RETURN 2
+ELSEIF IS_COMGRONAME("許しを乞う/消極的従う")     ;REACT分類が許しを乞う/消極的従う
+	SELECTCASE GET_COM_RANK()
+		CASE "自然な行動"
+			PRINTFORML %CALLNAME:MASTER%は%CALLNAME%に膣内を指でかき回され、
+			PRINTFORML 苦痛と異物感に震えた…
+		CASE "無理のない行動"
+			PRINTFORML %CALLNAME:MASTER%は痛みと快感のため朦朧としながら、
+			PRINTFORML %CALLNAME:TARGET%の愛撫を我慢している…
+		CASE "無理をした行動"
+			IF COMCOR_POSI()                                ;実は気持ちいい
+				PRINTFORML %CALLNAME:MASTER%は女性器を指で掻き回されて明らかな快楽を得てしまい、
+				PRINTFORML 羞恥と屈辱のあまり%CALLNAME%のことを直視できなかった…
+			ELSE                                            ;実は嫌
+				PRINTFORML %CALLNAME:MASTER%は指で性器を蹂躙される女としての屈辱に、
+				PRINTFORML 抵抗する気力が失われていくのを感じた…
+			ENDIF
+	ENDSELECT
+	RETURN 2
+ENDIF
+
+;────────────────────────────────────
+;027,押し倒す
+;────────────────────────────────────
+;★リアクション前★
+@TRAIN_MESSAGE_27
+IF TFLAG:ACT派生 == 0                   ;押し倒す
+	PRINTFORML %CALLNAME:TARGET%は%TARGET_DESCRIPTION("たまま")%%CALLNAME:MASTER%を押し倒した…
+ELSE                                    ;押し倒し終了
+	PRINTFORML %CALLNAME:TARGET%は%CALLNAME:MASTER%を自由にした…
+ENDIF
+
+;☆リアクション後☆
+@TRAIN_MESSAGE2_27
+IF TFLAG:ACT派生 == 1                   ;押し倒し終了
+	IF !IS_COMGRONAME("暴れる")
+		PRINTFORML %CALLNAME:MASTER%は大人しく%CALLNAME%に従った…
+	ENDIF
+	RETURN 1
+ELSE                                    ;押し倒す
+	SELECTCASE COMGRONAME(TFLAG:REACT分類)
+		CASE "受け入れる"
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行動"
+					PRINTFORML %CALLNAME:MASTER%は%CALLNAME%に肩を押されるまま倒れ込み、
+					PRINTFORML 快楽への期待に喉を鳴らした…
+				CASE "無理のない行動"
+					PRINTFORML %CALLNAME:MASTER%は%CALLNAME%に押し倒されながらこれからされる事を考え、
+					PRINTFORML どこか嬉しそうな複雑な表情をして、抵抗しなかった…
+				CASE "無理をした行動"
+					PRINTFORML %CALLNAME:MASTER%は%CALLNAME%に押し倒され、小さくもがいたが
+					PRINTFORML これから気持ち良くされることに期待して、抵抗をやめてしまった…
+			ENDSELECT
+			RETURN 2
+		CASE "積極的従う", "平然と従う"
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行動"
+					PRINTFORML %CALLNAME:MASTER%はどこか余裕さえ感じられる素振りで、抵抗もせず押し倒された…
+				CASE "無理のない行動"
+					PRINTFORML %CALLNAME%に押し倒されるまま、抵抗せず%CALLNAME:MASTER%は身を任せた…
+				CASE "無理をした行動"
+					IF COMCOR_POSI()                        ;実は気持ちいい
+						PRINTFORML %CALLNAME:MASTER%は押し倒されるまま、特に抵抗も見せずベッドに倒れ
+						PRINTFORML 複雑な色の籠った瞳で%CALLNAME%を見上げた…
+					ELSE                                    ;実は嫌
+						PRINTFORML %CALLNAME:MASTER%は強がりと怯えがない交ぜになった表情で、
+						PRINTFORML %CALLNAME%に押さえ込まれるまま身を任せた…
+					ENDIF
+			ENDSELECT
+			RETURN 2
+		CASE "許しを乞う"
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行動"
+					PRINTFORML %CALLNAME:MASTER%は%CALLNAME%に押し倒されながら、
+					PRINTFORML 酷いことはしないでと哀願した…
+				CASE "無理のない行動"
+					PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%に押さえ付けられ、怯えている…
+				CASE "無理をした行動"
+					IF COMCOR_POSI()                        ;実はまんざらでもない
+						PRINTFORML %CALLNAME:MASTER%は%CALLNAME%に押し倒され、一瞬期待を込めて見上げたが
+						PRINTFORML 恥ずかしさに顔を背けて、酷いことはやめてと言った…
+					ELSE                                    ;実は嫌
+						PRINTFORML %CALLNAME:MASTER%は%CALLNAME%に押し倒され、睨むように見上げたが
+						PRINTFORML 機嫌を損ねないよう声を和らげ、酷いことはしないでと頼んだ…
+					ENDIF
+			ENDSELECT
+			RETURN 2
+		CASE "消極的従う"
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行動"
+					PRINTFORML %CALLNAME:MASTER%は%CALLNAME%に押し倒され、身体を強張らせた…
+				CASE "無理のない行動"
+					PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%に押さえ付けられて身動きが取れない…
+				CASE "無理をした行動"
+					IF COMCOR_POSI()                        ;実はまんざらでもない
+						PRINTFORML %CALLNAME:MASTER%は%CALLNAME%に押し倒され、一瞬期待を込めて見上げたが
+						PRINTFORML 恥ずかしさに顔を背け、黙り込んだ…
+					ELSE                                    ;実は嫌
+						PRINTFORML %CALLNAME:MASTER%は%CALLNAME%に押し倒され、睨むように見上げたが
+						PRINTFORML 機嫌を損ねないよう、唇を結び黙り込んだ…
+					ENDIF
+			ENDSELECT
+			RETURN 2
+	ENDSELECT
+ENDIF

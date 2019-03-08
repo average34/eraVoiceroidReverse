@@ -1,0 +1,159 @@
+﻿;────────────────────────────────────
+;露出のソース（欲情、恥情、不快、抑鬱、気力、興味）
+;────────────────────────────────────
+@CALC_SOURCE20
+
+;恥じらいと恥薄いはここで処理
+SIF TALENT:MASTER:恥じらい
+	TIMES SOURCE:MASTER:露出 , 1.50
+SIF TALENT:MASTER:恥薄い
+	TIMES SOURCE:MASTER:露出 , 0.75
+
+;性知識不足、もしくは幼稚なら裸になる意味とかよくわからないから
+SIF EXP:性知識 < 10 || TALENT:MASTER:幼稚
+	TIMES SOURCE:MASTER:露出 , 0.80
+
+;欲情、露出癖と調教度合いを見る
+CUP:MASTER:欲情 += SOURCE:MASTER:露出 * (10 + GET_ABL(MASTER, "露出癖") * 2 + CFLAG:MASTER:調教レベル * 10) / 250
+
+;恥情、PALAM:MASTER:恥情をみる
+CUP:MASTER:恥情 += SOURCE:MASTER:露出 * LINE_CALC(PALAM:MASTER:恥情, "0→100,10000→0") / 100
+
+;性格を判定、強気なら不快、弱気なら抑鬱が上がります
+LOCAL = TALENT:MASTER:気丈 * 2 - TALENT:MASTER:臆病 * 2 + TALENT:MASTER:生意気 - TALENT:MASTER:大人しい + TALENT:MASTER:プライド高い * 2 - TALENT:MASTER:プライド低い * 2 + TALENT:MASTER:狂気 * 3 - TALENT:MASTER:ドＭ * 3
+
+;リアクションによって補正
+;気持ち良くして
+SIF IS_NOWCOMNAME("気持ち良くして")
+	TIMES LOCAL , 0.20
+;快感を我慢する
+SIF IS_NOWCOMNAME("快感を我慢する")
+	TIMES LOCAL , 0.30
+;積極的やる
+SIF IS_NOWCOMNAME("積極的やる")
+	TIMES LOCAL , 0.40
+;愛情を込めてやる
+SIF IS_NOWCOMNAME("愛情を込めてやる")
+	TIMES LOCAL , 0.10
+;自慰し始める
+SIF IS_NOWCOMNAME("自慰し始める")
+	TIMES LOCAL , 0.25
+
+;従順と露出癖を見る
+IF LOCAL > 0
+	CUP:MASTER:不快 += SOURCE:MASTER:露出 * (400 - GET_ABL(MASTER, "従順") * 4) * (200 - GET_ABL(MASTER, "露出癖") * 2) / 20000
+ELSE
+	CUP:MASTER:抑鬱 += SOURCE:MASTER:露出 * (200 - GET_ABL(MASTER, "従順") * 2) * (400 - GET_ABL(MASTER, "露出癖") * 4) / 20000
+ENDIF
+
+;露出SOURCEから補正値を作る
+LOCAL = LINE_CALC(SOURCE:MASTER:露出, "0→0,2500→50,LIMIT/0～50")
+
+;気力
+DOWNBASE:MASTER:気力 += LOCAL * 2
+
+;興味
+BASE:興味 += LOCAL * (3 + TALENT:好奇心 - TALENT:無関心) / 2
+
+;────────────────────────────────────
+;不潔のソース（不快、抑鬱、気力）
+;────────────────────────────────────
+@CALC_SOURCE21
+
+;関連素質の処理
+SIF TALENT:MASTER:汚れ無視
+	TIMES SOURCE:MASTER:不潔 , 0.30
+SIF TALENT:MASTER:汚臭鈍感
+	TIMES SOURCE:MASTER:不潔 , 0.60
+SIF TALENT:MASTER:汚臭敏感
+	TIMES SOURCE:MASTER:不潔 , 1.35
+
+;性格を判定、強気なら不快が多く、弱気なら抑鬱も上がります
+LOCAL = TALENT:MASTER:気丈 * 2 - TALENT:MASTER:臆病 * 2 + TALENT:MASTER:生意気 - TALENT:MASTER:大人しい + TALENT:MASTER:プライド高い * 2 - TALENT:MASTER:プライド低い * 2 + TALENT:MASTER:狂気 * 3 - TALENT:MASTER:ドＭ * 3
+
+;従順と調教度合いを見る
+IF LOCAL > 0 && CFLAG:MASTER:調教レベル < 30
+	CUP:MASTER:不快 += SOURCE:MASTER:露出 * (400 - GET_ABL(MASTER, "従順") * 4) * (30 - CFLAG:MASTER:調教レベル) / 6000
+ELSE
+	CUP:MASTER:不快 += SOURCE:MASTER:露出 * (400 - GET_ABL(MASTER, "従順") * 4) * (30 - CFLAG:MASTER:調教レベル) / 12000
+	CUP:MASTER:抑鬱 += SOURCE:MASTER:露出 * (200 - GET_ABL(MASTER, "従順") * 2) * (60 - CFLAG:MASTER:調教レベル * 2) / 6000
+ENDIF
+
+;気力
+DOWNBASE:MASTER:気力 += SOURCE:MASTER:不潔 / 20
+
+;────────────────────────────────────
+;逸脱のソース（反抗ソース、恐怖ソース、気力、興味）
+;────────────────────────────────────
+@CALC_SOURCE22
+
+;好奇心と情緒豊かはここで処理
+SIF TALENT:MASTER:好奇心
+	TIMES SOURCE:MASTER:逸脱 , 0.50
+SIF TALENT:MASTER:情緒豊か
+	TIMES SOURCE:MASTER:逸脱 , 1.75
+
+;従順、欲情と調教度合いを見る
+SIF CFLAG:MASTER:調教レベル < 30
+	LOCAL = SOURCE:MASTER:逸脱 * (400 - GET_ABL(MASTER, "従順") * 4) * (30 - CFLAG:MASTER:調教レベル) / 10000 + EXP:MASTER:異常経験 * 10
+;暴れる系対応ではなかった場合、補正値軽減
+SIF TFLAG:REACT分類 < 6
+	TIMES LOCAL , 0.60
+;反抗SOURCE増加
+SIF LOCAL > 0
+	SOURCE:MASTER:反抗 += LOCAL
+
+;調教対象調教レベルが低い場合、恐怖SOURCE増加
+SIF CFLAG:MASTER:調教レベル < 30
+	SOURCE:MASTER:恐怖 += SOURCE:MASTER:逸脱 * (400 - GET_ABL(MASTER, "欲望") * 4) * (30 - CFLAG:MASTER:調教レベル) / 10000 + EXP:MASTER:異常経験 * 10
+
+;気力
+DOWNBASE:MASTER:気力 += SOURCE:MASTER:逸脱 / 30
+
+;興味
+BASE:興味 += SOURCE:MASTER:逸脱 / 50 + 1
+
+;────────────────────────────────────
+;中毒充足のソース（欲情、恭順、理性、好感度）
+;────────────────────────────────────
+@CALC_SOURCE23
+
+;欲情をみる
+CUP:MASTER:欲情 += SOURCE:MASTER:中毒充足 * (10 + GET_ABL(MASTER, "欲望")) / 60
+CUP:MASTER:恭順 += SOURCE:MASTER:中毒充足 * (10 + GET_ABL(MASTER, "欲望")) / 60
+
+;理性
+DOWNBASE:MASTER:理性 += SOURCE:MASTER:中毒充足 / 50 + 1
+
+;好感度変動
+TFLAG:好感度アップ += LINE_CALC(SOURCE:MASTER:中毒充足, "0→0,5000→25,LIMIT/0～25")
+
+;────────────────────────────────────
+;トラウマのソース（反抗ソース、恐怖ソース、屈服、不快、抑鬱、気力、好感度）
+;────────────────────────────────────
+@CALC_SOURCE24
+
+;トラウマ刻印、従順と調教度合いを見る
+SIF MARK:MASTER:トラウマ < 10
+	SOURCE:MASTER:反抗 += SOURCE:MASTER:トラウマ * (400 - GET_ABL(MASTER, "従順") * 4) * (10 - MARK:MASTER:苦痛刻印) / 10000
+
+;調教対象調教レベルが低い場合、恐怖SOURCE増加
+SIF CFLAG:MASTER:調教レベル < 30
+	SOURCE:MASTER:恐怖 += SOURCE:MASTER:トラウマ * (400 - GET_ABL(MASTER, "従順") * 4) * (30 - CFLAG:MASTER:調教レベル) / 10000
+
+;屈服、臆病と気丈を見る
+CUP:MASTER:屈服 += SOURCE:MASTER:トラウマ * (2 + TALENT:MASTER:臆病 - TALENT:MASTER:反抗的) / 3
+
+;性格を判定、強気なら不快、弱気なら抑鬱が上がります
+LOCAL = TALENT:MASTER:気丈 * 2 - TALENT:MASTER:臆病 * 2 + TALENT:MASTER:生意気 - TALENT:MASTER:大人しい + TALENT:MASTER:プライド高い * 2 - TALENT:MASTER:プライド低い * 2 + TALENT:MASTER:狂気 * 3 - TALENT:MASTER:ドＭ * 3
+;従順とマゾっ気を見る
+IF LOCAL > 0
+	CUP:MASTER:不快 += SOURCE:MASTER:トラウマ * (400 - GET_ABL(MASTER, "従順") * 4) * (200 - GET_ABL(MASTER, "マゾっ気") * 2) / 20000
+ELSE
+	CUP:MASTER:抑鬱 += SOURCE:MASTER:トラウマ * (200 - GET_ABL(MASTER, "従順") * 2) * (400 - GET_ABL(MASTER, "マゾっ気") * 4) / 20000
+ENDIF
+
+;気力、好感度変動
+DOWNBASE:MASTER:気力 += LINE_CALC(SOURCE:MASTER:トラウマ, "0→0,5000→150,LIMIT/0～300")
+TFLAG:好感度アップ -= LINE_CALC(SOURCE:MASTER:トラウマ, "0→0,5000→25,LIMIT/0～25")
+

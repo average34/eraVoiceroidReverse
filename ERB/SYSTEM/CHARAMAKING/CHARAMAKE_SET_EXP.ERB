@@ -1,0 +1,456 @@
+﻿;EXP生成
+
+;Ｃ経験
+@CM_SET_EXP_0
+;まず経験自体の有無を判定
+;基本判定値50　よっぽど潔癖じゃなければＣ経験はある
+LOCAL = 50
+;素質判定値を利用
+LOCAL += CM_TALENT_MAKE("プライド逆", "被虐", "衝動", "羞恥逆", "モラル逆", "潔癖逆", "倒錯逆", "Ｃ好き", "Ｃ好き", "好奇心", "好奇心")
+;ちんこあると判定値+50
+SIF PENIS(MASTER)
+	LOCAL += 50
+;小柄だと判定値-40
+SIF TALENT:MASTER:小柄
+	LOCAL -= 40
+;経験があるとした場合、量の処理
+IF PERCENT(LOCAL)
+	;基本値は判定値（負にはなりえない）の1/4にRAND:判定値を足す
+	EXP:MASTER:Ｃ経験 = LOCAL/4+RAND:LOCAL
+	;小柄だと0.75倍
+	SIF TALENT:MASTER:小柄
+		TIMES EXP:MASTER:Ｃ経験, 0.75
+	;Ｃ敏感だと1.5倍
+	SIF TALENT:MASTER:Ｃ敏感
+		TIMES EXP:MASTER:Ｃ経験, 1.50
+	;ペニスがあって童貞でない場合、腰使いだと1.5倍
+	SIF PENIS(MASTER) && !TALENT:MASTER:童貞 && TALENT:MASTER:腰使い
+		TIMES EXP:MASTER:Ｃ経験, 1.50
+	;Ｃ鈍感だと0.75倍
+	SIF TALENT:MASTER:Ｃ鈍感
+		TIMES EXP:MASTER:Ｃ経験, 0.75
+	;自慰しやすいだと2倍
+	SIF TALENT:MASTER:自慰しやすい
+		TIMES EXP:MASTER:Ｃ経験, 2.00
+ENDIF
+
+;ちんこある非童貞の場合、もし0以下になっていれば、1+RAND:3で差し替える
+SIF PENIS(MASTER) && !TALENT:MASTER:童貞 && EXP:MASTER:Ｃ経験 <= 0
+	EXP:MASTER:Ｃ経験 = 1+RAND:3
+
+
+;Ｖ経験
+@CM_SET_EXP_1
+;オトコお断り
+SIF TALENT:MASTER:オトコ
+	RETURN 0
+;処女お断り
+SIF TALENT:MASTER:処女
+	RETURN 0
+;基本判定値30　処女ではないので必ず経験あり
+LOCAL = 30
+;素質判定値を利用
+LOCAL += CM_TALENT_MAKE("プライド逆", "知性逆", "素直さ", "羞恥逆", "モラル逆", "潔癖逆", "潔癖逆", "Ｖ好き", "Ｖ好き", "好奇心", "好奇心")
+;ちんこあると判定値-30
+SIF PENIS(MASTER)
+	LOCAL -= 30
+;小柄だと判定値-20
+SIF TALENT:MASTER:小柄
+	LOCAL -= 20
+
+;判定値が10以下なら、1+RAND:20で差し替える
+SIF LOCAL <= 10
+	LOCAL = 1+RAND:20
+
+;↑を基本値として量の処理
+;基本値は判定値（負にはなりえない）の1/4にRAND:判定値を足す
+EXP:MASTER:Ｖ経験 = LOCAL/4+RAND:LOCAL
+;小柄だと0.75倍
+SIF TALENT:MASTER:小柄
+	TIMES EXP:MASTER:Ｖ経験, 0.75
+;Ｖ敏感だと1.5倍
+SIF TALENT:MASTER:Ｖ敏感
+	TIMES EXP:MASTER:Ｖ経験, 1.50;
+;腰使いだと1.5倍
+SIF TALENT:MASTER:腰使い
+	TIMES EXP:MASTER:Ｖ経験, 1.50
+;Ｖ鈍感だと0.75倍
+SIF TALENT:MASTER:Ｖ鈍感
+	TIMES EXP:MASTER:Ｖ経験, 0.75
+;自慰しやすいだと1.2倍
+SIF TALENT:MASTER:自慰しやすい
+	TIMES EXP:MASTER:Ｖ経験, 1.20
+;最後に3で割る
+EXP:MASTER:Ｖ経験 /= 3
+
+;もし0以下になっていれば、1+RAND:3で差し替える
+SIF EXP:MASTER:Ｖ経験 <= 0
+	EXP:MASTER:Ｖ経験 = 1+RAND:3
+
+;Ａ経験
+@CM_SET_EXP_2
+;まず経験自体の有無を判定
+;基本判定値0　よっぽどじゃないとＡ経験は持ってない
+LOCAL = 0
+;素質判定値を利用
+LOCAL += CM_TALENT_MAKE("プライド逆", "被虐", "知性", "羞恥逆", "倒錯", "潔癖逆", "潔癖逆", "Ａ好き", "Ａ好き", "好奇心", "好奇心")
+;小柄だと判定値-60
+SIF TALENT:MASTER:小柄
+	LOCAL -= 60
+;経験があるとした場合、量の処理
+IF PERCENT(LOCAL)
+	;基本値は判定値（負にはなりえない）の1/4にRAND:判定値を足す
+	EXP:MASTER:Ａ経験 = LOCAL/4+RAND:LOCAL
+	;小柄だと0.75倍
+	SIF TALENT:MASTER:小柄
+		TIMES EXP:MASTER:Ａ経験, 0.75
+	;敏感だと1.5倍
+	SIF TALENT:MASTER:Ａ敏感
+		TIMES EXP:MASTER:Ａ経験, 1.50
+	;鈍感だと0.75倍
+	SIF TALENT:MASTER:Ａ鈍感
+		TIMES EXP:MASTER:Ａ経験, 0.75
+	;自慰しやすいだと2倍
+	SIF TALENT:MASTER:自慰しやすい
+		TIMES EXP:MASTER:Ａ経験, 2.00
+	;最後に4で割る
+	EXP:MASTER:Ａ経験 /= 4
+ENDIF
+
+;Ｂ経験
+@CM_SET_EXP_3
+;まず経験自体の有無を判定
+;基本判定値50　わりとＢ経験はある
+LOCAL = 50
+;素質判定値を利用
+LOCAL += CM_TALENT_MAKE("プライド逆", "被虐", "素直さ", "羞恥逆", "モラル逆", "潔癖逆", "潔癖逆", "Ｂ好き", "Ｂ好き", "好奇心", "好奇心")
+;小柄だと判定値-30
+SIF TALENT:MASTER:小柄
+	LOCAL -= 30
+;オトコだと判定値-30
+SIF TALENT:MASTER:オトコ
+	LOCAL -= 30
+;経験があるとした場合、量の処理
+IF PERCENT(LOCAL)
+	;基本値は判定値（負にはなりえない）の1/4にRAND:判定値を足す
+	EXP:MASTER:Ｂ経験 = LOCAL/4+RAND:LOCAL
+	;小柄だと0.75倍
+	SIF TALENT:MASTER:小柄
+		TIMES EXP:MASTER:Ｂ経験, 0.75
+	;敏感だと1.5倍
+	SIF TALENT:MASTER:Ｂ敏感
+		TIMES EXP:MASTER:Ｂ経験, 1.50
+	;鈍感だと0.75倍
+	SIF TALENT:MASTER:Ｂ鈍感
+		TIMES EXP:MASTER:Ｂ経験, 0.75
+	;自慰しやすいだと2倍
+	SIF TALENT:MASTER:自慰しやすい
+		TIMES EXP:MASTER:Ｂ経験, 2.00
+	;最後にオトコなら6、そうでなければ2で割る
+	EXP:MASTER:Ｂ経験 /= 2+(TALENT:MASTER:オトコ*4)
+ENDIF
+
+;絶頂経験
+@CM_SET_EXP_4
+;オトコ
+IF TALENT:MASTER:オトコ
+	;部位経験の和を70～100倍にし、100で割るが、Ｃ経験を超えない
+	EXP:MASTER:絶頂経験 = MIN(SUMARRAY(EXP:MASTER:0, 0, 4)*(70+RAND:31)/100, EXP:MASTER:Ｃ経験)
+;ふたなり
+ELSEIF TALENT:MASTER:オトコ
+	;部位経験の和を70～100倍にし、100で割る
+	EXP:MASTER:絶頂経験 = SUMARRAY(EXP:MASTER:0, 0, 4)*(70+RAND:31)/100
+;女の子
+ELSE
+	;部位経験の和を40～80倍にし、100で割る
+	EXP:MASTER:絶頂経験 = SUMARRAY(EXP:MASTER:0, 0, 4)*(40+RAND:41)/100
+ENDIF
+
+;射精経験
+@CM_SET_EXP_5
+;ペニスがなければ0、ペニスがあれば絶頂経験とＣ経験のうち少ないほうと同じ
+EXP:MASTER:射精経験 = PENIS(MASTER) ? MIN(EXP:MASTER:絶頂経験, EXP:MASTER:Ｃ経験) # 0
+;ただし非処女でふたなりの場合、経験の差に応じて絶頂数より射精数が少なくなったり
+SIF TALENT:MASTER:ふたなり && !TALENT:MASTER:処女
+	EXP:MASTER:射精経験 = EXP:MASTER:射精経験*(EXP:MASTER:Ｃ経験)/(EXP:MASTER:Ｃ経験+EXP:MASTER:Ｖ経験)
+
+;噴乳経験
+@CM_SET_EXP_6
+;生成されない
+
+;性交経験
+@CM_SET_EXP_7
+;オトコ・ふたなり処女
+IF TALENT:MASTER:オトコ || (TALENT:MASTER:ふたなり && TALENT:MASTER:処女)
+	;童貞お断りなんで^^;
+	IF !TALENT:MASTER:童貞
+		;Ｃ経験を0～100倍にし、200で割るが、射精経験を超えない
+		EXP:MASTER:性交経験 = MIN(EXP:MASTER:Ｃ経験*(RAND:100)/200, EXP:MASTER:射精経験)
+		;もし0以下になっていれば、1+RAND:2で差し替える
+		SIF EXP:MASTER:性交経験 <= 0
+			EXP:MASTER:性交経験 = 1+RAND:2
+	ENDIF
+;女の子・ふたなり童貞
+ELSEIF !TALENT:MASTER:オトコ || (TALENT:MASTER:ふたなり && TALENT:MASTER:童貞)
+	;処女とかめんどくさいだけでしょ
+	IF !TALENT:MASTER:処女
+		;Ｖ経験を80～100倍にし、100で割る
+		EXP:MASTER:性交経験 = EXP:MASTER:Ｖ経験*(80+RAND:21)/100
+		;もし0以下になっていれば、1+RAND:2で差し替える
+		SIF EXP:MASTER:性交経験 <= 0
+			EXP:MASTER:性交経験 = 1+RAND:2
+	ENDIF
+;両方使用済みふたなり
+ELSE
+	;Ｃ経験を10～100倍、Ｖ経験を80～100倍にし、200で割る
+	EXP:MASTER:性交経験 = ((EXP:MASTER:Ｃ経験*(10+RAND:91))+(EXP:MASTER:Ｖ経験*(80+RAND:21)))/200
+	;もし0以下になっていれば、2+RAND:3で差し替える
+	SIF EXP:MASTER:性交経験 <= 0
+		EXP:MASTER:性交経験 = 2+RAND:3
+ENDIF
+;自慰しやすいだと1/3になる
+SIF TALENT:MASTER:自慰しやすい
+	EXP:MASTER:性交経験 /= 3
+
+
+;性知識
+@CM_SET_EXP_8
+;部位経験の和に性交経験の３倍を加え、10で割る
+EXP:MASTER:性知識 = (SUMARRAY(EXP:MASTER:0, 0, 4)+(EXP:MASTER:性交経験*3))/10
+
+;自慰経験
+@CM_SET_EXP_10
+;オトコ・ふたなり処女
+IF TALENT:MASTER:オトコ || (TALENT:MASTER:ふたなり && TALENT:MASTER:処女)
+	;部位経験の和と射精経験のうち、少ない方から性交経験を引いたもの
+	EXP:MASTER:自慰経験 = MIN(SUMARRAY(EXP:MASTER:0, 0, 4), EXP:MASTER:射精経験)-EXP:MASTER:性交経験
+ELSE
+	;部位経験の和から性交経験を引いたもの
+	EXP:MASTER:自慰経験 = SUMARRAY(EXP:MASTER:0, 0, 4)-EXP:MASTER:性交経験
+ENDIF
+
+
+;調教自慰経験
+@CM_SET_EXP_11
+;調教要素なので生成されない
+
+;放尿経験
+@CM_SET_EXP_12
+;調教要素なので生成されない
+
+;被写経験
+@CM_SET_EXP_13
+;調教要素なので生成されない
+
+;精液経験
+@CM_SET_EXP_20
+;処女でもオトコでもない場合
+IF !TALENT:MASTER:オトコ && !TALENT:MASTER:処女
+	;性交経験を100～200倍にし、100で割る。
+	EXP:MASTER:精液経験 = EXP:MASTER:性交経験*(100+RAND:101)/100
+	;舌使いだと1.2倍
+	SIF TALENT:MASTER:舌使い
+		TIMES EXP:MASTER:精液経験, 1.20
+	;器用な指先だと1.2倍
+	SIF TALENT:MASTER:器用な指先
+		TIMES EXP:MASTER:精液経験, 1.20
+	;献身的だと1.2倍
+	SIF TALENT:MASTER:献身的
+		TIMES EXP:MASTER:精液経験, 1.20
+	;非童貞ふたなりの場合半分にする
+	EXP:MASTER:精液経験 = TALENT:MASTER:ふたなり && !TALENT:MASTER:童貞 ? EXP:MASTER:精液経験/2 # EXP:MASTER:精液経験
+;オトコではない＝処女の場合
+ELSEIF !TALENT:MASTER:オトコ
+	;まず経験自体の有無を判定
+	;基本判定値-20　処女奉仕はあまり発生しない
+	LOCAL = -20
+	;素質判定値を利用
+	LOCAL += CM_TALENT_MAKE("プライド逆", "被虐逆", "素直さ", "羞恥逆", "攻撃逆", "潔癖逆", "潔癖逆", "倒錯", "倒錯", "好奇心", "好奇心")
+	;小柄だと判定値-60
+	SIF TALENT:MASTER:小柄
+		LOCAL -= 60
+	;経験があるとした場合、量の処理
+	IF PERCENT(LOCAL)
+		;基本値は判定値（負にはなりえない）の1/4にRAND:判定値を足す
+		EXP:MASTER:精液経験 = LOCAL/4+RAND:LOCAL
+		;舌使いだと1.5倍
+		SIF TALENT:MASTER:舌使い
+			TIMES EXP:MASTER:精液経験, 1.50
+		;器用な指先だと1.5倍
+		SIF TALENT:MASTER:器用な指先
+			TIMES EXP:MASTER:精液経験, 1.50
+		;献身的だと1.5倍
+		SIF TALENT:MASTER:献身的
+			TIMES EXP:MASTER:精液経験, 1.50
+		;受け身だと0.75倍
+		SIF TALENT:MASTER:受け身
+			TIMES EXP:MASTER:精液経験, 0.75
+		;汚臭敏感だと0.75倍
+		SIF TALENT:MASTER:汚臭敏感
+			TIMES EXP:MASTER:精液経験, 0.75
+		;最後に20で割る
+		EXP:MASTER:精液経験 /= 20
+		;もし0以下になっていれば、1+RAND:2で差し替える
+		SIF EXP:MASTER:精液経験 <= 0
+			EXP:MASTER:精液経験 = 1+RAND:2
+	ENDIF
+ENDIF
+
+;奉仕快楽経験
+@CM_SET_EXP_21
+;調教要素なので生成されない
+
+;口淫経験
+@CM_SET_EXP_22
+;精液経験から性交経験を引いたものを0～200倍にし、150+器用な指先*50-舌使い*50で割る
+EXP:MASTER:口淫経験 = (EXP:MASTER:精液経験 - EXP:MASTER:性交経験)*RAND:201/(150+(TALENT:MASTER:器用な指先*50)-(TALENT:MASTER:舌使い*50))
+;もし0以下になっていれば、0で差し替える
+SIF EXP:MASTER:口淫経験 <= 0
+	EXP:MASTER:口淫経験 = 0
+
+;手淫経験
+@CM_SET_EXP_23
+;精液経験から性交経験と口淫経験の8割を引いたものを100～150倍にし、100で割る
+EXP:MASTER:手淫経験 = (EXP:MASTER:精液経験 - EXP:MASTER:性交経験 - (EXP:MASTER:口淫経験*8/10))*(100+RAND:51)/100
+;もし0以下になっていれば、0で差し替える
+SIF EXP:MASTER:手淫経験 <= 0
+	EXP:MASTER:手淫経験 = 0
+
+;道具使用経験
+@CM_SET_EXP_24
+;生成率は一律20％。ただし道具使いを持っている場合は100％
+IF !RAND:5 || TALENT:MASTER:道具使い
+	;生成量は性交経験+手淫経験+口淫経験の和を、オトコは２倍、女の子は半分にし、その1/10（道具使いは1/4）
+	EXP:MASTER:道具使用経験 = (EXP:MASTER:性交経験+EXP:MASTER:口淫経験+EXP:MASTER:手淫経験*(TALENT:MASTER:オトコ+1))/(!PENIS(MASTER)+1)/(10-(TALENT:MASTER:道具使い*6))
+ENDIF
+
+;キス経験
+@CM_SET_EXP_25
+;性交経験がある
+IF EXP:MASTER:性交経験
+	;性交経験*2と10のうち大きい方まででランダム
+	EXP:MASTER:キス経験 = RAND:(MAX(EXP:MASTER:性交経験*2, 10))
+;性交経験がない
+ELSE
+	;基礎確率50％、小柄なら20％
+	LOCAL = TALENT:MASTER:小柄 ? 20 # 50
+	LOCAL += TALENT:MASTER:親しみやすい-TALENT:MASTER:近寄り難い*30
+	SIF PERCENT(LOCAL)
+		EXP:MASTER:キス経験 = RAND:(3*(TALENT:MASTER:親しみやすい-TALENT:MASTER:近寄り難い)+5)
+ENDIF
+
+;会話経験
+@CM_SET_EXP_26
+;調教要素なので生成されない
+
+;苦痛快楽経験
+@CM_SET_EXP_30
+;調教要素なので生成されない
+
+;恥辱快楽経験
+@CM_SET_EXP_31
+;調教要素なので生成されない
+;たまに生成されても面白いけど
+
+;愛情経験
+@CM_SET_EXP_32
+;調教要素なので生成されない
+
+;レズ経験
+@CM_SET_EXP_40
+;ふたなりの場合
+IF TALENT:MASTER:ふたなり
+	;性交経験から精液経験を引いたものか、射精経験から自慰経験を引いたもののうち、多い方
+	EXP:MASTER:レズ経験 = MAX(EXP:MASTER:性交経験-EXP:MASTER:精液経験, EXP:MASTER:射精経験-EXP:MASTER:自慰経験, 0)
+;女の子で、男嫌いがある場合
+ELSEIF TALENT:MASTER:男嫌い && !TALENT:MASTER:オトコ
+	;性交経験と精液経験をレズ経験に移動する
+	EXP:MASTER:レズ経験 = (EXP:MASTER:性交経験+EXP:MASTER:精液経験)/2
+	;処女ならともに0に。処女でないならRAND:3で補う
+	EXP:MASTER:性交経験 = TALENT:MASTER:処女 ? 0 # RAND:3
+	EXP:MASTER:精液経験 = EXP:MASTER:性交経験
+;女の子で、両刀がある場合
+ELSEIF TALENT:MASTER:両刀 && !TALENT:MASTER:オトコ
+	LOCAL = -20
+	;素質判定値を利用
+	LOCAL += CM_TALENT_MAKE("同性愛", "同性愛", "Ｂ好き", "倒錯", "好奇心", "潔癖逆")
+	SIF PERCENT(LOCAL)
+		EXP:MASTER:レズ経験 = (RAND:LOCAL)/5
+ENDIF
+
+;ＢＬ経験
+@CM_SET_EXP_41
+;調教要素なので生成されない
+
+;異常経験
+@CM_SET_EXP_50
+;完全にランダム（2％）で１ついてくる
+SIF !RAND:50
+	EXP:MASTER:異常経験 = 1
+
+;緊縛経験
+@CM_SET_EXP_51
+;調教要素なので生成されない
+
+;Ｖ拡張経験
+@CM_SET_EXP_52
+;調教要素なので生成されない
+
+;Ａ拡張経験
+@CM_SET_EXP_53
+;調教要素なので生成されない
+
+;触手経験
+@CM_SET_EXP_55
+;調教要素なので生成されない
+
+;屈服経験
+@CM_SET_EXP_60
+;調教要素なので生成されない
+
+;恐怖経験
+@CM_SET_EXP_61
+;調教要素なので生成されない
+
+;露出経験
+@CM_SET_EXP_62
+;基本値は自慰経験を半分にして50を引いたもの
+LOCAL = EXP:MASTER:自慰経験/2-50
+;素質判定地は半分にして使う
+LOCAL += CM_TALENT_MAKE("プライド逆", "被虐", "羞恥", "羞恥", "倒錯", "倒錯", "潔癖逆", "衝動", "好奇心")/2
+;小柄だと判定値-30
+SIF TALENT:MASTER:小柄
+	LOCAL -= 30
+;オトコだと判定値-30
+SIF TALENT:MASTER:オトコ
+	LOCAL -= 30
+;倒錯的だと判定値+50
+SIF TALENT:MASTER:倒錯的
+	LOCAL += 30
+;自制的だと判定値-50
+SIF TALENT:MASTER:自制的
+	LOCAL -= 30
+;経験があるとした場合、量の処理
+IF PERCENT(LOCAL)
+	;基本値は判定値（負にはなりえない）の1/4にRAND:判定値を足す
+	EXP:MASTER:露出経験 = LOCAL/4+RAND:LOCAL
+	;慎重だと0.5倍
+	SIF TALENT:MASTER:慎重
+		TIMES EXP:MASTER:露出経験, 0.50
+	;倒錯的だと1.5倍
+	SIF TALENT:MASTER:倒錯的
+		TIMES EXP:MASTER:露出経験, 1.50
+	;恥じらいだと0.75倍
+	SIF TALENT:MASTER:恥じらい
+		TIMES EXP:MASTER:露出経験, 0.75
+	;恥薄いだと1.5倍
+	SIF TALENT:MASTER:恥薄い
+		TIMES EXP:MASTER:露出経験, 1.50
+	;最後にオトコなら10、そうでなければ4で割る
+	EXP:MASTER:露出経験 /= 4+(TALENT:MASTER:オトコ*6)
+ENDIF
+
+;イかせ経験
+@CM_SET_EXP_63
+;設定が面倒すぎたので調教要素と考えて生成しない
+

@@ -1,0 +1,390 @@
+﻿@SHOW_USERCOM
+#DIM SELECTCOM_RANK
+#DIM LINE
+#DIM L_FIRST
+#DIM SELECTUSERCOM
+L_FIRST = 0
+SELECTCOM_RANK = 0
+LINE = LINECOUNT
+$START
+SIF FLAG:調教UIパッド化
+	REDRAW 0
+CLEARLINE LINECOUNT - LINE
+SELECTCOM = COM_VITALITY("消費低", , SELECTCOM_RANK)
+LOCAL:9 = GETCOLOR()
+FLAG:COM表示法 = 1
+IF FLAG:COM表示法 == 0
+	FOR LOCAL, 0, 100
+		;CALL SHOW_USERCOM_COM(LOCAL, LOCAL:9)
+		CALL SHOW_USERCOM_COM2(LOCAL, LOCAL:9)		;HTML_PRINT版に変更@revkoishi(14/07/07)
+	NEXT
+ELSE
+	FOR LOCAL, 0, TFLAG:可能なCOM数
+		LOCAL:1 = COM_VITALITY("消費低", , LOCAL)
+		SIF LOCAL:1 == -1
+			CONTINUE
+		SIF LOCAL:1 == SELECTCOM
+			SELECTCOM_RANK = LOCAL
+		;CALL SHOW_USERCOM_COM(LOCAL:1, LOCAL:9)
+		CALL SHOW_USERCOM_COM2(LOCAL:1, LOCAL:9)	;HTML_PRINT版に変更@revkoishi(14/07/07)
+	NEXT
+ENDIF
+IF FLAG:調教UIパッド化
+	PRINTL 
+	FOR LOCAL, 0, 4
+		SIF SELECTCOM_RANK == TFLAG:可能なCOM数 && LOCAL == SELECTUSERCOM
+			SETCOLOR 0x7070C0
+		PRINTBUTTON @"%"[" + AUTO_SPLIT("履歴表示_汚れ表示_能力表示_パラメータ表示", "_", LOCAL)+ "]",22%", UNICODE(11000 + LOCAL)
+		RESETCOLOR
+	NEXT
+	PRINTL 
+ELSE
+	PRINTL 
+	PRINTC 履歴表示[800]
+	PRINTC 汚れ表示[801]
+	PRINTC 能力表示[802]
+	PRINTC パラメータ表示[803]
+	PRINTL 
+ENDIF
+IF FLAG:デバッグ
+	PRINTC 行動予約[997]
+	PRINTC ヒート値表示[998]
+	PRINTC 調教強制終了[999]
+	;デバッグのため999は調教強制終了のままで
+ENDIF
+PRINTL 
+DRAWLINE
+;修正後の姿勢表示はいったんオミット
+;CALL POSE_PRINT(L_FIRST == 0)
+L_FIRST = 1
+IF FLAG:調教UIパッド化
+	ONEINPUTS
+	CLEARLINE 1
+	SELECTCASE RESULTS
+		CASE KEY_A
+			IF SELECTCOM_RANK < TFLAG:可能なCOM数
+				REDRAW 1
+				DOTRAIN SELECTCOM
+				RETURN 1
+			ELSE
+				SELECTCASE SELECTUSERCOM
+					CASE 0
+						CALL SHOW_EQUIP
+						;TFLAG:可能なCOM数 = 0
+						GOTO START
+					CASE 1
+						CALL STAIN_INFO
+						;TFLAG:可能なCOM数 = 0
+						GOTO START
+					CASE 2
+						CALL SHOW_CHARADATA_PAD
+						;TFLAG:可能なCOM数 = 0
+						GOTO START
+					CASE 3
+						CALL UPCHECK_REV
+						WAIT
+						;TFLAG:可能なCOM数 = 0
+						GOTO START
+				ENDSELECT
+			ENDIF
+		CASE KEY_UP
+			SIF --SELECTCOM_RANK == -1
+				SELECTCOM_RANK = TFLAG:可能なCOM数
+			SIF SELECTCOM_RANK < TFLAG:可能なCOM数
+				SELECTUSERCOM = 0
+		CASE KEY_DOWN
+			SIF ++SELECTCOM_RANK == TFLAG:可能なCOM数 + 1
+				SELECTCOM_RANK = 0
+			SIF SELECTCOM_RANK < TFLAG:可能なCOM数
+				SELECTUSERCOM = 0
+			CASE KEY_LEFT
+				SIF --SELECTUSERCOM == -1
+					SELECTUSERCOM = 3
+			CASE KEY_RIGHT
+				SIF ++SELECTUSERCOM == 4
+					SELECTUSERCOM = 0
+				
+		CASEELSE
+			ENCODETOUNI %RESULTS%
+			IF INRANGE(RESULT:1, 10000, 10999)
+				DOTRAIN RESULT:1 - 10000
+				RETURN 1
+			ELSEIF INRANGE(RESULT:1, 11000, 11999)
+				SELECTCASE RESULT:1 - 11000
+					CASE 0
+						CALL SHOW_EQUIP
+						;TFLAG:可能なCOM数 = 0
+						GOTO START
+					CASE 1
+						CALL STAIN_INFO
+						;TFLAG:可能なCOM数 = 0
+						GOTO START
+					CASE 2
+						CALL SHOW_CHARADATA
+						;TFLAG:可能なCOM数 = 0
+						GOTO START
+					CASE 3
+						CALL UPCHECK_REV
+						WAIT
+						;TFLAG:可能なCOM数 = 0
+						GOTO START
+				ENDSELECT
+			ENDIF
+	ENDSELECT
+ELSE
+	REDRAW 1
+	INPUT
+	SELECTCASE RESULT
+		CASE 0 TO 100
+			SIF TRAINNAME:RESULT == ""
+				GOTO START
+			SELECTCOM = RESULT
+			RESULT = 0
+			CALL COMABLE(SELECTCOM)
+			SIF RESULT == 0
+				GOTO START
+			DOTRAIN SELECTCOM
+			RETURN 1
+		CASE 800
+			CALL SHOW_EQUIP
+			;TFLAG:可能なCOM数 = 0
+			GOTO START
+		CASE 801
+			CALL STAIN_INFO
+			;TFLAG:可能なCOM数 = 0
+			GOTO START
+		CASE 802
+			CALL SHOW_CHARADATA
+			;TFLAG:可能なCOM数 = 0
+			GOTO START
+		CASE 803
+			CALL UPCHECK_REV
+			WAIT
+			;TFLAG:可能なCOM数 = 0
+			GOTO START
+		CASE 899
+			IF FLAG:デバッグ
+				PRINTFORML TFLAG:可能なCOM数 = {TFLAG:92}
+				;TFLAG:可能なCOM数 = 0
+				GOTO START
+			ENDIF
+		CASE 997
+			IF FLAG:デバッグ
+				CALL ACTION_RESERVATION
+				;TFLAG:可能なCOM数 = 0
+				GOTO START
+			ENDIF
+		CASE 998
+			IF FLAG:デバッグ
+				CALL SHOW_HEAT
+				;TFLAG:可能なCOM数 = 0
+				GOTO START
+			ENDIF
+		CASE 999
+			;強制終了させる際にSHOW_USERCOM内でBEGINできないのでEVENCOMに落として終わらせる
+			IF FLAG:デバッグ
+				DOTRAIN 999
+				RETURN 1
+			ENDIF
+	ENDSELECT
+ENDIF
+GOTO START
+
+
+@SHOW_USERCOM_COM(ARG, ARG:1)
+TSTR:実行COM名 = %TRAINNAME:ARG%
+SIF ARG == 71 && PENIS(TARGET)
+	TSTR:実行COM名 = フェラチオ
+;同一COM色変化を一度止める
+;SETCOLOR PREVCOM == ARG ? 0xC0C070 # ARG:1
+;負荷によって色を変える
+IF SELECTCOM == ARG && FLAG:調教UIパッド化
+	SETCOLOR 0x7070C0
+	IF GET_COMEFFORT(TRAINNAME:ARG) == 1
+		CALL BRIGHTCOLOR, 70
+	ELSEIF GET_COMEFFORT(TRAINNAME:ARG) >= 2
+		CALL BRIGHTCOLOR, 40
+	ENDIF
+ELSE
+	SELECTCASE GET_COMEFFORT(TRAINNAME:ARG)
+		CASE 0
+			;デフォ0xC0C0C0
+			SETCOLOR ARG:1
+		CASE 1
+			SETCOLOR 0x909090
+		CASEELSE
+			SETCOLOR 0x606060
+	ENDSELECT
+ENDIF
+IF FLAG:調教UIパッド化
+	PRINTBUTTON @"%TSTR:3, 27 + 1%", UNICODE(10000 + ARG)
+ELSE
+	PRINTFORMC %TSTR:3%[{ARG,3}] 
+ENDIF
+LOCAL:1 = COM_VITALITY(, TRAINNAME:ARG)
+LOCAL:2 = MIN(MAX(COM_VITALITY(, TRAINNAME:ARG), MAXBASE:MASTER:気力), COM_LIM_INS())
+LOCAL:3 = COM_VITALITY(, TRAINNAME:ARG) > MAXBASE:MASTER:気力 ? 32 * COM_VITALITY(, TRAINNAME:ARG) / MAXBASE:MASTER:気力 # 32
+LOCAL:4 = TFLAG:抵抗不能 || COM_VITALITY(, TRAINNAME:ARG) > BASE:MASTER:気力 ? 0xC07070 # 0x70C070
+LOCAL:5 = 0x205020
+PRINTFORM ({LOCAL:1, 4}) 
+SETCOLOR ARG:1
+CALL PRINT_COLORBAR(LOCAL:1, LOCAL:2, LOCAL:3, UNICODE(0x2584), UNICODE(0x2584), LOCAL:4, LOCAL:5)
+PRINTL 
+
+
+;-------------------------------------------------
+;関数名:SHOW_USERCOM_COM2
+;概　要:COM表示関数(HTML_PRINT対応版)
+;引　数:ARG:0…COM番号
+;　　　 ARG:1…文字表示色
+;戻り値:なし(RESULT保護)
+;@SHOW_USERCOM_COM関数のHTML_PRINT対応版。なんかケオスめいてしまった
+;新規作成@revkoishi(14/07/07)
+;-------------------------------------------------
+@SHOW_USERCOM_COM2(ARG:0, ARG:1)
+TSTR:実行COM名 '= \@ ARG:0 == 71 && PENIS(TARGET) ? フェラチオ # %TRAINNAME:(ARG:0)% \@
+{
+HTML_PRINT HTMLFONT(\@ FLAG:調教UIパッド化 ? # %" " * MAX(PRINTCLENGTH() - STRLENS(TSTR:実行COM名) - 6, 0)% \@
+         + HTMLBUTTON(\@ FLAG:調教UIパッド化 ? %TSTR:実行COM名, 28% # %TSTR:実行COM名%[{ARG:0, 3}]%" "% \@,
+           \@ FLAG:調教UIパッド化 ? %UNICODE(10000 + ARG:0)% # %TOSTR(ARG:0)% \@, COM_RANK(GET_COMEFFORT(TRAINNAME:(ARG:0))))
+         + @"({COM_VITALITY(, TRAINNAME:(ARG:0)), 4}) ", , (SELECTCOM == ARG:0 && FLAG:調教UIパッド化)
+           ? SIGNV(GET_COMEFFORT(TRAINNAME:(ARG:0)) - 1, 0x7070C0, BRIGHTCOLORF(70, 0x7070C0), BRIGHTCOLORF(40, 0x7070C0))
+           # SIGNV(GET_COMEFFORT(TRAINNAME:(ARG:0)) - 1, ARG:1, 0x909090, 0x606060))
+         + HTML_COLORBAR(COM_VITALITY(, TRAINNAME:(ARG:0)),
+           LIMIT(COM_VITALITY(, TRAINNAME:(ARG:0)), COM_LIM_INS(), MAXBASE:MASTER:気力),
+           COM_VITALITY(, TRAINNAME:(ARG:0)) > MAXBASE:MASTER:気力 ? 32 * COM_VITALITY(, TRAINNAME:(ARG:0)) / MAXBASE:MASTER:気力 # 32,
+           UNICODE(0x2584), UNICODE(0x2584),
+           TFLAG:抵抗不能 || COM_VITALITY(, TRAINNAME:(ARG:0)) > BASE:MASTER:気力 ? 0xC07070 # 0x70C070, 0x205020)
+}
+RETURN RESULT
+
+
+@USERCOM
+
+
+@SHOW_EQUIP
+SIF TEQUIP:野外プレイ
+	PRINT  [野外]
+SIF TEQUIP:大鏡
+	PRINT  [大鏡]
+SIF TCVAR:MASTER:焦らし度 > 1
+	PRINT  [焦らし]
+SIF TEQUIP:自慰中 == 1
+	PRINTFORM  [%CALLNAME:MASTER%自慰中]
+SIF TEQUIP:自慰中 == 2
+	PRINTFORM  [%CALLNAME:TARGET%自慰中]
+SIF TEQUIP:自慰中 == 3
+	PRINT  [二人自慰中]
+SIF TEQUIP:性交中
+	PRINT  [挿入中]
+SIF TEQUIP:触手調教中
+	PRINT  [触手] 
+PRINTL 
+
+SIF TEQUIP:ローション
+	PRINTFORM [ローション(%EFFECT(TEQUIP:ローション, 1)%)]
+SIF TEQUIP:媚薬
+	PRINTFORM [媚薬(%EFFECT(TEQUIP:媚薬)%)]
+SIF TEQUIP:利尿剤
+	PRINTFORM [利尿剤(%EFFECT(TEQUIP:利尿剤)%)]
+SIF TEQUIP:鈴蘭の毒
+	PRINTFORM [鈴蘭の毒(%EFFECT(TEQUIP:鈴蘭の毒)%)]
+SIF TEQUIP:バイブ
+	PRINTFORM [\@ TEQUIP:バイブ > 1 ? 特注 # \@バイブ]
+SIF TEQUIP:アナルバイブ
+	PRINTFORM [\@ TEQUIP:アナルバイブ > 1 ? 特注 # \@アナルバイブ]
+SIF TEQUIP:アナルビーズ
+	PRINT [アナルビーズ]
+SIF TEQUIP:浣腸器＋プラグ
+	PRINT [浣腸＋アナルプラグ]
+SIF TEQUIP:クリキャップ
+	PRINTFORM [\@ TEQUIP:クリキャップ > 1 ? 特注 # \@クリキャップ]
+SIF TEQUIP:オナホール
+	PRINTFORM [\@ TEQUIP:オナホール > 1 ? 特注 # \@オナホール]
+SIF TEQUIP:ニプルキャップ
+	PRINTFORM [\@ TEQUIP:ニプルキャップ > 1 ? 特注 # \@ニプルキャップ]
+SIF TEQUIP:縄
+	PRINT [縄で緊縛]
+SIF TEQUIP:アイマスク
+	PRINT [アイマスク]
+SIF TEQUIP:ボールギャグ
+	PRINT [ボールギャグ]
+SIF TEQUIP:三角木馬
+	PRINT [三角木馬乗馬中]
+PRINTL 
+
+;潮吹きを追加、ｃｖｂａを大文字に修正@revkoishi(14/05/26)
+{
+PRINTS \@ EX:MASTER:Ｃ絶頂 ? Ｃ絶頂:{EX:MASTER:Ｃ絶頂}回%" "% # \@ + \@ EX:MASTER:Ｖ絶頂 ? Ｖ絶頂:{EX:MASTER:Ｖ絶頂}回%" "% # \@ + 
+       \@ EX:MASTER:Ａ絶頂 ? Ａ絶頂:{EX:MASTER:Ａ絶頂}回%" "% # \@ + \@ EX:MASTER:Ｂ絶頂 ? Ｂ絶頂:{EX:MASTER:Ｂ絶頂}回%" "% # \@ + 
+       \@ EX:MASTER:噴乳 ? 噴乳:{EX:MASTER:噴乳}回%" "% # \@ + \@ EX:MASTER:射精 ? 射精:{EX:MASTER:射精}回%" "% # \@ + 
+       \@ EX:MASTER:放尿 ? 放尿:{EX:MASTER:放尿}回%" "% # \@ + \@ EX:MASTER:潮吹き ? 潮吹き:{EX:MASTER:潮吹き}回%" "% # \@
+}
+PRINTFORM \@ LINEISEMPTY() ? # \n \@
+PRINTFORM \@ 20 - MATCH(EX:TARGET, 0, 0, 20) ? （調教者）\n # \@
+{
+PRINTS \@ EX:TARGET:Ｃ絶頂 ? Ｃ絶頂:{EX:TARGET:Ｃ絶頂}回%" "% # \@ + \@ EX:TARGET:Ｖ絶頂 ? Ｖ絶頂:{EX:TARGET:Ｖ絶頂}回%" "% # \@ + 
+       \@ EX:TARGET:Ａ絶頂 ? Ａ絶頂:{EX:TARGET:Ａ絶頂}回%" "% # \@ + \@ EX:TARGET:Ｂ絶頂 ? Ｂ絶頂:{EX:TARGET:Ｂ絶頂}回%" "% # \@ + 
+       \@ EX:TARGET:噴乳 ? 噴乳:{EX:TARGET:噴乳}回%" "% # \@ + \@ EX:TARGET:射精 ? 射精:{EX:TARGET:射精}回%" "% # \@ + 
+       \@ EX:TARGET:放尿 ? 放尿:{EX:TARGET:放尿}回%" "% # \@ + \@ EX:TARGET:潮吹き ? 潮吹き:{EX:TARGET:潮吹き}回%" "% # \@
+}
+PRINTFORM \@ LINEISEMPTY() ? # \n \@
+WAIT
+
+
+@SHOW_HEAT
+PRINTFORML 休憩[{TFLAG:71,3}]/ ｿﾌﾄ[{TFLAG:72,3}]/ﾉｰﾏﾙ[{TFLAG:73,3}]/ﾊｰﾄﾞ[{TFLAG:74,3}]/異常[{TFLAG:75,3}]
+PRINTFORML 会話[{TFLAG:81,3}]/愛撫[{TFLAG:82,3}]/道具[{TFLAG:83,3}]/性交[{TFLAG:84,3}]/羞恥[{TFLAG:85,3}]
+PRINTFORML 奉仕[{TFLAG:86,3}]/加虐[{TFLAG:87,3}]/異常[{TFLAG:88,3}]/使役[{TFLAG:89,3}]/性奉[{TFLAG:350,3}]
+PRINTFORML ﾛｰｼｮ[{FLAG:20,3}]/媚薬[{FLAG:21,3}]/栄養[{FLAG:23,3}]/治療[{FLAG:24,3}]
+WAIT
+
+
+@ACTION_RESERVATION
+DRAWLINE
+PRINTL [-1] - 戻る
+PRINTFORML [0] - 調教者の\@ TFLAG:ACT分類予約 >= 0 ? 次のメニュー:%MENU(TFLAG:ACT分類予約)% # メニュー予約 \@
+PRINTFORML [1] - 調教者の\@ TCVAR:行動予約 >= 0 ? 次の行動:%STR:(TCVAR:行動予約)% # 行動予約 \@
+SIF ASSI:1 >= 0
+	PRINTL [2] - 助手1の行動予約
+SIF ASSI:2 >= 0
+	PRINTL [3] - 助手2の行動予約
+SIF ASSI:1 >= 0 && !TFLAG:コンビネーション予約 && TCVAR:行動予約 >= 0 && TFLAG:助手１行動予約 < 0
+	PRINTL [4] - コンビネーションの予約
+$INPUT_LOOP
+INPUT
+;---------------------------------------------------------------------
+;
+;---------------------------------------------------------------------
+SELECTCASE RESULT
+	CASE -1
+		RETURN 0
+	CASE 0
+		PRINTL メニュー番号を入力してください。
+		INPUT
+		TFLAG:ACT分類予約 = RESULT
+	CASE 1
+		PRINTL 行動番号を入力してください。
+		INPUT
+		TCVAR:行動予約 = RESULT
+	CASE 2
+		SIF ASSI:1 < 0
+			GOTO INPUT_LOOP
+		PRINTL 行動番号を入力してください。
+		INPUT
+		TFLAG:助手１行動予約 = RESULT
+	CASE 3
+		SIF ASSI:2 < 0
+			GOTO INPUT_LOOP
+		PRINTL 行動番号を入力してください。
+		INPUT
+		TFLAG:助手２行動予約 = RESULT
+	CASE 4
+		SIF ASSI:1 < 0 || TFLAG:コンビネーション予約 || TFLAG:助手１行動予約 >= 0 || TCVAR:行動予約 < 0
+			GOTO INPUT_LOOP
+		PRINTL コンビネーションを予約しました。
+		TFLAG:コンビネーション予約 = 1
+	CASEELSE
+		GOTO INPUT_LOOP
+ENDSELECT
+RESTART

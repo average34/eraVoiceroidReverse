@@ -1,0 +1,321 @@
+﻿;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+;
+;		HTML_PRINT向け(HTMLFONT系)関数
+;
+;_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/#
+;=========================================================================================
+;	*#FUNCTIONS属性でHTML_PRINT(©Emuera)もしくは@HTMLPRINT系(©KOMEIJI_FUNCTIONS)内での使用を想定。
+;   *@HTMLFONTを介して出力するのでKOMEIJI_FUNCTIONSは必須。ファイルのエンコードはUTF-8(BOM付き)が前提
+;   *エンコードがSJISのファイルに内容をコピーして保存することは出来ないと思われる
+;   *デフォ設定のフォントはWin7標準のもの。他のWindowsだと場合によっては問題あるかも？
+;       フォント指定、文字色指定、表示する数の指定、引数の省略可能
+;           指定するフォントによっては正しく出力されないこともある
+;               描画インターフェイスがGDI+である場合、正しく出力されないこともある
+;=========================================================================================
+
+;※フォントに関しては等幅のもの、かつ描画インターフェイスがWIN API(GDI)である場合にきちんと表示される事を確認の上設定。
+;　TexRenderer(GDI)でもほぼ問題ないはず。Graphics(GDI+)だと問題が出る可能性あり。
+
+;-------------------------------------------------
+;関数名:HTML_HEARTB
+;概　要:塗りつぶしのハートマークを表示する
+;引　数:ARGS:0…使用するフォント名(省略するとＭＳ Ｐゴシック)
+;引　数:ARG: 0…色指定(省略すると淡いピンク系で出力)
+;引　数:ARG: 1…表示する数(省略すると1)
+;-------------------------------------------------
+@HTML_HEARTB(ARGS:0 = "ＭＳ Ｐゴシック", ARG:0 = 0xFFBFBE, ARG:1 = 1)
+#FUNCTIONS
+LOCALS = %HTMLFONT("♥" * ARG:1, ARGS:0, ARG:0)%
+RETURNF LOCALS
+;//Batang, BatangChe, David, DFKai-SB, Dotum, DotumChe, Gulim, Gungsuh, Lucida Console
+;//Microsoft Yi Baiti, Miriam, PMingLiu, Rod, SimHei, SimSun, SimSun-ExtB
+;//上記のフォントも表示が崩れたり行を侵食することなく使える。ただHEART系はフォント毎の差異があまりない
+
+;-------------------------------------------------
+;関数名:HTML_HEART
+;概　要:HTML_HEARTBの中抜き版
+;仕様はHTML_HEARTBに準ずる
+;-------------------------------------------------
+@HTML_HEART(ARGS:0 = "ＭＳ Ｐゴシック", ARG:0 = 0xFFBFBE, ARG:1 = 1)
+#FUNCTIONS
+LOCALS = %HTMLFONT("♡" * ARG:1, ARGS:0, ARG:0)%
+RETURNF LOCALS
+
+
+;-------------------------------------------------
+;関数名:HTML_SPADEB
+;概　要:塗りつぶしのスペードを表示する
+;引　数:ARGS:0…使用するフォント名(省略するとＭＳ Ｐゴシック)
+;引　数:ARG: 0…色指定(省略すると白系で出力)
+;引　数:ARG: 1…表示する数(省略すると1)
+;-------------------------------------------------
+@HTML_SPADEB(ARGS:0 = "ＭＳ Ｐゴシック", ARG:0 = 0xFFFFFF, ARG:1 = 1)
+#FUNCTIONS
+LOCALS = %HTMLFONT("♠" * ARG:1, ARGS:0, ARG:0)%
+RETURNF LOCALS
+
+;-------------------------------------------------
+;関数名:HTML_SPADE
+;概　要:HTML_SPADEBの中抜き版
+;仕様はHTML_SPADEBに準ずる
+;-------------------------------------------------
+@HTML_SPADE(ARGS:0 = "ＭＳ Ｐゴシック", ARG:0 = 0xFFFFFF, ARG:1 = 1)
+#FUNCTIONS
+LOCALS = %HTMLFONT("♤" * ARG:1, ARGS:0, ARG:0)%
+RETURNF LOCALS
+
+
+;-------------------------------------------------
+;関数名:HTML_CLUBB
+;概　要:塗りつぶしのクラブを表示する
+;引　数:ARGS:0…使用するフォント名(省略するとBatang)
+;引　数:ARG: 0…色指定(省略すると緑系で出力)
+;引　数:ARG: 1…表示する数(省略すると1)
+;-------------------------------------------------
+@HTML_CLUBB(ARGS:0 = "Batang", ARG:0 = 0x40BE70, ARG:1 = 1)
+#FUNCTIONS
+LOCALS = %HTMLFONT("♣" * ARG:1, ARGS:0, ARG:0)%
+RETURNF LOCALS
+
+;-------------------------------------------------
+;関数名:HTML_CLUB
+;概　要:HTML_CLUBBの中抜き版
+;引　数:ARGS:0…使用するフォント名(省略するとSimSun-ExtB)
+;他の仕様はHTML_CLUBBに準ずる
+;-------------------------------------------------
+@HTML_CLUB(ARGS:0 = "SimSun-ExtB", ARG:0 = 0x40BE70, ARG:1 = 1)
+#FUNCTIONS
+LOCALS = %HTMLFONT("♧" * ARG:1, ARGS:0, ARG:0)%
+RETURNF LOCALS
+
+
+;-------------------------------------------------
+;関数名:HTML_DIAMONDB
+;概　要:塗りつぶしのダイヤを表示する
+;引　数:ARGS:0…使用するフォント名(省略するとSimSun-ExtB)
+;引　数:ARG: 0…色指定(省略すると赤系で出力)
+;引　数:ARG: 1…表示する数(省略すると1)
+;-------------------------------------------------
+@HTML_DIAMONDB(ARGS:0 = "SimSun-ExtB", ARG:0 = 0xA8142F, ARG:1 = 1)
+#FUNCTIONS
+LOCALS = %HTMLFONT("♦" * ARG:1, ARGS:0, ARG:0)%
+RETURNF LOCALS
+
+;-------------------------------------------------
+;関数名:HTML_DIAMOND
+;概　要:HTML_DIAMONDBの中抜き版
+;仕様はHTML_DIAMONDBに準ずる
+;-------------------------------------------------
+@HTML_DIAMOND(ARGS:0 = "SimSun-ExtB", ARG:0 = 0xA8142F, ARG:1 = 1)
+#FUNCTIONS
+LOCALS = %HTMLFONT("♢" * ARG:1, ARGS:0, ARG:0)%
+RETURNF LOCALS
+
+
+;-------------------------------------------------
+;関数名:HTML_EIGHTHNOTE
+;概　要:８分音符を表示する
+;引　数:ARGS:0…使用するフォント名(省略するとLucida Console)
+;引　数:ARG: 0…色指定(省略すると白系で出力)
+;引　数:ARG: 1…表示する数(省略すると1)
+;-------------------------------------------------
+@HTML_EIGHTHNOTE(ARGS:0 = "Lucida Console", ARG:0 = 0xFFFFFF, ARG:1 = 1)
+#FUNCTIONS
+LOCALS = %HTMLFONT("♪" * ARG:1, ARGS:0, ARG:0)%
+RETURNF LOCALS
+
+
+;-------------------------------------------------
+;関数名:HTML_W8NOTE
+;概　要:連８分音符を表示する
+;引　数:ARGS:0…使用するフォント名(省略するとLucida Console)
+;引　数:ARG: 0…色指定(省略すると白系で出力)
+;引　数:ARG: 1…表示する数(省略すると1)
+;-------------------------------------------------
+@HTML_W8NOTE(ARGS:0 = "Lucida Console", ARG:0 = 0xFFFFFF, ARG:1 = 1)
+#FUNCTIONS
+LOCALS = %HTMLFONT("♫" * ARG:1, ARGS:0, ARG:0)%
+RETURNF LOCALS
+
+
+;-------------------------------------------------
+;関数名:HTML_W16NOTE
+;概　要:連16分音符を表示する
+;引　数:ARGS:0…使用するフォント名(省略するとSimSun-ExtB)
+;引　数:ARG: 0…色指定(省略すると白系で出力)
+;引　数:ARG: 1…表示する数(省略すると1)
+;-------------------------------------------------
+@HTML_W16NOTE(ARGS:0 = "SimSun-ExtB", ARG:0 = 0xFFFFFF, ARG:1 = 1)
+#FUNCTIONS
+LOCALS = %HTMLFONT("♬" * ARG:1, ARGS:0, ARG:0)%
+RETURNF LOCALS
+
+
+;-------------------------------------------------
+;関数名:HTML_FLAT
+;概　要:フラットを表示する
+;引　数:ARGS:0…使用するフォント名(省略するとCourier New)
+;引　数:ARG: 0…色指定(省略すると白系で出力)
+;引　数:ARG: 1…表示する数(省略すると1)
+;-------------------------------------------------
+@HTML_FLAT(ARGS:0 = "Courier New", ARG:0 = 0xFFFFFF, ARG:1 = 1)
+#FUNCTIONS
+LOCALS = %HTMLFONT("♭" * ARG:1, ARGS:0, ARG:0)%
+RETURNF LOCALS
+
+
+;-------------------------------------------------
+;関数名:HTML_NATURAL
+;概　要:ナチュラルを表示する
+;引　数:ARGS:0…使用するフォント名(省略するとSimSun-ExtB)
+;引　数:ARG: 0…色指定(省略すると白系で出力)
+;引　数:ARG: 1…表示する数(省略すると1)
+;-------------------------------------------------
+@HTML_NATURAL(ARGS:0 = "SimSun-ExtB", ARG:0 = 0xFFFFFF, ARG:1 = 1)
+#FUNCTIONS
+LOCALS = %HTMLFONT("♮" * ARG:1, ARGS:0, ARG:0)%
+RETURNF LOCALS
+
+
+;-------------------------------------------------
+;関数名:HTML_SHARP
+;概　要:シャープを表示する
+;引　数:ARGS:0…使用するフォント名(省略するとCourier New)
+;引　数:ARG: 0…色指定(省略すると白系で出力)
+;引　数:ARG: 1…表示する数(省略すると1)
+;-------------------------------------------------
+@HTML_SHARP(ARGS:0 = "Courier New", ARG:0 = 0xFFFFFF, ARG:1 = 1)
+#FUNCTIONS
+LOCALS = %HTMLFONT("♯" * ARG:1, ARGS:0, ARG:0)%
+RETURNF LOCALS
+
+
+;-------------------------------------------------
+;関数名:HTML_SUNNY
+;概　要:晴れマークを表示する
+;引　数:ARGS:0…使用するフォント名(省略するとSimSun-ExtB)
+;引　数:ARG: 0…色指定(省略するとオレンジ系で出力)
+;引　数:ARG: 1…表示する数(省略すると1)
+;-------------------------------------------------
+@HTML_SUNNY(ARGS:0 = "SimSun-ExtB", ARG:0 = 0xF3743E, ARG:1 = 1)
+#FUNCTIONS
+LOCALS = %HTMLFONT("☀" * ARG:1, ARGS:0, ARG:0)%
+RETURNF LOCALS
+
+
+;-------------------------------------------------
+;関数名:HTML_CLOUDY
+;概　要:曇りマークを表示する
+;引　数:ARGS:0…使用するフォント名(省略するとSimSun-ExtB)
+;引　数:ARG: 0…色指定(省略すると灰色系で出力)
+;引　数:ARG: 1…表示する数(省略すると1)
+;-------------------------------------------------
+@HTML_CLOUDY(ARGS:0 = "SimSun-ExtB", ARG:0 = 0x9AA4A4, ARG:1 = 1)
+#FUNCTIONS
+LOCALS = %HTMLFONT("☁" * ARG:1, ARGS:0, ARG:0)%
+RETURNF LOCALS
+
+
+;-------------------------------------------------
+;関数名:HTML_RAINY
+;概　要:雨(傘)マークを表示する
+;引　数:ARGS:0…使用するフォント名(省略するとSimSun-ExtB)
+;引　数:ARG: 0…色指定(省略すると水色系で出力)
+;引　数:ARG: 1…表示する数(省略すると1)
+;-------------------------------------------------
+@HTML_RAINY(ARGS:0 = "SimSun-ExtB", ARG:0 = 0x95EDF5, ARG:1 = 1)
+#FUNCTIONS
+LOCALS = %HTMLFONT("☂" * ARG:1, ARGS:0, ARG:0)%
+RETURNF LOCALS
+
+;"Malgun Gothic", "Meiryo UI", "Microsoft JhengHei", "Microsoft YaHei", "メイリオ"
+;上記のフォントの場合、右に傾斜した傘マークが出力される
+;見た目的には大変宜しいが、出力時に下側の行を侵食してしまう
+;"Meiryo UI"なら使いドコロによってはなんとか、という感
+
+;-------------------------------------------------
+;関数名:HTML_SNOW
+;概　要:雪(ダルマ)マークを表示する
+;引　数:ARGS:0…使用するフォント名(省略するとSimSun-ExtB)
+;引　数:ARG: 0…色指定(省略すると白系で出力)
+;引　数:ARG: 1…表示する数(省略すると1)
+;-------------------------------------------------
+@HTML_SNOW(ARGS:0 = "SimSun-ExtB", ARG:0 = 0xFFFFFF, ARG:1 = 1)
+#FUNCTIONS
+LOCALS = %HTMLFONT("☃" * ARG:1, ARGS:0, ARG:0)%
+RETURNF LOCALS
+
+
+;-------------------------------------------------
+;関数名:HTML_SHOOTINGSTAR
+;概　要:流れ星マークを表示する
+;引　数:ARGS:0…使用するフォント名(省略するとSimSun-ExtB)
+;引　数:ARG: 0…色指定(省略すると水色系で出力)
+;引　数:ARG: 1…表示する数(省略すると1)
+;-------------------------------------------------
+@HTML_SHOOTINGSTAR(ARGS:0 = "SimSun-ExtB", ARG:0 = 0xABF5F3, ARG:1 = 1)
+#FUNCTIONS
+LOCALS = %HTMLFONT("☄" * ARG:1, ARGS:0, ARG:0)%
+RETURNF LOCALS
+
+
+;-------------------------------------------------
+;関数名:HTML_STARB
+;概　要:星マークを表示する
+;引　数:ARGS:0…使用するフォント名(省略するとDFKai-SB)
+;引　数:ARG: 0…色指定(省略すると黄色系で出力)
+;引　数:ARG: 1…表示する数(省略すると1)
+;-------------------------------------------------
+@HTML_STARB(ARGS:0 = "DFKai-SB", ARG:0 = 0xEAF0A7, ARG:1 = 1)
+#FUNCTIONS
+LOCALS = %HTMLFONT("★" * ARG:1, ARGS:0, ARG:0)%
+RETURNF LOCALS
+
+;-------------------------------------------------
+;関数名:HTML_STAR
+;概　要:HTML_STARBの中抜き版
+;仕様はHTML_STARBに準ずる
+;-------------------------------------------------
+@HTML_STAR(ARGS:0 = "DFKai-SB", ARG:0 = 0xEAF0A7, ARG:1 = 1)
+#FUNCTIONS
+LOCALS = %HTMLFONT("☆" * ARG:1, ARGS:0, ARG:0)%
+RETURNF LOCALS
+
+
+;-------------------------------------------------
+;関数名:HTML_SKULL
+;概　要:ハザードシンボル(毒性)を表示する
+;引　数:ARGS:0…使用するフォント名(省略するとSimSun-ExtB)
+;引　数:ARG: 0…色指定(省略すると赤系で出力)
+;引　数:ARG: 1…表示する数(省略すると1)
+;-------------------------------------------------
+@HTML_SKULL(ARGS:0 = "SimSun-ExtB", ARG:0 = 0xA8142F, ARG:1 = 1)
+#FUNCTIONS
+LOCALS = %HTMLFONT("☠" * ARG:1, ARGS:0, ARG:0)%
+RETURNF LOCALS
+
+
+;-------------------------------------------------
+;関数名:HTML_NUKE
+;概　要:ハザードシンボル(放射能)を表示する
+;引　数:ARGS:0…使用するフォント名(省略するとSimSun-ExtB)
+;引　数:ARG: 0…色指定(省略すると黄色系で出力)
+;引　数:ARG: 1…表示する数(省略すると1)
+;-------------------------------------------------
+@HTML_NUKE(ARGS:0 = "SimSun-ExtB", ARG:0 = 0xE9FC02, ARG:1 = 1)
+#FUNCTIONS
+LOCALS = %HTMLFONT("☢" * ARG:1, ARGS:0, ARG:0)%
+RETURNF LOCALS
+
+
+;-------------------------------------------------
+;関数名:HTML_BIOHAZARD
+;概　要:ハザードシンボル(バイオハザード)を表示する
+;引　数:ARGS:0…使用するフォント名(省略するとSimSun-ExtB)
+;引　数:ARG: 0…色指定(省略すると黄色系で出力)
+;引　数:ARG: 1…表示する数(省略すると1)
+;-------------------------------------------------
+@HTML_BIOHAZARD(ARGS:0 = "SimSun-ExtB", ARG:0 = 0xE0E909, ARG:1 = 1)
+#FUNCTIONS
+LOCALS = %HTMLFONT("☣" * ARG:1, ARGS:0, ARG:0)%
+RETURNF LOCALS

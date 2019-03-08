@@ -1,0 +1,101 @@
+﻿;────────────────────────────────────
+;040,拒否する（反抗、お仕置きポイント）
+;────────────────────────────────────
+@COM40
+;反抗SOURCE増加
+IF CFLAG:MASTER:調教レベル < 10
+	SOURCE:MASTER:反抗 += 250 + MARK:屈服刻印 * (10 - CFLAG:MASTER:調教レベル) * 20
+ELSE
+	SOURCE:MASTER:反抗 += 200
+ENDIF
+;お仕置きポイント加算
+TFLAG:お仕置きポイント += BASE:苛立ち / 100 + MARK:反抗刻印 + 1
+;COM分類
+CALL SET_COMGRO("拒否")
+;COM印象
+CALL SET_COMIMP("悪印象大")
+;依存度変化
+CALL ADD_DEPEND(-2, -4)
+RETURN 1
+
+
+;────────────────────────────────────
+;041,消極的やる（屈従、消極的従う、お仕置きポイント）
+;────────────────────────────────────
+@COM41
+;屈従SOURCE増加
+SOURCE:MASTER:屈従 += 100 + CFLAG:MASTER:調教レベル * (50 + GET_ABL(MASTER, "従順")) * (50 + GET_ABL(MASTER, "奉仕精神") * 2) * MARK:屈服刻印 / 100
+;消極判定
+LOCAL = (BASE:苛立ち / 150 + BASE:興味 / 150 - CFLAG:アライメント / 10) * (11 - MARK:屈服刻印) / 10 + RAND:3
+IF LOCAL > 0
+	;お仕置きポイント加算
+	TFLAG:お仕置きポイント += LOCAL
+	;派生：消極的なのが気に入らない
+	TFLAG:REACT派生 = 1
+	;COM印象
+	CALL SET_COMIMP("悪印象小")
+	;依存度変化
+	CALL ADD_DEPEND(-5, 0)
+ELSE
+	;派生：消極的だけどいいか
+	TFLAG:REACT派生 = 0
+	;COM印象
+	CALL SET_COMIMP("好印象小")
+	;依存度変化
+	CALL ADD_DEPEND(-3, +2)
+ENDIF
+;COM分類
+CALL SET_COMGRO("消極的従う")
+RETURN 1
+
+
+;────────────────────────────────────
+;042,積極的やる（達成、積極的従う）
+;────────────────────────────────────
+@COM42
+;達成SOURCE増加
+SOURCE:MASTER:達成 += (CFLAG:MASTER:調教レベル + 5) * (GET_ABL(MASTER, "奉仕精神") + 50) + (GET_ABL(MASTER, "技巧") + 50) * 20 / 100
+;COM分類
+CALL SET_COMGRO("積極的従う")
+;COM印象
+CALL SET_COMIMP("好印象大")
+;我慢フラグ解消
+TCVAR:MASTER:我慢 = 0
+;依存度変化
+CALL ADD_DEPEND(+4, +2)
+RETURN 1
+
+
+;────────────────────────────────────
+;043,愛情を込めてやる（達成、悦楽、積極的従う）
+;────────────────────────────────────
+@COM43
+;達成、悦楽SOURCE増加
+SOURCE:MASTER:達成 += (CFLAG:M好意 + 500) * (GET_ABL(MASTER, "奉仕精神") + 10) * (GET_ABL(MASTER, "技巧") + 10) / 10000
+SOURCE:MASTER:悦楽 += (CFLAG:M好意 + 100) * (GET_TRAINLV(TARGET) + 10) / 50
+;COM分類
+CALL SET_COMGRO("積極的従う")
+;COM印象
+CALL SET_COMIMP("好印象大")
+;我慢フラグ解消
+TCVAR:MASTER:我慢 = 0
+;依存度変化
+CALL ADD_DEPEND(+6, +10)
+RETURN 1
+
+
+;────────────────────────────────────
+;044,平然とやる（達成、平然と従う）
+;────────────────────────────────────
+@COM44
+;達成SOURCE増加
+SOURCE:MASTER:達成 += (CFLAG:MASTER:調教レベル + 5) * (GET_ABL(MASTER, "奉仕精神") + 50) + (GET_ABL(MASTER, "技巧") + 50) * 20 / 120
+;COM分類
+CALL SET_COMGRO("平然と従う")
+;COM印象
+CALL SET_COMIMP("好印象小")
+;我慢フラグ解消
+TCVAR:MASTER:我慢 = 0
+;依存度変化
+CALL ADD_DEPEND(+2, -2)
+RETURN 1

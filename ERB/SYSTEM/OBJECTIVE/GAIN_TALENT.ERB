@@ -1,0 +1,350 @@
+﻿
+;────────────────────────────────────
+;技能取得・放棄処理
+;※ARGは要求偏差(0を基準に大きいほどこの種別で魔力を消費したがる)
+;────────────────────────────────────
+@GAIN_TALENT_AI()
+#DIM LCOUNT
+#DIM 技能数
+#DIM 可用魔力
+#DIMS 全技能名
+#DIMS 技能名, 15
+#DIMS 決定種
+
+;取得(放棄)可能技能を技能名に格納する
+全技能名 = 調合知識/魅惑/禁断の知識/道具使い/撮影技能/舌使い/器用な指先/縛り上手/サド/汚れ無視/終端
+SPLIT 全技能名, "/", 技能名
+
+;技能についての解説@これみ_201205
+;『調合知識』
+;媚薬・ローションの薬効上昇、また休憩系栄養剤ACTの回復量上昇
+;『魅惑』
+;調教対象の肯定的行動に対する障壁が低くなる、また好感度上昇も大きくなる
+;『禁断の知識』
+;休憩系栄養剤ACTの回復量上昇程度。現在は不遇
+;『道具使い』
+;全般的な道具効果の上昇、また道具カスタマイズが可能に
+;『撮影技能』
+;撮影助手ACTが可能になる
+;『舌使い』
+;舌を使用する行動の効果が高まる
+;『器用な指先』
+;指を利用する行動の効果が高まる
+;『縛り上手』
+;縄を利用する行動の効果が高まる。それだけ
+;『サド』
+;苦痛を与えることに対して抵抗がなくなり、効果も上がります
+;『汚れ無視』
+;汚れによるデメリットを軽減。現在は若干不遇
+
+;技能数をカウント
+技能数 = FINDELEMENT(技能名, "終端")
+
+;この価格を上回る技能が存在すると破綻する
+LOCAL = 1000000
+FOR LCOUNT, 0, 技能数
+	SIF TALENT:(技能名:LCOUNT) == 0 && 技能名:LCOUNT != "サド"
+		LOCAL = MIN(LOCAL, GAIN_TALENT_V(技能名:LCOUNT, 0))
+NEXT
+;使用可能魔力判定
+可用魔力 = GAIN_TALENT_MP_ABLE()
+
+SIF FLAG:デバッグ
+	PRINTFORML 『技能取得処理』(可用魔力：{可用魔力})
+
+;買えないか、買える道具がもう無いなら帰る
+IF 可用魔力 < LOCAL || LOCAL == 1000000
+	IF FLAG:デバッグ
+		IF LOCAL == 1000000
+			PRINTFORMW 取得可能な技能が存在しません！
+		ELSE
+			PRINTFORMW 可用魔力が不足しています(あと{LOCAL - 可用魔力})
+		ENDIF
+	ENDIF
+	RETURN RESULT
+ENDIF
+
+;変数を初期化
+CALL SET_CRI_VAR
+FOR LCOUNT, 0, 技能数
+	SIF TALENT:(技能名:LCOUNT) == 0 && 技能名:LCOUNT != "サド"
+		CALL SET_CRI_VAR, 技能名:LCOUNT, 1
+NEXT
+
+;------------------------------------------
+;補正処理
+;------------------------------------------
+
+LOCALS = GAIN_TALENT
+
+CALL CHA_CRI_VAR, "調教者の素質"
+CALLFORM %LOCALS%_TALENT_T
+
+CALL CHA_CRI_VAR, "調教対象の素質"
+CALLFORM %LOCALS%_TALENT_M
+
+CALL CHA_CRI_VAR, "調教者の狂気"
+CALLFORM %LOCALS%_INSANE(全技能名)
+
+CALL CHA_CRI_VAR, "価格による補正"
+CALLFORM %LOCALS%_PRICE(全技能名)
+
+CALL CHA_CRI_VAR, "実行判定"
+CALLFORM %LOCALS%_ABLE
+
+;------------------------------------------
+;取得判定
+;------------------------------------------
+
+LOCAL:2 = 0
+
+$GAIN_TALENT
+
+;取得状況による判定(既に取得、魔力不足)
+;判定処理
+FOR LCOUNT, 0, 技能数
+	IF TALENT:(技能名:LCOUNT) == 1 && 技能名:LCOUNT != "サド"
+		CALL DIM_CRI_VAR(技能名:LCOUNT, -999)
+		CONTINUE
+	ENDIF
+	LOCAL = GET_CRI_VAR(技能名:LCOUNT + "累計")
+	IF LOCAL < 0
+		LOCAL = GAIN_TALENT_V(技能名:LCOUNT, 0) * (10 + ABS(LOCAL)) / 10
+	ELSE
+		LOCAL = GAIN_TALENT_V(技能名:LCOUNT, 0) * 10 / (10 + ABS(LOCAL))
+	ENDIF
+	SIF LOCAL > 可用魔力
+		CALL DIM_CRI_VAR(技能名:LCOUNT, -999)
+NEXT
+
+CALL DEF_CRI_VAR("最大前者")
+LOCAL = GET_CRI_VAR("決定")
+決定種 = %RESULTS%
+CALL ANA_CRI_VAR()
+IF LOCAL != -1 && GAIN_TALENT_V(決定種, 0) <= CFLAG:魔力
+	LOCAL = CFLAG:魔力
+	CFLAG:魔力 -= GAIN_TALENT_V(決定種, 0)
+	可用魔力 -= GAIN_TALENT_V(決定種, 0)
+	TALENT:決定種 = 1
+	;錬成時口上呼び出し
+	;CALL KOJO_EVENT(110, XX)
+	;CALL VOIDLINE_IF(RESULT)
+	SKIPDISP 0
+	PRINTFORMW %CALLNAME%は[%決定種%]を取得しました
+	PRINTFORMW 魔力({LOCAL} → {CFLAG:魔力})
+	IF FLAG:オートモード > 0 && FLAG:オートモード表示設定 == 1
+		SKIPDISP 1
+	ENDIF
+	LOCAL:2++
+	SIF FLAG:デバッグ
+		PRINTFORML (可用魔力：{可用魔力})
+	GOTO GAIN_TALENT
+ENDIF
+
+SIF FLAG:デバッグ
+	PRINTW 
+
+RETURN RESULT
+
+;-------------------------------------------------------------------------
+;調教者の素質を参照
+;-------------------------------------------------------------------------
+@GAIN_TALENT_TALENT_T
+
+;調教者がプライド高い/低い
+IF TALENT:プライド高い
+	CALL ADD_CRI_VAR("汚れ無視", -6)
+ELSEIF TALENT:プライド低い
+	CALL ADD_CRI_VAR("汚れ無視", 6)
+ENDIF
+
+;調教者が無関心/好奇心
+IF TALENT:無関心
+	CALL ADD_CRI_VAR("調合知識", -6)
+	CALL ADD_CRI_VAR("禁断の知識", -6)
+	CALL ADD_CRI_VAR("道具使い", -6)
+	CALL ADD_CRI_VAR("撮影技能", -6)
+ELSEIF TALENT:好奇心
+	CALL ADD_CRI_VAR("調合知識", 6)
+	CALL ADD_CRI_VAR("禁断の知識", 6)
+	CALL ADD_CRI_VAR("道具使い", 6)
+	CALL ADD_CRI_VAR("撮影技能", 6)
+ENDIF
+
+;調教者が抑圧/解放
+IF TALENT:抑圧
+	CALL ADD_CRI_VAR("サド", TALENT:サド ? 6 # -6)
+ELSEIF TALENT:解放
+	CALL ADD_CRI_VAR("サド", TALENT:サド ? -6 # 6)
+ENDIF
+
+;調教者が献身的
+SIF TALENT:献身的
+	CALL ADD_CRI_VAR("汚れ無視", 3)
+	
+;-------------------------------------------------------------------------
+;調教対象の素質を参照
+;-------------------------------------------------------------------------
+@GAIN_TALENT_TALENT_M
+
+;調教対象が反抗的/素直
+IF TALENT:MASTER:反抗的
+	CALL ADD_CRI_VAR("魅惑", 6)
+	CALL ADD_CRI_VAR("縛り上手", 3)
+	CALL ADD_CRI_VAR("サド", 3)
+ELSEIF TALENT:MASTER:素直
+	CALL ADD_CRI_VAR("魅惑", -6)
+	CALL ADD_CRI_VAR("縛り上手", -3)
+	CALL ADD_CRI_VAR("サド", -3)
+ENDIF
+
+;調教対象が無関心/好奇心
+IF TALENT:MASTER:無関心
+	CALL ADD_CRI_VAR("道具使い", -3)
+ELSEIF TALENT:MASTER:好奇心
+	CALL ADD_CRI_VAR("道具使い", 3)
+ENDIF
+
+;調教対象が感情乏しい/情緒豊か
+IF TALENT:MASTER:感情乏しい
+	CALL ADD_CRI_VAR("調合知識", 3)
+ELSEIF TALENT:MASTER:情緒豊か
+	CALL ADD_CRI_VAR("調合知識", -3)
+ENDIF
+
+;調教対象が目立ちたがり
+SIF TALENT:MASTER:目立ちたがり
+	CALL ADD_CRI_VAR("撮影技能", 6)
+
+;調教対象が貞操観念/貞操無頓着
+IF TALENT:MASTER:貞操観念
+	CALL ADD_CRI_VAR("魅惑", 6)
+ELSEIF TALENT:MASTER:貞操無頓着
+	CALL ADD_CRI_VAR("魅惑", -3)
+ENDIF
+
+;調教対象が抑圧/解放
+IF TALENT:MASTER:抑圧
+	CALL ADD_CRI_VAR("魅惑", 3)
+ELSEIF TALENT:MASTER:解放
+	CALL ADD_CRI_VAR("魅惑", -3)
+ENDIF
+
+;調教対象が恥じらい/恥薄い
+IF TALENT:MASTER:恥じらい
+	CALL ADD_CRI_VAR("撮影技能", 6)
+ELSEIF TALENT:MASTER:恥薄い
+	CALL ADD_CRI_VAR("撮影技能", -6)
+ENDIF
+
+;調教対象が痛みに弱い/痛みに強い
+IF TALENT:MASTER:痛みに弱い
+	CALL ADD_CRI_VAR("縛り上手", 6)
+	CALL ADD_CRI_VAR("サド", 6)
+ELSEIF TALENT:MASTER:痛みに強い
+	CALL ADD_CRI_VAR("縛り上手", -3)
+	CALL ADD_CRI_VAR("サド", -3)
+ENDIF
+
+;調教対象が濡れやすい/濡れにくい
+IF TALENT:MASTER:濡れやすい
+	CALL ADD_CRI_VAR("調合知識", 6)
+	CALL ADD_CRI_VAR("舌使い", 3)
+ELSEIF TALENT:MASTER:濡れにくい
+	CALL ADD_CRI_VAR("調合知識", -6)
+	CALL ADD_CRI_VAR("舌使い", -3)
+ENDIF
+
+;調教対象が薬毒耐性
+SIF TALENT:MASTER:薬毒耐性
+	CALL ADD_CRI_VAR("調合知識", -9)
+
+;調教対象が自慰しやすい
+SIF TALENT:MASTER:自慰しやすい
+	CALL ADD_CRI_VAR("縛り上手", 3)
+
+;調教対象が快感に素直/快感の否定
+IF TALENT:MASTER:快感に素直
+	CALL ADD_CRI_VAR("魅惑", -3)
+ELSEIF TALENT:MASTER:快感の否定
+	CALL ADD_CRI_VAR("魅惑", 3)
+ENDIF
+
+;調教対象がドＭ
+IF TALENT:MASTER:ドＭ
+	CALL ADD_CRI_VAR("縛り上手", 3)
+	CALL ADD_CRI_VAR("サド", 3)
+ENDIF
+
+;調教対象が倒錯的
+SIF TALENT:MASTER:倒錯的
+	CALL ADD_CRI_VAR("サド", 6)
+
+;調教対象が回復早い/回復遅い
+IF TALENT:MASTER:回復早い
+	CALL ADD_CRI_VAR("調合知識", -6)
+ELSEIF TALENT:MASTER:回復遅い
+	CALL ADD_CRI_VAR("調合知識", 6)
+ENDIF
+
+;------------------------------------------
+;調教者の狂気
+;------------------------------------------
+@GAIN_TALENT_INSANE(ARGS)
+#DIM LCOUNT
+#DIM 技能数
+#DIMS 技能名, 15
+
+SIF !TALENT:狂気
+	RETURN 0
+
+;取得(放棄)可能技能を技能名に格納する
+SPLIT ARGS, "/", 技能名
+
+;技能数をカウント
+技能数 = FINDELEMENT(技能名, "終端")
+
+FOR LCOUNT, 0, 技能数
+	SIF TALENT:(技能名:LCOUNT) == 0 && 技能名:LCOUNT != "サド"
+		CALL MUL_CRI_VAR(技能名:LCOUNT, -50, 100)
+NEXT
+
+;------------------------------------------
+;価格による補正
+;------------------------------------------
+@GAIN_TALENT_PRICE(ARGS)
+#DIM LCOUNT
+#DIM 技能数
+#DIMS 技能名, 15
+
+;取得(放棄)可能技能を技能名に格納する
+SPLIT ARGS, "/", 技能名
+
+;技能数をカウント
+技能数 = FINDELEMENT(技能名, "終端")
+
+FOR LCOUNT, 0, 技能数
+	LOCAL = GET_CRI_VAR(技能名:LCOUNT + "累計")
+	IF LOCAL > 0
+		CALL MUL_CRI_VAR(技能名:LCOUNT, 100 * POWER(2, 10 + TALENT:衝動的 - TALENT:自制的 + TALENT:目立ちたがり) / GAIN_TALENT_V(技能名:LCOUNT, 0))
+	ELSEIF LOCAL < 0
+		CALL MUL_CRI_VAR(技能名:LCOUNT, 100 * GAIN_TALENT_V(技能名:LCOUNT, 0) / POWER(2, 10 + TALENT:衝動的 - TALENT:自制的 + TALENT:目立ちたがり))
+	ENDIF
+NEXT
+
+;------------------------------------------
+;実行判定
+;------------------------------------------
+@GAIN_TALENT_ABLE
+
+;現仕様ではサド素質を付けたり外したりを繰り返しかねないので
+CALL DIM_CRI_VAR("サド", -999)
+CALL DIM_CRI_VAR("着衣プレイ好き", -999)
+
+;------------------------------------------
+;使用可能魔力判定
+;------------------------------------------
+@GAIN_TALENT_MP_ABLE()
+#FUNCTION
+;魔力不足基準設定
+RETURNF LIMIT(CFLAG:魔力 * (8 + MANAGE_MP_PROP() + TALENT:習得早い - TALENT:習得遅い) * 10 / 100, 0, CFLAG:魔力)

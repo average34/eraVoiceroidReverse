@@ -1,0 +1,164 @@
+﻿
+;────────────────────────────────────
+;姿勢変更 地の文
+;
+;調教者行動によって姿勢が変更になった場合ここで表示します。
+;口上で指定することによって置換した文章を表示し呼ばれないようにするべきかもしれないけど
+;今はまだできません。
+;────────────────────────────────────
+@POSE_CHANGE
+#LOCALSIZE 3
+VARSET LOCAL, -1
+;変化内容のチェック
+SIF TCVAR:MASTER:姿勢 != TCVAR:MASTER:前回の姿勢
+	LOCAL = TCVAR:MASTER:姿勢
+SIF TCVAR:MASTER:位置前後 != TCVAR:MASTER:前回の位置前後
+	LOCAL:1 = TCVAR:MASTER:位置前後
+SIF TCVAR:MASTER:位置上下 != TCVAR:MASTER:前回の位置上下
+	LOCAL:2 = TCVAR:MASTER:位置上下
+
+;何も変わっていないなら戻る
+SIF LOCAL < 0 && LOCAL:1 < 0 && LOCAL:2 < 0
+	RETURN 0
+
+;口上呼び出し
+CALL KOJO_POSE(LOCAL, LOCAL:1, LOCAL:2)
+
+;スレへの対応手段
+SIF MENU(GET_ACTM(TFLAG:ACT)) == "不明"
+	PRINTFORMW ＠＠＠エラーです。ACT番号{TFLAG:ACT}です、スレで報告くださいませ＠＠＠
+
+;位置上下
+SELECTCASE LOCAL:2
+	;自由になった
+	CASE 0
+		PRINTFORM %CALLNAME:TARGET%は\@ TCVAR:MASTER:前回の位置上下 == 1 ? %CALLNAME:MASTER%の上から降り # 上に乗っている%CALLNAME:MASTER%を押しのけ \@
+		IF LOCAL >= 0
+			PRINTFORML ると、
+			;姿勢
+			SELECTCASE LOCAL
+				;自由
+				CASE 0
+					PRINTFORMW %CALLNAME:MASTER%には楽な姿勢をさせた…
+				;仰向け
+				CASE 1
+					PRINTFORMW %CALLNAME:MASTER%は仰向けに寝かせた…
+				;座り
+				CASE 2
+					PRINTFORMW %CALLNAME:MASTER%を\@ TEQUIP:野外プレイ ? 地面 # ベッド \@の上に座らせた…
+				;四つん這い
+				CASE 3
+					PRINTFORMW %CALLNAME:MASTER%に四つん這いにな\@ TCVAR:MASTER:位置前後 == 2 ? って尻を向け # \@るように言った…
+				;起立
+				CASE 4
+					PRINTFORMW %CALLNAME:MASTER%に\@ TEQUIP:野外プレイ ? 地面 # 床 \@に立つように言った…
+				;膝立ち
+				CASE 10
+					PRINTFORMW %CALLNAME:MASTER%に\@ TEQUIP:野外プレイ ? 地面 # ベッド \@の上で膝立ちになるように言った…
+			ENDSELECT
+		ELSE
+			PRINTFORMW た…
+		ENDIF
+	;上に乗った
+	CASE 1
+		PRINTFORML %CALLNAME:TARGET%は\@ TCVAR:MASTER:前回の位置上下 == 2 ? 上に乗っている%CALLNAME:MASTER%と身体を入れ替え # %CALLNAME:MASTER%の上にのしかかり \@、組み敷こうとした…
+	;上に乗せた
+	CASE 2
+		;正常位
+		IF IS_NOWACTNAME("正常位させる")
+			PRINTFORM %CALLNAME:TARGET%は脚を開き、%CALLNAME:MASTER%に前から体を被せてくるように言った…
+		ELSE
+			PRINTFORM %CALLNAME:TARGET%は%CALLNAME:MASTER%に、\@ TCVAR:MASTER:位置前後 == 3 ? 背中を # 身体を \@跨いで上になるように言った…
+		ENDIF
+	;上下変化なし
+	CASEELSE
+		PRINTFORM %CALLNAME:TARGET%は
+		IF LOCAL >= 0
+			;姿勢
+			SELECTCASE LOCAL
+				;仰向け
+				CASE 1
+					;イった後
+					IF NOWEX:MASTER:Ｃ絶頂 || NOWEX:MASTER:Ｖ絶頂 || NOWEX:MASTER:Ａ絶頂 || NOWEX:MASTER:Ｂ絶頂 || NOWEX:MASTER:射精
+						PRINTFORM 、絶頂の余韻で腰が抜け、力なく横たわった%CALLNAME:MASTER%を見て満足げに頬を緩め
+					ELSE
+						PRINTFORM %CALLNAME:MASTER%を仰向けに寝かせ
+					ENDIF
+				;座り
+				CASE 2
+					;イきそう、前回が仰向け
+					IF TCVAR:MASTER:イきそう && TCVAR:MASTER:前回の姿勢 == 1
+						PRINTFORM 、快感を求めて身を起こし、座るように腰を引く%CALLNAME:MASTER%を眺めて笑みを浮かべ
+					;イった後
+					ELSEIF NOWEX:MASTER:Ｃ絶頂 || NOWEX:MASTER:Ｖ絶頂 || NOWEX:MASTER:Ａ絶頂 || NOWEX:MASTER:Ｂ絶頂 || NOWEX:MASTER:射精
+						PRINTFORM 、絶頂の余韻で腰が抜け、くたりと座りこんだ%CALLNAME:MASTER%を見て満足げに頬を緩め
+					ELSE
+						PRINTFORM %CALLNAME:MASTER%を\@ TEQUIP:野外プレイ ? 地面 # ベッド \@の上に座らせ
+					ENDIF
+				;四つん這い
+				CASE 3
+					PRINTFORM %CALLNAME:MASTER%を四つん這いに\@ TCVAR:MASTER:位置前後 == 2 ? させて尻を向け # \@させ
+				;起立
+				CASE 4
+					PRINTFORM %CALLNAME:MASTER%に\@ TEQUIP:野外プレイ ? 地面 # 床 \@に立たせ
+				;膝立ち
+				CASE 10
+					;イきそう
+					IF TCVAR:MASTER:イきそう
+						PRINTFORM 、快感を求めて腰を浮かせ、膝立ちになった%CALLNAME:MASTER%を眺めて笑みを浮かべ
+					ELSE
+						PRINTFORM %CALLNAME:MASTER%を\@ TEQUIP:野外プレイ ? 地面 # ベッド \@の上で膝立ちにさせ
+					ENDIF
+				;自由
+				CASEELSE
+					PRINTFORM %CALLNAME:MASTER%に楽な姿勢をさせ
+			ENDSELECT
+			SIF LOCAL:1 >= 0
+				PRINTFORML ると、
+		ENDIF
+		IF LOCAL:1 >= 0
+			;位置前後
+			SELECTCASE LOCAL:1
+				CASE 0
+					SELECTCASE TCVAR:MASTER:位置上下
+						CASE 0
+							PRINTFORMW 身体を離して、%CALLNAME:MASTER%の全身を舐め回すように見つめだした…
+						CASEELSE
+							PRINTFORMW 身体を重ねたまま、%CALLNAME:MASTER%の全身を舐め回すように見つめだした…
+					ENDSELECT
+				CASE 1
+					SELECTCASE TCVAR:MASTER:位置上下
+						CASE 0
+							PRINTFORMW %CALLNAME:MASTER%の正面に回り込み、\@ RAND:2 ? その瞳を覗き込んだ… # 意味ありげに微笑んだ… \@
+						CASE 1
+							PRINTFORMW %CALLNAME:MASTER%の顔が見えるように向き直り、厭らしく笑って見下ろした…
+						CASE 2
+							PRINTFORMW %CALLNAME:MASTER%の顔が見えるように向きを変えさせた…
+					ENDSELECT
+				CASE 2
+					SELECTCASE TCVAR:MASTER:位置上下
+						CASE 0, 1
+							IF MENU(GET_ACTM(TFLAG:ACT)) == "加虐"
+								PRINTFORMW %CALLNAME:MASTER%の背後に回り込み、粘つく薄笑いを浮かべた…
+							ELSEIF RAND:2
+								PRINTFORMW %CALLNAME:MASTER%の背後に回り込み、\@ RAND:2 ? 肩越しに耳元に顔を寄せた… # 肩を抱き寄せた… \@
+							ELSE
+								PRINTFORMW %CALLNAME:MASTER%の身体を前後逆に回し、背中越しに身体を寄せ始めた…
+							ENDIF
+						CASE 2
+							PRINTFORMW 背を向けて跨るように%CALLNAME:MASTER%の向きを変えさせた…
+					ENDSELECT
+				CASE 3
+					SELECTCASE TCVAR:MASTER:位置上下
+						CASE 0, 2
+							PRINTFORMW %CALLNAME:MASTER%に背を向けた…
+						CASE 1
+							PRINTFORMW %CALLNAME:MASTER%の顔に背を向けるように、跨いだまま向きを変えた…
+					ENDSELECT
+			ENDSELECT
+		ELSE
+			PRINTFORMW た…
+		ENDIF
+ENDSELECT
+PRINTL 
+CALL POSE_SHOW

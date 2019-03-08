@@ -1,0 +1,13 @@
+﻿; ブロックをタグと本文に分解する置き場
+#DIMS TAGSPLIT_STR,1
+#DIMS TAGSPLIT_TAG,1
+
+; ブロックからタグごとに分解する置き場
+#DIMS TAGSPLIT_TAGBLOCS,20
+; ブロックからタグごとに分解したのを、さらにタグと数値に分解する置き場
+#DIMS TAGSPLIT_TAGPROPS,2
+; 引数をタグと数値に分解する置き場
+#DIMS TAGSPLIT_NOWPROPS,2
+; タグ分割数
+#DIM TAGSPLIT_TAGNUM,1
+
