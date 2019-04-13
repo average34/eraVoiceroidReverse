@@ -13,9 +13,9 @@ DO
 	FOR LOCAL:1, 0, 126
 		CLEARLINE LINECOUNT - LOCAL:2
 		;タイトル画像表示
-		;FOR LOCAL:0, 0, 41
-		;	HTML_PRINT "<p align='center'><img src='rev" + TOSTR(LOCAL:1, "000") + TOSTR(LOCAL:0, "00") + "'></p>"
-		;NEXT
+		FOR LOCAL:0, 0, 29
+			HTML_PRINT "<p align='center'><img src='rev" + TOSTR(LOCAL:1, "000") + TOSTR(LOCAL:0, "00") + "'></p>"
+		NEXT
 		$START
 		ALIGNMENT CENTER
 		CUSTOMDRAWLINE ━
