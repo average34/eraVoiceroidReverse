@@ -22,7 +22,7 @@ eraVoiceroidЯeverseは「サークル獏」様製作の eramaker のエミュ�
 eratoho界隈で様々な改造が施された逆調教バリアント「eratohoЯeverse」。RではなくЯなのは度重なるバージョンアップによる名称変更によるものです。
 Яはキリル文字なんですが『やー』を変換するのが簡単です。あるいは『ろしあ』でも変換できます。
 
-この元となったバリアントは2019年現在でもバージョンアップが進められています。開発・改造に興味を持った方は是非スレ（http://jbbs.shitaraba.net/bbs/read.cgi/otaku/16783/1421446768/　）やサイト（https://launchpad.net/eratohoreverse　）にアクセスしてみて下さい。
+この元となったバリアントは2020年現在でもバージョンアップが進められています。開発・改造に興味を持った方は是非スレ（http://jbbs.shitaraba.net/bbs/read.cgi/otaku/16783/1421446768/　）やサイト（https://launchpad.net/eratohoreverse　）にアクセスしてみて下さい。
 
 
 =========================
