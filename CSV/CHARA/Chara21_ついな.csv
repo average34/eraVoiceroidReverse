@@ -3,7 +3,7 @@
 番号,21
  
 ;名前(NAME), 呼び名(CALLNAME)
-名前,如月ついな
+名前,役ついな
 呼び名,ついな
  
 ;基礎(BASE)
@@ -75,7 +75,7 @@
  
 ;キャラ情報(CSTR)
 CSTR,二つ名,VOICEROID
-CSTR,登場名,如月ついな
+CSTR,登場名,役ついな
 CSTR,ローマ字,Kisaragi Tsuina
 CSTR,曲１,--
 CSTR,曲２,--
