@@ -28,7 +28,7 @@ jobs:
         run: echo ::set-env name=TWEET_TEXT_2::"https://github.com/$GITHUB_REPOSITORY/releases/"
 
       - name: Set env TWEET_TEXT_3
-        run: echo ::set-env name=TWEET_TEXT_3::"このゲームは、VOICEROID、CeVIO、AITalkのキャラクターの二次創作ゲームです。 テキストのみで進める、ボイロを監禁調教するゲームです。ぜひとも遊んでください。"
+        run: echo ::set-env name=TWEET_TEXT_3::"このゲームは、VOICEROID、CeVIO、AITalkのキャラクターの二次創作ゲームです。 テキストのみで進める、ボイロに監禁調教されるゲームです。ぜひとも遊んでください。"
 
       # env.TWEET_TEXT_TESTにツイート内容を代入
       - name: Set env TWEET_TEXT_TEST
