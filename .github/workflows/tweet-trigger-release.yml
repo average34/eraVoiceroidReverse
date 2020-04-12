@@ -58,10 +58,10 @@ jobs:
         uses: Ilshidur/action-discord@master
         with:
             args: ${{ env.TWEET_TEXT_2 }}
-      - name: Discord notification1-3
-        uses: Ilshidur/action-discord@master
-        with:
-            args: ${{ env.TWEET_TEXT_3 }}
+#      - name: Discord notification1-3
+#        uses: Ilshidur/action-discord@master
+#        with:
+#            args: ${{ env.TWEET_TEXT_3 }}
 
       # DISCORD_WEBHOOKにURIを代入
       - name: Set env DISCORD_WEBHOOK for BOIRODA
@@ -76,10 +76,10 @@ jobs:
         uses: Ilshidur/action-discord@master
         with:
             args: ${{ env.TWEET_TEXT_2 }}
-      - name: Discord notification2-3
-        uses: Ilshidur/action-discord@master
-        with:
-            args: ${{ env.TWEET_TEXT_3 }}
+#      - name: Discord notification2-3
+#        uses: Ilshidur/action-discord@master
+#        with:
+#            args: ${{ env.TWEET_TEXT_3 }}
 
 
 # [EOF]
