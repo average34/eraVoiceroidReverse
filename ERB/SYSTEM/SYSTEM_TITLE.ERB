@@ -35,6 +35,9 @@ DO
 		;CALL HTMLPRINTL(@"%HTMLBUTTON(" [2]     ＩＮＦＯ     ", "2", "更新内容を表示します")%")
 		;CALL HTMLPRINTL(@"%HTMLBUTTON(" [3]   ＣＲＥＤＩＴ   ", "3", "クレジットを表示します")%")
 		ALIGNMENT LEFT
+		;文字化け警告
+		CALL MOJIBAKE_CHECK_START
+
 		CALL INPUTINT(0, 1)
 		CUSTOMDRAWLINE ━
 		SELECTCASE RESULT
