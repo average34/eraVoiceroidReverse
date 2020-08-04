@@ -3,7 +3,9 @@
 DRAWLINE
 SIF FLAG:デバッグ
 	PRINTL 選択したメニューの興味を増減することができます
-FOR LOCAL, 0, 200
+	
+;100番以降は東方固有だったので非表示
+FOR LOCAL, 0, 99
 	IF STR:(100 + LOCAL) != ""
 		PRINTFORM [{LOCAL, 3}]  
 		PRINTFORM %STR:(100 + LOCAL), 20, LEFT%  

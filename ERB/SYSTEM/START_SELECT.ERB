@@ -112,6 +112,9 @@ IF ARG == 0
 ELSEIF NO:MASTER != 0
 	PRINTL 　[0]「あなた」にします
 ENDIF
+;口上少ないので最初は表示
+KOJOOFF = 1
+
 
 @START_CHARA_REQU_M(ARG)
 SIF FLAG:(ARG + 99) == 0
