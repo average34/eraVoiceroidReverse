@@ -31,9 +31,11 @@ DO
 		PRINTFORML %SIGNS(FLAG:AI自由度 ? FLAG:AI自由度 / 15 # -1, "OFF", "一部ON", "ON"), 30, RIGHT%
 	ENDIF
 	PRINTFORML %"[ 9] 調教中のインターフェース", 50, LEFT%%\@ FLAG:調教UIパッド化 ? パッド # ノーマル \@, 30, RIGHT%
+	PRINTFORML %"[10] オートモード", 50, LEFT%%\@ FLAG:オートモード > 0 ? オン # オフ \@, 30, RIGHT%
+
 	DO
 		INPUT
-		LOCAL:0 = !INRANGE(RESULT, 0, 9)								;範囲チェック
+		LOCAL:0 = !INRANGE(RESULT, 0, 10)								;範囲チェック
 		LOCAL:0 |= (RESULT == 1 && KOJO_CONF:0 <= 0)					;推奨設定が無い
 		LOCAL:0 |= (RESULT == 2 && (FLAG:デバッグ !| KOJO_CONF:1 > 0))	;デバッグモードでも読心能力オンでもない
 		LOCAL:0 |= (RESULT == 8 && FLAG:モード != 1)					;SANDBOXモードでない
@@ -68,6 +70,8 @@ DO
 			FLAG:奴隷妊娠 = RESULT
 		CASE 7 TO 9
 			CALLFORM CONFIG_%CONF_FUNC:(LOCAL:0 - 7)%
+		CASE 10
+			CALL SET_AUTO
 	ENDSELECT
 LOOP LOCAL:0
 REDRAW LOCAL:2
