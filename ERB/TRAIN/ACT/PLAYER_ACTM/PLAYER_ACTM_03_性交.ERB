@@ -129,7 +129,7 @@ CALL ADD_CRI_VAR("アナルセックス", 5)
 
 ;-------------------------------------------------------------
 ;本日の方針
-;本日の方針(0=いつもどおり/1=A開発/2=お仕置き/3=ハード/4=イチャイチャ/5=異常/6=野外/7=異常/8=休憩)
+;本日の方針(0=いつもどおり/1=A開発/2=お仕置き/3=ハード/4=イチャイチャ/5=異常/6=野外/7=子作り/8=休憩/9=抱いて/10=ご奉仕/11=かわいがり)
 ;-------------------------------------------------------------
 @ACT_ACTM3_POLYCY
 ;今日の方針
@@ -140,7 +140,7 @@ SELECTCASE POLICY("今日")
 		CALL ADD_CRI_VAR("騎乗位"  , -10)
 		CALL ADD_CRI_VAR("対面座位", -10)
 		CALL ADD_CRI_VAR("背面座位", -10)
-		CALL ADD_CRI_VAR("アナルセックス", 10)
+		CALL ADD_CRI_VAR("アナルセックス", 15)
 	CASE "抱いて"
 		CALL ADD_CRI_VAR("アナルセックス", -10)
 		CALL ADD_CRI_VAR("正常位"  , 10)
@@ -148,7 +148,15 @@ SELECTCASE POLICY("今日")
 		CALL ADD_CRI_VAR("騎乗位"  , 10)
 		CALL ADD_CRI_VAR("対面座位", 10)
 		CALL ADD_CRI_VAR("背面座位", 10)
+	CASE "かわいがり"
+		CALL ADD_CRI_VAR("正常位"  ,   5)
+		CALL ADD_CRI_VAR("後背位"  , -10)
+		CALL ADD_CRI_VAR("騎乗位"  , -10)
+		CALL ADD_CRI_VAR("対面座位",  15)
+		CALL ADD_CRI_VAR("背面座位", -10)
+		CALL ADD_CRI_VAR("アナルセックス", -10)
 	CASEELSE
+		;none
 ENDSELECT
 
 

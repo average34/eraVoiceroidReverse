@@ -322,8 +322,22 @@ PRINTFORML 自分の足を舐めろと命令した…
 
 ;☆リアクション後☆
 @TRAIN_MESSAGE2_55
+#LOCALSSIZE 2
+VARSET LOCALS
+LOCALS:0 = \@ IS_NOWCOMNAME("キスする") ? キスをし # 舌を這わせ \@
 SELECTCASE COMGRONAME(TFLAG:REACT分類)
-	CASE "積極的従う", "平然と従う"
+	CASE "積極的従う"
+		PRINTFORML %CALLNAME:MASTER%は目の前に差し出された%CALLNAME:TARGET%の\@ TALENT:美脚 ? 美しい #\@脚に、
+		SELECTCASE GET_COM_RANK()
+			CASE "自然な行動"
+				PRINTFORML 愛おしくて堪らないといった様子で、幸福感に浸りながら%LOCALS:0%た…
+			CASE "無理のない行動"
+				PRINTFORML 自分だけに許されたその行為の喜びを噛みしめながら%LOCALS:0%た…
+			CASE "無理をした行動"
+				PRINTFORML さながら女王に忠誠を誓う下僕のように、うやうやしく%LOCALS:0%た…
+		ENDSELECT
+		RETURN 1
+	CASE "平然と従う"
 		PRINTFORML %CALLNAME:MASTER%はひざまずき、抵抗もなく%CALLNAME%の足に舌を這わせ、
 		PRINTFORML 指の間まで丁寧に舐め、舌先でくすぐっている…
 		RETURN 2

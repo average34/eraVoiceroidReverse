@@ -2492,11 +2492,22 @@ IF TEQUIP:調教対象Ｃ使用 && NOWEX:MASTER:射精
 			ELSEIF RAND:2
 				TEQUIP:調教対象Ｃ使用 = 0
 				TEQUIP:接触指 = 0
-				PRINTFORMW %CALLNAME:TARGET%は手に付着する%CALLNAME:MASTER%の精液を美味しそうに舐めとっている…
+				IF TEQUIP:オナホール
+					PRINTFORML %CALLNAME:TARGET%は精液で満たされたオナホールを興味深げに指先で弄びつつ、
+					PRINTFORMW %CALLNAME:MASTER%の様子に満足気な笑みを浮かべている…
+				ELSE
+					PRINTFORMW %CALLNAME:TARGET%は手に付着する%CALLNAME:MASTER%の精液を美味しそうに舐めとっている…
+				ENDIF
 			;継続
 			ELSE
-				PRINTFORML %CALLNAME:TARGET%はペニス全体に精液を塗り広げ、
-				PRINTFORMW ゆっくりとした手淫で%CALLNAME:MASTER%に次の精液を催促している…
+				PRINTFORM %CALLNAME:TARGET%は
+				IF TEQUIP:オナホール
+					PRINTFORML 精液で満たされたオナホールを弄びながら、
+					PRINTFORMW 敏感になった箇所を刺激される%CALLNAME:MASTER%の反応を愉しんでいる…
+				ELSE
+					PRINTFORML ペニス全体に精液を塗り広げ、
+					PRINTFORMW ゆっくりとした手淫で%CALLNAME:MASTER%に次の精液を催促している…
+				ENDIF
 			ENDIF
 		;フェラチオ時
 		CASE 2
@@ -2509,7 +2520,11 @@ IF TEQUIP:調教対象Ｃ使用 && NOWEX:MASTER:射精
 				TEQUIP:調教対象Ｃ使用 = 0
 				TEQUIP:接触口 = 0
 				PRINTFORML %CALLNAME:TARGET%は唇をしぼめてゆっくりとペニスから口を離すと
-				PRINTFORMW %CALLNAME:MASTER%に口内の精液をみせつけてから喉を鳴らして飲み込んだ…
+				{
+				PRINTFORMW \@ DEEP_THROAT 
+				? 口内に付着した精液を指先ですくい取り、%CALLNAME:MASTER%に見せつけるように舌で舐めとった 
+				# %CALLNAME:MASTER%に口内の精液をみせつけてから喉を鳴らして飲み込んだ \@…
+				}
 			;継続
 			ELSE
 				PRINTFORML %CALLNAME:TARGET%は口内に放たれた精液を飲み込むと

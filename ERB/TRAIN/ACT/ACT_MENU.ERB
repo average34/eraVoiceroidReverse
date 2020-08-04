@@ -699,15 +699,28 @@ IF TALENT:LOCAL:男嫌い && TALENT:(LOCAL:1):オトコ
 	CALL ADD_CRI_VAR("性奉", -4)
 ENDIF
 
-;-------------------------------------------------------------
-;本日の方針
-;本日の方針(通常/アナル/お仕置き/ハード/イチャイチャ/異常/野外/子作り/休憩/抱いて)
-;-------------------------------------------------------------
+[SKIPSTART]
+/////////////////////////////////////
+本日の方針
+	0=通常         (いつも通り)
+	1=アナル       (アナルをいじめて)
+	2=お仕置き     (お仕置きして)
+	3=ハード       (激しくして)
+	4=イチャイチャ (甘えさせて)
+	5=異常         (壊れるまでして)
+	6=野外         (外に出たい)
+	7=子作り       (孕ませたい)
+	8=休憩         (休ませて)
+	9=抱いて       (抱かれたい)
+	10=ご奉仕      (ご奉仕したい)
+	11=かわいがり  (かわいがって)
+/////////////////////////////////////
+[SKIPEND]
 @ACT_MENU_POLICY
 SELECTCASE POLICY("今日")
 	CASE "アナル"
 		;調教者がふたなりであるかペニスバンド所持の場合は性交系を誘発するように
-		IF CFLAG:M好意 + CFLAG:好意 >= 10000 && (TALENT:TARGET:ふたなり || ITEM:ペニスバンド)
+		IF (CFLAG:M好意 + CFLAG:好意 >= 10000) && (TALENT:TARGET:ふたなり || ITEM:ペニスバンド)
 			CALL ADD_CRI_VAR("会話", -10)
 			CALL ADD_CRI_VAR("愛撫",  -8)
 			CALL ADD_CRI_VAR("道具", -10)
@@ -724,15 +737,16 @@ SELECTCASE POLICY("今日")
 			CALL ADD_CRI_VAR("加虐", ITEM:浣腸セット ? 10 # -10)
 			CALL ADD_CRI_VAR("性奉", -10)
 		ENDIF
-	;CASE "お仕置き"
+	CASE "お仕置き"
 		;お仕置き時はお仕置きフラグが立つのみ
+		;何らかの手入れをしてもいいのかも知れない
 	CASE "ハード"
 		CALL ADD_CRI_VAR("道具",   5)
 		CALL ADD_CRI_VAR("奉仕",   8)
 		CALL ADD_CRI_VAR("加虐",  10)
 	CASE "イチャイチャ"
 		;調教対象が女かつペニスバンド所持の場合は性奉系を誘発するように
-		IF CFLAG:M好意 + CFLAG:好意 >= 10000 && ITEM:ペニスバンド && !PENIS(MASTER)
+		IF (CFLAG:M好意 + CFLAG:好意 >= 10000) && (ITEM:ペニスバンド && !PENIS(MASTER))
 			CALL ADD_CRI_VAR("会話",  -7)
 			CALL ADD_CRI_VAR("愛撫",  -8)
 			CALL ADD_CRI_VAR("道具", -10)
@@ -786,6 +800,20 @@ SELECTCASE POLICY("今日")
 		CALL ADD_CRI_VAR("加虐", -10)
 		CALL ADD_CRI_VAR("異常", -10)
 		CALL ADD_CRI_VAR("性奉",  -5)
+	CASE "かわいがり"
+		CALL ADD_CRI_VAR("会話",   5)
+		CALL ADD_CRI_VAR("愛撫",  10)
+		CALL ADD_CRI_VAR("道具", -10)
+		CALL ADD_CRI_VAR("羞恥", -10)
+		CALL ADD_CRI_VAR("奉仕", -10)
+		CALL ADD_CRI_VAR("加虐", -10)
+		CALL ADD_CRI_VAR("異常", -10)
+		CALL ADD_CRI_VAR("性奉", -10)
+		;調教対象がオトコでない場合、条件を満たしていれば性交系に+補正
+		SIF !TALENT:MASTER:オトコ && (CFLAG:M好意 + CFLAG:好意 >= 10000)
+			CALL ADD_CRI_VAR("性交", 5)
+	CASEELSE
+		;none
 ENDSELECT
 
 ;------------------------------------------

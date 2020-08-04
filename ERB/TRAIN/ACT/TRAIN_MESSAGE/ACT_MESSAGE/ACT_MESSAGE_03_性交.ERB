@@ -270,21 +270,35 @@ SELECTCASE COMGRONAME(TFLAG:REACT分類)
 		ENDSELECT
 		RETURN 2
 	CASE "積極的従う", "平然と従う"
-		SELECTCASE GET_COM_RANK()
-			CASE "自然な行動"
-				PRINTFORML %CALLNAME:MASTER%は%CALLNAME%を逆に犯すかのように、
-				PRINTFORML 上半身を押さえつけて巧みに腰を振り、快楽を与えようとした…
-			CASE "無理のない行動"
-				PRINTFORML %CALLNAME:MASTER%は懸命に上下に腰を振り、%CALLNAME%を気持ち良くさせようとした…
-			CASE "無理をした行動"
-				IF COMCOR_POSI()                  ;実はまんざらでもない
-					PRINTFORML %CALLNAME:MASTER%は強烈な快楽と欲望に呑まれないように必死に自分を保ち、
-					PRINTFORML %CALLNAME%を犯すつもりで腰を振った…
-				ELSE                              ;実は嫌
-					PRINTFORML %CALLNAME:MASTER%は奉仕させられることに抵抗を覚えつつも、
-					PRINTFORML %CALLNAME%を気持ち良くさせるために懸命に腰を振った…
-				ENDIF
-		ENDSELECT
+		IF IS_NOWCOMNAME("キスする")
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行動"
+					PRINTFORML %CALLNAME:MASTER%は倒れ込むように上半身を前傾させ、%CALLNAME:TARGET%にギュッと抱きつくと
+					PRINTFORML 奪うようなキスをしながら、腰を激しく振り立てた…
+				CASE "無理のない行動"
+					PRINTFORML %CALLNAME:MASTER%は%CALLNAME%に覆いかぶさり、キスをしながら
+					PRINTFORML 夢中で腰を振り立て、子猫のように甘えた声を上げた…
+				CASE "無理をした行動"
+					PRINTFORML %CALLNAME:MASTER%は%CALLNAME%に覆いかぶさると、遠慮がちにキスをしながら
+					PRINTFORML 懸命に腰を振って奉仕した…
+			ENDSELECT
+		ELSE
+			SELECTCASE GET_COM_RANK()
+				CASE "自然な行動"
+					PRINTFORML %CALLNAME:MASTER%は%CALLNAME%を逆に犯すかのように、
+					PRINTFORML 上半身を押さえつけて巧みに腰を振り、快楽を与えようとした…
+				CASE "無理のない行動"
+					PRINTFORML %CALLNAME:MASTER%は懸命に上下に腰を振り、%CALLNAME%を気持ち良くさせようとした…
+				CASE "無理をした行動"
+					IF COMCOR_POSI()                  ;実はまんざらでもない
+						PRINTFORML %CALLNAME:MASTER%は強烈な快楽と欲望に呑まれないように必死に自分を保ち、
+						PRINTFORML %CALLNAME%を犯すつもりで腰を振った…
+					ELSE                              ;実は嫌
+						PRINTFORML %CALLNAME:MASTER%は奉仕させられることに抵抗を覚えつつも、
+						PRINTFORML %CALLNAME%を気持ち良くさせるために懸命に腰を振った…
+					ENDIF
+			ENDSELECT
+		ENDIF
 		RETURN 2
 	CASE "許しを乞う"
 		SELECTCASE GET_COM_RANK()
@@ -374,18 +388,29 @@ SELECTCASE COMGRONAME(TFLAG:REACT分類)
 	CASE "積極的従う", "平然と従う"
 		SELECTCASE GET_COM_RANK()
 			CASE "自然な行動"
-				PRINTFORML %CALLNAME:MASTER%は%CALLNAME%に貫かれながら上半身を自ら密着させ、
-				PRINTFORML 情熱的に唇を求めた…
+				PRINTFORML %CALLNAME:MASTER%は貫かれながら上半身を自ら密着させ
+				{
+				PRINTFORML %CALLNAME%の\@ IS_NOWCOMNAME("キスする") 
+				? 首に腕を回して抱きつくと、情熱的にキスをし 
+				# 息遣いを感じながら、高まる快楽にその身を委ね \@た…
+				}
 			CASE "無理のない行動"
-				PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%の求めに応じて自ら尻を揺すり、
-				PRINTFORML キスをしながら性交に没頭した…
+				PRINTFORML %CALLNAME:MASTER%は%CALLNAME%の求めに応じて自ら尻を揺すり\@ !IS_NOWCOMNAME("キスする") ? ながら # \@、
+				{
+				PRINTFORML \@ IS_NOWCOMNAME("キスする") 
+				? 夢中でキスをしながら快楽に溺れてい 
+				# もっと欲望を剥き出しにして貪って欲しいとねだ \@った…
+				}
 			CASE "無理をした行動"
 				IF COMCOR_POSI()                  ;実は気持ちいい
-					PRINTFORML %CALLNAME:MASTER%は快楽から逃れるように%CALLNAME%の唇に吸い付き、
-					PRINTFORML 背筋を弓なりに反らして体重をかけ、\@ TEQUIP:調教者ペニスバンド ? 張り型 # ペニス \@を深く銜えこんだ…
+					PRINTFORML %CALLNAME:MASTER%は快楽から逃れるように\@ IS_NOWCOMNAME("キスする") ? %CALLNAME%の唇に吸い付き、 # 目を伏せながら \@
+					{
+					PRINTFORML \@ IS_NOWCOMNAME("キスする") ? 抱きつきながら # 背筋を弓なりに反らして \@体重をかけ、\@ 
+					TEQUIP:調教者ペニスバンド ? 張り型 # ペニス \@を深く銜えこんだ…
+					}
 				ELSE                              ;実は嫌
 					PRINTFORML %CALLNAME:MASTER%は恋人が抱き合うような性交に抵抗を覚えつつも、
-					PRINTFORML %CALLNAME%を喜ばせるため、自分から唇を求めて見せた…
+					PRINTFORML %CALLNAME%を喜ばせるため、自分から\@ IS_NOWCOMNAME("キスする") ? 唇を求めて # 積極的に動いて \@見せた…
 				ENDIF
 		ENDSELECT
 		RETURN 2

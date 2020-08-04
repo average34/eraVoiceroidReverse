@@ -282,7 +282,7 @@ IF IS_NOWACTNAME("口で愛撫/パイズリする") || (IS_NOWACTNAME("胸愛撫
 ENDIF
 
 ;キス経験追加
-IF IS_NOWACTNAME("キス")
+IF IS_NOWACTNAME("キス") || (!IS_NOWACTNAME("足舐め強制") && IS_NOWCOMNAME("キスする"))
 	EXP:キス経験 += 1
 	EXP:MASTER:キス経験 += 1
 	;助手参加時には助手にも加算

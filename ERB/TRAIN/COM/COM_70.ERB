@@ -62,3 +62,32 @@ CALL SET_COMIMP("好印象大")
 CALL ADD_DEPEND(+10, +6)
 RETURN 1
 
+
+;────────────────────────────────────
+;071,キスする
+;────────────────────────────────────
+@COM71
+;達成、悦楽SOURCE増加
+SOURCE:MASTER:情愛 += 35 + CFLAG:M好意 / 40 + GET_ABL(MASTER, "奉仕精神") * 3
+SOURCE:MASTER:達成 += (CFLAG:M好意 + 500) * (GET_ABL(MASTER, "奉仕精神") + 10) * (GET_ABL(MASTER, "技巧") + 10) / 10000
+SOURCE:MASTER:悦楽 += (CFLAG:M好意 + 100) * (GET_TRAINLV(TARGET) + 10) / 50
+;COM分類
+CALL SET_COMGRO("積極的従う")
+;COM印象
+CALL SET_COMIMP("好印象大")
+;我慢フラグ解消
+TCVAR:MASTER:我慢 = 0
+;ACTがキスでない場合の汚れ移動
+IF !IS_NOWACTNAME("キス")
+	IF IS_NOWACTNAME("足舐め強制")
+		;汚れの移動
+		CALL MOVE_STAIN("足", TARGET, "口", MASTER)
+	ELSE
+		;汚れの移動
+		CALL MOVE_STAIN("口", TARGET, "口", MASTER)
+	ENDIF
+ENDIF
+;依存度変化
+CALL ADD_DEPEND(+5, +10)
+RETURN 1
+;キス経験追加は@EXP_CHECKで行う

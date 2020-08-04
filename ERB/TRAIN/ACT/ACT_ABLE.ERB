@@ -277,6 +277,10 @@ ENDIF
 ACTABLE_REASON:10 = 解除規制_性交(受→攻)(全)
 SIF TEQUIP:性交奉仕中
 	RETURN 0
+;口淫継続中
+ACTABLE_REASON:10 = 解除規制_口淫中
+SIF TEQUIP:調教対象Ｃ使用 == 2
+	RETURN 0
 ;実行可能
 ACTABLE_REASON:10 = 
 RETURN 1
@@ -300,10 +304,12 @@ SIF IS_POLICY("今", "異常")
 IF !TALENT:壁抜け && TALENT:MASTER:オトコ
 	;調教対象の上半身上着で妨害される
 	ACTABLE_REASON:11 = 物理障害_着衣(受)(上半身上着)
+	;オトコの上半身上着が戻り値2(導師服/ワンピース)になることは通常ではあり得ない
 	SIF CLOTHESTYPE(1, 3) == 2
 		RETURN 0
 	;調教対象の上半身下着で妨害される
 	ACTABLE_REASON:11 = 物理障害_着衣(受)(上半身下着)
+	;オトコの上半身下着が戻り値2(ブラジャー/さらし)になることは通常であり得ない
 	SIF CLOTHESTYPE(1, 2) == 2
 		RETURN 0
 ENDIF
@@ -318,6 +324,14 @@ SIF GROUPMATCH(TEQUIP:性交中, 2, 5, 6) > 0
 ;性交奉仕中（正常位/後背位/背面座位/Ａセックス）
 ACTABLE_REASON:11 = 解除規制_性交(受→攻)(正常位/後背位/背面座位/Ａセックス)
 SIF GROUPMATCH(TEQUIP:性交奉仕中, 1, 2, 5, 6) > 0
+	RETURN 0
+;口淫中
+ACTABLE_REASON:11 = 物理障害_姿勢(口淫中)
+SIF TEQUIP:調教対象Ｃ使用 == 2
+	RETURN 0
+;顔面騎乗中
+ACTABLE_REASON:11 = 物理障害_姿勢(顔面騎乗中)
+SIF TEQUIP:顔面騎乗 || TEQUIP:顔面騎乗アナル
 	RETURN 0
 ;実行可能
 ACTABLE_REASON:11 = 
@@ -429,10 +443,6 @@ RETURN 1
 ;一括管理
 SIF GLOBAL_ACTABLE(14)
 	RETURN RESULT
-;フェラ継続中
-ACTABLE_REASON:14 = 状況不適合_口淫中
-SIF TEQUIP:調教対象Ｃ使用 == 2
-	RETURN 0
 ;お仕置きモード
 ACTABLE_REASON:14 = 状況不適合_お仕置き中
 SIF TFLAG:お仕置きフラグ
@@ -460,6 +470,10 @@ SIF TEQUIP:性交中
 ACTABLE_REASON:14 = 解除規制_性交(受→攻)(全)
 SIF TEQUIP:性交奉仕中
 	RETURN 0
+;口淫継続中
+ACTABLE_REASON:14 = 状況不適合_口淫中
+SIF TEQUIP:調教対象Ｃ使用 == 2
+	RETURN 0
 ;調教者に壁抜けがない
 IF !TALENT:壁抜け
 	;調教対象の下半身上着で妨害される
@@ -486,6 +500,10 @@ RETURN 1
 ;一括管理
 SIF GLOBAL_ACTABLE(15)
 	RETURN RESULT
+;口淫継続中
+ACTABLE_REASON:15 = 状況不適合_口淫中
+SIF TEQUIP:調教対象Ｃ使用 == 2
+	RETURN 0
 ;お仕置きモード
 ACTABLE_REASON:15 = 状況不適合_お仕置き中
 SIF TFLAG:お仕置きフラグ
@@ -519,6 +537,10 @@ RETURN 1
 ;一括管理
 SIF GLOBAL_ACTABLE(16)
 	RETURN RESULT
+;口淫継続中
+ACTABLE_REASON:16 = 状況不適合_口淫中
+SIF TEQUIP:調教対象Ｃ使用 == 2
+	RETURN 0
 ;お仕置きモード
 ACTABLE_REASON:16 = 状況不適合_お仕置き中
 SIF TFLAG:お仕置きフラグ
@@ -642,6 +664,10 @@ RETURN 1
 ;一括管理
 SIF GLOBAL_ACTABLE(18)
 	RETURN RESULT
+;口淫継続中
+ACTABLE_REASON:18 = 状況不適合_口淫中
+SIF TEQUIP:調教対象Ｃ使用 == 2
+	RETURN 0
 ;お仕置きモード
 ACTABLE_REASON:18 = 状況不適合_お仕置き中
 SIF TFLAG:お仕置きフラグ
@@ -980,6 +1006,10 @@ SIF CLOTHESTYPE(1, 1) == 2 && PENIS(MASTER)
 ACTABLE_REASON:24 = 物理障害_性交(受→攻)(全)
 SIF TEQUIP:性交奉仕中
 	RETURN 0
+;口淫継続中
+ACTABLE_REASON:24 = 状況不適合_口淫中
+SIF TEQUIP:調教対象Ｃ使用 == 2
+	RETURN 0
 ;触手
 ACTABLE_REASON:24 = 物理障害_触手
 SIF TEQUIP:触手調教中
@@ -1110,9 +1140,23 @@ SIF TCVAR:MASTER:焦らし度
 ACTABLE_REASON:27 = 状況不適合_挿入中
 SIF TEQUIP:性交中 || TEQUIP:性交奉仕中
 	RETURN 0
-;満足度が50%以下 // 押し倒しが頻発するので条件を絞って様子を見ます@/L
+[SKIPSTART]
+;満足度が50%以下
 ACTABLE_REASON:27 = 状況不適合_満足度
 SIF TENSION(TARGET, 8) != "高い" && !TEQUIP:押し倒し中
+	RETURN 0
+[SKIPEND]
+;満足度が80%以下かつ押し倒し中でない場合
+ACTABLE_REASON:27 = 状況不適合_満足度
+SIF !BASERATIO(TARGET, 8, 80) && !TEQUIP:押し倒し中
+	RETURN 0
+;調教者が情欲ではないかつ押し倒し中でない場合
+ACTABLE_REASON:27 = 状況不適合_状態変化
+SIF !IS_CONDITION(TARGET, "情欲") && !TEQUIP:押し倒し中
+	RETURN 0
+;押し倒し終了に派生し得るのは満足度が非常に高い場合のみ
+ACTABLE_REASON:27 = 状況不適合_満足度(押し倒し中)
+SIF !BASERATIO(TARGET, 8, 90) && TEQUIP:押し倒し中
 	RETURN 0
 ;実行可能
 ACTABLE_REASON:27 = 
@@ -2197,13 +2241,21 @@ RETURN 1
 ;一括管理
 SIF GLOBAL_ACTABLE(60)
 	RETURN RESULT
-;性交中はいくまで抜かないように
+;性奉中はいくまで抜かないように
 ACTABLE_REASON:60 = 解除規制_性交(受→攻)(全)
 SIF TEQUIP:性交奉仕中
+	RETURN 0
+;後背位以外の性交中は規制
+ACTABLE_REASON:60 = 解除規制_性交(攻→受)(正常位/騎乗位/対面座位/背面座位/Ａセックス)
+SIF GROUPMATCH(TEQUIP:性交中, 1, 3, 4, 5, 6)
 	RETURN 0
 ;調教対象の上半身上着で妨害される
 ACTABLE_REASON:60 = 物理障害_着衣(受)(上半身上着)
 SIF CLOTHESTYPE(1, 3) == 2
+	RETURN 0
+;顔面騎乗中
+ACTABLE_REASON:60 = 物理障害_姿勢(顔面騎乗中)
+SIF TEQUIP:顔面騎乗 || TEQUIP:顔面騎乗アナル
 	RETURN 0
 ;実行可能
 ACTABLE_REASON:60 = 

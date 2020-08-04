@@ -176,10 +176,13 @@ CUP:MASTER:屈服 += SOURCE:MASTER:拘束 * (5 + ABL:MASTER:従順) / 25
 
 ;苦痛、従順を見る
 CUP:MASTER:苦痛 += SOURCE:MASTER:拘束 * (11 - ABL:MASTER:従順 * 2) / 50
+;苦痛上昇がマイナスなら0に差し替える
+SIF CUP:MASTER:苦痛 < 0
+	CUP:MASTER:苦痛 = 0
 
 ;不快
 CUP:MASTER:不快 += SOURCE:MASTER:拘束 * (61 - ABL:MASTER:マゾっ気 - ABL:MASTER:拘束中毒 * 3 - CFLAG:MASTER:調教レベル - TALENT:MASTER:ドＭ * 5) / 50
-;;不快上昇がマイナスなら0に差し替える
+;不快上昇がマイナスなら0に差し替える
 SIF CUP:MASTER:不快 < 0
 	CUP:MASTER:不快 = 0
 

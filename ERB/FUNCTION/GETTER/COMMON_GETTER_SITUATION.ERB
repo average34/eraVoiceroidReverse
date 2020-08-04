@@ -311,7 +311,7 @@ RETURNF ARGS == CONDITION(TCVAR:MASTER:状態変化)
 #FUNCTIONS
 #LOCALSSIZE 20
 ;前半６つは短期方針、後半は「今日の方針」
-SPLIT "通常/休憩/ソフト/ノーマル/ハード/異常/通常/アナル/お仕置き/ハード/イチャイチャ/異常/野外/子作り/休憩/抱いて/ご奉仕", "/", LOCALS, LOCAL
+SPLIT "通常/休憩/ソフト/ノーマル/ハード/異常/通常/アナル/お仕置き/ハード/イチャイチャ/異常/野外/子作り/休憩/抱いて/ご奉仕/かわいがり", "/", LOCALS, LOCAL
 IF ARGS == "今日の方針"
 	RETURNF LOCALS:(ARG+6)
 ELSEIF ARGS == "今回の方針"
@@ -362,7 +362,7 @@ RETURNF 0
 #FUNCTIONS
 #LOCALSSIZE 20
 SIF !STRLENS(LOCALS)
-	SPLIT "通常/アナル/お仕置き/ハード/イチャイチャ/異常/野外/子作り/休憩/抱いて/ご奉仕", "/", LOCALS, LOCAL
+	SPLIT "通常/アナル/お仕置き/ハード/イチャイチャ/異常/野外/子作り/休憩/抱いて/ご奉仕/かわいがり", "/", LOCALS, LOCAL
 RETURNF LOCALS:ARG
 
 ;-------------------------------------------------
@@ -405,6 +405,27 @@ SIF LOCAL < MAXBASE:(ARG:0):(ARG:1) / 4
 	RETURNF "低い"
 RETURNF @"\@ LOCAL < MAXBASE:(ARG:0):(ARG:1) / 2 ? 一般 # 高い \@"
 
+
+;-------------------------------------------------
+;COMRANK(REACT負荷)
+;-------------------------------------------------
+
+;REACT負荷リストを返す
+@COMRANKLIST()
+#FUNCTIONS
+RETURNF "自然な行動/無理のない行動/無理をした行動"
+
+;現在のREACT負荷名称とARGSが合致すれば真を返す
+@IS_NOWCOMRANKNAME(ARGS)
+#FUNCTION
+RETURNF IS_LIST(ARGS, COMRANKLIST(), TFLAG:REACT負荷)
+
+;ARGSのREACT負荷なら真を返す
+@IS_COMRANK(ARGS)
+#FUNCTION
+RETURNF ARGS == COM_RANK(TFLAG:REACT負荷)
+
+
 ;-------------------------------------------------
 ;関数名:COM_RANK
 ;概　要:REACT負荷から文字列を取得する関数
@@ -417,6 +438,7 @@ RETURNF @"\@ LOCAL < MAXBASE:(ARG:0):(ARG:1) / 2 ? 一般 # 高い \@"
 SIF !STRLENS(LOCALS)
 	SPLIT "自然な行動/無理のない行動/無理をした行動", "/", LOCALS, LOCAL
 RETURNF LOCALS:ARG
+
 
 ;-------------------------------------------------
 ;関数名:GET_COM_RANK

@@ -361,8 +361,13 @@ IF IS_COMGRONAME("暴れる/拒否")
 ELSE
 	;愛撫補正、調教対象従順、淫茎素質に応じて補正値上昇
 	LOCAL = 100 + ACT_TO(TARGET, 5) * GET_ABL(MASTER, "従順") * (2 + TALENT:MASTER:淫核／淫茎) / 600
-	;快ｖSOURCE増加
-	TIMES SOURCE:快Ｖ, 1.25
+	;特定状況に於けるSOURCE:快Ｖ増加(Ｇスポット責め扱い)
+	IF IS_COMGRONAME("平然と従う") && IS_COMRANK("自然な行動/無理のない行動")
+		TIMES SOURCE:快Ｖ , 2.50
+	;通常のSOURCE:快Ｖ増加
+	ELSE
+		TIMES SOURCE:快Ｖ, 1.25
+	ENDIF
 	;調教対象調教レベルに応じて接触SOURCE増加
 	SOURCE:MASTER:接触 += CFLAG:MASTER:調教レベル * 10
 	;補正値に応じて情愛、快ｖSOURCE増加

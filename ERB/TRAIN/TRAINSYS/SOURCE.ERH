@@ -1,0 +1,3 @@
+﻿
+;ディープスロート参照用。リセットと代入は共にSOURCE_1.ERBで行う
+#DIM DEEP_THROAT

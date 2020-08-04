@@ -365,7 +365,7 @@ IF TFLAG:ACT派生 == 0
 	;道具強化、愛撫補正値、道具使い素質に応じて快ＢSOURCE増加
 	SOURCE:MASTER:快Ｂ = 150 + ITEM:9 * 100 + ACT_FROM(TARGET, 14) * (TALENT:道具使い + 3) / 3
 	;ニプルキャップ装着
-	TEQUIP:ニプルキャップ = 1
+	TEQUIP:ニプルキャップ = 1 + ITEM:9
 ;解除時
 ELSE
 	;快ＢSOURCE増加

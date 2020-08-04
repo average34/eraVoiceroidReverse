@@ -21,4 +21,11 @@ EmueraXXXX.exeを右クリックし、「ショートカットの作成」を選
 
 他の詳細についてはhttp://sourceforge.jp/projects/emuera/wiki/debugを参照して下さい。
 
-(2014/10/12)/L
+
+追記
+*****
+-Debugを加える際は半角スペースが必須になります
+EmueraXXXX.exe -Debug
+"EmueraXXXX.exe" -Debug
+上記のようにしないと機能しません
+(2018/01/22)/L

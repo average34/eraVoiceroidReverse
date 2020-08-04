@@ -49,7 +49,7 @@ FOR LOCAL, 250, 260
 	CVARSET CFLAG, LOCAL
 NEXT
 TFLAG:可能なCOM数 = 0
-;絶頂関連
+;絶頂関連のリセット
 FOR LCOUNT, 0, CHARANUM
 	VARSET EX:LCOUNT:0
 	VARSET NOWEX:LCOUNT:0
@@ -92,7 +92,7 @@ CALLF _UNEXTRACTION(MASTER, 1, 0)	;抜かず状態遅延判定フラグ初期化
 ;────────────────────────────────────
 ;選択可能な大満足ボーナスがいくつあるか
 可能満足ボー数 = 0
-FOR LCOUNT, 0, 10
+FOR LCOUNT, 0, 12
 	SIF SATISBONUS_ABLE(LCOUNT)
 		可能満足ボー数++
 NEXT
@@ -150,10 +150,11 @@ IF 可能満足ボー数 && CFLAG:満足ボー && CFLAG:好意 > 1000 && !TFLAG:
 	PRINTL
 	CALL PRINT_RAINBOW2W(@"★★%CALLNAME:TARGET%さま大満足ボーナス★★", 30)
 	PRINTL
+	;オートモードの際の処理
 	IF FLAG:オートモード > 0
 		LOCAL = FLAG:優先大満足ボーナス % 100
-		SIF LOCAL == 9
-			LOCAL = RAND:9
+		SIF LOCAL == 12
+			LOCAL = RAND:12
 		SIF !LOCAL:1 && LOCAL == 6
 			LOCAL = FLAG:優先大満足ボーナス / 100
 		SIF !LOCAL:2 && LOCAL == 7
@@ -165,9 +166,10 @@ IF 可能満足ボー数 && CFLAG:満足ボー && CFLAG:好意 > 1000 && !TFLAG:
 					LOCAL = LCOUNT
 			NEXT
 		ENDIF
-		PRINTFORMW %AUTO_SPLIT("いつも通り/アナルをいじめて/お仕置きして/激しくして/甘えさせて/壊れるまでして/外に出たい/孕ませたい/休ませて/抱かれたい/ランダム", "/", LOCAL)%を選択しました
+		PRINTFORMW %AUTO_SPLIT("いつも通り/アナルをいじめて/お仕置きして/激しくして/甘えさせて/壊れるまでして/外に出たい/孕ませたい/休ませて/抱かれたい/ご奉仕したい/かわいがって/ランダム", "/", LOCAL)%を選択しました
 		RESULT = LOCAL
 		LOCAL = 0
+	;通常の処理
 	ELSE
 		CALL KOJO_EVENT(16)
 		PRINTFORMW %CALLNAME:TARGET%は上機嫌な様子で、今日は何をされたいかとたずねてきた
@@ -205,6 +207,12 @@ IF 可能満足ボー数 && CFLAG:満足ボー && CFLAG:好意 > 1000 && !TFLAG:
 		;反抗刻印なしかつM好意1000以上
 		SIF SATISBONUS_ABLE(10)
 			CALL HTMLPRINTL(@"%HTMLBUTTON(@"[10] - %CALLNAME%さまにご奉仕したい", "10", "奉仕++")%")
+		;好意2000, M好意1000が必要
+		SIF SATISBONUS_ABLE(11)
+			{
+			CALL HTMLPRINTL(@"%HTMLBUTTON(@"[11] - かわいがって", "11", @"会話+ 愛撫++\@ 
+			!TALENT:MASTER:オトコ ?  性交+ # \@")%")
+			}
 		REDRAW 0
 		$INPUT_LOOP
 		INPUT
@@ -214,48 +222,41 @@ IF 可能満足ボー数 && CFLAG:満足ボー && CFLAG:好意 > 1000 && !TFLAG:
 		ENDIF
 		REDRAW 1
 	ENDIF
-	;TCVAR:今日の満足ボーナスへの代入を追加@/L
 	SELECTCASE RESULT
 		;通常
 		CASE 0
-			TCVAR:今日の満足ボーナス = 0
 		;アナル
 		CASE 1
-			TCVAR:今日の満足ボーナス = 1
 		;お仕置き
 		CASE 2
 			TFLAG:お仕置きフラグ = 1
-			TCVAR:今日の満足ボーナス = 2
 		;ハード
 		CASE 3
-			TCVAR:今日の満足ボーナス = 3
 		;イチャイチャ
 		CASE 4
-			TCVAR:今日の満足ボーナス = 4
 		;異常
 		CASE 5
-			TCVAR:今日の満足ボーナス = 5
 		;野外
 		CASE 6
 			TEQUIP:野外プレイ = 1
-			TCVAR:今日の満足ボーナス = 6
 		;子作り
 		CASE 7
-			TCVAR:今日の満足ボーナス = 7
 		;休憩
 		CASE 8
-			TCVAR:今日の満足ボーナス = 8
 		;抱いて
 		CASE 9
-			TCVAR:今日の満足ボーナス = 9
 		;ご奉仕
 		CASE 10
-			TCVAR:今日の満足ボーナス = 10
+		;かわいがり
+		CASE 11
 	ENDSELECT
 	TFLAG:今日の方針 = RESULT
+	TCVAR:今日の満足ボーナス = RESULT
 	;ここでリセットされると今日の方針箇所での参照に使えないのでコメントアウト
 	;CFLAG:満足ボー = 0
+	PRINTL
 	CALL KOJO_EVENT(16, 1)
+	CALL VOIDLINE_IF(RESULT)
 	SIF TFLAG:今日の方針 != 8
 		PRINTFORMW %CALLNAME:TARGET%は%CALLNAME:MASTER%の返事を聞くと調教の準備を始めた
 	LOCAL = 1
@@ -269,6 +270,7 @@ IF !LOCAL && TFLAG:今日の方針
 	CALL VOIDLINE_IF(RESULT)
 ENDIF
 
+;方針決定後の地の文
 SELECTCASE POLICY("今日")
 	CASE "通常"
 	CASE "アナル"
@@ -304,6 +306,8 @@ SELECTCASE POLICY("今日")
 		}
 	CASE "ご奉仕"
 		PRINTFORMW %CALLNAME:TARGET%は殊勝な申し出に満足げな笑みを浮かべつつ、%CALLNAME:MASTER%を招き寄せその頭を優しく撫でた…
+	CASE "かわいがり"
+		PRINTFORMW %CALLNAME:TARGET%は微笑みながら%CALLNAME:MASTER%に近づき、額にそっと口づけした…
 ENDSELECT
 
 ;今日の方針地の文を抜けてからリセット
@@ -355,10 +359,15 @@ SELECTCASE ARG
 	CASE 10
 		SIF !(!MARK:反抗刻印 && CFLAG:M好意 >= 1000)
 			RETURNF 0
+	;かわいがって
+	CASE 11
+		SIF !(CFLAG:好意 >= 2000 && CFLAG:M好意 >= 1000)
+			RETURNF 0
 	[SKIPSTART]
 	実装する場合はペニバンと排他にすべきか？
+	というか今更別枠でやる意味は薄い。やるなら方針[9]と統合して内部で分ける方がいいかな
 	;孕ませて
-	CASE 11
+	CASE 12
 		SIF !(CFLAG:M好意 + CFLAG:好意 >= 10000 && !TALENT:MASTER:妊娠 && FLAG:調教対象妊娠 && !TALENT:MASTER:オトコ && TALENT:ふたなり)
 			RETURN 0
 	[SKIPEND]

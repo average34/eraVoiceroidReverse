@@ -166,6 +166,9 @@ VARSET 潮吹き負担
 VARSET 絶頂負担
 VARSET 絞り強度
 
+;ディープスロートをリセット
+DEEP_THROAT = 0
+
 ;絶頂Ｃ
 ;快Ｃ、快ＣPALAM合計から刺激強度を用意
 LOCAL = CUP:MASTER:快Ｃ + PALAM:MASTER:快Ｃ
@@ -601,6 +604,11 @@ IF NOWEX:MASTER:射精
 		ELSE
 			TCVAR:MASTER:腸内射精後経過ターン参照 = 1
 		ENDIF
+	;口による愛撫で射精の場合
+	ELSEIF GET_ACTNAME(GET_NORMALACTNUM(TFLAG:ACT)) == "口で愛撫" || TEQUIP:調教対象Ｃ使用 == 2
+		;調教者が情欲かつ口淫経験が一定以上ならディープスロート発生
+		SIF IS_CONDITION(TARGET, "情欲") && EXP:TARGET:口淫経験 >= 50
+			DEEP_THROAT = 1
 	ENDIF
 	;TFLAG:射精後経過ターンは403xx seriesあたりで抹消予定@/L
 	TFLAG:射精後経過ターン                  = 1

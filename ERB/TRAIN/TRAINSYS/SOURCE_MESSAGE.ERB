@@ -78,6 +78,9 @@ IF MASTER_EX() && !NOWEX:MASTER:放尿
 		CASE "皮肉を言う", "不敵に笑う", "下手だと罵る", "強気に応答する", "無愛想に応答する", "拒否する", "暴れる"
 			PRINTFORML %CALLNAME:MASTER%は意地を張って顔を背けたまま絶頂した…
 			PRINTFORMW %CALLNAME:MASTER%の強気の言葉は絶頂の快楽にこみ上げる喘ぎに塗り潰されていく…
+		CASE "キスする"
+			PRINTFORML %CALLNAME:MASTER%は%CALLNAME%とキスを交わしながら絶頂した…
+			PRINTFORMW %CALLNAME%の暖かく柔らかな唇の感触に包まれながら、全身から力が抜けていくのを感じる…
 		CASEELSE
 			PRINTFORML %CALLNAME:MASTER%は快感を与えられるままに絶頂した…
 			PRINTFORMW あまりの気持ち良さに、頭の中が真っ白になっていくのを感じる…
@@ -116,6 +119,8 @@ IF TARGET_EX()
 			CASE "恥ずかしがる", "消極的やる", "嫌がる", "許しを乞う", "道具を外す", "悲鳴を上げる"
 				PRINTFORML %CALLNAME:TARGET%は身体を揺すって%CALLNAME:MASTER%の愛撫を貪り、
 				PRINTFORMW じれったそうに眉を細めて絶頂した…
+			CASE "キスする"
+				PRINTFORMW %CALLNAME%は%CALLNAME:MASTER%に塞がれた唇から、甘い潤いを帯びた声を漏れ響かせつつ絶頂した…
 			CASEELSE
 				PRINTFORMW %CALLNAME:TARGET%は%CALLNAME:MASTER%の与える快楽に甘い声を漏らして絶頂した…
 		ENDSELECT
@@ -305,13 +310,18 @@ IF NOWEX:MASTER:射精 && !NOWEX:MASTER:放尿
 			ENDIF
 		;口淫
 		ELSEIF GET_ACTNAME(GET_NORMALACTNUM(TFLAG:ACT)) == "口で愛撫" || TEQUIP:調教対象Ｃ使用 == 2
-			;２５％でディープスロート             //RANDは口上側で参照できないのでちょっと考えないといけない
+			IF 0
+			[SKIPSTART]
+			;２５％でディープスロート
 			IF !RAND:4
 				PRINTFORML %CALLNAME:TARGET%は食道の直接放たれる精液を飲み込みながら
 				;絶頂時アニメーション
 				SIF !KILL_ANIMEON
 					CALL FLASH
 				PRINTFORMW 喉を使って%CALLNAME:MASTER%のペニスを締め付けている…
+			ディープスロートを口上側で参照できるように
+			さらに射精種毎に分ける
+			[SKIPEND]
 			;大量射精
 			ELSEIF NOWEX:MASTER:射精 == 3
 				;助手協力時
@@ -323,15 +333,25 @@ IF NOWEX:MASTER:射精 && !NOWEX:MASTER:放尿
 					PRINTFORMW 噴き上がる精液を吸い上げている…
 				;助手非協力時
 				ELSE
-					PRINTFORML %CALLNAME:MASTER%は亀頭を舌でくすぐられる度に射精し、
-					;絶頂時アニメーション
-					SIF !KILL_ANIMEON
-						CALL FLASH
-					;乱数分岐
-					IF RAND:2
-						PRINTFORMW %CALLNAME:TARGET%の求めに応じて口内に大量の精液を放ち続けた…
+					;調教者が情欲ならディープスロート
+					IF IS_CONDITION(TARGET, "情欲") && EXP:TARGET:口淫経験 >= 50
+						PRINTFORML %CALLNAME:MASTER%は喉奥で性交するかのような甘美な刺激に耐えきれず、
+						PRINTFORML %CALLNAME:TARGET%の食道内に直接、大量の精液を放った…
+						;絶頂時アニメーション
+						SIF !KILL_ANIMEON
+							CALL FLASH
+						PRINTFORML %CALLNAME:TARGET%は脈動を続けるペニスを喉奥で締めつけ、一滴残らず搾り取ろうとしている…
 					ELSE
-						PRINTFORMW %CALLNAME:TARGET%は大量の精液を飲み込みながらも口内で愛撫を続け、さらなる射精を促している…
+						PRINTFORML %CALLNAME:MASTER%は亀頭を舌でくすぐられる度に射精し、
+						;絶頂時アニメーション
+						SIF !KILL_ANIMEON
+							CALL FLASH
+						;乱数分岐
+						IF RAND:2
+							PRINTFORMW %CALLNAME:TARGET%の求めに応じて口内に大量の精液を放ち続けた…
+						ELSE
+							PRINTFORMW %CALLNAME:TARGET%は大量の精液を飲み込みながらも口内で愛撫を続け、さらなる射精を促している…
+						ENDIF
 					ENDIF
 				ENDIF
 			;その他
@@ -345,14 +365,25 @@ IF NOWEX:MASTER:射精 && !NOWEX:MASTER:放尿
 					PRINTFORMW %CALLNAME:MASTER%が射精した精液を二人は奪い合うように舐めとっている…
 				;助手非協力時
 				ELSE
-					PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%の口内に射精した…
-					;絶頂時アニメーション
-					SIF !KILL_ANIMEON
-						CALL FLASH
-					PRINTFORMW %CALLNAME:TARGET%は勢い良く放たれる精液を舌で味わいながらゆっくりと飲み込んでいった…
+					;調教者が情欲ならディープスロート
+					IF IS_CONDITION(TARGET, "情欲") && EXP:TARGET:口淫経験 >= 50
+						PRINTFORML %CALLNAME:MASTER%はまるで性交するかのように喉奥でしごかれながら、
+						PRINTFORML %CALLNAME:TARGET%の食道内に直接射精した…
+						;絶頂時アニメーション
+						SIF !KILL_ANIMEON
+							CALL FLASH
+						PRINTFORML %CALLNAME:TARGET%は喉奥で締めつけながら、さらなる射精を促している…
+					;その他
+					ELSE
+						PRINTFORML %CALLNAME:MASTER%は%CALLNAME:TARGET%の口内に射精した…
+						;絶頂時アニメーション
+						SIF !KILL_ANIMEON
+							CALL FLASH
+						PRINTFORMW %CALLNAME:TARGET%は勢い良く放たれる精液を舌で味わいながらゆっくりと飲み込んでいった…
+					ENDIF
 				ENDIF
 			ENDIF
-		;パイズリ	
+		;パイズリ
 		ELSEIF GET_ACTNAME(GET_NORMALACTNUM(TFLAG:ACT)) == "パイズリする"
 			;絶頂時アニメーション
 			SIF !KILL_ANIMEON
