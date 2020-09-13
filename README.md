@@ -16,7 +16,7 @@ https://github.com/average34/eraVoiceroidReverse/releases
 Emuera1821.exeを実行することでゲームを起動します。  
 インストーラなどはありません。
 
-※起動時に何か問題が起きた場合、まずは同フォルダの「Q&A.txt」を参照して下さい。
+※起動時に何か問題が起きた場合、まずは同フォルダの[「Q&A.txt」](https://github.com/average34/eraVoiceroidReverse/blob/master/Q%26A.txt "Q&A")を参照して下さい。
 
 # 動作環境
 Windows7,8.1,10   
